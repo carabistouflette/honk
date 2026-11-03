@@ -3,15 +3,25 @@ namespace platform;
 import std;
 import os;
 extern fn real(path: const u8[:], out: u8[>..]&) -> bool = "honk_real";
+extern fn kind(path: const u8[:]) -> i64 = "honk_kind";
 extern fn mkdir(path: const u8[:]) -> bool = "honk_mkdir";
 extern fn read(path: const u8[:], out: u8[>..]&) -> bool = "honk_read";
+extern fn install(from: const u8[:], to: const u8[:], force: bool) -> bool = "honk_install";
 extern fn write(path: const u8[:], data: const u8[:], executable: bool, exclusive: bool) -> bool = "honk_write";
 extern fn lock(path: const u8[:]) -> i64 = "honk_lock";
 extern fn unlock(fd: i64) = "honk_unlock";
 extern fn spawn(packed: const u8[:], cwd: const u8[:], capture: bool, out: u8[>..]&) -> i64 = "honk_spawn";
 extern fn copy_tree(from: const u8[:], to: const u8[:]) -> bool = "honk_copy";
 extern fn remove_tree(path: const u8[:]) -> bool = "honk_remove";
-fn die(message: u8[:]) { write_stderr(str("honk: ", message, "\n")); exit(1); }
+fn die(message: u8[:]) {
+    var out = str("honk: ");
+    for c, i in message {
+        if i >= 4096 { out.append("..."); break; }
+        if c < 32 || c >= 127 { out.append("\\x"); out.push("0123456789abcdef"[c >> 4]); out.push("0123456789abcdef"[c & 15]); }
+        else { out.push(c); }
+    }
+    out.push('\n'); write_stderr(out); exit(1);
+}
 fn require(ok: bool, message: u8[:]) { if !ok { die(message); } }
 fn absolute(path: u8[:]) -> u8[>..] {
     var out: u8[>..] = []; require(real(path, out), str("cannot resolve path: ", path)); return out;

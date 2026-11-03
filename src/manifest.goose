@@ -8,14 +8,19 @@ import .platform;
 struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false }
 root struct Project {
     root:     u8[>..], name: u8[>..], version: u8[>..], entry: u8[>..], kind: u8[>..],
-    revision: u8[>..], dependencies: Dependency[>..], members: u8[][>..],
+    revision: u8[>..], description: u8[>..], license: u8[>..], dependencies: Dependency[>..], members: u8[][>..],
 }
 fn identifier(s: u8[:]) -> bool {
     if s.len == 0 || s.len > 64 { return false; }
     for c, i in s {
         if !((c >= 'a' && c <= 'z') || c == '_' || (i > 0 && c >= '0' && c <= '9')) { return false; }
     }
-    return s != "std" && s != "os" && s != "json" && s != "math" && s != "string";
+    for reserved in ["std", "os", "json", "math", "string", "base64", "binary", "csv", "exception", "ffi", "regex", "vec", "rng", "utf8", "thread", "slot_pool", "slice_pool", "simd", "dictionary",
+                     "import", "from", "namespace", "struct", "root", "enum", "type", "fn", "thread_fn", "export", "extern", "inline", "recursive",
+                     "let", "var", "const", "if", "else", "for", "while", "loop", "match", "return", "break", "continue", "guard", "true", "false"] {
+        if s == reserved { return false; }
+    }
+    return true;
 }
 fn package_name(s: u8[:]) -> bool {
     if s.len == 0 || s.len > 64 || s[0] < 'a' || s[0] > 'z' { return false; }
@@ -63,6 +68,19 @@ fn keys(doc: toml::Document&, parent: i64, allowed: const u8[:][:]) {
         id = doc.nodes[id].next;
     }
 }
+fn validate_dependency(dep: Dependency&) {
+    platform::require((dep.path.len > 0) != (dep.git.len > 0), "dependency needs exactly one of path or git");
+    if dep.git.len > 0 {
+        platform::require(dep.git.len > 8 && dep.git[..8] == "https://", "Git sources must use https://");
+        platform::require(dep.rev.len > 0 && dep.rev.len <= 256 && dep.rev[0] != '-', "Git dependency needs a non-option rev");
+        for c in dep.git { platform::require(c != '@' && c != '?' && c != '#', "Git URL must not contain credentials, query, or fragment"); }
+        for c in dep.rev { platform::require(c > 32 && c != 127 && c != ':' && c != '\\', "invalid Git ref"); }
+    } else { platform::require(dep.rev.len == 0, "path dependency cannot specify rev"); }
+    for value in [dep.path[..], dep.git[..], dep.rev[..]] {
+        platform::require(value.len <= 4096, "dependency value exceeds 4096 bytes");
+        for c in value { platform::require(c >= 32 && c != 127, "control character in dependency value"); }
+    }
+}
 fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Project&) {
     let table = toml::find(doc, 0, key); if table < 0 { return; }
     platform::require(doc.nodes[table].kind == toml::Kind.Table, "dependencies must be a table");
@@ -73,13 +91,7 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
         for dep in project.dependencies { platform::require(dep.name != name, "duplicate dependency across dependency tables"); }
         keys(doc, id, ["path", "git", "rev"]);
         var dep = Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev };
-        platform::require((dep.path.len > 0) != (dep.git.len > 0), "dependency needs exactly one of path or git");
-        if dep.git.len > 0 {
-            platform::require(dep.git.len > 8 && dep.git[..8] == "https://", "Git sources must use https://");
-            platform::require(dep.rev.len > 0 && dep.rev.len <= 256 && dep.rev[0] != '-', "Git dependency needs a non-option rev");
-            for c in dep.git { platform::require(c != '@' && c != '?' && c != '#', "Git URL must not contain credentials, query, or fragment"); }
-            for c in dep.rev { platform::require(c > 32 && c != 127 && c != ':' && c != '\\', "invalid Git ref"); }
-        } else { platform::require(dep.rev.len == 0, "path dependency cannot specify rev"); }
+        validate_dependency(dep);
         platform::require(project.dependencies.len < 256, "dependency limit is 256");
         project.dependencies.push(copy(dep)); id = doc.nodes[id].next;
     }
@@ -93,6 +105,7 @@ fn load(root: u8[:], project: Project&) {
     let package = toml::find(doc, 0, "package");
     if package >= 0 {
         keys(doc, package, ["name", "version", "entry", "kind", "description", "license"]);
+        project.description = string(doc, package, "description"); project.license = string(doc, package, "license");
         project.name = string(doc, package, "name"); project.version = string(doc, package, "version", "0.1.0");
         project.kind = string(doc, package, "kind", "bin");
         platform::require(package_name(project.name), "invalid package name (lowercase ASCII, digits, hyphen, underscore)");
@@ -128,6 +141,8 @@ fn serialize(project: Project&) -> u8[>..] {
     if project.name.len > 0 {
         out.append("[package]\nname = "); quoted(out, project.name); out.append("\nversion = "); quoted(out, project.version);
         out.append("\nkind = "); quoted(out, project.kind); out.append("\nentry = "); quoted(out, project.entry); out.push('\n');
+        if project.description.len > 0 { out.append("description = "); quoted(out, project.description); out.push('\n'); }
+        if project.license.len > 0 { out.append("license = "); quoted(out, project.license); out.push('\n'); }
     }
     if project.revision.len > 0 { out.append("\n[toolchain]\nrevision = "); quoted(out, project.revision); out.push('\n'); }
     if project.members.len > 0 {

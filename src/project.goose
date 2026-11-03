@@ -28,7 +28,12 @@ fn create(path: u8[:], name: u8[:], library: bool, init: bool) {
     platform::require(!file_exists(str(root, "/", entry)), "source entry already exists");
     platform::require(platform::mkdir(str(root, "/src")), "cannot create src directory");
     var p = manifest::Project { root: str(root), name: str(name), version: str("0.1.0"), entry: str(entry), kind: str(if library { "lib" } else { "bin" }), .. };
-    let source = if library { "// SPDX-License-Identifier: Apache-2.0\nfn answer() -> i64 { 42 }\n" } else { "fn main() { print(\"Hello, Goose!\"); }\n" };
+    var source: u8[>..] = [];
+    if library {
+        source.append("// SPDX-License-Identifier: Apache-2.0\nnamespace ");
+        for c in name { source.push(if c == '-' { '_' } else { c }); }
+        source.append(";\nfn answer() -> i64 { 42 }\n");
+    } else { source.append("fn main() { print(\"Hello, Goose!\"); }\n"); }
     platform::require(platform::write(str(root, "/", entry), source, false, true), "cannot create source entry");
     platform::require(platform::write(str(root, "/Honk.toml"), manifest::serialize(p), false, true), "cannot create manifest");
     if !file_exists(str(root, "/.gitignore")) { platform::require(platform::write(str(root, "/.gitignore"), "/target/\n/.honk/\n", false, true), "cannot create ignore file"); }

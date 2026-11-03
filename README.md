@@ -12,7 +12,7 @@ cd hello
 /path/to/honk run
 ```
 
-Without `GOOSE`, Honk builds and caches the exact pinned compiler using Git, CMake 3.27+, C/C++20 compilers, and Make/Ninja. Linux also needs libc development headers. `HONK_HOME` selects Honk's cache; default is `$XDG_CACHE_HOME/honk` or `$HOME/.cache/honk`. Projects may override the compiler with `[toolchain] revision = "<full commit>"`. `GOOSE` explicitly selects an existing matching compiler; it is not silently accepted at a different revision.
+Without `GOOSE`, Honk builds and caches the exact pinned compiler using Git, CMake 3.27+, C/C++20 compilers, and Make/Ninja. Linux also needs libc development headers. `HONK_HOME` selects Honk's cache; default is `$XDG_CACHE_HOME/honk` or `$HOME/.cache/honk`. Projects may override the compiler with `[toolchain] revision = "<full commit>"`. `GOOSE` explicitly selects a compiler and checks its advertised short revision against the pin. You must trust that binary; this is not cryptographic verification. Source bootstraps additionally verify the full Git commit.
 
 ## Projects
 
@@ -31,7 +31,7 @@ mathx = { path = "../mathx" }
 # test support; excluded when this project is consumed as a dependency
 ```
 
-Use `import mathx;` in application source. The dependency key is the Goose import name: identifiers with underscores, not hyphens. Existing libraries need `<import-name>.goose` at their root. Honk libraries may use a manifest entry elsewhere; Honk creates an adapter in its staging directory. Existing sourced imports are remapped to the explicit manifest graph. Honk discovers transitive manifests and sourced imports in legacy dependency entry files. Declare other package requirements in Honk.toml; no untracked compiler fetch is allowed.
+Use `import mathx;` in application source. Library names and namespaces are separate; declare the namespace in library source. The dependency key is the Goose import name: identifiers with underscores, not hyphens. Existing libraries need `<import-name>.goose` at their root. Honk libraries may use a manifest entry elsewhere; Honk creates an adapter in its staging directory. Existing sourced imports are remapped to the explicit manifest graph. Honk discovers transitive manifests and sourced imports in legacy dependency entry files, rejects conflicting identities/refs and cycles, and checks cached Git checkouts for local changes before use. Declare other package requirements in Honk.toml; no untracked compiler fetch is allowed.
 
 ## Commands
 
@@ -42,19 +42,22 @@ Use `import mathx;` in application source. The dependency key is the Goose impor
 - `add NAME --path PATH` or `add NAME --git HTTPS_URL --rev REF [--dev]`; `remove NAME`: normalize the manifest; run `fetch` to refresh the lock. Normalization removes comments.
 - `fetch`, `update`: resolve dependencies; ordinary commands preserve locked Git commits, `update` deliberately refreshes refs.
 - `tree`: list resolved dependencies. `metadata`: machine-readable JSON project metadata.
+- `package`: typecheck and produce a deterministic source `.tar.gz` under `target/package/`. Requires tracked Honk.toml/Honk.lock in a Git repository; archives only tracked regular files and excludes local untracked files. External path dependencies and tracked submodules are rejected. Vendored dependencies inside the project are supported.
+- `install [--root PREFIX] [--force]`: build release and atomically install `PREFIX/bin/NAME`; default prefix is `HONK_HOME/installed`. Existing executables require `--force`. Add that bin directory to PATH yourself. `uninstall NAME [--root PREFIX]` works outside a project.
+- `doc`: save the compiler's API declaration/documentation dump under `target/doc/NAME.goose`.
 - `clean`: remove project build/staging directories without following symlinks.
 - `toolchain`: obtain/report the pinned compiler; `version`, `help`.
 
-All project commands discover Honk.toml upward from cwd. `--manifest-path PATH` selects a manifest. `[workspace] members = ["one", "two"]` supports explicit members; `--workspace` executes each, `-p NAME` selects one. Virtual workspaces execute all members by default. Each member keeps its own lockfile and output directory. Nested workspaces are rejected.
+All project commands discover Honk.toml upward from cwd. Program arguments retain their exact boundaries, including empty arguments; child exit codes propagate. `--manifest-path PATH` explicitly selects a file named Honk.toml and rejects a final symlink. `[workspace] members = ["one", "two"]` supports explicit members; `--workspace` executes each, `-p NAME` selects one. Virtual workspaces execute all members by default. Each member keeps its own lockfile and output directory. Nested workspaces are rejected.
 
 ## Reproducibility and safety
 
-Commit Honk.lock. Git refs resolve to full commits. `--locked` forbids lockfile changes; `--offline` forbids network/bootstrap but may write a lockfile for local dependencies; `--frozen` combines both. Local dependencies remain live source trees, not immutable releases. HTTPS is the only network Git transport. Credentials in manifests, shell commands, automatic lifecycle scripts, and Git hooks are unsupported. Native dependencies and the selected compiler can execute code; build only trusted projects.
+Commit Honk.lock. It records the compiler revision and dependencies. Git refs resolve to full commits. `--locked` forbids lockfile changes; `--offline` forbids network/bootstrap but may write a lockfile for local dependencies; `--frozen` combines both. Local dependencies remain live source trees, not immutable releases. HTTPS is the only network Git transport. Credentials in manifests, shell commands, automatic lifecycle scripts, and Git hooks are unsupported. Credentials may be supplied by Git transport environment/agents under your control; global Git configuration is deliberately disabled, so credential helpers and URL rewrites from it are not loaded. Native dependencies and the selected compiler can execute code; build only trusted projects.
 
-Honk stages source trees under `.honk/` and leaves original sources intact. Source trees reject symlinks and special files and are bounded to 100,000 entries, 256 MiB, and depth 64 per tree; Goose sources and manifests are limited to 1 MiB each. Resolution is bounded to 256 packages. Captured subprocess stdout is bounded to 1 MiB. Honk uses nonblocking project/cache locks: concurrent operations fail clearly; retry after the other process exits. Private per-user caches and project directories must not be writable by untrusted users.
+Honk stages source trees under `.honk/` and leaves original sources intact. Source trees reject symlinks and special files and are bounded to 100,000 entries, 256 MiB, and depth 64 per tree; Goose sources and manifests are limited to 1 MiB each. Resolution is bounded to 256 packages; source discovery is bounded to 4096 Goose files and directories. Captured subprocess stdout is bounded to 1 MiB. Honk uses nonblocking project/cache locks: concurrent operations fail clearly; retry after the other process exits. Private per-user caches and project directories must not be writable by untrusted users.
 
 This is an evolving Git/path package workflow. Registry publishing, semver solving, cross compilation, and Windows support are not implemented. Do not treat this pre-release as Cargo feature or stability parity.
 
 ## Validation
 
-`make check test` runs formatting, typechecking, and black-box process tests. `make sanitize` runs the same integration suite with AddressSanitizer, UndefinedBehaviorSanitizer, debug checks, and bounds-check elimination disabled in Honk. `make bench` reports local CLI timings; no timing threshold or universal performance claim.
+`make check test` runs formatting, typechecking, and black-box process tests. `make sanitize` runs the same integration suite with AddressSanitizer, UndefinedBehaviorSanitizer, debug checks, and bounds-check elimination disabled in Honk. `make bench` records all raw samples, compiler, platform and source revision in `.build/bench.json`; no timing threshold or universal performance claim.

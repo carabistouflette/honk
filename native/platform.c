@@ -39,6 +39,13 @@ bool honk_real(hs s, gs_rref out) {
   gs_bld_append(out, r, (int64_t)strlen(r));
   return true;
 }
+int64_t honk_kind(hs s) {
+  char p[HPATH];
+  struct stat st;
+  if (!path(s, p) || lstat(p, &st) < 0)
+    return 0;
+  return S_ISREG(st.st_mode) ? 1 : S_ISDIR(st.st_mode) ? 2 : -1;
+}
 bool honk_mkdir(hs s) {
   char p[HPATH];
   if (!path(s, p))
@@ -60,7 +67,7 @@ bool honk_mkdir(hs s) {
   }
   return true;
 }
-bool honk_read(hs s, gs_rref out) {
+static bool read_bounded(hs s, gs_rref out, size_t limit) {
   char p[HPATH];
   if (!path(s, p))
     return false;
@@ -68,7 +75,8 @@ bool honk_read(hs s, gs_rref out) {
   if (fd < 0)
     return false;
   struct stat st;
-  bool ok = fstat(fd, &st) == 0 && S_ISREG(st.st_mode) && st.st_size <= HCAP;
+  bool ok = fstat(fd, &st) == 0 && S_ISREG(st.st_mode) &&
+            (uint64_t)st.st_size <= limit;
   char b[16384];
   size_t total = 0;
   while (ok) {
@@ -82,7 +90,7 @@ bool honk_read(hs s, gs_rref out) {
     if (!n)
       break;
     total += (size_t)n;
-    if (total > HCAP) {
+    if (total > limit) {
       ok = false;
       break;
     }
@@ -91,6 +99,8 @@ bool honk_read(hs s, gs_rref out) {
   close(fd);
   return ok;
 }
+bool honk_read(hs s, gs_rref out) { return read_bounded(s, out, HCAP); }
+
 bool honk_write(hs s, hs data, bool executable, bool exclusive) {
   char p[HPATH], t[HPATH];
   if (!path(s, p) || snprintf(t, sizeof t, "%s.tmp-XXXXXX", p) >= (int)sizeof t)
@@ -206,6 +216,8 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
       setenv("GIT_CONFIG_NOSYSTEM", "1", 1);
       setenv("GIT_CONFIG_GLOBAL", "/dev/null", 1);
       setenv("GIT_TERMINAL_PROMPT", "0", 1);
+      setenv("GIT_ALLOW_PROTOCOL", "https", 1);
+      unsetenv("GIT_TEMPLATE_DIR");
       unsetenv("GIT_DIR");
       unsetenv("GIT_WORK_TREE");
       unsetenv("GIT_CONFIG_COUNT");
@@ -402,5 +414,64 @@ bool honk_remove(hs s) {
     return errno == ENOENT;
   bool ok = remove_at(fd, slash + 1, 0);
   close(fd);
+  return ok;
+}
+
+// Stream executable installation with bounded memory and atomic publication.
+bool honk_install(hs from, hs to, bool force) {
+  char p[HPATH], q[HPATH], temp[HPATH];
+  if (!path(from, p) || !path(to, q) ||
+      snprintf(temp, sizeof temp, "%s.tmp-XXXXXX", q) >= (int)sizeof temp)
+    return false;
+  struct stat st;
+  if (lstat(q, &st) == 0 && !S_ISREG(st.st_mode))
+    return false;
+  int src = open(p, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+  if (src < 0)
+    return false;
+  bool ok = fstat(src, &st) == 0 && S_ISREG(st.st_mode) && st.st_size >= 0 &&
+            st.st_size <= 268435456;
+  int dst = ok ? mkstemp(temp) : -1;
+  if (dst < 0) {
+    close(src);
+    return false;
+  }
+  char buf[65536];
+  uint64_t total = 0;
+  while (ok) {
+    ssize_t n = read(src, buf, sizeof buf);
+    if (n < 0 && errno == EINTR)
+      continue;
+    if (n < 0) {
+      ok = false;
+      break;
+    }
+    if (!n)
+      break;
+    total += (uint64_t)n;
+    if (total > 268435456) {
+      ok = false;
+      break;
+    }
+    ssize_t offset = 0;
+    while (offset < n) {
+      ssize_t written = write(dst, buf + offset, (size_t)(n - offset));
+      if (written < 0 && errno == EINTR)
+        continue;
+      if (written <= 0) {
+        ok = false;
+        break;
+      }
+      offset += written;
+    }
+  }
+  close(src);
+  if (ok)
+    ok = fchmod(dst, 0755) == 0 && fsync(dst) == 0;
+  if (close(dst) < 0)
+    ok = false;
+  if (ok)
+    ok = force ? rename(temp, q) == 0 : link(temp, q) == 0;
+  unlink(temp);
   return ok;
 }

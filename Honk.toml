@@ -1,0 +1,14 @@
+[package]
+name = "honk"
+version = "0.1.0"
+kind = "bin"
+entry = "honk.goose"
+description = "Goose project and dependency manager"
+license = "Apache-2.0"
+
+[toolchain]
+revision = "eadca409f68210893f366e60d0c2f0dc29a339be"
+
+[dependencies]
+toml = { path = "vendor/goose-toml" }
+argparse = { path = "vendor/goose-argparse" }

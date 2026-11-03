@@ -9,6 +9,7 @@ import .project;
 import .deps;
 import .build;
 import .toolchain;
+import .distribution;
 fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, args: u8[:][:], cache: u8[:]) {
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create project state directory");
     let lock = platform::lock(str(p.root, "/.honk/lock")); platform::require(lock >= 0, "project is locked by another Honk process");
@@ -23,13 +24,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         if cmd == "add" {
             platform::require(deps_name(p, name) < 0, "dependency already exists; remove it before replacing it");
             var dep = manifest::Dependency { name: str(name), path: str(options.get("path")), git: str(options.get("git")), rev: str(options.get("rev")), dev: options.has("dev") };
-            platform::require((dep.path.len > 0) != (dep.git.len > 0), "add needs exactly one of --path or --git");
-            platform::require(dep.path.len == 0 || dep.rev.len == 0, "path dependency cannot have --rev");
-            if dep.git.len > 0 {
-                platform::require(dep.git.len > 8 && dep.git[..8] == "https://" && dep.rev.len > 0 && dep.rev[0] != '-', "Git dependency needs HTTPS URL and --rev");
-                for c in dep.git { platform::require(c > 32 && c != 127 && c != '@' && c != '?' && c != '#' && c != '"' && c != '\\', "invalid Git URL"); }
-                for c in dep.rev { platform::require(c > 32 && c != 127 && c != ':' && c != '\\' && c != '"', "invalid Git ref"); }
-            }
+            manifest::validate_dependency(dep);
             p.dependencies.push(copy(dep));
         } else {
             platform::require(deps_name(p, name) >= 0, "dependency does not exist");
@@ -46,8 +41,8 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     if cmd == "toolchain" {
         let binary = toolchain::compiler(p, cache, offline); let argv: const u8[:][] = [binary, "version"]; platform::run(argv, p.root); platform::unlock(lock); return;
     }
-    let compiler = toolchain::compiler(p, cache, offline);
     if cmd == "fmt" {
+        let compiler = toolchain::compiler(p, cache, offline);
         var paths:  u8[][>..] = []; build::files(p.root, "", paths);
         var packed: u8[>..]   = []; platform::pack(packed, compiler); platform::pack(packed, "format");
         if options.has("check") { platform::pack(packed, "--check"); }
@@ -63,11 +58,21 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         for node in graph.nodes { print("  ", node.name, " ", if node.git.len > 0 { node.commit[..] } else { node.path[..] }); }
         platform::unlock(lock); return;
     }
+    let compiler = toolchain::compiler(p, cache, offline);
     if options.has("bin") {
         let name = options.get("bin"); platform::require(manifest::package_name(name), "invalid binary target name");
         p.entry = str("src/bin/", name, ".goose"); p.name = str(name); p.kind = str("bin");
     }
-    build::compile(p, graph, compiler, cmd, options.has("release"), args);
+    if cmd == "package" {
+        build::compile(p, graph, compiler, "check", false, args); distribution::package(p, graph);
+    } else {
+        let release = options.has("release") || cmd == "install";
+        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args);
+        if cmd == "install" {
+            let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
+            distribution::install(p, release, destination, options.has("force"));
+        }
+    }
     platform::unlock(lock);
 }
 fn deps_name(p: manifest::Project&, name: u8[:]) -> i64 { for d, i in p.dependencies { if d.name == name { return i; } } return -1; }

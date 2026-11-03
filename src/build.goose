@@ -13,17 +13,19 @@ fn skip(name: u8[:]) -> bool { name == ".git" || name == "target" || name == ".h
 fn item(paths: u8[][:], index: i64) -> u8[:] {
     for path, i in paths { if i == index { return path; } } abort("invalid source index");
 }
-fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&, depth: i64 = 0) {
+fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
     var directories: u8[][>..] = []; directories.push(str(prefix)); var cursor = 0;
     while cursor < directories.len {
         let current = item(directories, cursor); cursor++;
+        platform::require(platform::kind(str(root, "/", current)) == 2, "source directories must not be symlinks");
         var entries: u8[>..] = []; platform::require(list_dir(str(root, "/", current), entries), "cannot list source directory");
         var start = 0;
         for c, i in entries {
             if c != '\n' { continue; } let name = entries[start..i]; start = i + 1;
             if skip(name) { continue; }
             let path = if current.len > 0 { str(current, "/", name) } else { str(name) };
-            if is_dir(str(root, "/", path)) {
+            let kind = platform::kind(str(root, "/", path)); platform::require(kind == 1 || kind == 2, "source tree contains a symlink or special file");
+            if kind == 2 {
                 platform::require(directories.len < 4096, "source directory limit is 4096"); directories.push(str(path));
             } else if suffix(name, ".goose") {
                 platform::require(out.len < 4096, "source file limit is 4096"); out.push(str(path));
@@ -59,12 +61,14 @@ fn prepare(p: manifest::Project&, g: deps::Graph&) -> u8[>..] {
     let app = str(directory, "/app"); platform::require(platform::mkdir(app), "cannot create source staging directory");
     platform::require(platform::copy_tree(p.root, app), "cannot stage sources (symlink, special file, depth, file, or size limit)");
     for n in g.nodes {
+        if !n.enabled { continue; }
         let to = str(directory, "/deps/", n.name); platform::require(platform::mkdir(to), "cannot create dependency staging directory");
         platform::require(platform::copy_tree(n.directory, to), str("cannot stage dependency: ", n.name));
         if n.entry != str(n.name, ".goose") { platform::save(str(to, "/", n.name, ".goose"), str("import .", module(n.entry), ";\n")); }
     }
     // Map every sourced import to Honk's resolved graph, including legacy test roots.
     for n in g.nodes {
+        if !n.enabled { continue; }
         let to = str(directory, "/deps/", n.name); var paths: u8[][>..] = []; files(to, "", paths);
         for path in paths {
             let text = platform::load(str(to, "/", path));
@@ -89,12 +93,14 @@ fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
     // Source declarations already name their dependency; avoid duplicate declarations.
     let declared = source::requirements(source); var out: u8[>..] = [];
     for n in g.nodes {
+        if !n.enabled { continue; }
         var found = false; for req in declared { if req.name == n.name { found = true; } }
         if !found { out.append("import "); out.append(n.name); out.append(" from "); manifest::quoted(out, str(project::parent(stage), "/deps/", n.name)); out.append(";\n"); }
     }
     out.append(source); platform::save(file, out); return file;
 }
 fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:]) {
+    deps::activate(g, cmd == "test" || cmd == "bench");
     let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
     let output = str(p.root, "/target/", profile); platform::require(platform::mkdir(output), "cannot create build output directory");
     if cmd == "test" || cmd == "bench" {
@@ -112,6 +118,12 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         print("Passed ", paths.len, " ", cmd, " targets"); return;
     }
     let entry = root_entry(stage, p.entry, g);
+    if cmd == "doc" {
+        let argv: const u8[:][] = [compiler, "--check", "--dump-docs", "--offline", entry];
+        let text, status = platform::command(argv, p.root, true); if status != 0 { exit(status); }
+        let directory = str(p.root, "/target/doc"); platform::require(platform::mkdir(directory), "cannot create documentation directory");
+        let output = str(directory, "/", p.name, ".goose"); platform::save(output, text); print(output); return;
+    }
     let action = if cmd == "check" || p.kind == "lib" { "check" } else { "build" };
     let binary = str(output, "/", p.name);
     var packed: u8[>..] = []; let argv: const u8[:][] = [compiler, action, entry, "--offline"]; for a in argv { platform::pack(packed, a); }
