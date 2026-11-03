@@ -49,9 +49,8 @@ fn node(g: Graph&, index: i64) -> Node& {
     for n, i in g.nodes { if i == index { return n; } }
     abort("invalid internal dependency index");
 }
-fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:], depth: i64) {
+fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
     manifest::validate_dependency(dep);
-    platform::require(depth <= 64 && g.nodes.len < 256, "dependency graph limit exceeded (256 packages / depth 64)");
     let candidate = if dep.path.len > 0 && dep.path[0] == '/' { str(dep.path) } else { str(base, "/", dep.path) };
     let local = if dep.path.len > 0 { platform::absolute(candidate) } else { str("") };
     let existing = index(g, dep.name);
@@ -60,6 +59,7 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:], depth: i64) {
         platform::require(n.directory == local || (n.git.len > 0 && n.git == dep.git && n.rev == dep.rev), str("conflicting dependency: ", dep.name));
         if g.current >= 0 { g.edges.push(Edge { g.current, existing }); } else if !dep.dev { n.production = true; } return;
     }
+    platform::require(g.nodes.len < 256, "dependency graph limit exceeded (256 packages)");
     var commit: u8[>..] = []; var directory = str(local);
     if dep.git.len > 0 {
         var old = -1;
@@ -116,7 +116,7 @@ fn expand(g: Graph&, id: i64) {
     g.current = id;
     if file_exists(str(directory, "/Honk.toml")) {
         var child = manifest::Project { .. }; manifest::load(directory, child);
-        for d in child.dependencies { if !d.dev { add(g, d, directory, 0); } }
+        for d in child.dependencies { if !d.dev { add(g, d, directory); } }
     }
     let text = platform::load(str(directory, "/", entry)); let reqs = source::requirements(text);
     for req in reqs {
@@ -131,7 +131,7 @@ fn expand(g: Graph&, id: i64) {
         }
         var d = manifest::Dependency { name: str(req.name), path: copy(path), git: copy(git), rev: copy(rev), .. };
         platform::require(manifest::identifier(d.name), "invalid sourced dependency name");
-        add(g, d, project::parent(str(directory, "/", entry)), 0);
+        add(g, d, project::parent(str(directory, "/", entry)));
     }
     n.visiting = false;
 }
@@ -152,7 +152,7 @@ fn acyclic(g: Graph&) {
 fn resolve(p: manifest::Project&, g: Graph&) {
     g.revision = str(if p.revision.len > 0 { p.revision[..] } else { toolchain::REVISION });
     read_lock(p, g);
-    for dep in p.dependencies { add(g, dep, p.root, 0); }
+    for dep in p.dependencies { add(g, dep, p.root); }
     var cursor = 0; while cursor < g.nodes.len { expand(g, cursor); cursor++; } acyclic(g);
     let text = lock_text(g); let file = str(p.root, "/Honk.lock");
     if file_exists(file) { let old = platform::load(file); if old == text { return; } }

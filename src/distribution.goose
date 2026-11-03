@@ -6,11 +6,11 @@ import .platform;
 import .manifest;
 import .deps;
 import .build;
-fn package(p: manifest::Project&, g: deps::Graph&) {
+fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
     // Path dependencies cannot be reproduced by recipients of a source archive.
     for n in g.nodes {
         let inside = n.directory.len > p.root.len && n.directory[..p.root.len] == p.root && n.directory[p.root.len] == '/';
-        platform::require(n.git.len > 0 || inside, "package requires Git dependencies or vendored paths inside the project");
+        platform::require(n.git.len > 0 || (inside && n.path.len > 0 && n.path[0] != '/'), "package requires Git dependencies or vendored paths inside the project");
     }
     let stage = str(p.root, "/.honk/package"); platform::require(platform::remove_tree(stage), "cannot clear package staging directory");
     let label = str(p.name, "-", p.version); let directory = str(stage, "/", label);
@@ -44,6 +44,13 @@ fn package(p: manifest::Project&, g: deps::Graph&) {
     let output = str(p.root, "/target/package"); platform::require(platform::mkdir(output), "cannot create package output directory");
     let archive = str(output, "/", label, ".tar.gz"); let temp = str(stage, "/archive.tar.gz");
     platform::run(["tar", "--create", "--gzip", "--file", temp, "--directory", stage, "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--null", "--verbatim-files-from", "--no-recursion", "--files-from", list], p.root);
+    // Verify the exact exported files, rather than accidentally depending on untracked local files.
+    let verify = str(stage, "/verify"); platform::require(platform::mkdir(verify), "cannot create package verification directory");
+    platform::run(["tar", "--extract", "--gzip", "--file", temp, "--directory", verify, "--no-same-owner", "--no-same-permissions"], p.root);
+    var exported = manifest::Project { .. }; manifest::load(str(verify, "/", label), exported);
+    var resolved = deps::Graph { cache: str(g.cache), locked: true, offline: true, .. }; deps::resolve(exported, resolved);
+    let no_args: u8[:][0] = [];
+    build::compile(exported, resolved, compiler, "check", false, no_args);
     platform::require(rename_file(temp, archive), "cannot commit package archive"); platform::require(platform::remove_tree(stage), "cannot clear packaged sources"); print(archive);
 }
 fn install(p: manifest::Project&, release: bool, destination: u8[:], force: bool) {

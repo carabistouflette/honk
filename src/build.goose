@@ -18,7 +18,7 @@ fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
     while cursor < directories.len {
         let current = item(directories, cursor); cursor++;
         platform::require(platform::kind(str(root, "/", current)) == 2, "source directories must not be symlinks");
-        var entries: u8[>..] = []; platform::require(list_dir(str(root, "/", current), entries), "cannot list source directory");
+        var entries: u8[>..] = []; platform::require(platform::list(str(root, "/", current), entries), "cannot list source directory");
         var start = 0;
         for c, i in entries {
             if c != '\n' { continue; } let name = entries[start..i]; start = i + 1;
@@ -43,7 +43,7 @@ fn rewrite(text: u8[:], g: deps::Graph&, directory: u8[:], original: u8[:], p: m
             let resolved = platform::absolute(path);
             platform::require(resolved == p.root, str("undeclared source import: ", req.name));
             let alias = str(stage, "/", req.name, ".goose");
-            if p.entry != str(req.name, ".goose") { platform::save(alias, str("import .", module(p.entry), ";\n")); }
+            if p.entry != str(req.name, ".goose") && !file_exists(alias) { platform::save(alias, str("import .", module(p.entry), ";\n")); }
         }
         out.append(text[start..req.start]);
         out.append("from "); let mapped = if id >= 0 { str(directory, "/deps/", req.name) } else { str(stage) }; manifest::quoted(out, mapped);

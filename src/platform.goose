@@ -3,6 +3,7 @@ namespace platform;
 import std;
 import os;
 extern fn real(path: const u8[:], out: u8[>..]&) -> bool = "honk_real";
+extern fn list(path: const u8[:], out: u8[>..]&) -> bool = "honk_list";
 extern fn kind(path: const u8[:]) -> i64 = "honk_kind";
 extern fn mkdir(path: const u8[:]) -> bool = "honk_mkdir";
 extern fn read(path: const u8[:], out: u8[>..]&) -> bool = "honk_read";

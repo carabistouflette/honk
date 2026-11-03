@@ -96,7 +96,6 @@ class CLI(unittest.TestCase):
         self.run_honk('fetch', cwd=p)
     def test_manifest_library_dependency(self):
         lib = self.new('mathx', '--lib')
-        (lib/'src/lib.goose').write_text('namespace mathx; fn answer() -> i64 { 42 }')
         p = self.new()
         self.run_honk('add', 'mathx', '--path', '../mathx', cwd=p)
         (p/'src/main.goose').write_text('import mathx; fn main() { print(mathx::answer()); }')
@@ -165,6 +164,13 @@ class CLI(unittest.TestCase):
             self.assertNotIn('hello-0.1.0/secret.txt', names)
         self.run_honk('package', '--locked', cwd=p)
         self.assertEqual(archive.read_bytes(), original)
+        # A source needed by the build but absent from Git must not produce a broken archive.
+        main = p/'src/main.goose'; saved = main.read_text()
+        main.write_text('import .helper; fn main() { print(helper()); }')
+        (p/'src/helper.goose').write_text('fn helper() -> i64 { 42 }')
+        self.run_honk('package', '--locked', cwd=p, ok=False)
+        self.assertEqual(archive.read_bytes(), original)
+        main.write_text(saved)
         dest = self.root/'installed binaries'
         self.run_honk('install', '--root', dest, cwd=p)
         self.assertIn('Hello, Goose!', subprocess.check_output([dest/'bin/hello'], text=True))
@@ -287,6 +293,12 @@ class CLI(unittest.TestCase):
         (p/'real.toml').write_text((p/'Honk.toml').read_text())
         (p/'Honk.toml').unlink(); (p/'Honk.toml').symlink_to('real.toml')
         self.run_honk('metadata', '--manifest-path', p/'Honk.toml', ok=False)
+    def test_existing_root_package_entry_is_preserved(self):
+        p = self.new(); (p/'tests').mkdir()
+        (p/'helper.goose').write_text('namespace helper; fn value() -> i64 { 42 }')
+        (p/'tests/test.goose').write_text('import helper from ".."; fn main() { assert(helper::value() == 42); }')
+        self.run_honk('test', cwd=p)
+        self.assertIn('namespace helper', (p/'helper.goose').read_text())
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

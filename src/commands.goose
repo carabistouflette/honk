@@ -64,7 +64,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         p.entry = str("src/bin/", name, ".goose"); p.name = str(name); p.kind = str("bin");
     }
     if cmd == "package" {
-        build::compile(p, graph, compiler, "check", false, args); distribution::package(p, graph);
+        distribution::package(p, graph, compiler);
     } else {
         let release = options.has("release") || cmd == "install";
         build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args);

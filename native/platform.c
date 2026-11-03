@@ -46,6 +46,74 @@ int64_t honk_kind(hs s) {
     return 0;
   return S_ISREG(st.st_mode) ? 1 : S_ISDIR(st.st_mode) ? 2 : -1;
 }
+static struct dirent *read_entry(DIR *dir, bool *ok) {
+  errno = 0;
+  struct dirent *entry = readdir(dir);
+  if (!entry && errno)
+    *ok = false;
+  return entry;
+}
+static int name_order(const void *a, const void *b) {
+  return strcmp(*(const char *const *)a, *(const char *const *)b);
+}
+bool honk_list(hs s, gs_rref out) {
+  char p[HPATH];
+  if (!path(s, p))
+    return false;
+  int fd = open(p, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+  if (fd < 0)
+    return false;
+  DIR *dir = fdopendir(fd);
+  if (!dir) {
+    close(fd);
+    return false;
+  }
+  char **names = NULL;
+  size_t count = 0, capacity = 0, bytes = 0;
+  bool ok = true;
+  struct dirent *entry;
+  while (ok && (entry = read_entry(dir, &ok))) {
+    const char *name = entry->d_name;
+    if (!strcmp(name, ".") || !strcmp(name, ".."))
+      continue;
+    size_t length = strlen(name);
+    if (count >= 100000 || length + 1 > HCAP - bytes || strchr(name, '\n') ||
+        strchr(name, '\r')) {
+      ok = false;
+      break;
+    }
+    if (count == capacity) {
+      size_t next = capacity ? capacity * 2 : 32;
+      char **grown = realloc(names, next * sizeof *names);
+      if (!grown) {
+        ok = false;
+        break;
+      }
+      names = grown;
+      capacity = next;
+    }
+    names[count] = strdup(name);
+    if (!names[count]) {
+      ok = false;
+      break;
+    }
+    count++;
+    bytes += length + 1;
+  }
+  closedir(dir);
+  if (ok) {
+    if (count > 1)
+      qsort(names, count, sizeof *names, name_order);
+    for (size_t i = 0; i < count; i++) {
+      gs_bld_append(out, names[i], (int64_t)strlen(names[i]));
+      gs_bld_append(out, "\n", 1);
+    }
+  }
+  for (size_t i = 0; i < count; i++)
+    free(names[i]);
+  free(names);
+  return ok;
+}
 bool honk_mkdir(hs s) {
   char p[HPATH];
   if (!path(s, p))
@@ -270,13 +338,17 @@ static bool tree_copy(int src, int dst, size_t *files, uint64_t *bytes,
                       int depth) {
   if (depth > 64)
     return false;
-  DIR *d = fdopendir(dup(src));
-  if (!d)
+  int duplicate = fcntl(src, F_DUPFD_CLOEXEC, 0);
+  if (duplicate < 0)
     return false;
+  DIR *d = fdopendir(duplicate);
+  if (!d) {
+    close(duplicate);
+    return false;
+  }
   bool ok = true;
   struct dirent *e;
-  errno = 0;
-  while (ok && (e = readdir(d))) {
+  while (ok && (e = read_entry(d, &ok))) {
     const char *n = e->d_name;
     if (!strcmp(n, ".") || !strcmp(n, "..") || skip(n))
       continue;
@@ -347,10 +419,7 @@ static bool tree_copy(int src, int dst, size_t *files, uint64_t *bytes,
         ok = false;
     } else
       ok = false;
-    errno = 0;
   }
-  if (errno)
-    ok = false;
   closedir(d);
   return ok;
 }
@@ -388,15 +457,11 @@ static bool remove_at(int parent, const char *name, int depth) {
   }
   bool ok = true;
   struct dirent *e;
-  errno = 0;
-  while (ok && (e = readdir(d))) {
+  while (ok && (e = read_entry(d, &ok))) {
     if (!strcmp(e->d_name, ".") || !strcmp(e->d_name, ".."))
       continue;
     ok = remove_at(fd, e->d_name, depth + 1);
-    errno = 0;
   }
-  if (errno)
-    ok = false;
   closedir(d);
   return ok && unlinkat(parent, name, AT_REMOVEDIR) == 0;
 }

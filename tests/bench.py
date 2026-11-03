@@ -13,6 +13,7 @@ honk = os.environ['HONK']
 goose = os.environ['GOOSE']
 report = {'platform': platform.platform(), 'compiler': subprocess.check_output([goose, 'version'], text=True).strip(),
           'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
+          'dirty': subprocess.run(['git', 'diff', '--quiet', 'HEAD']).returncode != 0,
           'scope': '25 sequential warm local invocations; includes process startup; no network; no timing threshold', 'samples': {}}
 with tempfile.TemporaryDirectory(prefix='honk bench ') as directory:
     env = {**os.environ, 'GOOSE': goose, 'HONK_HOME': directory+'/cache'}

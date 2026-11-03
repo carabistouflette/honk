@@ -42,7 +42,7 @@ Use `import mathx;` in application source. Library names and namespaces are sepa
 - `add NAME --path PATH` or `add NAME --git HTTPS_URL --rev REF [--dev]`; `remove NAME`: normalize the manifest; run `fetch` to refresh the lock. Normalization removes comments.
 - `fetch`, `update`: resolve dependencies; ordinary commands preserve locked Git commits, `update` deliberately refreshes refs.
 - `tree`: list resolved dependencies. `metadata`: machine-readable JSON project metadata.
-- `package`: typecheck and produce a deterministic source `.tar.gz` under `target/package/`. Requires tracked Honk.toml/Honk.lock in a Git repository; archives only tracked regular files and excludes local untracked files. External path dependencies and tracked submodules are rejected. Vendored dependencies inside the project are supported.
+- `package`: typecheck and produce a deterministic source `.tar.gz` under `target/package/`. Requires tracked Honk.toml/Honk.lock in a Git repository; archives only tracked regular files, excludes local untracked files, and typechecks the exact exported contents offline before publishing the archive. External path dependencies and tracked submodules are rejected. Vendored dependencies inside the project are supported.
 - `install [--root PREFIX] [--force]`: build release and atomically install `PREFIX/bin/NAME`; default prefix is `HONK_HOME/installed`. Existing executables require `--force`. Add that bin directory to PATH yourself. `uninstall NAME [--root PREFIX]` works outside a project.
 - `doc`: save the compiler's API declaration/documentation dump under `target/doc/NAME.goose`.
 - `clean`: remove project build/staging directories without following symlinks.
@@ -60,4 +60,4 @@ This is an evolving Git/path package workflow. Registry publishing, semver solvi
 
 ## Validation
 
-`make check test` runs formatting, typechecking, and black-box process tests. `make sanitize` runs the same integration suite with AddressSanitizer, UndefinedBehaviorSanitizer, debug checks, and bounds-check elimination disabled in Honk. `make bench` records all raw samples, compiler, platform and source revision in `.build/bench.json`; no timing threshold or universal performance claim.
+`make check test` runs formatting, typechecking, and black-box process tests. `make security` runs 213 deterministic malformed-import probes and FIFO rejection. `make sanitize` runs integration and hostile-input suites with AddressSanitizer, UndefinedBehaviorSanitizer, debug checks, and bounds-check elimination disabled in Honk. `make bench` records all raw samples, compiler, platform and source revision in `.build/bench.json`; no timing threshold or universal performance claim.
