@@ -6,9 +6,9 @@ selects targets/workspace members and invokes the compiler. The vendored TOML
 and argument parsers are pure Goose.
 
 `src/platform.goose` is the internal synchronous boundary to the native adapter.
-The adapter supplies missing filesystem/process operations: descriptor-based
-no-follow walks and copies, locks, bounded reads/captures, argv execution,
-atomic replacement/installation and direct-child cancellation. Its functions
+The adapter supplies missing filesystem operations and application signal guards: descriptor-based
+no-follow walks and copies, locks, bounded reads,
+atomic replacement/installation and signal latching/recovery. Pinned goose-process owns normal child launching, captures, pumping, pidfd signalling and reaping. Its functions
 are internal, single-threaded application implementation details, not a stable
 reusable library API.
 

@@ -45,15 +45,22 @@ Executables are published atomically only after successful compilation. Temporar
 persistent; manifests, lockfiles and cache metadata retain durability syncs.
 
 SIGINT/SIGTERM sent to Honk are forwarded to a running direct child, and locks
-remain held until that child finishes. Terminal-generated SIGINT is not sent a
-second time to a child sharing the foreground group. External group-wide user
+remain held until that child finishes or transferred ownership is recovered.
+Handlers only latch signals; normal forwarding uses goose-process pidfds, never
+cached numeric PIDs. Terminal-generated SIGINT is suppressed for a registered
+child sharing the foreground group. Classification during launch is best effort:
+a signal predating child creation cannot be distinguished from one the child
+already received. External group-wide user
 signals are indistinguishable from direct signals and can still be duplicated;
 scripted callers should target Honk's PID. Honk temporarily establishes waitable
 SIGCHLD handling and restores its prior disposition afterward; exec children
 start with SIGCHLD default so they can wait for their own subprocesses. This is
 not process-tree supervision: applications that fork grandchildren, ignore cancellation, or keep captured streams open can
 require operator intervention. There is no universal command deadline in this
-version. Directory locks are cooperative and local filesystem semantics apply.
+version. Exceptional cleanup retains locks and waitable SIGCHLD until a terminal
+wait status or ECHILD is obtained; denied signals/waits may require indefinite
+waiting. A transferred PID is signalled only while this separate recovery owner
+still owns its unreaped identity. Directory locks are cooperative and local filesystem semantics apply.
 
 See [RESULTS.md](RESULTS.md) for the concrete test/review evidence and its scope.
 Passing tests, sanitizers and fuzz probes is not a proof of security or absence

@@ -11,6 +11,7 @@ release; changing them requires explicit review and validation.
 | [goose-argparse](https://github.com/carabistouflette/goose-argparse) | `d23af7aff17c6720d17a2e8f6b80bd3bf8f14275` | `vendor/goose-argparse/argparse.goose` | [Apache-2.0](vendor/goose-argparse/LICENSE) |
 | [goose-text](https://github.com/carabistouflette/goose-text) | `46059e30be79ece6efd4317eb0adc6d213c808ab` | `vendor/goose-text/text.goose` | [Apache-2.0](vendor/goose-text/LICENSE) |
 | [goose-semver](https://github.com/carabistouflette/goose-semver) | `2c91a8be80b231f725a18003f7e47ca99880d6dc` | `vendor/goose-semver/semver.goose` | [Apache-2.0](vendor/goose-semver/LICENSE) |
+| [goose-process](https://github.com/carabistouflette/goose-process) | `191a9423197e850e699eff500620a5c7d111aa54` | `vendor/goose-process/process.goose`, `process.build`, `native/` | [Apache-2.0](vendor/goose-process/LICENSE) |
 
 The source bytes and license copies were compared with the immutable Git objects
 at these upstream commits during the publication audit. None of the pinned trees has

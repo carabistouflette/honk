@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import process from "./vendor/goose-process";
 import semver from "./vendor/goose-semver";
 import text from "./vendor/goose-text";
 import toml from "./vendor/goose-toml";

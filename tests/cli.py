@@ -352,11 +352,12 @@ class CLI(unittest.TestCase):
         compiler.chmod(0o755)
         proc = subprocess.Popen([HONK, 'check'], cwd=p, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                 env={**os.environ, 'GOOSE': str(compiler), 'HONK_HOME': str(self.root/'cache'), 'TEST_MARKER': str(marker)})
-        child = None
+        child = None; child_fd = None
         try:
             deadline = time.monotonic()+10
             while not marker.exists() and time.monotonic() < deadline: time.sleep(0.01)
             self.assertTrue(marker.exists(), 'compiler never started'); child = int(marker.read_text())
+            child_fd = os.pidfd_open(child)
             proc.send_signal(signal.SIGTERM)
             stdout, stderr = proc.communicate(timeout=10)
             self.assertEqual(proc.returncode, 143, stdout+stderr)
@@ -365,10 +366,13 @@ class CLI(unittest.TestCase):
             child = None
             self.run_honk('clean', cwd=p)
         finally:
-            if proc.poll() is None: proc.kill(); proc.communicate()
-            if child:
-                try: os.kill(child, signal.SIGKILL)
+            # Kill the identity-anchored fixture child BEFORE draining pipes.
+            # Otherwise an assertion/timeout can hang forever in communicate.
+            if child_fd is not None:
+                try: signal.pidfd_send_signal(child_fd, signal.SIGKILL)
                 except ProcessLookupError: pass
+                finally: os.close(child_fd)
+            if proc.poll() is None: proc.kill()
             proc.communicate(timeout=5)
     def test_package_ignores_ambient_git_index(self):
         p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)

@@ -1,6 +1,6 @@
 # Honk
 
-A Goose project manager, written in Goose. Apache-2.0. Pre-release; Linux x86-64/glibc is the initial target. Uses the Goose compiler for compilation and goose-toml/goose-argparse for parsing. A C adapter supplies missing process/filesystem primitives.
+A Goose project manager, written in Goose. Apache-2.0. Pre-release; Linux x86-64/glibc is the initial target. Uses the pinned Goose compiler and vendored parsing, text, version and process libraries. A small C adapter supplies filesystem operations and application signal guards.
 
 ```sh
 git clone https://github.com/carabistouflette/honk.git
@@ -85,3 +85,5 @@ Large staged files use Linux kernel-assisted copying where supported, with a bou
 Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed build or installation.
 
 Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Git/path dependencies retain exact refs: no version solver is implied. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy.
+
+Honk delegates child ownership to pinned goose-process. This requires Linux kernel 5.3+ and glibc 2.34+. Commands explicitly use Child with no overall deadline, preserving long-running `run` servers; the parent pumps bounded 20 ms steps, forwards pending cancellation through pidfds, and retains locks through direct-child cleanup or exceptional transferred-child recovery. Recovery may wait indefinitely if OS permissions prevent proving cleanup. Captured stdout is capped at 1 MiB; stderr and stdin remain inherited. Argument limits include argv[0]: 4,096 arguments, 1 MiB total, 131,071 bytes per argument. PATH lookup uses the child's effective environment/cwd; it does not invoke a shell fallback for executable text without a shebang. Descendants and capture pipes they keep open remain outside direct-child supervision. Terminal Ctrl-C suppression is best effort during launch, when the application cannot distinguish a signal predating the child from one already delivered to its foreground group.
