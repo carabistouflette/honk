@@ -17,3 +17,4 @@ semver = { path = "vendor/goose-semver" }
 process = { path = "vendor/goose-process" }
 http = { path = "vendor/goose-http" }
 honk_metadata = { path = "vendor/honk-metadata" }
+logger = { path = "vendor/goose-log" }

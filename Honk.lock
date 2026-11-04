@@ -50,3 +50,10 @@ path = "vendor/honk-metadata"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "logger"
+path = "vendor/goose-log"
+git = ""
+rev = ""
+commit = ""

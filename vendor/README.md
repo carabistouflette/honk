@@ -13,3 +13,5 @@ reviewed repository metadata, not an upstream signature verification service.
 Vendoring makes Honk's own libraries available in a standalone clone. Compiler
 bootstrap still fetches the pinned Goose compiler unless an existing matching
 GOOSE executable is supplied. Library updates are explicit reviewed commits.
+
+Optional explicit diagnostics use the pinned goose-log snapshot, including its upstream NOTICE. Full source/license/notice identity remains in manifest.json.

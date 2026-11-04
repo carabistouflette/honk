@@ -79,6 +79,17 @@
         "honk_metadata.goose": "6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
+    },
+    {
+      "directory": "goose-log",
+      "repository": "https://github.com/carabistouflette/goose-log",
+      "revision": "a3919c5e9135b9812db422d5052bb1ea5d1d202b",
+      "license": "Apache-2.0",
+      "files": {
+        "logger.goose": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049"
+      }
     }
   ]
 }
