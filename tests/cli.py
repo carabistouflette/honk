@@ -679,6 +679,62 @@ class CLI(unittest.TestCase):
         configured.unlink(); (bootstrap/'GOOSE_REVISION').write_text('not-a-full-pin\n')
         proc = subprocess.run(['bash', str(script)], cwd=bootstrap, capture_output=True, timeout=10)
         self.assertNotEqual(proc.returncode, 0); self.assertFalse(configured.exists())
+    def test_ignored_sigchld_preserves_build_and_child_exit_status(self):
+        import signal
+        p = self.new(); (p/'src/main.goose').write_text('import os; fn main() { exit(7); }')
+        proc = subprocess.run([HONK, 'run', '--offline'], cwd=p,
+                              env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache')},
+                              preexec_fn=lambda: signal.signal(signal.SIGCHLD, signal.SIG_IGN),
+                              capture_output=True, timeout=90)
+        self.assertEqual(proc.returncode, 7, proc.stdout+proc.stderr)
+        self.assertTrue((p/'target/debug/hello').is_file())
+    def test_terminal_sigint_does_not_interrupt_child_cleanup_twice(self):
+        import fcntl
+        import pty
+        import signal
+        import sys
+        import termios
+        import time
+        p = self.new(); compiler = self.root/'interrupt-compiler'
+        version = subprocess.check_output([GOOSE, 'version'], text=True).strip()
+        compiler.write_text('#!'+sys.executable+\
+            '\nimport os,signal,sys,time\nfrom pathlib import Path\n'\
+            'if "version" in sys.argv: print('+repr(version)+'); sys.exit(0)\n'\
+            'm=Path(os.environ["TEST_MARKER"])\n'\
+            'def stop(sig, frame):\n signal.signal(signal.SIGINT, signal.SIG_DFL)\n'\
+            ' m.with_suffix(".stopping").write_text("stopping")\n time.sleep(0.4)\n'\
+            ' m.with_suffix(".done").write_text("done")\n sys.exit(0)\n'\
+            'signal.signal(signal.SIGINT,stop)\nm.write_text(str(os.getpid()))\nwhile True: time.sleep(1)\n')
+        compiler.chmod(0o755)
+        for mode in ('terminal', 'direct'):
+            with self.subTest(mode=mode):
+                marker = self.root/mode; master, slave = pty.openpty()
+                def foreground_session():
+                    os.setsid(); fcntl.ioctl(0, termios.TIOCSCTTY, 0); os.tcsetpgrp(0, os.getpgrp())
+                proc = subprocess.Popen([HONK, 'check'], cwd=p, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                        preexec_fn=foreground_session,
+                                        env={**os.environ, 'GOOSE': str(compiler), 'HONK_HOME': str(self.root/'cache'), 'TEST_MARKER': str(marker)})
+                os.close(slave)
+                try:
+                    deadline = time.monotonic()+10
+                    while not marker.exists() and time.monotonic() < deadline: time.sleep(0.01)
+                    self.assertTrue(marker.exists(), 'child never started')
+                    if mode == 'terminal':
+                        os.kill(proc.pid, signal.SIGSTOP)
+                        _, status = os.waitpid(proc.pid, os.WUNTRACED)
+                        self.assertTrue(os.WIFSTOPPED(status))
+                        os.write(master, b'\x03')
+                        while not marker.with_suffix('.stopping').exists() and time.monotonic() < deadline: time.sleep(0.01)
+                        self.assertTrue(marker.with_suffix('.stopping').exists(), 'terminal signal missed child')
+                        os.kill(proc.pid, signal.SIGCONT)
+                    else: proc.send_signal(signal.SIGINT)
+                    stdout, stderr = proc.communicate(timeout=10)
+                    self.assertEqual(proc.returncode, 130, stdout+stderr)
+                    self.assertTrue(marker.with_suffix('.done').exists(), 'cleanup interrupted by duplicate signal')
+                finally:
+                    if proc.poll() is None:
+                        os.killpg(proc.pid, signal.SIGKILL); proc.communicate(timeout=5)
+                    os.close(master)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

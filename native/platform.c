@@ -248,37 +248,57 @@ void honk_unlock(int64_t fd) {
 static volatile sig_atomic_t waiting_child = 0;
 static volatile sig_atomic_t interrupted = 0;
 typedef struct {
-  struct sigaction old_int, old_term;
+  struct sigaction old_int, old_term, old_chld;
   sigset_t mask, blocked;
 } signal_guard;
-static void forward_signal(int number) {
+static void forward_signal(int number, siginfo_t *info, void *context) {
+  (void)context;
   int saved = errno;
   interrupted = number;
-  if (waiting_child > 0)
-    kill((pid_t)waiting_child, number);
+  if (waiting_child > 0) {
+    pid_t child = (pid_t)waiting_child;
+    // A terminal already delivers SIGINT to every foreground-group member.
+    // Re-forwarding it can interrupt the child's graceful cleanup a second time.
+    bool terminal_group = number == SIGINT && info && info->si_code == SI_KERNEL &&
+                          getpgid(child) == getpgrp();
+    if (!terminal_group)
+      kill(child, number);
+  }
   errno = saved;
 }
 static bool guard_begin(signal_guard *guard) {
   sigemptyset(&guard->blocked);
   sigaddset(&guard->blocked, SIGINT);
   sigaddset(&guard->blocked, SIGTERM);
+  sigaddset(&guard->blocked, SIGCHLD);
   if (sigprocmask(SIG_BLOCK, &guard->blocked, &guard->mask) < 0)
     return false;
   if (sigaction(SIGINT, NULL, &guard->old_int) < 0 ||
-      sigaction(SIGTERM, NULL, &guard->old_term) < 0) {
+      sigaction(SIGTERM, NULL, &guard->old_term) < 0 ||
+      sigaction(SIGCHLD, NULL, &guard->old_chld) < 0) {
     sigprocmask(SIG_SETMASK, &guard->mask, NULL);
     return false;
   }
   struct sigaction action;
   memset(&action, 0, sizeof action);
   sigemptyset(&action.sa_mask);
-  action.sa_handler = forward_signal;
+  // SIG_IGN/SA_NOCLDWAIT would auto-reap the child and invalidate both exit
+  // status and the zombie PID reservation used by cancellation.
+  action.sa_handler = SIG_DFL;
+  if (sigaction(SIGCHLD, &action, NULL) < 0) {
+    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
+    return false;
+  }
+  action.sa_sigaction = forward_signal;
+  action.sa_flags = SA_SIGINFO;
   if (sigaction(SIGINT, &action, NULL) < 0) {
+    sigaction(SIGCHLD, &guard->old_chld, NULL);
     sigprocmask(SIG_SETMASK, &guard->mask, NULL);
     return false;
   }
   if (sigaction(SIGTERM, &action, NULL) < 0) {
     sigaction(SIGINT, &guard->old_int, NULL);
+    sigaction(SIGCHLD, &guard->old_chld, NULL);
     sigprocmask(SIG_SETMASK, &guard->mask, NULL);
     return false;
   }
@@ -286,12 +306,15 @@ static bool guard_begin(signal_guard *guard) {
   interrupted = 0;
   return true;
 }
-static int guard_end(signal_guard *guard) {
+static int guard_end(signal_guard *guard, bool child) {
   waiting_child = 0;
   sigprocmask(SIG_BLOCK, &guard->blocked, NULL);
   int received = interrupted;
   sigaction(SIGINT, &guard->old_int, NULL);
   sigaction(SIGTERM, &guard->old_term, NULL);
+  // Exec children need waitable descendants too; preserve SIG_DFL there.
+  if (!child)
+    sigaction(SIGCHLD, &guard->old_chld, NULL);
   sigprocmask(SIG_SETMASK, &guard->mask, NULL);
   return received;
 }
@@ -349,7 +372,7 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
   }
   pid_t pid = fork();
   if (pid < 0) {
-    guard_end(&guard);
+    guard_end(&guard, false);
     if (capture) {
       close(fds[0]);
       close(fds[1]);
@@ -359,7 +382,7 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
     return 125;
   }
   if (pid == 0) {
-    guard_end(&guard);
+    guard_end(&guard, true);
     if (chdir(dir) < 0)
       _exit(125);
     if (capture) {
@@ -443,7 +466,7 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
   siginfo_t completion;
   while (waitid(P_PID, (id_t)pid, &completion, WEXITED | WNOWAIT) < 0) {
     if (errno != EINTR) {
-      guard_end(&guard);
+      guard_end(&guard, false);
       return 125;
     }
   }
@@ -452,11 +475,11 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
   int status;
   while (waitpid(pid, &status, 0) < 0) {
     if (errno != EINTR) {
-      guard_end(&guard);
+      guard_end(&guard, false);
       return 125;
     }
   }
-  int cancellation = guard_end(&guard);
+  int cancellation = guard_end(&guard, false);
   if (cancellation)
     return 128 + cancellation;
   if (overflow)

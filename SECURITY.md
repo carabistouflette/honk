@@ -40,8 +40,13 @@ are checked before replacing the original. Executables are published atomically
 only after successful compilation. Temporary staged-source writes are not crash
 persistent; manifests, lockfiles and cache metadata retain durability syncs.
 
-SIGINT/SIGTERM are forwarded to a running direct child, and locks remain held
-until that child finishes. This is not process-tree supervision: applications
+SIGINT/SIGTERM sent to Honk are forwarded to a running direct child, and locks
+remain held until that child finishes. Terminal-generated SIGINT is not sent a
+second time to a child sharing the foreground group. External group-wide user
+signals are indistinguishable from direct signals and can still be duplicated;
+scripted callers should target Honk's PID. Honk temporarily establishes waitable
+SIGCHLD handling and restores its prior disposition afterward; exec children
+start with SIGCHLD default so they can wait for their own subprocesses. This is not process-tree supervision: applications
 that fork grandchildren, ignore cancellation, or keep captured streams open can
 require operator intervention. There is no universal command deadline in this
 version. Directory locks are cooperative and local filesystem semantics apply.
