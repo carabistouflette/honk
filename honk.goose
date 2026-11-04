@@ -48,11 +48,11 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
     var p = manifest::Project { .. };
     let root = select_root(options);
     manifest::load(root, p);
-    if cmd == "metadata" { project::metadata(p); return; }
+    platform::require(options.positionals.len == 0 || cmd == "add" || cmd == "remove", "unexpected positional argument (program arguments follow --)");
+    if cmd == "metadata" { emit_metadata(p, options); return; }
     var known = false;
     for name in ["build", "run", "check", "test", "bench", "fmt", "fetch", "update", "tree", "clean", "add", "remove", "toolchain", "package", "install", "doc"] { if cmd == name { known = true; } }
     platform::require(known, str("unknown command: ", cmd));
-    platform::require(options.positionals.len == 0 || cmd == "add" || cmd == "remove", "unexpected positional argument (program arguments follow --)");
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
     if options.has("workspace") || p.name.len == 0 || options.has("package") {
         platform::require(p.members.len > 0, "manifest has no workspace members"); var selected = 0;
@@ -66,6 +66,28 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
         platform::require(selected > 0, "no workspace package matched");
     } else { commands::execute(p, cmd, options, program_args, cache); }
     platform::unlock(cache_lock);
+}
+
+fn emit_metadata(p: manifest::Project&, options: const argparse::Result&) {
+    if !options.has("workspace") && !options.has("package") { print(project::metadata(p)); return; }
+    platform::require(p.members.len > 0, "manifest has no workspace members");
+    let collection = options.has("workspace"); var selected = 0; var single: u8[>..] = [];
+    if collection { write_stdout("["); }
+    for member in p.members {
+        platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
+        var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
+        platform::require(child.members.len == 0, "nested workspaces are not supported");
+        if options.has("package") && options.get("package") != child.name { continue; }
+        if collection {
+            if selected > 0 { write_stdout(","); }
+            write_stdout(project::metadata(child));
+        } else {
+            platform::require(selected == 0, "ambiguous workspace package name"); single = project::metadata(child);
+        }
+        selected++;
+    }
+    platform::require(selected > 0, "no workspace package matched");
+    if collection { write_stdout("]\n"); } else { print(single); }
 }
 
 fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {

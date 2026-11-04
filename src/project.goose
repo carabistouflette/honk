@@ -3,6 +3,7 @@ namespace project;
 import std;
 import os;
 import json;
+import toml;
 import .manifest;
 import .platform;
 fn parent(path: u8[:]) -> u8[>..] {
@@ -42,7 +43,8 @@ fn create(path: u8[:], name: u8[:], library: bool, init: bool) {
     if !file_exists(str(root, "/.gitignore")) { platform::require(platform::write(str(root, "/.gitignore"), "/target/\n/.honk/\n", false, true), "cannot create ignore file"); }
     print("Created ", if library { "library " } else { "application " }, name);
 }
-fn metadata(p: manifest::Project&) {
+fn metadata(p: manifest::Project&) -> u8[>..] {
+    platform::require(toml::valid_utf8(p.root), "metadata requires a UTF-8 project path");
     var out = str("{\"name\":"); json::format_string(out, p.name);
     out.append(",\"version\":"); json::format_string(out, p.version);
     out.append(",\"root\":"); json::format_string(out, p.root);
@@ -54,6 +56,6 @@ fn metadata(p: manifest::Project&) {
         out.append(",\"path\":"); json::format_string(out, dep.path); out.append(",\"git\":"); json::format_string(out, dep.git);
         out.append(",\"rev\":"); json::format_string(out, dep.rev); out.append(",\"dev\":"); json::format_bool(out, dep.dev); out.push('}');
     }
-    out.append("],\"members\":["); for member, i in p.members { if i > 0 { out.push(','); } json::format_string(out, member); } out.append("]}\n");
-    write_stdout(out);
+    out.append("],\"members\":["); for member, i in p.members { if i > 0 { out.push(','); } json::format_string(out, member); } out.append("]}");
+    return out;
 }

@@ -604,6 +604,30 @@ class CLI(unittest.TestCase):
         finally:
             for active in (server, plain): active.shutdown(); active.server_close()
             for thread in threads: thread.join(timeout=5)
+    def test_metadata_selects_workspace_members_without_cache(self):
+        a = self.new('alpha'); b = self.new('beta')
+        (self.root/'Honk.toml').write_text('[workspace]\nmembers=["alpha", "beta"]')
+        member = json.loads(self.run_honk('metadata', '-p', 'beta').stdout)
+        self.assertEqual(member['name'], 'beta'); self.assertEqual(member['root'], str(b))
+        members = json.loads(self.run_honk('metadata', '--workspace').stdout)
+        self.assertEqual([m['name'] for m in members], ['alpha', 'beta'])
+        self.assertEqual(len(json.loads(self.run_honk('metadata', '--workspace', '-p', 'beta').stdout)), 1)
+        self.assertEqual(self.run_honk('metadata', '-p', 'missing', ok=False).stdout, '')
+        self.run_honk('metadata', 'unexpected', ok=False)
+        self.assertFalse((self.root/'cache').exists())
+        (b/'Honk.toml').write_text((b/'Honk.toml').read_text().replace('"beta"', '"alpha"'))
+        self.assertEqual(self.run_honk('metadata', '-p', 'alpha', ok=False).stdout, '')
+        (self.root/'Honk.toml').write_text('[workspace]\nmembers=["link"]')
+        (self.root/'link').symlink_to(a, target_is_directory=True)
+        self.run_honk('metadata', '-p', 'alpha', ok=False)
+    def test_metadata_rejects_non_utf8_project_root(self):
+        directory = os.fsencode(self.root)+b'/bad\xff'
+        env = {**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache')}
+        created = subprocess.run([HONK, 'new', directory, '--name', 'hello'], env=env, capture_output=True, timeout=10)
+        self.assertEqual(created.returncode, 0, created.stderr)
+        proc = subprocess.run([HONK, 'metadata'], cwd=directory, env=env, capture_output=True, timeout=10)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertEqual(proc.stdout, b''); self.assertIn(b'UTF-8 project path', proc.stderr)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')
