@@ -99,6 +99,19 @@ fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
     }
     out.append(source); platform::save(file, out); return file;
 }
+fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: bool, root: u8[:]) {
+    let kind = platform::kind(output);
+    platform::require(kind == 0 || kind == 1, "binary output must not be a symlink or special file");
+    let private_dir = str(stage, "/.honk"); platform::require(platform::mkdir(private_dir), "cannot create private compiler output directory");
+    let temporary = str(private_dir, "/program");
+    var packed: u8[>..] = [];
+    let argv: const u8[:][] = [compiler, "build", entry, "--offline", "-o", temporary]; for a in argv { platform::pack(packed, a); }
+    if !release { platform::pack(packed, "--debug"); }
+    var captured: u8[>..] = []; let code = platform::spawn(packed, root, true, captured);
+    if code != 0 { write_stdout(captured); exit(code); }
+    platform::require(platform::install(temporary, output, true), "cannot atomically publish executable");
+    print("built ", output);
+}
 fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:]) {
     deps::activate(g, cmd == "test" || cmd == "bench");
     let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
@@ -108,12 +121,11 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         if !is_dir(str(stage, "/", dir)) { print("No ", dir, " targets"); return; }
         var paths: u8[][>..] = []; files(stage, dir, paths);
         for path, i in paths {
-            let entry = root_entry(stage, path, g); let binary = str(output, "/", cmd, "-", i);
-            var packed: u8[>..] = []; let argv: const u8[:][] = [compiler, "build", entry, "--offline", "-o", binary]; for a in argv { platform::pack(packed, a); }
-            if !release { platform::pack(packed, "--debug"); }
-            var captured: u8[>..] = []; let code = platform::spawn(packed, p.root, false, captured); if code != 0 { exit(code); }
-            packed.clear(); platform::pack(packed, binary); for a in args { platform::pack(packed, a); }
-            let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+            let target_dir = str(output, "/.honk/", dir); platform::require(platform::mkdir(target_dir), "cannot create test output directory");
+            let entry = root_entry(stage, path, g); let executable = str(target_dir, "/", i);
+            binary(compiler, entry, stage, executable, release, p.root);
+            var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
+            var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
         }
         print("Passed ", paths.len, " ", cmd, " targets"); return;
     }
@@ -124,14 +136,13 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         let directory = str(p.root, "/target/doc"); platform::require(platform::mkdir(directory), "cannot create documentation directory");
         let output = str(directory, "/", p.name, ".goose"); platform::save(output, text); print(output); return;
     }
-    let action = if cmd == "check" || p.kind == "lib" { "check" } else { "build" };
-    let binary = str(output, "/", p.name);
-    var packed: u8[>..] = []; let argv: const u8[:][] = [compiler, action, entry, "--offline"]; for a in argv { platform::pack(packed, a); }
-    if action == "build" { platform::pack(packed, "-o"); platform::pack(packed, binary); }
-    if !release { platform::pack(packed, "--debug"); }
-    var captured: u8[>..] = []; let code = platform::spawn(packed, p.root, false, captured); if code != 0 { exit(code); }
+    if cmd == "check" || p.kind == "lib" {
+        let argv: const u8[:][] = [compiler, "check", entry, "--offline"]; platform::run(argv, p.root);
+        platform::require(cmd != "run", "run requires a binary package"); return;
+    }
+    let executable = str(output, "/", p.name); binary(compiler, entry, stage, executable, release, p.root);
     if cmd == "run" {
-        platform::require(p.kind == "bin", "run requires a binary package"); packed.clear(); platform::pack(packed, binary);
-        for a in args { platform::pack(packed, a); } let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+        var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
+        var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
     }
 }

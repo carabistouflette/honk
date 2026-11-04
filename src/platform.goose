@@ -4,6 +4,7 @@ import std;
 import os;
 extern fn real(path: const u8[:], out: u8[>..]&) -> bool = "honk_real";
 extern fn list(path: const u8[:], out: u8[>..]&) -> bool = "honk_list";
+extern fn directory(base: const u8[:], relative: const u8[:]) -> bool = "honk_directory";
 extern fn kind(path: const u8[:]) -> i64 = "honk_kind";
 extern fn mkdir(path: const u8[:]) -> bool = "honk_mkdir";
 extern fn read(path: const u8[:], out: u8[>..]&) -> bool = "honk_read";
@@ -12,6 +13,7 @@ extern fn write(path: const u8[:], data: const u8[:], executable: bool, exclusiv
 extern fn lock(path: const u8[:]) -> i64 = "honk_lock";
 extern fn unlock(fd: i64) = "honk_unlock";
 extern fn spawn(packed: const u8[:], cwd: const u8[:], capture: bool, out: u8[>..]&) -> i64 = "honk_spawn";
+extern fn copy_files(from: const u8[:], to: const u8[:], paths: const u8[:]) -> bool = "honk_copy_files";
 extern fn copy_tree(from: const u8[:], to: const u8[:]) -> bool = "honk_copy";
 extern fn remove_tree(path: const u8[:]) -> bool = "honk_remove";
 fn die(message: u8[:]) {

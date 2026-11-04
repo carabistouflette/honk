@@ -170,6 +170,7 @@ class CLI(unittest.TestCase):
         (p/'src/helper.goose').write_text('fn helper() -> i64 { 42 }')
         self.run_honk('package', '--locked', cwd=p, ok=False)
         self.assertEqual(archive.read_bytes(), original)
+        self.assertFalse((p/'.honk/package/hello-0.1.0/secret.txt').exists())
         main.write_text(saved)
         dest = self.root/'installed binaries'
         self.run_honk('install', '--root', dest, cwd=p)
@@ -299,6 +300,104 @@ class CLI(unittest.TestCase):
         (p/'tests/test.goose').write_text('import helper from ".."; fn main() { assert(helper::value() == 42); }')
         self.run_honk('test', cwd=p)
         self.assertIn('namespace helper', (p/'helper.goose').read_text())
+    def test_binary_output_symlink_cannot_overwrite_outside(self):
+        p = self.new(); output = p/'target/debug'; output.mkdir(parents=True)
+        victim = self.root/'victim'; victim.write_bytes(b'private unchanged marker')
+        (output/'hello').symlink_to(victim)
+        self.run_honk('build', cwd=p, ok=False)
+        self.assertEqual(victim.read_bytes(), b'private unchanged marker')
+    def test_test_binary_does_not_overwrite_application(self):
+        p = self.new('test-0'); (p/'tests').mkdir()
+        (p/'tests/check.goose').write_text('fn main() { print("test program"); }')
+        self.run_honk('build', cwd=p)
+        binary = p/'target/debug/test-0'; original = binary.read_bytes()
+        self.run_honk('test', cwd=p)
+        self.assertEqual(binary.read_bytes(), original)
+        self.assertIn('Hello, Goose!', subprocess.check_output([binary], text=True))
+    def test_closed_standard_descriptors(self):
+        p = self.new()
+        def close_stdin_stdout():
+            os.close(0); os.close(1)
+        proc = subprocess.run([HONK, 'check'], cwd=p,
+                              env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache')},
+                              preexec_fn=close_stdin_stdout, stderr=subprocess.PIPE, timeout=30)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+    def test_failed_compiler_preserves_last_good_binary(self):
+        import sys
+        p = self.new(); self.run_honk('build', cwd=p)
+        binary = p/'target/debug/hello'; original = binary.read_bytes()
+        compiler = self.root/'failing-compiler'
+        version = subprocess.check_output([GOOSE, 'version'], text=True).strip()
+        compiler.write_text('#!'+sys.executable+'\nimport sys\nif "version" in sys.argv: print('+repr(version)+'); sys.exit(0)\nfrom pathlib import Path\nPath(sys.argv[sys.argv.index("-o")+1]).write_bytes(b"partial output")\nsys.exit(9)\n')
+        compiler.chmod(0o755)
+        proc = self.run_honk('build', cwd=p, env={'GOOSE': str(compiler)}, ok=False)
+        self.assertEqual(proc.returncode, 9)
+        self.assertEqual(binary.read_bytes(), original)
+    def test_package_stages_only_tracked_files(self):
+        p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src')
+        os.mkfifo(p/'untracked-pipe')
+        (p/'untracked-link').symlink_to('/does/not/exist')
+        self.run_honk('package', '--frozen', cwd=p)
+        with tarfile.open(p/'target/package/hello-0.1.0.tar.gz') as archive:
+            self.assertNotIn('hello-0.1.0/untracked-pipe', archive.getnames())
+            self.assertNotIn('hello-0.1.0/untracked-link', archive.getnames())
+    def test_cancellation_waits_for_child_cleanup(self):
+        import signal
+        import sys
+        import time
+        p = self.new(); marker = self.root/'child'; compiler = self.root/'slow-compiler'
+        version = subprocess.check_output([GOOSE, 'version'], text=True).strip()
+        compiler.write_text('#!'+sys.executable+'\nimport os,signal,sys,time\nfrom pathlib import Path\nif "version" in sys.argv: print('+repr(version)+'); sys.exit(0)\nm=Path(os.environ["TEST_MARKER"])\ndef stop(sig, frame):\n m.with_suffix(".stopping").write_text("stopping")\n time.sleep(0.3)\n m.with_suffix(".done").write_text("done")\n sys.exit(0)\nsignal.signal(signal.SIGTERM, stop)\nm.write_text(str(os.getpid()))\nwhile True: time.sleep(1)\n')
+        compiler.chmod(0o755)
+        proc = subprocess.Popen([HONK, 'check'], cwd=p, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                                env={**os.environ, 'GOOSE': str(compiler), 'HONK_HOME': str(self.root/'cache'), 'TEST_MARKER': str(marker)})
+        child = None
+        try:
+            deadline = time.monotonic()+10
+            while not marker.exists() and time.monotonic() < deadline: time.sleep(0.01)
+            self.assertTrue(marker.exists(), 'compiler never started'); child = int(marker.read_text())
+            proc.send_signal(signal.SIGTERM)
+            stdout, stderr = proc.communicate(timeout=10)
+            self.assertEqual(proc.returncode, 143, stdout+stderr)
+            self.assertTrue(marker.with_suffix('.done').exists(), 'parent exited before child cleanup')
+            with self.assertRaises(ProcessLookupError): os.kill(child, 0)
+            child = None
+            self.run_honk('clean', cwd=p)
+        finally:
+            if proc.poll() is None: proc.kill(); proc.communicate()
+            if child:
+                try: os.kill(child, signal.SIGKILL)
+                except ProcessLookupError: pass
+            proc.communicate(timeout=5)
+    def test_package_ignores_ambient_git_index(self):
+        p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src')
+        alternate = self.root/'alternate-index'; shutil.copyfile(p/'.git/index', alternate)
+        (p/'secret.txt').write_text('not tracked in the project index')
+        subprocess.run(['git', '-C', str(p), 'add', 'secret.txt'],
+                       env={**os.environ, 'GIT_INDEX_FILE': str(alternate)}, check=True)
+        self.run_honk('package', '--frozen', cwd=p, env={'GIT_INDEX_FILE': str(alternate)})
+        with tarfile.open(p/'target/package/hello-0.1.0.tar.gz') as archive:
+            self.assertNotIn('hello-0.1.0/secret.txt', archive.getnames())
+    def test_workspace_clean_rejects_symlink_members(self):
+        outside = self.new('outside'); workspace = self.root/'workspace'; workspace.mkdir()
+        (workspace/'link').symlink_to(outside, target_is_directory=True)
+        (workspace/'nested').symlink_to(self.root, target_is_directory=True)
+        for member in ['link', 'nested/outside']:
+            with self.subTest(member=member):
+                target = outside/'target'; target.mkdir(exist_ok=True)
+                victim = target/'keep'; victim.write_text('outside workspace')
+                (workspace/'Honk.toml').write_text('[workspace]\nmembers=['+json.dumps(member)+']')
+                self.run_honk('clean', '--workspace', cwd=workspace, ok=False)
+                self.assertEqual(victim.read_text(), 'outside workspace')
+    def test_add_rejects_invalid_utf8_without_changing_manifest(self):
+        p = self.new(); original = (p/'Honk.toml').read_bytes()
+        proc = subprocess.run([HONK, 'add', 'helper', '--path', b'\xff'], cwd=p,
+                              env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache')},
+                              capture_output=True, timeout=10)
+        self.assertNotEqual(proc.returncode, 0)
+        self.assertEqual((p/'Honk.toml').read_bytes(), original)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

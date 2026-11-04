@@ -77,6 +77,7 @@ fn validate_dependency(dep: Dependency&) {
         for c in dep.rev { platform::require(c > 32 && c != 127 && c != ':' && c != '\\', "invalid Git ref"); }
     } else { platform::require(dep.rev.len == 0, "path dependency cannot specify rev"); }
     for value in [dep.path[..], dep.git[..], dep.rev[..]] {
+        platform::require(toml::valid_utf8(value), "dependency values must be valid UTF-8");
         platform::require(value.len <= 4096, "dependency value exceeds 4096 bytes");
         for c in value { platform::require(c >= 32 && c != 127, "control character in dependency value"); }
     }

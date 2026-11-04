@@ -57,6 +57,7 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
     if options.has("workspace") || p.name.len == 0 || options.has("package") {
         platform::require(p.members.len > 0, "manifest has no workspace members"); var selected = 0;
         for member in p.members {
+            platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
             var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
             platform::require(child.members.len == 0, "nested workspaces are not supported");
             if options.has("package") && options.get("package") != child.name { continue; }

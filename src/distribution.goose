@@ -15,9 +15,7 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
     let stage = str(p.root, "/.honk/package"); platform::require(platform::remove_tree(stage), "cannot clear package staging directory");
     let label = str(p.name, "-", p.version); let directory = str(stage, "/", label);
     platform::require(platform::mkdir(directory), "cannot create package staging directory");
-    platform::require(platform::copy_tree(p.root, directory), "cannot stage package sources");
-    // Git's tracked file set defines a package. Never copy ignored/untracked local secrets.
-    // copy_tree above validates all source entries before any archive operation.
+    // Only tracked paths enter staging; untracked files and secrets are never copied.
     let staged = platform::git(["-C", p.root, "ls-files", "--stage", "-z"], p.root);
     var record = 0;
     for c, i in staged {
@@ -40,6 +38,7 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
         names.append(label); names.push('/'); names.append(name); names.push(0);
     }
     platform::require(manifest_found && lock_found, "track Honk.toml and Honk.lock before packaging");
+    platform::require(platform::copy_files(p.root, directory, tracked), "cannot copy tracked regular package files safely");
     platform::save(list, names);
     let output = str(p.root, "/target/package"); platform::require(platform::mkdir(output), "cannot create package output directory");
     let archive = str(output, "/", label, ".tar.gz"); let temp = str(stage, "/archive.tar.gz");

@@ -211,6 +211,13 @@ int64_t honk_lock(hs s) {
   int fd = open(p, O_CREAT | O_RDWR | O_NOFOLLOW | O_CLOEXEC, 0600);
   if (fd < 0)
     return -1;
+  if (fd <= STDERR_FILENO) {
+    int moved = fcntl(fd, F_DUPFD_CLOEXEC, STDERR_FILENO + 1);
+    close(fd);
+    fd = moved;
+    if (fd < 0)
+      return -1;
+  }
   struct stat st;
   if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode) ||
       flock(fd, LOCK_EX | LOCK_NB) < 0) {
@@ -222,6 +229,59 @@ int64_t honk_lock(hs s) {
 void honk_unlock(int64_t fd) {
   if (fd >= 0)
     close((int)fd);
+}
+// A synchronous runner retains its project/cache locks until the direct child
+// has exited. Block cancellation across fork so a signal cannot land before the
+// child PID is registered.
+static volatile sig_atomic_t waiting_child = 0;
+static volatile sig_atomic_t interrupted = 0;
+typedef struct {
+  struct sigaction old_int, old_term;
+  sigset_t mask, blocked;
+} signal_guard;
+static void forward_signal(int number) {
+  int saved = errno;
+  interrupted = number;
+  if (waiting_child > 0)
+    kill((pid_t)waiting_child, number);
+  errno = saved;
+}
+static bool guard_begin(signal_guard *guard) {
+  sigemptyset(&guard->blocked);
+  sigaddset(&guard->blocked, SIGINT);
+  sigaddset(&guard->blocked, SIGTERM);
+  if (sigprocmask(SIG_BLOCK, &guard->blocked, &guard->mask) < 0)
+    return false;
+  if (sigaction(SIGINT, NULL, &guard->old_int) < 0 ||
+      sigaction(SIGTERM, NULL, &guard->old_term) < 0) {
+    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
+    return false;
+  }
+  struct sigaction action;
+  memset(&action, 0, sizeof action);
+  sigemptyset(&action.sa_mask);
+  action.sa_handler = forward_signal;
+  if (sigaction(SIGINT, &action, NULL) < 0) {
+    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
+    return false;
+  }
+  if (sigaction(SIGTERM, &action, NULL) < 0) {
+    sigaction(SIGINT, &guard->old_int, NULL);
+    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
+    return false;
+  }
+  waiting_child = 0;
+  interrupted = 0;
+  return true;
+}
+static int guard_end(signal_guard *guard) {
+  waiting_child = 0;
+  sigprocmask(SIG_BLOCK, &guard->blocked, NULL);
+  int received = interrupted;
+  sigaction(SIGINT, &guard->old_int, NULL);
+  sigaction(SIGTERM, &guard->old_term, NULL);
+  sigprocmask(SIG_SETMASK, &guard->mask, NULL);
+  return received;
 }
 // packed argv consists of nonempty NUL-terminated arguments. User empty args
 // are supported.
@@ -256,11 +316,28 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
     return 125;
   }
   if (capture) {
-    fcntl(fds[0], F_SETFD, FD_CLOEXEC);
-    fcntl(fds[1], F_SETFD, FD_CLOEXEC);
+    if (fcntl(fds[0], F_SETFD, FD_CLOEXEC) < 0 ||
+        fcntl(fds[1], F_SETFD, FD_CLOEXEC) < 0) {
+      close(fds[0]);
+      close(fds[1]);
+      free(buf);
+      free(argv);
+      return 125;
+    }
+  }
+  signal_guard guard;
+  if (!guard_begin(&guard)) {
+    if (capture) {
+      close(fds[0]);
+      close(fds[1]);
+    }
+    free(buf);
+    free(argv);
+    return 125;
   }
   pid_t pid = fork();
   if (pid < 0) {
+    guard_end(&guard);
     if (capture) {
       close(fds[0]);
       close(fds[1]);
@@ -270,30 +347,49 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
     return 125;
   }
   if (pid == 0) {
+    guard_end(&guard);
     if (chdir(dir) < 0)
       _exit(125);
     if (capture) {
       close(fds[0]);
-      if (dup2(fds[1], STDOUT_FILENO) < 0)
+      if (fds[1] != STDOUT_FILENO) {
+        if (dup2(fds[1], STDOUT_FILENO) < 0)
+          _exit(125);
+        close(fds[1]);
+      } else if (fcntl(STDOUT_FILENO, F_SETFD, 0) < 0) {
         _exit(125);
-      close(fds[1]);
+      }
     }
     // Disable implicit Git configuration, interactive prompts, and repository
     // hooks.
     if (strcmp(argv[0], "git") == 0) {
-      setenv("GIT_CONFIG_NOSYSTEM", "1", 1);
-      setenv("GIT_CONFIG_GLOBAL", "/dev/null", 1);
-      setenv("GIT_TERMINAL_PROMPT", "0", 1);
-      setenv("GIT_ALLOW_PROTOCOL", "https", 1);
-      unsetenv("GIT_TEMPLATE_DIR");
-      unsetenv("GIT_DIR");
-      unsetenv("GIT_WORK_TREE");
-      unsetenv("GIT_CONFIG_COUNT");
-      unsetenv("GIT_CONFIG_PARAMETERS");
+      if (setenv("GIT_CONFIG_NOSYSTEM", "1", 1) ||
+          setenv("GIT_CONFIG_GLOBAL", "/dev/null", 1) ||
+          setenv("GIT_TERMINAL_PROMPT", "0", 1) ||
+          setenv("GIT_ALLOW_PROTOCOL", "https", 1))
+        _exit(125);
+      const char *context[] = {"GIT_TEMPLATE_DIR",
+                               "GIT_DIR",
+                               "GIT_WORK_TREE",
+                               "GIT_COMMON_DIR",
+                               "GIT_INDEX_FILE",
+                               "GIT_OBJECT_DIRECTORY",
+                               "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+                               "GIT_NAMESPACE",
+                               "GIT_SHALLOW_FILE",
+                               "GIT_CONFIG_COUNT",
+                               "GIT_CONFIG_PARAMETERS",
+                               "GIT_CONFIG",
+                               "GIT_REPLACE_REF_BASE"};
+      for (size_t i = 0; i < sizeof context / sizeof context[0]; i++)
+        if (unsetenv(context[i]))
+          _exit(125);
     }
     execvp(argv[0], argv);
     _exit(errno == ENOENT ? 127 : 126);
   }
+  waiting_child = (sig_atomic_t)pid;
+  sigprocmask(SIG_SETMASK, &guard.mask, NULL);
   free(buf);
   free(argv);
   bool overflow = false;
@@ -305,7 +401,12 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
       ssize_t n = read(fds[0], b, sizeof b);
       if (n < 0 && errno == EINTR)
         continue;
-      if (n <= 0)
+      if (n < 0) {
+        overflow = true;
+        kill(pid, SIGKILL);
+        break;
+      }
+      if (!n)
         break;
       total += (size_t)n;
       if (total > HCAP) {
@@ -317,11 +418,27 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
     }
     close(fds[0]);
   }
+  // Observe completion without reaping first. A zombie reserves its PID until
+  // cancellation is blocked, preventing a handler from signalling a reused PID.
+  siginfo_t completion;
+  while (waitid(P_PID, (id_t)pid, &completion, WEXITED | WNOWAIT) < 0) {
+    if (errno != EINTR) {
+      guard_end(&guard);
+      return 125;
+    }
+  }
+  sigprocmask(SIG_BLOCK, &guard.blocked, NULL);
+  waiting_child = 0;
   int status;
   while (waitpid(pid, &status, 0) < 0) {
-    if (errno != EINTR)
+    if (errno != EINTR) {
+      guard_end(&guard);
       return 125;
+    }
   }
+  int cancellation = guard_end(&guard);
+  if (cancellation)
+    return 128 + cancellation;
   if (overflow)
     return 125;
   return WIFEXITED(status)     ? WEXITSTATUS(status)
@@ -333,6 +450,165 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
 static bool skip(const char *n) {
   return !strcmp(n, ".git") || !strcmp(n, "target") || !strcmp(n, ".honk") ||
          !strcmp(n, ".toolchain") || !strcmp(n, ".build");
+}
+static bool copy_regular(int srcdir, int dstdir, const char *name,
+                         uint64_t *bytes) {
+  int src =
+      openat(srcdir, name, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+  if (src < 0)
+    return false;
+  struct stat st;
+  bool ok = fstat(src, &st) == 0 && S_ISREG(st.st_mode) && st.st_size >= 0 &&
+            (uint64_t)st.st_size <= 268435456 - *bytes;
+  if (!ok) {
+    close(src);
+    return false;
+  }
+  *bytes += (uint64_t)st.st_size;
+  int dst =
+      openat(dstdir, name, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW | O_CLOEXEC,
+             st.st_mode & 0111 ? 0755 : 0644);
+  if (dst < 0) {
+    close(src);
+    return false;
+  }
+  char buf[65536];
+  uint64_t actual = 0;
+  while (ok) {
+    ssize_t count = read(src, buf, sizeof buf);
+    if (count < 0 && errno == EINTR)
+      continue;
+    if (count < 0) {
+      ok = false;
+      break;
+    }
+    if (!count)
+      break;
+    actual += (uint64_t)count;
+    if (actual > (uint64_t)st.st_size) {
+      ok = false;
+      break;
+    }
+    ssize_t offset = 0;
+    while (offset < count) {
+      ssize_t written = write(dst, buf + offset, (size_t)(count - offset));
+      if (written < 0 && errno == EINTR)
+        continue;
+      if (written <= 0) {
+        ok = false;
+        break;
+      }
+      offset += written;
+    }
+  }
+  ok = ok && actual == (uint64_t)st.st_size;
+  close(src);
+  if (close(dst) < 0)
+    ok = false;
+  return ok;
+}
+// Copy a caller-validated NUL-delimited file set without traversing symlinks.
+// Each path is checked again at the native boundary and walked relative to held
+// descriptors.
+static int relative_directory(int base, char *relative, bool create) {
+  int current = fcntl(base, F_DUPFD_CLOEXEC, 0);
+  if (current < 0)
+    return -1;
+  if (!*relative)
+    return current;
+  char *part = relative;
+  unsigned depth = 0;
+  for (;;) {
+    char *slash = strchr(part, '/');
+    if (slash)
+      *slash = 0;
+    if (!*part || !strcmp(part, ".") || !strcmp(part, "..") || ++depth > 64) {
+      close(current);
+      return -1;
+    }
+    if (create && mkdirat(current, part, 0700) < 0 && errno != EEXIST) {
+      close(current);
+      return -1;
+    }
+    int next =
+        openat(current, part, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    close(current);
+    if (next < 0)
+      return -1;
+    current = next;
+    if (!slash)
+      return current;
+    *slash = '/';
+    part = slash + 1;
+  }
+}
+bool honk_directory(hs base, hs relative) {
+  char p[HPATH], q[HPATH];
+  if (!path(base, p) || !path(relative, q) || q[0] == '/')
+    return false;
+  int root = open(p, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+  if (root < 0)
+    return false;
+  int directory = relative_directory(root, q, false);
+  close(root);
+  if (directory < 0)
+    return false;
+  close(directory);
+  return true;
+}
+static bool copy_selected_path(int source, int destination, char *path,
+                               uint64_t *bytes) {
+  char *name = strrchr(path, '/');
+  char *parents = path;
+  if (name) {
+    *name = 0;
+    name++;
+  } else {
+    name = path;
+    parents = "";
+  }
+  if (!*name || !strcmp(name, ".") || !strcmp(name, ".."))
+    return false;
+  int src = relative_directory(source, parents, false);
+  if (src < 0)
+    return false;
+  int dst = relative_directory(destination, parents, true);
+  bool ok = dst >= 0 && copy_regular(src, dst, name, bytes);
+  close(src);
+  if (dst >= 0)
+    close(dst);
+  return ok;
+}
+
+bool honk_copy_files(hs from, hs to, hs packed) {
+  char p[HPATH], q[HPATH];
+  if (!path(from, p) || !path(to, q) || packed.len < 1 || packed.len > HCAP ||
+      packed.data[packed.len - 1] != 0)
+    return false;
+  int src = open(p, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+  int dst = open(q, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+  if (src < 0 || dst < 0) {
+    if (src >= 0)
+      close(src);
+    if (dst >= 0)
+      close(dst);
+    return false;
+  }
+  bool ok = true;
+  uint64_t bytes = 0;
+  size_t files = 0, start = 0;
+  for (size_t i = 0; ok && i < (size_t)packed.len; i++) {
+    if (packed.data[i])
+      continue;
+    hs entry = {packed.data + start, (int64_t)(i - start)};
+    char relative[HPATH];
+    ok = ++files <= 100000 && path(entry, relative) && relative[0] != '/' &&
+         copy_selected_path(src, dst, relative, &bytes);
+    start = i + 1;
+  }
+  close(src);
+  close(dst);
+  return ok;
 }
 static bool tree_copy(int src, int dst, size_t *files, uint64_t *bytes,
                       int depth) {
@@ -374,49 +650,7 @@ static bool tree_copy(int src, int dst, size_t *files, uint64_t *bytes,
       if (b >= 0)
         close(b);
     } else if (S_ISREG(st.st_mode)) {
-      if (st.st_size < 0 || (uint64_t)st.st_size > 268435456 - *bytes) {
-        ok = false;
-        break;
-      }
-      *bytes += (uint64_t)st.st_size;
-      int a = openat(src, n, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
-      int b =
-          openat(dst, n, O_WRONLY | O_CREAT | O_TRUNC | O_NOFOLLOW | O_CLOEXEC,
-                 st.st_mode & 0111 ? 0755 : 0644);
-      ok = a >= 0 && b >= 0;
-      char buf[65536];
-      uint64_t actual = 0;
-      while (ok) {
-        ssize_t nr = read(a, buf, sizeof buf);
-        if (nr < 0 && errno == EINTR)
-          continue;
-        if (nr < 0) {
-          ok = false;
-          break;
-        }
-        if (!nr)
-          break;
-        actual += (uint64_t)nr;
-        if (actual > (uint64_t)st.st_size) {
-          ok = false;
-          break;
-        }
-        ssize_t off = 0;
-        while (off < nr) {
-          ssize_t nw = write(b, buf + off, (size_t)(nr - off));
-          if (nw < 0 && errno == EINTR)
-            continue;
-          if (nw <= 0) {
-            ok = false;
-            break;
-          }
-          off += nw;
-        }
-      }
-      if (a >= 0)
-        close(a);
-      if (b >= 0 && close(b) < 0)
-        ok = false;
+      ok = copy_regular(src, dst, n, bytes);
     } else
       ok = false;
   }
