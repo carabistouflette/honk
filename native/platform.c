@@ -1,5 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 // POSIX operations missing from the pinned Goose standard library. No shell.
+#ifndef _GNU_SOURCE
+#define _GNU_SOURCE
+#endif
 #define _POSIX_C_SOURCE 200809L
 #define _XOPEN_SOURCE 700
 #include "goose.h"
@@ -169,17 +172,20 @@ static bool read_bounded(hs s, gs_rref out, size_t limit) {
 }
 bool honk_read(hs s, gs_rref out) { return read_bounded(s, out, HCAP); }
 
-bool honk_write(hs s, hs data, bool executable, bool exclusive) {
+static bool write_atomic(hs s, hs data, bool executable, bool exclusive,
+                         bool durable) {
   char p[HPATH], t[HPATH];
   if (!path(s, p) || snprintf(t, sizeof t, "%s.tmp-XXXXXX", p) >= (int)sizeof t)
     return false;
   struct stat st;
-  if (lstat(p, &st) == 0 && !S_ISREG(st.st_mode))
+  bool exists = lstat(p, &st) == 0;
+  if (exists && !S_ISREG(st.st_mode))
     return false;
+  mode_t mode = executable ? 0755 : exists ? st.st_mode & 0777 : 0600;
   int fd = mkstemp(t);
   if (fd < 0)
     return false;
-  bool ok = fchmod(fd, executable ? 0755 : 0644) == 0;
+  bool ok = fchmod(fd, mode) == 0;
   size_t off = 0;
   while (ok && off < (size_t)data.len) {
     ssize_t n = write(fd, data.data + off, (size_t)data.len - off);
@@ -191,7 +197,7 @@ bool honk_write(hs s, hs data, bool executable, bool exclusive) {
     }
     off += (size_t)n;
   }
-  if (ok)
+  if (ok && durable)
     ok = fsync(fd) == 0;
   if (close(fd) < 0)
     ok = false;
@@ -203,6 +209,12 @@ bool honk_write(hs s, hs data, bool executable, bool exclusive) {
   }
   unlink(t);
   return ok;
+}
+bool honk_write(hs s, hs data, bool executable, bool exclusive) {
+  return write_atomic(s, data, executable, exclusive, true);
+}
+bool honk_write_scratch(hs s, hs data) {
+  return write_atomic(s, data, false, false, false);
 }
 int64_t honk_lock(hs s) {
   char p[HPATH];
@@ -480,6 +492,29 @@ static bool copy_regular(int srcdir, int dstdir, const char *name,
   }
   char buf[65536];
   uint64_t actual = 0;
+#if defined(__linux__) && !defined(HONK_PORTABLE_COPY)
+  // Large files can use kernel-assisted copying, including CoW on supporting
+  // filesystems. Both paths retain the same descriptor, file-type,
+  // logical-byte, and exact-length checks.
+  if ((uint64_t)st.st_size >= sizeof buf) {
+    while (actual < (uint64_t)st.st_size) {
+      ssize_t count = copy_file_range(
+          src, NULL, dst, NULL, (size_t)((uint64_t)st.st_size - actual), 0);
+      if (count < 0 && errno == EINTR)
+        continue;
+      if (count < 0) {
+        if (errno != EXDEV && errno != ENOSYS && errno != EOPNOTSUPP &&
+            errno != EINVAL && errno != EPERM)
+          ok = false;
+        break;
+      }
+      if (!count)
+        break;
+      actual += (uint64_t)count;
+    }
+  }
+#endif
+
   while (ok) {
     ssize_t count = read(src, buf, sizeof buf);
     if (count < 0 && errno == EINTR)

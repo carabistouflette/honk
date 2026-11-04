@@ -10,6 +10,7 @@ extern fn mkdir(path: const u8[:]) -> bool = "honk_mkdir";
 extern fn read(path: const u8[:], out: u8[>..]&) -> bool = "honk_read";
 extern fn install(from: const u8[:], to: const u8[:], force: bool) -> bool = "honk_install";
 extern fn write(path: const u8[:], data: const u8[:], executable: bool, exclusive: bool) -> bool = "honk_write";
+extern fn write_scratch(path: const u8[:], data: const u8[:]) -> bool = "honk_write_scratch";
 extern fn lock(path: const u8[:]) -> i64 = "honk_lock";
 extern fn unlock(fd: i64) = "honk_unlock";
 extern fn spawn(packed: const u8[:], cwd: const u8[:], capture: bool, out: u8[>..]&) -> i64 = "honk_spawn";
@@ -34,6 +35,8 @@ fn load(path: u8[:]) -> u8[>..] {
     var out: u8[>..] = []; require(read(path, out), str("cannot read regular file (limit 1 MiB): ", path)); return out;
 }
 fn save(path: u8[:], data: u8[:]) { require(write(path, data, false, false), str("cannot atomically write: ", path)); }
+// Only for replaceable files under private staging directories; persistent metadata uses save.
+fn save_scratch(path: u8[:], data: u8[:]) { require(write_scratch(path, data), str("cannot write temporary file: ", path)); }
 fn pack(out: u8[>..]&, s: u8[:]) {
     for c in s { if c == 0 { die("NUL byte in process argument"); } }
     out.append(s); out.push(0);

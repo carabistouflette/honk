@@ -15,5 +15,5 @@ jobs:
           key: goose-${{ runner.os }}-${{ hashFiles('GOOSE_REVISION', 'scripts/setup-goose.sh') }}
       - run: make setup
       - run: make check test security
-      - run: make sanitize
+      - run: make sanitize portable
       - run: make bench

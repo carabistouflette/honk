@@ -4,6 +4,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import random
 import statistics
 import subprocess
 import tempfile
@@ -16,8 +17,9 @@ baseline = os.environ.get('HONK_BASELINE')
 if baseline:
     report['baseline'] = baseline
     report['baseline_revision'] = os.environ.get('HONK_BASELINE_REVISION', 'unspecified')
-with tempfile.TemporaryDirectory(prefix='honk audit perf ') as directory:
+with tempfile.TemporaryDirectory(prefix='honk audit perf ', dir=os.environ.get('AUDIT_TEMP_ROOT')) as directory:
     root = Path(directory)
+    report['filesystem'] = subprocess.check_output(['stat','-f','-c','%T',str(root)],text=True).strip()
     env = {**os.environ, 'GOOSE': goose, 'HONK_HOME': str(root/'cache')}
     def run(*args, cwd=root, binary=honk):
         subprocess.run([binary, *args], cwd=cwd, env=env, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=90)
@@ -40,7 +42,11 @@ with tempfile.TemporaryDirectory(prefix='honk audit perf ') as directory:
     dev_graph = root/'dev_graph'
     with (dev_graph/'Honk.toml').open('a') as stream: stream.write('p000 = { path = "../libs/p000" }\n')
     run('check', cwd=graph)
-    for name, cwd in [('wide_check', wide), ('dense_graph_check', graph), ('dense_dev_graph_check', dev_graph)]:
+    run('new', 'assets')
+    assets = root/'assets'; (assets/'data').mkdir()
+    payload = random.Random(0x484F4E4B).randbytes(262144)
+    for i in range(128): (assets/'data'/f'asset{i:03}.bin').write_bytes(payload)
+    for name, cwd in [('wide_check', wide), ('dense_graph_check', graph), ('dense_dev_graph_check', dev_graph), ('asset_32mib_check', assets)]:
         binaries = {'after': honk}
         if baseline: binaries['before'] = baseline
         samples = {key: [] for key in binaries}

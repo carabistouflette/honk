@@ -39,7 +39,7 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
     }
     platform::require(manifest_found && lock_found, "track Honk.toml and Honk.lock before packaging");
     platform::require(platform::copy_files(p.root, directory, tracked), "cannot copy tracked regular package files safely");
-    platform::save(list, names);
+    platform::save_scratch(list, names);
     let output = str(p.root, "/target/package"); platform::require(platform::mkdir(output), "cannot create package output directory");
     let archive = str(output, "/", label, ".tar.gz"); let temp = str(stage, "/archive.tar.gz");
     platform::run(["tar", "--create", "--gzip", "--file", temp, "--directory", stage, "--format=gnu", "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--null", "--verbatim-files-from", "--no-recursion", "--files-from", list], p.root);

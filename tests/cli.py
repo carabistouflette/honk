@@ -452,6 +452,33 @@ class CLI(unittest.TestCase):
         self.assertLess(len(manifest), 1048576); (p/'Honk.toml').write_text(manifest)
         self.run_honk('fetch', cwd=p, ok=False)
         self.assertEqual((p/'Honk.lock').read_bytes(), original)
+    def test_binary_source_snapshots_are_independent(self):
+        import random
+        import stat
+        p = self.new(); data = p/'data'; data.mkdir()
+        rng = random.Random(0x484F4E4B)
+        payloads = {f'asset{i}.bin': rng.randbytes(size) for i,size in enumerate([0,1,65535,65536,65537,1048576,2097155])}
+        for name, content in payloads.items(): (data/name).write_bytes(content)
+        (data/'tool').write_bytes(b'executable asset'); (data/'tool').chmod(0o755)
+        self.run_honk('check', cwd=p)
+        staged = p/'.honk/stage/app/data'
+        for name, content in payloads.items(): self.assertEqual((staged/name).read_bytes(), content)
+        self.assertTrue(stat.S_IMODE((staged/'tool').stat().st_mode) & stat.S_IXUSR)
+        source = data/'asset6.bin'; original = payloads['asset6.bin']
+        with source.open('r+b') as stream: stream.write(b'changed')
+        self.assertEqual((staged/'asset6.bin').read_bytes(), original)
+        self.run_honk('check', '--frozen', cwd=p)
+        self.assertEqual((staged/'asset6.bin').read_bytes(), source.read_bytes())
+    def test_oversized_staging_file_fails_before_copy(self):
+        p = self.new()
+        with (p/'oversized.bin').open('wb') as stream: stream.truncate(268435457)
+        self.run_honk('check', cwd=p, ok=False)
+        self.assertFalse((p/'.honk/stage/app/oversized.bin').exists())
+    def test_manifest_update_preserves_private_permissions(self):
+        import stat
+        p = self.new(); manifest = p/'Honk.toml'; manifest.chmod(0o600)
+        self.run_honk('add', 'helper', '--path', '.', cwd=p)
+        self.assertEqual(stat.S_IMODE(manifest.stat().st_mode), 0o600)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

@@ -43,7 +43,7 @@ fn rewrite(text: u8[:], g: deps::Graph&, directory: u8[:], original: u8[:], p: m
             let resolved = platform::absolute(path);
             platform::require(resolved == p.root, str("undeclared source import: ", req.name));
             let alias = str(stage, "/", req.name, ".goose");
-            if p.entry != str(req.name, ".goose") && !file_exists(alias) { platform::save(alias, str("import .", module(p.entry), ";\n")); }
+            if p.entry != str(req.name, ".goose") && !file_exists(alias) { platform::save_scratch(alias, str("import .", module(p.entry), ";\n")); }
         }
         out.append(text[start..req.start]);
         out.append("from "); let mapped = if id >= 0 { str(directory, "/deps/", req.name) } else { str(stage) }; manifest::quoted(out, mapped);
@@ -64,7 +64,7 @@ fn prepare(p: manifest::Project&, g: deps::Graph&) -> u8[>..] {
         if !n.enabled { continue; }
         let to = str(directory, "/deps/", n.name); platform::require(platform::mkdir(to), "cannot create dependency staging directory");
         platform::require(platform::copy_tree(n.directory, to), str("cannot stage dependency: ", n.name));
-        if n.entry != str(n.name, ".goose") { platform::save(str(to, "/", n.name, ".goose"), str("import .", module(n.entry), ";\n")); }
+        if n.entry != str(n.name, ".goose") { platform::save_scratch(str(to, "/", n.name, ".goose"), str("import .", module(n.entry), ";\n")); }
     }
     // Map every sourced import to Honk's resolved graph, including legacy test roots.
     for n in g.nodes {
@@ -73,14 +73,14 @@ fn prepare(p: manifest::Project&, g: deps::Graph&) -> u8[>..] {
         for path in paths {
             let text = platform::load(str(to, "/", path));
             let transformed = rewrite(text, g, directory, project::parent(str(n.directory, "/", path)), p, app);
-            if transformed != text { platform::save(str(to, "/", path), transformed); }
+            if transformed != text { platform::save_scratch(str(to, "/", path), transformed); }
         }
     }
     var paths: u8[][>..] = []; files(app, "", paths);
     for path in paths {
         let text = platform::load(str(app, "/", path));
         let transformed = rewrite(text, g, directory, project::parent(str(p.root, "/", path)), p, app);
-        if transformed != text { platform::save(str(app, "/", path), transformed); }
+        if transformed != text { platform::save_scratch(str(app, "/", path), transformed); }
     }
     return app;
 }
@@ -97,7 +97,7 @@ fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
         var found = false; for req in declared { if req.name == n.name { found = true; } }
         if !found { out.append("import "); out.append(n.name); out.append(" from "); manifest::quoted(out, str(project::parent(stage), "/deps/", n.name)); out.append(";\n"); }
     }
-    out.append(source); if out != source { platform::save(file, out); } return file;
+    out.append(source); if out != source { platform::save_scratch(file, out); } return file;
 }
 fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: bool, root: u8[:]) {
     let kind = platform::kind(output);
