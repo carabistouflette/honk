@@ -28,6 +28,9 @@ typedef struct {
 } hs;
 #define HPATH 4096
 #define HCAP (1024 * 1024)
+bool honk_flush_stdout(void) {
+  return fflush(stdout) == 0 && !ferror(stdout);
+}
 // Original source remains capped at HCAP. Generated import mappings can add
 // 256 JSON-escaped paths (at most six bytes per path byte, plus import names).
 #define HSTAGED_CAP (8 * HCAP)

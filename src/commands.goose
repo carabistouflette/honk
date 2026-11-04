@@ -44,7 +44,9 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     }
     let offline = options.has("offline") || options.has("frozen");
     if cmd == "toolchain" {
-        let binary = toolchain::compiler(p, cache, offline); let argv: const u8[:][] = [binary, "version"]; platform::run(argv, p.root); platform::unlock(lock); return;
+        let binary = toolchain::compiler(p, cache, offline); let argv: const u8[:][] = [binary, "version"];
+        let text, status = platform::command(argv, p.root, true); write_stdout(text); if status != 0 { exit(status); }
+        platform::unlock(lock); return;
     }
     if cmd == "fmt" {
         let compiler = toolchain::compiler(p, cache, offline);

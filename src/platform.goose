@@ -2,6 +2,7 @@
 namespace platform;
 import std;
 import os;
+extern fn flush_stdout() -> bool = "honk_flush_stdout";
 extern fn real(path: const u8[:], out: u8[>..]&) -> bool = "honk_real";
 extern fn list(path: const u8[:], out: u8[>..]&) -> bool = "honk_list";
 extern fn directory(base: const u8[:], relative: const u8[:]) -> bool = "honk_directory";
