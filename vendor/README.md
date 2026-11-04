@@ -1,8 +1,14 @@
 # Vendored libraries
 
-Unmodified Apache-2.0 Goose sources from the local coordination workspace:
+Honk includes unmodified Apache-2.0 snapshots of goose-toml and goose-argparse.
+Exact upstream URLs, full commits, source/license SHA-256 values and included
+files are recorded in [manifest.json](manifest.json). Attribution and license
+links are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-- goose-toml: carabistouflette/goose-toml, commit fb055e32098c3de312896952aa86d18edafdaf98, `toml.goose`.
-- goose-argparse: carabistouflette/goose-argparse; exact source identity recorded in `goose-argparse/REVISION`.
+`python3 scripts/check-vendor.py` checks source and license hashes without a
+network connection or another checkout. This is a consistency check against
+reviewed repository metadata, not an upstream signature verification service.
 
-Each directory includes its upstream license. Vendoring keeps a clean standalone checkout buildable before all libraries have public releases. Updates are explicit, reviewed commits. No consumer process performs network access to import these libraries.
+Vendoring makes Honk's own libraries available in a standalone clone. Compiler
+bootstrap still fetches the pinned Goose compiler unless an existing matching
+GOOSE executable is supplied. Library updates are explicit reviewed commits.

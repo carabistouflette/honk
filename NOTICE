@@ -1,0 +1,6 @@
+Honk
+Copyright 2026 Honk contributors
+
+Licensed under the Apache License, Version 2.0.
+This product includes Apache-2.0 code from goose-toml and goose-argparse.
+See THIRD_PARTY_NOTICES.md and vendor/ for source provenance and license copies.
