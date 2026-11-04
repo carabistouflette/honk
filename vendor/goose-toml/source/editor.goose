@@ -119,16 +119,16 @@ fn newline(source: const u8[:]) -> const u8[:] {
     }
     return "\n";
 }
-fn validate_output(output: const u8[:], version: toml::Version) -> u8[>..] {
-    var doc = toml::Document { .. };
+// Terminal validation: source node IDs and arena views are no longer read.
+fn validate_output(output: const u8[:], doc: toml::Document&, version: toml::Version) -> u8[>..] {
     return toml::parse_into(output, doc, version);
 }
-fn splice(source: const u8[:], start: i64, end: i64, replacement: const u8[:], version: toml::Version, profile: Profile) -> u8[>..], u8[>..] {
+fn splice(source: const u8[:], start: i64, end: i64, replacement: const u8[:], doc: toml::Document&, version: toml::Version, profile: Profile) -> u8[>..], u8[>..] {
     let kept = source.len - (end - start);
     if replacement.len > MAX_BYTES - kept { return [], owned(if legacy(profile) { "toml-edit: output exceeds 1 MiB" } else { "toml source: output exceeds 1 MiB" }); }
     var output: u8[>..] = [];
     output.append(source[..start]); output.append(replacement); output.append(source[end..]);
-    let error = validate_output(output, version);
+    let error = validate_output(output, doc, version);
     if error.len > 0 { return [], owned(error); }
     return output, [];
 }
@@ -163,7 +163,7 @@ fn put_impl(source: const u8[:], path: const u8[:][:], value: const u8[:], versi
     if target >= 0 {
         for statement in statements {
             if !statement.header && statement.node == target {
-                return splice(source, statement.value_start, statement.end, value, version, profile);
+                return splice(source, statement.value_start, statement.end, value, doc, version, profile);
             }
         }
         return [], owned(if legacy(profile) { "toml-edit: replace a complete assignment, not a declared table" } else { "toml source: value is not a directly assigned source span" });
@@ -200,7 +200,7 @@ fn put_impl(source: const u8[:], path: const u8[:][:], value: const u8[:], versi
     if legacy(profile) && (addition.len > MAX_BYTES - 3 || value.len > MAX_BYTES - addition.len - 3 ||
         eol.len > MAX_BYTES - addition.len - 3 - value.len) { return [], owned("toml-edit: output exceeds 1 MiB"); }
     addition.append(" = "); addition.append(value); addition.append(eol);
-    return splice(source, at, at, addition, version, profile);
+    return splice(source, at, at, addition, doc, version, profile);
 }
 // Remove assignment/header token spans belonging to a named subtree. Leading
 // and trailing comments, indentation, and surrounding newlines are retained.
@@ -215,7 +215,7 @@ fn remove_impl(source: const u8[:], path: const u8[:][:], version: toml::Version
     if target < 0 {
         var output = owned(source);
         if legacy(profile) {
-            let error = validate_output(output, version);
+            let error = validate_output(output, doc, version);
             if error.len > 0 { return [], owned(error); }
         }
         return output, [];
@@ -231,7 +231,7 @@ fn remove_impl(source: const u8[:], path: const u8[:][:], version: toml::Version
     }
     if edits == 0 { return [], owned("toml source: value is inside an unsupported inline span"); }
     output.append(source[copied..]);
-    let output_error = validate_output(output, version);
+    let output_error = validate_output(output, doc, version);
     if output_error.len > 0 { return [], owned(output_error); }
     return output, [];
 }

@@ -271,3 +271,27 @@ Honk restored its intentionally ignored SIGCHLD, then restores the fixture's
 original waitable policy before LeakSanitizer starts its own tracing child.
 This avoids autoreaped sanitizer-helper status warnings; it does not weaken
 the application's restoration checks or disable leak detection.
+
+
+## Canonical alpha.3 successor adoption
+
+The current graph pins canonical TOML `fe849141405009e36e1cce6eb479b395eae18f1a`
+and released companion v0.1.1 `f8d1b1664a86b768a6f1375636d9b2c3a440aa31`.
+Only `source/editor.goose` changes among the nine canonical vendor files; the
+companion adapter and both licenses remain byte-identical. Each file is verified
+against its public Git object and recorded SHA-256 in `vendor/manifest.json`.
+
+One isolated fresh-public consumer acceptance tested candidate `44c99ad` on
+Honk `f12d88a`: check/build, five dependency-editing and seven real Git-version
+CLI cases, normal/frozen check and package all passed. The lock stayed unchanged;
+normal and frozen archives matched (127 files, 15 required exports compared, no
+generated state). The companion release has the identical tree
+`a2a9534d317539ab801afd6ba1313abc70fe6e84`, bridging that acceptance to the
+released pin. The acceptance excluded the separate SIGPIPE corrective commit.
+
+Upstream's tested `debe1ab` to released `fe849` bridge changes only approved root
+README/CHANGELOG files. The older `de7` to `fe849` range includes engine work.
+The upstream successor parity/ownership evidence is
+[recorded at the released companion pin](https://github.com/carabistouflette/goose-toml-edit/blob/f8d1b1664a86b768a6f1375636d9b2c3a440aa31/docs/results/adapter-fe849-validation.json).
+Historical timing results remain qualified in their original reports; this
+adoption introduces no new performance claim.

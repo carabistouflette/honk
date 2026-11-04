@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Adopt the released TOML companion v0.1.1 and canonical alpha.3 source profile,
+  preserving legacy dependency editing behavior and exact vendored provenance.
+
 - Protect transferred-child recovery from diagnostic-generated SIGPIPE when
   inherited stderr has no reader. Keep ownership/locks until actual cleanup;
   preserve the caller's SIGPIPE disposition, mask and pre-existing pending signal.
