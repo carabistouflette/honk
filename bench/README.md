@@ -48,3 +48,5 @@ implementation with the first public main and retain every measured workload.
 record the next reviewed source and complete paired samples against `f427cd1`.
 
 [Cache recovery measurements](../docs/CACHE-RECOVERY-AUDIT-2026-11-04.md) retain every paired workload and record CPU3 affinity.
+
+The [process consumer audit](../docs/PROCESS-CONSUMER-2026-11-04.md) records paired real child-launch workloads, all samples and caveats. `bench/process_profile.py` checks source/binary/compiler identities before and after measurement.

@@ -126,3 +126,5 @@ and paired samples against `f427cd1`, including all slower results and remaining
 process-group cancellation limits.
 
 The [generated source/cache recovery audit](docs/CACHE-RECOVERY-AUDIT-2026-11-04.md) records five additional fixes, the 66-case suite, cache migration rules and all paired CPU3 samples against `04f7ddf`.
+
+The [process consumer checkpoint](docs/PROCESS-CONSUMER-2026-11-04.md) records the goose-process migration, signal/ownership fault tests, normal/GCC/Clang/portable validation, review state and paired caller measurements with full provenance.
