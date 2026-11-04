@@ -19,6 +19,9 @@ fn locate(start: u8[:]) -> u8[>..] {
 }
 fn create(path: u8[:], name: u8[:], library: bool, init: bool) {
     platform::require(manifest::package_name(name), "invalid package name");
+    var module_name: u8[>..] = [];
+    for c in name { module_name.push(if c == '-' { '_' } else { c }); }
+    if library { platform::require(manifest::identifier(module_name), "library namespace must be a nonreserved import identifier"); }
     if !init { platform::require(!is_dir(path) && !file_exists(path), "destination already exists"); }
     platform::require(platform::mkdir(path), "cannot create project directory");
     let root = platform::absolute(path);
@@ -31,7 +34,7 @@ fn create(path: u8[:], name: u8[:], library: bool, init: bool) {
     var source: u8[>..] = [];
     if library {
         source.append("// SPDX-License-Identifier: Apache-2.0\nnamespace ");
-        for c in name { source.push(if c == '-' { '_' } else { c }); }
+        source.append(module_name);
         source.append(";\nfn answer() -> i64 { 42 }\n");
     } else { source.append("fn main() { print(\"Hello, Goose!\"); }\n"); }
     platform::require(platform::write(str(root, "/", entry), source, false, true), "cannot create source entry");

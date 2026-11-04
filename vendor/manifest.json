@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "libraries": [
+    {
+      "directory": "goose-toml",
+      "repository": "https://github.com/carabistouflette/goose-toml",
+      "revision": "fb055e32098c3de312896952aa86d18edafdaf98",
+      "license": "Apache-2.0",
+      "files": {
+        "toml.goose": "13545623d05ccebdfe39a81b31a368c245177b246f44323122469903ccab962d",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-argparse",
+      "repository": "https://github.com/carabistouflette/goose-argparse",
+      "revision": "d23af7aff17c6720d17a2e8f6b80bd3bf8f14275",
+      "license": "Apache-2.0",
+      "files": {
+        "argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    }
+  ]
+}

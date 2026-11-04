@@ -479,6 +479,40 @@ class CLI(unittest.TestCase):
         p = self.new(); manifest = p/'Honk.toml'; manifest.chmod(0o600)
         self.run_honk('add', 'helper', '--path', '.', cwd=p)
         self.assertEqual(stat.S_IMODE(manifest.stat().st_mode), 0o600)
+    def test_package_is_deterministic_across_umasks(self):
+        import stat
+        p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)
+        (p/'tool.sh').write_text('#!/bin/sh\nexit 0\n'); (p/'tool.sh').chmod(0o755)
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src', 'tool.sh')
+        results = []
+        for mask in [0o022, 0o077]:
+            proc = subprocess.run([HONK, 'package', '--frozen'], cwd=p,
+                                  env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache')},
+                                  preexec_fn=lambda: os.umask(mask), capture_output=True, timeout=90)
+            self.assertEqual(proc.returncode, 0, proc.stdout+proc.stderr)
+            archive = p/'target/package/hello-0.1.0.tar.gz'; results.append(archive.read_bytes())
+            with tarfile.open(archive) as tar:
+                self.assertEqual(tar.getmember('hello-0.1.0/tool.sh').mode, 0o755)
+                self.assertEqual(tar.getmember('hello-0.1.0/Honk.toml').mode, 0o644)
+        self.assertEqual(*results)
+    def test_package_disables_git_fsmonitor(self):
+        import shlex
+        p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src')
+        marker = self.root/'monitor-ran'; hook = self.root/'monitor'
+        hook.write_text('#!/bin/sh\nprintf invoked >'+shlex.quote(str(marker))+"\nprintf 'token\\0'\n"); hook.chmod(0o755)
+        self.git(p, 'config', 'core.fsmonitor', str(hook))
+        self.run_honk('package', '--frozen', cwd=p)
+        self.assertFalse(marker.exists())
+    def test_library_namespace_is_validated_before_creation(self):
+        for name in ['fn','as','in','defer','reusable','bool','u8','std']:
+            with self.subTest(name=name):
+                self.run_honk('new', name, '--lib', ok=False)
+                self.assertFalse((self.root/name).exists())
+        self.run_honk('init', '--lib', '--name', 'fn', ok=False)
+        self.assertFalse((self.root/'Honk.toml').exists())
+        self.assertFalse((self.root/'src').exists())
+        lib = self.new('my-lib', '--lib'); self.run_honk('check', '--offline', cwd=lib)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

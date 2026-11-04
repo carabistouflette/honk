@@ -5,6 +5,7 @@ setup:
 format:
 	$(GOOSE) format honk.goose src tests
 check:
+	python3 scripts/check-vendor.py
 	$(GOOSE) format --check honk.goose src tests
 	$(GOOSE) check honk.goose
 	$(GOOSE) check tests/core.goose

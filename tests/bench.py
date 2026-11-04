@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Reproducible CLI latency samples, with fixture creation outside timing."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import platform
@@ -11,10 +12,13 @@ import time
 
 honk = os.environ['HONK']
 goose = os.environ['GOOSE']
-report = {'platform': platform.platform(), 'compiler': subprocess.check_output([goose, 'version'], text=True).strip(),
+report = {'binary': Path(honk).name, 'binary_sha256': hashlib.sha256(Path(honk).read_bytes()).hexdigest(), 'platform': platform.platform(), 'compiler': subprocess.check_output([goose, 'version'], text=True).strip(),
           'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
           'dirty': subprocess.run(['git', 'diff', '--quiet', 'HEAD']).returncode != 0,
           'scope': '25 sequential warm local invocations; includes process startup; no network; no timing threshold', 'samples': {}}
+cpuinfo = Path('/proc/cpuinfo')
+report['cpu_model'] = next((line.split(':',1)[1].strip() for line in cpuinfo.read_text().splitlines() if line.startswith('model name')), platform.processor()) if cpuinfo.exists() else platform.processor()
+report['build_method'] = 'make build: Goose default optimization and C backend default -O2; caller-supplied comparison binaries must use the same flags'
 with tempfile.TemporaryDirectory(prefix='honk bench ') as directory:
     env = {**os.environ, 'GOOSE': goose, 'HONK_HOME': directory+'/cache'}
     def run(*args, cwd=directory):

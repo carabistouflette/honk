@@ -490,13 +490,16 @@ static bool copy_regular(int srcdir, int dstdir, const char *name,
     close(src);
     return false;
   }
+  // Staging parents are private. Normalize archived modes independently of
+  // caller umask.
+  ok = fchmod(dst, st.st_mode & 0111 ? 0755 : 0644) == 0;
   char buf[65536];
   uint64_t actual = 0;
 #if defined(__linux__) && !defined(HONK_PORTABLE_COPY)
   // Large files can use kernel-assisted copying, including CoW on supporting
   // filesystems. Both paths retain the same descriptor, file-type,
   // logical-byte, and exact-length checks.
-  if ((uint64_t)st.st_size >= sizeof buf) {
+  if (ok && (uint64_t)st.st_size >= sizeof buf) {
     while (actual < (uint64_t)st.st_size) {
       ssize_t count = copy_file_range(
           src, NULL, dst, NULL, (size_t)((uint64_t)st.st_size - actual), 0);

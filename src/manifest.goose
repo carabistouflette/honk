@@ -18,6 +18,8 @@ fn identifier(s: u8[:]) -> bool {
     }
     for reserved in ["std", "os", "json", "math", "string", "base64", "binary", "csv", "exception", "ffi", "regex", "vec", "rng", "utf8", "thread", "slot_pool", "slice_pool", "simd", "dictionary",
                      "import", "from", "namespace", "struct", "root", "enum", "type", "fn", "thread_fn", "export", "extern", "inline", "recursive",
+                     "pad", "reusable", "in", "block", "defer", "as", "null", "self", "bool", "varint",
+                     "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "f32", "f64",
                      "let", "var", "const", "if", "else", "for", "while", "loop", "match", "return", "break", "continue", "guard", "true", "false"] {
         if s == reserved { return false; }
     }

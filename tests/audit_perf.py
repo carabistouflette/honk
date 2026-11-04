@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Local audit workloads; compare identical fixtures/binaries, never timing gates."""
 import json
+import hashlib
 import os
 from pathlib import Path
 import platform
@@ -12,11 +13,15 @@ import time
 
 honk = os.environ['HONK']
 goose = os.environ['GOOSE']
-report = {'binary': honk, 'platform': platform.platform(), 'revision': subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(), 'compiler': subprocess.check_output([goose,'version'],text=True).strip(), 'dirty': subprocess.run(['git','diff','--quiet','HEAD']).returncode != 0, 'samples': {}}
+report = {'binary': Path(honk).name, 'binary_sha256': hashlib.sha256(Path(honk).read_bytes()).hexdigest(), 'platform': platform.platform(), 'revision': subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(), 'compiler': subprocess.check_output([goose,'version'],text=True).strip(), 'dirty': subprocess.run(['git','diff','--quiet','HEAD']).returncode != 0, 'samples': {}}
 baseline = os.environ.get('HONK_BASELINE')
 if baseline:
-    report['baseline'] = baseline
+    report['baseline'] = Path(baseline).name
+    report['baseline_binary_sha256'] = hashlib.sha256(Path(baseline).read_bytes()).hexdigest()
     report['baseline_revision'] = os.environ.get('HONK_BASELINE_REVISION', 'unspecified')
+cpuinfo = Path('/proc/cpuinfo')
+report['cpu_model'] = next((line.split(':',1)[1].strip() for line in cpuinfo.read_text().splitlines() if line.startswith('model name')), platform.processor()) if cpuinfo.exists() else platform.processor()
+report['build_method'] = 'make build: Goose default optimization and C backend default -O2; caller-supplied comparison binaries must use the same flags'
 with tempfile.TemporaryDirectory(prefix='honk audit perf ', dir=os.environ.get('AUDIT_TEMP_ROOT')) as directory:
     root = Path(directory)
     report['filesystem'] = subprocess.check_output(['stat','-f','-c','%T',str(root)],text=True).strip()
