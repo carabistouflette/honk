@@ -871,6 +871,37 @@ class CLI(unittest.TestCase):
         manifest.write_text(original_manifest)
         linked = self.root/'compiler-link'; linked.symlink_to(GOOSE)
         self.run_honk('check',cwd=p,env={'GOOSE':str(linked)})
+    def test_ambiguous_workspace_selection_never_cleans_multiple_packages(self):
+        a=self.new('alpha'); b=self.new('beta')
+        (b/'Honk.toml').write_text((b/'Honk.toml').read_text().replace('"beta"','"alpha"'))
+        (self.root/'Honk.toml').write_text('[workspace]\nmembers=["alpha","beta"]')
+        for p in (a,b): (p/'target').mkdir();(p/'target/keep').write_text('keep')
+        for args in [('clean','-p','alpha'),('clean','--workspace','-p','alpha'),('metadata','-p','alpha'),('metadata','--workspace','-p','alpha')]:
+            with self.subTest(args=args):
+                result=self.run_honk(*args,ok=False);self.assertIn('ambiguous',result.stderr)
+                self.assertEqual(result.stdout,'')
+                for p in (a,b):self.assertTrue((p/'target/keep').is_file())
+        (b/'Honk.toml').write_text((b/'Honk.toml').read_text().replace('"alpha"','"beta"'))
+        self.run_honk('clean','-p','alpha');self.assertFalse((a/'target').exists());self.assertTrue((b/'target/keep').is_file())
+    def test_empty_install_root_and_unsupported_uninstall_flags_fail_early(self):
+        p=self.new()
+        for args in [('install','--root',''),('uninstall','hello','--root',''),('uninstall','hello','--force'),('uninstall','hello','-p','other'),('uninstall','hello','--manifest-path','Honk.toml'),('uninstall','hello','--workspace')]:
+            with self.subTest(args=args):self.run_honk(*args,cwd=p,ok=False)
+        self.assertFalse((p/'target').exists());self.assertFalse((self.root/'cache').exists())
+    def test_output_failures_do_not_report_success(self):
+        import signal
+        p=self.new();manifest=p/'Honk.toml'
+        manifest.write_text(manifest.read_text().replace('[dependencies]', '[dependencies]\n'+''.join('long'+str(i)+'={path="'+'x'*4096+'"}\n' for i in range(3))))
+        for args in [('version',),('--help',),('metadata',),('toolchain',)]:
+            with self.subTest(args=args), open('/dev/full','wb') as output:
+                result=subprocess.run([HONK,*args],cwd=p,stdout=output,stderr=subprocess.PIPE,timeout=10, env={**os.environ,'HONK_HOME':str(self.root/'cache'),'GOOSE':GOOSE})
+                self.assertNotEqual(result.returncode,0);self.assertIn(b'cannot write standard output',result.stderr)
+        read_fd,write_fd=os.pipe();os.close(read_fd)
+        try:
+            result=subprocess.run([HONK,'metadata'],cwd=p,stdout=write_fd,stderr=subprocess.PIPE,timeout=10,
+                                  preexec_fn=lambda:signal.signal(signal.SIGPIPE,signal.SIG_IGN))
+            self.assertNotEqual(result.returncode,0);self.assertIn(b'cannot write standard output',result.stderr)
+        finally:os.close(write_fd)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

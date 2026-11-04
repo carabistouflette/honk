@@ -16,6 +16,10 @@ fn usage() {
     print("honk 0.1.0-dev — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain version help\n\nUse honk help for project conventions. --help prints this message.");
 }
 fn main() {
+    cli_main();
+    platform::require(platform::flush_stdout(), "cannot write standard output");
+}
+fn cli_main() {
     let argv = args();
     if argv.len < 2 || argv[1] == "help" || argv[1] == "--help" || argv[1] == "-h" { usage(); return; }
     let cmd = argv[1];
@@ -56,13 +60,16 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
     for name in ["build", "run", "check", "test", "bench", "fmt", "fetch", "update", "tree", "clean", "add", "remove", "toolchain", "package", "install", "doc"] { if cmd == name { known = true; } }
     platform::require(known, str("unknown command: ", cmd));
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
-    if options.has("workspace") || p.name.len == 0 || options.has("package") {
+    if options.has("package") {
+        let selected = selected_member(p, options.get("package"));
+        var child = manifest::Project { .. }; manifest::load(selected, child);
+        commands::execute(child, cmd, options, program_args, cache);
+    } else if options.has("workspace") || p.name.len == 0 {
         platform::require(p.members.len > 0, "manifest has no workspace members"); var selected = 0;
         for member in p.members {
             platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
             var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
             platform::require(child.members.len == 0, "nested workspaces are not supported");
-            if options.has("package") && options.get("package") != child.name { continue; }
             commands::execute(child, cmd, options, program_args, cache); selected++;
         }
         platform::require(selected > 0, "no workspace package matched");
@@ -71,39 +78,52 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
 }
 
 fn emit_metadata(p: manifest::Project&, options: const argparse::Result&) {
-    if !options.has("workspace") && !options.has("package") { print(project::metadata(p)); return; }
+    if options.has("package") {
+        let selected = selected_member(p, options.get("package"));
+        var child = manifest::Project { .. }; manifest::load(selected, child);
+        if options.has("workspace") { print("[", project::metadata(child), "]"); } else { print(project::metadata(child)); }
+        return;
+    }
+    if !options.has("workspace") { print(project::metadata(p)); return; }
     platform::require(p.members.len > 0, "manifest has no workspace members");
-    let collection = options.has("workspace"); var selected = 0; var single: u8[>..] = [];
-    if collection { write_stdout("["); }
+    var selected = 0; write_stdout("[");
     for member in p.members {
         platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
         var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
         platform::require(child.members.len == 0, "nested workspaces are not supported");
-        if options.has("package") && options.get("package") != child.name { continue; }
-        if collection {
-            if selected > 0 { write_stdout(","); }
-            write_stdout(project::metadata(child));
-        } else {
-            platform::require(selected == 0, "ambiguous workspace package name"); single = project::metadata(child);
-        }
-        selected++;
+        if selected > 0 { write_stdout(","); }
+        write_stdout(project::metadata(child)); selected++;
     }
-    platform::require(selected > 0, "no workspace package matched");
-    if collection { write_stdout("]\n"); } else { print(single); }
+    platform::require(selected > 0, "no workspace package matched"); write_stdout("]\n");
+}
+
+fn selected_member(p: manifest::Project&, name: u8[:]) -> u8[>..] {
+    platform::require(p.members.len > 0, "manifest has no workspace members");
+    var selected: u8[>..] = [];
+    for member in p.members {
+        platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
+        var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
+        platform::require(child.members.len == 0, "nested workspaces are not supported");
+        if child.name != name { continue; }
+        platform::require(selected.len == 0, "ambiguous workspace package name"); selected = str(child.root);
+    }
+    platform::require(selected.len > 0, "no workspace package matched"); return selected;
 }
 
 fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {
+    platform::require(!options.has("root") || options.get("root").len > 0, "installation root must not be empty");
     platform::require(arguments == 0 || cmd == "run" || cmd == "test" || cmd == "bench", "only run/test/bench accept arguments after --");
     for entry in options.entries {
         let name = entry.name; var allowed = false;
         if name == "help" { allowed = true; }
         else if name == "lib" || name == "name" { allowed = cmd == "new" || cmd == "init"; }
         else if name == "path" || name == "git" || name == "rev" || name == "dev" { allowed = cmd == "add"; }
-        else if name == "root" || name == "force" { allowed = cmd == "install" || cmd == "uninstall"; }
+        else if name == "root" { allowed = cmd == "install" || cmd == "uninstall"; }
+        else if name == "force" { allowed = cmd == "install"; }
         else if name == "release" { allowed = cmd == "build" || cmd == "run" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "bin" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "install" || cmd == "doc"; }
         else if name == "check" { allowed = cmd == "fmt"; }
-        else { allowed = cmd != "new" && cmd != "init"; }
+        else { allowed = cmd != "new" && cmd != "init" && cmd != "uninstall"; }
         platform::require(allowed, str("--", name, " is not supported by ", cmd));
     }
 }
