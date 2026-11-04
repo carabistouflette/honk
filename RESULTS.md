@@ -132,3 +132,27 @@ The [process consumer checkpoint](docs/PROCESS-CONSUMER-2026-11-04.md) records t
 The [HTTPS metadata consumer report](docs/HTTP-METADATA-2026-11-04.md) records fixed-origin request policy, dispatch/output/state-isolation tests, real loopback TLS and GCC/Clang sanitizer validation, the explicit live smoke and remaining transport limitations.
 
 The [diagnostics integration report](docs/DIAGNOSTICS-2026-11-04.md) records the final combined checks, native import exclusion regression, fixed-record privacy and file-failure tests, exact library/component pins, and current CLI/workload samples.
+
+## Controlled service stability checkpoint
+
+An independent, isolated public clone of production source
+`453aa53dc7b20622782423c64cc180097f653650` passed a bounded real compiled-Goose
+service soak: natural exits and direct SIGINT/SIGTERM cancellation, with project
+and cache locks checked during operation and after return. All 24 scenarios
+passed; session-validated child identities were gone, controller descriptor
+checks passed and no unwaited children remained. No runtime defect or patch
+release was justified by this workload.
+
+The immutable [report](https://github.com/carabistouflette/goose-process/blob/c609a65695444752c46a9fef82dbded1151d623a/bench/results/honk-soak-2026-11-04.json),
+[method and limitations](https://github.com/carabistouflette/goose-process/blob/c609a65695444752c46a9fef82dbded1151d623a/bench/SOAK.md)
+and [harness](https://github.com/carabistouflette/goose-process/blob/c609a65695444752c46a9fef82dbded1151d623a/bench/soak_honk.py)
+retain exact consumer/compiler/executable/fixture/harness identities and each
+outcome. The harness hash was independently compared with that immutable Git
+object. Review findings in the initial harness's identity/timeout cleanup were
+fixed before the recorded run; they were not Honk runtime findings.
+
+This is short controlled functional validation, not hours or days of uptime, a
+throughput or memory benchmark, or a guarantee about arbitrary descendants or
+signal storms. The existing terminal/recovery regressions exercise separate
+paths. The evidence does not claim Cargo parity or remove the documented
+platform, trust and cleanup limits.

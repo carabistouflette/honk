@@ -25,7 +25,7 @@ packaging as well as builds. The sanitizer and portable-copy scripts default to 
 The release workflow is initially validated on Linux x86-64/glibc; Windows,
 macOS, other architectures and libc implementations are not validated.
 
-[Validation results](RESULTS.md), [benchmark methods and raw samples](bench/README.md),
+[Changelog](CHANGELOG.md), [validation results](RESULTS.md), [benchmark methods and raw samples](bench/README.md),
 [security policy](SECURITY.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Without `GOOSE`, Honk builds and caches the exact pinned compiler using Git, CMake 3.27+, C/C++20 compilers, and Make/Ninja. Linux also needs libc development headers. `HONK_HOME` selects Honk's cache; default is `$XDG_CACHE_HOME/honk` or `$HOME/.cache/honk`. Projects may override the compiler with `[toolchain] revision = "<full commit>"`. `GOOSE` explicitly selects a compiler and checks its advertised short revision against the pin. You must trust that binary; this is not cryptographic verification. Source bootstraps additionally verify the full Git commit. Honk-managed compiler caches require a successful-build completion marker and matching checkout/version; older caches without that marker need one online rebuild/validation or an explicit matching `GOOSE` before offline use. Incomplete Git initialization and failed source repairs are retryable online; completed cache identity mismatches still fail closed.
