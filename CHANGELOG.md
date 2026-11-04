@@ -7,7 +7,14 @@
 - Add bounded internal selection from sorted enumerated Git tags, with strict
   requirements, highest-precedence matching, ambiguity rejection and owned
   outputs. Contract tests include hostile consumer overloads. This does not
-  expose a requirement-based CLI resolver or change exact Git/path workflows.
+  itself change exact Git/path workflows.
+
+- Add an opt-in Git `version` requirement alongside exclusive exact `rev`:
+  bounded annotated-tag enumeration, highest-match selection, package-version
+  verification and requirement/tag/commit locking. Matching locks rehydrate by
+  commit without tag queries; offline/frozen forbid discovery, and resolution
+  failures retain the old lock. Distinct import requirements conflict instead
+  of invoking a graph solver. This is unreleased and is excluded from v0.1.0.
 
 ## 0.1.0 — 2026-11-04 (experimental prerelease)
 

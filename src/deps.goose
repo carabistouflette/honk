@@ -3,14 +3,25 @@ namespace deps;
 import std;
 import os;
 import toml;
+import semver;
+import .version_policy;
+import .tag_select;
+import .tag_catalog;
 import .manifest;
 import .platform;
 import .source;
 import .project;
 import .toolchain;
-struct Node { name: u8[], path: u8[], git: u8[], rev: u8[], commit: u8[], directory: u8[], entry: u8[], production: bool = false, enabled: bool = true, visiting: bool = true }
+struct Node { name: u8[], path: u8[], git: u8[], rev: u8[], commit: u8[], directory: u8[], entry: u8[], production: bool = false, enabled: bool = true, visiting: bool = true, requirement: u8[] = [] }
 struct Edge { parent: i64, child: i64 }
 root struct Graph { edges: Edge[>..], current: i64 = -1, nodes: Node[>..], old: Node[>..], cache: u8[>..], revision: u8[>..], locked: bool = false, offline: bool = false, update: bool = false }
+fn locked_version(reference: const u8[:], requirement: const u8[:]) -> bool {
+    if !manifest::version_requirement(requirement) || !tag_catalog::reference(reference) { return false; }
+    if tag_select::spelling(reference).len > 64 { return false; }
+    let requested, request_error = semver::parse_requirement(requirement);
+    let version, version_error = version_policy::parse_tag(reference);
+    return request_error.kind == semver::ErrorKind.None && version_error.kind == semver::ErrorKind.None && semver::matches(requested, version);
+}
 fn read_lock(p: manifest::Project&, g: Graph&) {
     let path = str(p.root, "/Honk.lock"); if !file_exists(path) { return; }
     let input = platform::load(path); var doc = toml::Document { .. }; let error = toml::parse_into(input, doc);
@@ -22,14 +33,18 @@ fn read_lock(p: manifest::Project&, g: Graph&) {
     platform::require(doc.nodes[array].kind == toml::Kind.Array, "invalid lock dependency array");
     var id = doc.nodes[array].first;
     while id >= 0 {
-        manifest::keys(doc, id, ["name", "path", "git", "rev", "commit"]);
+        manifest::keys(doc, id, ["name", "path", "git", "rev", "commit", "requirement"]);
         let name = manifest::string(doc, id, "name"); let path = manifest::string(doc, id, "path");
         let git = manifest::string(doc, id, "git"); let rev = manifest::string(doc, id, "rev"); let commit = manifest::string(doc, id, "commit");
+        let requirement = manifest::string(doc, id, "requirement");
+        if toml::find(doc, id, "requirement") >= 0 {
+            platform::require(git.len > 0 && path.len == 0 && locked_version(rev, requirement), "invalid version requirement/tag identity in lockfile");
+        }
         platform::require(manifest::identifier(name), "invalid name in lockfile");
         for old in g.old { platform::require(old.name != name, "duplicate name in lockfile"); }
         if git.len > 0 { platform::require(manifest::commit(commit), "invalid Git commit in lockfile"); }
         platform::require(g.old.len < 256, "lock dependency limit is 256");
-        g.old.push(Node { name: str(name), path: str(path), git: str(git), rev: str(rev), commit: str(commit), directory: [], entry: [], visiting: false });
+        g.old.push(Node { name: str(name), path: str(path), git: str(git), rev: str(rev), commit: str(commit), directory: [], entry: [], visiting: false, requirement: str(requirement) });
         id = doc.nodes[id].next;
     }
 }
@@ -40,6 +55,7 @@ fn lock_text(g: Graph&) -> u8[>..] {
         out.append("\npath = "); manifest::quoted(out, n.path);
         out.append("\ngit = "); manifest::quoted(out, n.git);
         out.append("\nrev = "); manifest::quoted(out, n.rev);
+        if n.requirement.len > 0 { out.append("\nrequirement = "); manifest::quoted(out, n.requirement); }
         out.append("\ncommit = "); manifest::quoted(out, n.commit); out.push('\n');
     }
     return out;
@@ -56,15 +72,15 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
     let existing = index(g, dep.name);
     if existing >= 0 {
         let n .= node(g, existing);
-        platform::require(n.directory == local || (n.git.len > 0 && n.git == dep.git && n.rev == dep.rev), str("conflicting dependency: ", dep.name));
+        platform::require(n.directory == local || (n.git.len > 0 && n.git == dep.git && n.requirement == dep.requirement && (dep.requirement.len > 0 || n.rev == dep.rev)), str("conflicting dependency: ", dep.name));
         if g.current >= 0 { g.edges.push(Edge { g.current, existing }); } else if !dep.dev { n.production = true; } return;
     }
     platform::require(g.nodes.len < 256, "dependency graph limit exceeded (256 packages)");
-    var commit: u8[>..] = []; var directory = str(local);
+    var commit: u8[>..] = []; var directory = str(local); var selected_ref = str(dep.rev);
     if dep.git.len > 0 {
         var old = -1;
-        for n, i in g.old { if n.name == dep.name && n.git == dep.git && n.rev == dep.rev { old = i; } }
-        if old >= 0 && !g.update { for n, i in g.old { if i == old { commit = str(n.commit); } } }
+        for n, i in g.old { if n.name == dep.name && n.git == dep.git && n.requirement == dep.requirement && (dep.requirement.len > 0 || n.rev == dep.rev) { old = i; } }
+        if old >= 0 && !g.update { for n, i in g.old { if i == old { commit = str(n.commit); selected_ref = str(n.rev); } } }
         else { platform::require(!g.locked, str("lockfile must change for ", dep.name)); }
         // The cache key is a deterministic encoding of source bytes, not a security hash.
         // Exact source identity and commit are checked independently before use.
@@ -88,8 +104,20 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
         let identity = platform::load(str(repo, "/honk-source")); platform::require(identity == dep.git, "Git cache identity mismatch");
         if commit.len == 0 {
             platform::require(!g.offline, "cannot resolve an unlocked Git ref offline");
-            platform::git(["--git-dir", repo, "fetch", "--no-tags", "--depth=1", "--", dep.git, dep.rev], base);
-            commit = platform::git(["--git-dir", repo, "rev-parse", "--verify", "FETCH_HEAD^{commit}"], base);
+            if dep.requirement.len > 0 {
+                let advertised = platform::git(["ls-remote", "--tags", "--sort=refname", "--", dep.git], base, 60000, false);
+                let selected, selection_error = tag_catalog::select(dep.requirement, advertised);
+                platform::require(selection_error != tag_select::Error.NoMatch, "no Git tag satisfies version requirement");
+                platform::require(selection_error != tag_select::Error.Ambiguous, "ambiguous highest Git version (alias/build tie)");
+                platform::require(selection_error == tag_select::Error.None, "invalid or oversized Git tag catalog");
+                selected_ref = str(selected.reference);
+                platform::git(["--git-dir", repo, "fetch", "--no-tags", "--depth=1", "--", dep.git, selected_ref], base);
+                commit = platform::git(["--git-dir", repo, "rev-parse", "--verify", "FETCH_HEAD^{commit}"], base);
+                platform::require(commit == selected.commit, "Git tag selected commit moved or did not peel to the advertised commit");
+            } else {
+                platform::git(["--git-dir", repo, "fetch", "--no-tags", "--depth=1", "--", dep.git, dep.rev], base);
+                commit = platform::git(["--git-dir", repo, "rev-parse", "--verify", "FETCH_HEAD^{commit}"], base);
+            }
         }
         platform::require(manifest::commit(commit), "Git did not resolve a full commit");
         directory = str(g.cache, "/sources/", hash(dep.git), "-", commit);
@@ -115,13 +143,18 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
     if file_exists(str(directory, "/Honk.toml")) {
         var child = manifest::Project { .. }; manifest::load(directory, child);
         platform::require(child.kind == "lib", "dependency Honk.toml must describe a library"); entry = str(child.entry);
-    }
+        if dep.requirement.len > 0 {
+            let selected_version, selected_error = version_policy::parse_tag(selected_ref);
+            let declared_version, declared_error = semver::parse(child.version);
+            platform::require(selected_error.kind == semver::ErrorKind.None && declared_error.kind == semver::ErrorKind.None && semver::compare(selected_version, declared_version) == 0, "package version does not match selected Git tag");
+        }
+    } else { platform::require(dep.requirement.len == 0, "version-selected Git dependency needs a Honk library manifest"); }
     var parents = entry.len; while parents > 0 && entry[parents - 1] != '/' { parents--; }
     if parents > 0 { platform::require(platform::directory(directory, entry[..parents - 1]), "dependency entry parent must be a directory without symlink components"); }
     platform::require(file_exists(str(directory, "/", entry)), str("missing dependency entry: ", dep.name, " (", entry, ")"));
     let id = g.nodes.len;
     // Keep path spellings in the lockfile portable for direct local dependencies.
-    g.nodes.push(Node { name: str(dep.name), path: str(dep.path), git: str(dep.git), rev: str(dep.rev), commit: copy(commit), directory: copy(directory), entry: copy(entry), visiting: true });
+    g.nodes.push(Node { name: str(dep.name), path: str(dep.path), git: str(dep.git), rev: str(selected_ref), commit: copy(commit), directory: copy(directory), entry: copy(entry), visiting: true, requirement: str(dep.requirement) });
     if g.current >= 0 { g.edges.push(Edge { g.current, id }); } else if !dep.dev { node(g, id).production = true; }
 }
 fn expand(g: Graph&, id: i64) {

@@ -8,7 +8,7 @@ import text;
 import json;
 import .platform;
 
-struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false }
+struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [] }
 root struct Project {
     root:     u8[>..], name: u8[>..], version: u8[>..], entry: u8[>..], kind: u8[>..],
     revision: u8[>..], description: u8[>..], license: u8[>..], dependencies: Dependency[>..], members: u8[][>..],
@@ -96,15 +96,22 @@ fn keys(doc: toml::Document&, parent: i64, allowed: const u8[:][:]) {
         id = doc.nodes[id].next;
     }
 }
+fn version_requirement(value: const u8[:]) -> bool {
+    if value.len == 0 || value.len > 4096 || text::validate_utf8(value) != -1 { return false; }
+    for c in value { if c < 32 || c == 127 { return false; } }
+    let requirement, error = semver::parse_requirement(value); return error.kind == semver::ErrorKind.None;
+}
 fn validate_dependency(dep: Dependency&) {
     platform::require((dep.path.len > 0) != (dep.git.len > 0), "dependency needs exactly one of path or git");
     if dep.git.len > 0 {
         platform::require(dep.git.len > 8 && dep.git[..8] == "https://", "Git sources must use https://");
-        platform::require(dep.rev.len > 0 && dep.rev.len <= 256 && dep.rev[0] != '-', "Git dependency needs a non-option rev");
+        platform::require((dep.rev.len > 0) != (dep.requirement.len > 0), "Git dependency needs exactly one of rev or version");
+        if dep.rev.len > 0 { platform::require(dep.rev.len <= 256 && dep.rev[0] != '-', "Git dependency needs a non-option rev"); }
+        if dep.requirement.len > 0 { platform::require(version_requirement(dep.requirement), "Git version needs an explicit full-version requirement (ASCII space only, limit 4096 bytes)"); }
         for c in dep.git { platform::require(c != '@' && c != '?' && c != '#', "Git URL must not contain credentials, query, or fragment"); }
         for c in dep.rev { platform::require(c > 32 && c != 127 && c != ':' && c != '\\', "invalid Git ref"); }
-    } else { platform::require(dep.rev.len == 0, "path dependency cannot specify rev"); }
-    for value in [dep.path[..], dep.git[..], dep.rev[..]] {
+    } else { platform::require(dep.rev.len == 0 && dep.requirement.len == 0, "path dependency cannot specify rev or version"); }
+    for value in [dep.path[..], dep.git[..], dep.rev[..], dep.requirement[..]] {
         platform::require(text::validate_utf8(value) == -1, "dependency values must be valid UTF-8");
         platform::require(value.len <= 4096, "dependency value exceeds 4096 bytes");
         for c in value { platform::require(c >= 32 && c != 127, "control character in dependency value"); }
@@ -118,8 +125,12 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
         let name = toml::key(doc, id);
         platform::require(identifier(name), str("invalid dependency import name: ", name));
         for dep in project.dependencies { platform::require(dep.name != name, "duplicate dependency across dependency tables"); }
-        keys(doc, id, ["path", "git", "rev"]);
-        var dep = Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev };
+        keys(doc, id, ["path", "git", "rev", "version"]);
+        let has_rev = toml::find(doc, id, "rev") >= 0; let has_version = toml::find(doc, id, "version") >= 0;
+        platform::require(!(has_rev && has_version), "rev and version fields are mutually exclusive");
+        platform::require(toml::find(doc, id, "path") < 0 || (!has_rev && !has_version), "path dependency cannot contain rev or version fields");
+        if has_version { platform::require(version_requirement(string(doc, id, "version")), "invalid Git version requirement (ASCII space only, limit 4096 bytes)"); }
+        var dep = Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version") };
         validate_dependency(dep);
         platform::require(project.dependencies.len < 256, "dependency limit is 256");
         project.dependencies.push(copy(dep)); id = doc.nodes[id].next;
@@ -186,7 +197,7 @@ fn serialize(project: Project&) -> u8[>..] {
         for dep in project.dependencies {
             if dep.dev != dev { continue; } out.append(dep.name); out.append(" = { ");
             if dep.path.len > 0 { out.append("path = "); quoted(out, dep.path); }
-            else { out.append("git = "); quoted(out, dep.git); out.append(", rev = "); quoted(out, dep.rev); }
+            else { out.append("git = "); quoted(out, dep.git); out.append(if dep.requirement.len > 0 { ", version = " } else { ", rev = " }); quoted(out, if dep.requirement.len > 0 { dep.requirement[..] } else { dep.rev[..] }); }
             out.append(" }\n");
         }
     }

@@ -14,6 +14,13 @@ import os;
 extern fn close(fd: i32) -> i32;
 fn main() {
     let argv = args();
+    if argv.len > 1 && argv[1] == "deadline" {
+        assert(argv.len == 3);
+        var packed: u8[>..] = []; platform::pack(packed, "/usr/bin/python3"); platform::pack(packed, "-I"); platform::pack(packed, "-c");
+        platform::pack(packed, "import pathlib,sys,time;pathlib.Path(sys.argv[1]).write_text('started');time.sleep(30)"); platform::pack(packed, argv[2]);
+        var out: u8[>..] = []; let status = platform::spawn(packed, ".", true, out, 1000);
+        assert(status == 125 && out.len == 0); return;
+    }
     if argv.len > 1 && argv[1] == "streams" {
         let out, code = platform::command(["/usr/bin/python3", "-c", "import sys;sys.stdout.buffer.write(b'a\\x00b');sys.stderr.write('live-stderr')"], ".", true);
         assert(code == 0 && out == "a\0b"); return;

@@ -18,6 +18,7 @@ import .src.toolchain;
 import .src.commands;
 import .src.version_policy;
 import .src.tag_select;
+import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
@@ -40,7 +41,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.1.0"); return; }
     let spec = [argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -154,7 +155,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {
         if name == "metadata" { allowed = cmd == "toolchain"; }
         else if name == "help" || name == "log-file" { allowed = true; }
         else if name == "lib" || name == "name" { allowed = cmd == "new" || cmd == "init"; }
-        else if name == "path" || name == "git" || name == "rev" || name == "dev" { allowed = cmd == "add"; }
+        else if name == "path" || name == "git" || name == "rev" || name == "version" || name == "dev" { allowed = cmd == "add"; }
         else if name == "root" { allowed = cmd == "install" || cmd == "uninstall"; }
         else if name == "force" { allowed = cmd == "install"; }
         else if name == "release" { allowed = cmd == "build" || cmd == "run" || cmd == "test" || cmd == "bench" || cmd == "install"; }

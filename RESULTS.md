@@ -188,3 +188,29 @@ Unfinished Git-tag requirement selection and the pending SemVer
 consumer-overload fix are excluded from this release tree. Existing package
 version validation and workspace selection use the accepted parse/compare API;
 this CLI does not expose requirement-based dependency selection.
+
+
+## Unreleased Git version workflow
+
+The concrete transport/lock behavior follows
+[GIT-VERSION-DESIGN.md](docs/GIT-VERSION-DESIGN.md).
+`tests/tag_catalog.goose` covers strict LF/object/ref parsing, sorted duplicate
+conflicts, non-adjacent annotated peeling, 4,096 base tags, 8,192 raw rows and
+exact/exceeded 1 MiB input. `tests/version_deps_cli.py` uses real Git behind one
+explicit test-only HTTPS-to-local shim. Its seven cases cover highest numeric
+selection, prereleases, aliases/build ties, moved commits, allowed same-commit
+tag-object replacement, declaration/lock validation and failed-lock preservation.
+
+The transport log proves both query and fetch absence for warm/cold frozen and
+offline paths. Online locked rehydration asserts that every new fetch argument
+names the old locked commit OID, despite a moved remote tag and retained bare
+objects. These checks are stronger than observing the compiled answer alone.
+A separate adapter deadline probe requires a child readiness marker before
+asserting timeout cleanup, avoiding launch-failure false passes.
+
+Full normal/typecheck/security, GCC/Clang ASan/UBSan/debug/no-BCE and portable-copy
+suites passed. After the existing read-only review requested explicit fetch
+proofs, the same seven cases passed with those assertions under normal, GCC and
+Clang builds. The review also narrowed movement claims to commit identity and
+qualified the general no-deadline documentation. No registry, graph solver, tag
+signature verification or frozen-v0.1.0 feature is implied by this evidence.

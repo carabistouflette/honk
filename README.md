@@ -57,7 +57,7 @@ Use `import mathx;` in application source. Library names and namespaces are sepa
 - `build [--release] [--bin NAME]`, `run [--release] -- ARGS`: native executable in `target/debug` or `target/release`. `--bin NAME` selects `src/bin/NAME.goose`. Executables are compiled privately and published atomically after success; a failed compiler leaves the previous binary intact, and output symlinks/special files are rejected. Debug builds enable Goose runtime checks. Libraries are source packages and `build` checks them.
 - `check`: type/lifetime checking. `test`, `bench`: build and run `.goose` programs under `tests/` or `bench/`, failing on the first nonzero exit. Test/benchmark executables have a separate reserved output directory so target names cannot overwrite application binaries. Program arguments follow `--`.
 - `fmt [--check]`: Goose formatting.
-- `add NAME --path PATH` or `add NAME --git HTTPS_URL --rev REF [--dev]`; `remove NAME`: edit dependency syntax while preserving surrounding comments and formatting; run `fetch` to refresh the lock. Unsupported inline parent-table edits and changes exceeding dependency or metadata-size limits fail before replacing the original manifest.
+- `add NAME --path PATH`, `add NAME --git HTTPS_URL --rev REF [--dev]`, or `add NAME --git HTTPS_URL --version REQUIREMENT [--dev]`; `remove NAME`: edit dependency syntax while preserving surrounding comments and formatting; run `fetch` to refresh the lock. Unsupported inline parent-table edits and changes exceeding dependency or metadata-size limits fail before replacing the original manifest.
 - `fetch`, `update`: resolve dependencies; ordinary commands preserve locked Git commits, `update` deliberately refreshes refs.
 - `tree`: list resolved dependencies. `metadata`: machine-readable JSON project metadata. `metadata -p NAME` or `metadata -p NAME@FULL_VERSION` selects one workspace member; `metadata --workspace` streams an array of members (check the exit status before consuming output). Metadata does not create caches or obtain a compiler, and rejects non-UTF-8 project paths before emitting a project object.
 - `package`: requires GNU tar/gzip; typecheck and produce a deterministic source `.tar.gz` under `target/package/`. Requires tracked Honk.toml/Honk.lock in a Git repository; copies only tracked regular files from the current working tree into private staging, excludes local untracked files, and typechecks the exact exported contents offline before publishing the archive. External path dependencies and tracked submodules are rejected. Vendored dependencies inside the project are supported. Archive modes normalize to 0644/0755 independently of caller umask. Archive creation uses an explicit GNU format and ignores inherited TAR_OPTIONS/GZIP options.
@@ -74,7 +74,7 @@ Commit Honk.lock. It records the compiler revision and dependencies. An oversize
 
 Honk stages source trees under `.honk/` and leaves original sources intact. Source trees reject symlinks and special files and are bounded to 100,000 entries, 256 MiB, and depth 64 per tree; Goose sources and manifests are limited to 1 MiB each. Resolution is bounded to 256 packages; source discovery is bounded to 4096 Goose files and directories. Each directory listing is limited to 1 MiB of names including separators; filenames containing CR/LF are rejected. Original source limits remain 1 MiB even when generated import mappings enlarge staged files; only validated staged rereads have a separate bounded 8 MiB allowance. Captured subprocess stdout is bounded to 1 MiB. Honk uses nonblocking project/cache locks: concurrent operations fail clearly; retry after the other process exits. Atomic text updates preserve existing ordinary permission bits; newly created text metadata is owner-only. Private per-user caches and project directories must not be writable by untrusted users.
 
-This is an evolving Git/path package workflow. Registry publishing, semver solving, cross compilation, and Windows support are not implemented. Do not treat this pre-release as Cargo feature or stability parity.
+This is an evolving Git/path package workflow. Registry publishing, general dependency solving/backtracking, cross compilation, and Windows support are not implemented. Do not treat this pre-release as Cargo feature or stability parity.
 
 ## Validation
 
@@ -91,9 +91,9 @@ existing atomic manifest write remain in effect.
 
 Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed build or installation.
 
-Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Git/path dependencies retain exact refs: no version solver is implied. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy. The internal [bounded tag-selection policy](docs/GIT-TAG-SELECTION.md) has contract tests; commands still use exact Git refs and paths.
+Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Exact Git refs and paths retain their behavior; a separate bounded Git-tag requirement workflow is described below. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy. The [bounded tag-selection policy](docs/GIT-TAG-SELECTION.md) and [transport/lock contract](docs/GIT-VERSION-DESIGN.md) describe the tested development workflow.
 
-Honk delegates child ownership to pinned goose-process. This requires Linux kernel 5.3+ and glibc 2.34+. Commands explicitly use Child with no overall deadline, preserving long-running `run` servers; the parent pumps bounded 20 ms steps, forwards pending cancellation through pidfds, and retains locks through direct-child cleanup or exceptional transferred-child recovery. Recovery may wait indefinitely if OS permissions prevent proving cleanup. Captured stdout is capped at 1 MiB; stderr and stdin remain inherited. Argument limits include argv[0]: 4,096 arguments, 1 MiB total, 131,071 bytes per argument. PATH lookup uses the child's effective environment/cwd; it does not invoke a shell fallback for executable text without a shebang. Descendants and capture pipes they keep open remain outside direct-child supervision. Terminal Ctrl-C suppression is best effort during launch, when the application cannot distinguish a signal predating the child from one already delivered to its foreground group.
+Honk delegates child ownership to pinned goose-process. This requires Linux kernel 5.3+ and glibc 2.34+. Commands use Child with no overall deadline by default, preserving long-running `run` servers. Git tag metadata discovery explicitly uses a 60-second deadline. The parent pumps bounded 20 ms steps, forwards pending cancellation through pidfds, and retains locks through direct-child cleanup or exceptional transferred-child recovery. Recovery may wait indefinitely if OS permissions prevent proving cleanup. Captured stdout is capped at 1 MiB; stderr and stdin remain inherited. Argument limits include argv[0]: 4,096 arguments, 1 MiB total, 131,071 bytes per argument. PATH lookup uses the child's effective environment/cwd; it does not invoke a shell fallback for executable text without a shebang. Descendants and capture pipes they keep open remain outside direct-child supervision. Terminal Ctrl-C suppression is best effort during launch, when the application cannot distinguish a signal predating the child from one already delivered to its foreground group.
 
 The metadata command requests only the fixed Goose-upstream commit endpoint with HTTPS certificate/hostname verification, anonymous headers and identity content encoding. It makes one request with no proxy, credentials, redirect or retry, caps body/header callback bytes at 256 KiB/32 KiB, requires HTTP 200 and full returned SHA equality, and emits escaped JSON. The 5000 ms transfer timeout is **not** a hard wall deadline: threaded DNS cleanup can take longer. Metadata does not authenticate compiler binaries, authorize installation or prove upstream trust. Returned URL/subject strings remain untrusted data. libcurl callback normalization/trailer limitations mean security-critical headers/digests must never be inferred from transfer success; this consumer validates the required JSON SHA directly. `make metadata-test` and `make metadata-sanitize` use only local TLS fixtures with a test-only shim; ordinary builds contain no shim.
 
@@ -125,3 +125,32 @@ retry, rotation or fsync. Use a fresh private file when the cap is reached.
 The opt-in toolchain metadata command also accepts explicit `--log-file`; those records contain only fixed lifecycle events and numeric duration/outcome fields, never response URLs, subjects, pins or bodies. Logging is the only explicit file output added to that otherwise cache/compiler-free path.
 
 Explicit diagnostics may record `started`/`failed` even when a metadata flag combination is rejected before transport. Log delivery can fail after stdout or command side effects; no rollback is promised, and callers must check the exit status.
+
+
+### Git version requirements (unreleased)
+
+A Git dependency may use `version = "^1.2.3"` instead of `rev`, including through
+`add NAME --git HTTPS_URL --version REQUIREMENT`. Field presence is exclusive: both
+keys together, empty requirements and any version field on a path dependency
+are rejected. Requirements are at most 4,096 bytes and use ASCII spaces, not TAB.
+Bare full versions are exact; explicit `= > >= < <= ^ ~`, comma AND and standalone
+`*` are supported. There are no partial versions, implicit caret, OR or hyphen
+ranges. Prereleases require a comparator with the same core and a prerelease.
+
+Unlocked resolution enumerates at most 1 MiB / 8,192 raw Git tag records and
+4,096 base tags, handles annotated peeling, then chooses the highest matching
+precedence. Equal highest aliases/build-only distinctions fail as ambiguous. A
+60-second transfer deadline applies to the metadata child; cleanup and kernel
+scheduling are not hard real-time guarantees. Fetch verifies the selected peeled
+commit and requires a Honk library manifest with a matching package version.
+Changing only a tag annotation/object while retaining the same commit is allowed;
+annotations and signatures are not trusted or verified by this workflow.
+
+The lock records the requirement, selected full tag ref and verified commit.
+Ordinary commands reuse that commit until `update`, including after remote tag
+movement. An online cold cache fetches the locked commit directly. `--locked`
+rejects changed/missing entries before enumeration; offline/frozen never enumerate
+or fetch. Failed resolution preserves lock bytes. Distinct requirements for one
+import identity fail as a conflict; there is no graph backtracking or registry.
+The optional new lock `requirement` key is rejected by older Honk versions.
+This workflow is absent from the frozen v0.1.0 release.

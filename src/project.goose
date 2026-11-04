@@ -54,7 +54,7 @@ fn metadata(p: manifest::Project&) -> u8[>..] {
     for dep, i in p.dependencies {
         if i > 0 { out.push(','); } out.append("{\"name\":"); json::format_string(out, dep.name);
         out.append(",\"path\":"); json::format_string(out, dep.path); out.append(",\"git\":"); json::format_string(out, dep.git);
-        out.append(",\"rev\":"); json::format_string(out, dep.rev); out.append(",\"dev\":"); json::format_bool(out, dep.dev); out.push('}');
+        out.append(",\"rev\":"); json::format_string(out, dep.rev); if dep.requirement.len > 0 { out.append(",\"version\":"); json::format_string(out, dep.requirement); } out.append(",\"dev\":"); json::format_bool(out, dep.dev); out.push('}');
     }
     out.append("],\"members\":["); for member, i in p.members { if i > 0 { out.push(','); } json::format_string(out, member); } out.append("]}");
     return out;

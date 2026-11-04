@@ -33,11 +33,14 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         if cmd == "add" {
             platform::require(current.dependencies.len < 256, "dependency limit is 256");
             platform::require(deps_name(current, name) < 0, "dependency already exists; remove it before replacing it");
-            var dep = manifest::Dependency { name: str(name), path: str(options.get("path")), git: str(options.get("git")), rev: str(options.get("rev")), dev: options.has("dev") };
+            platform::require(!(options.has("rev") && options.has("version")), "rev and version options are mutually exclusive");
+            platform::require(!options.has("path") || (!options.has("version") && !options.has("rev")), "path dependency cannot specify rev or version");
+            if options.has("version") { platform::require(manifest::version_requirement(options.get("version")), "invalid Git version requirement (ASCII space only, limit 4096 bytes)"); }
+            var dep = manifest::Dependency { name: str(name), path: str(options.get("path")), git: str(options.get("git")), rev: str(options.get("rev")), dev: options.has("dev"), requirement: str(options.get("version")) };
             manifest::validate_dependency(dep);
             var value = str("{ ");
             if dep.path.len > 0 { value.append("path = "); manifest::quoted(value, dep.path); }
-            else { value.append("git = "); manifest::quoted(value, dep.git); value.append(", rev = "); manifest::quoted(value, dep.rev); }
+            else { value.append("git = "); manifest::quoted(value, dep.git); value.append(if dep.requirement.len > 0 { ", version = " } else { ", rev = " }); manifest::quoted(value, if dep.requirement.len > 0 { dep.requirement[..] } else { dep.rev[..] }); }
             value.append(" }");
             let path: const u8[:][] = [if dep.dev { "dev-dependencies" } else { "dependencies" }, name];
             let error = toml_edit::set(source, path, value, edited);

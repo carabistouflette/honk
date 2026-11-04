@@ -37,6 +37,10 @@ class ProcessCLI(unittest.TestCase):
     def test_exact_capture_and_argument_bounds(self):
         for mode in ['exact', 'overflow', 'arguments']:
             with self.subTest(mode=mode): self.call([PROBE, mode])
+        with tempfile.TemporaryDirectory(prefix='honk-deadline-') as root:
+            marker = Path(root) / 'started'
+            self.call([PROBE, 'deadline', str(marker)])
+            self.assertEqual(marker.read_bytes(), b'started')
     def test_startup_signal_and_exceptional_recovery(self):
         with tempfile.TemporaryDirectory(prefix='honk-process-fault-') as root:
             lock = str(Path(root) / 'lock')

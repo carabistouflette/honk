@@ -32,7 +32,7 @@ fn process_status(status: process::Status) -> i64 {
 fn recover_status(status: process::Status) {
     if status.unreaped_pid > 0 { process_recover(status.unreaped_pid); }
 }
-fn spawn(packed: const u8[:], cwd: const u8[:], capture: bool, out: u8[>..]&) -> i64 {
+fn spawn(packed: const u8[:], cwd: const u8[:], capture: bool, out: u8[>..]&, timeout_ms: i64 = 0) -> i64 {
     if packed.len < 2 || packed.len > 1048576 || packed[packed.len - 1] != 0 || packed[0] == 0 { return 125; }
     var argv: (const u8[:])[>..] = []; var start = 0;
     for c, i in packed { if c == 0 { if argv.len == 4096 { return 125; } argv.push(packed[start..i]); start = i + 1; } }
@@ -48,7 +48,7 @@ fn spawn(packed: const u8[:], cwd: const u8[:], capture: bool, out: u8[>..]&) ->
         }
     }
     if argv[0] == "tar" { for key in ["TAR_OPTIONS", "GZIP"] { environment.push(process::EnvOverride { key: key, remove: true }); } }
-    let options = process::Options { cwd: cwd, timeout_ms: 0, output_limit: 1048576,
+    let options = process::Options { cwd: cwd, timeout_ms: timeout_ms, output_limit: 1048576,
         stdout: if capture { process::Output.Capture } else { process::Output.Inherit },
         stderr: process::Output.Inherit, stdin: process::Input.Inherit, environment: environment[..], search_path: true, .. };
     if !process_guard_begin() { return 125; }
@@ -123,7 +123,7 @@ fn command(args: const u8[:][:], cwd: u8[:], capture: bool = false) -> u8[>..], 
 fn run(args: const u8[:][:], cwd: u8[:]) {
     let out, status = command(args, cwd); if status != 0 { child_exit(status); }
 }
-fn git(args: const u8[:][:], cwd: u8[:]) -> u8[>..] {
+fn git(args: const u8[:][:], cwd: u8[:], timeout_ms: i64 = 0, trim: bool = true) -> u8[>..] {
     var packed: u8[>..] = [];
     for a in ["git", "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.ext.allow=never", "-c", "protocol.file.allow=never", "-c", "http.sslVerify=true"] { pack(packed, a); }
     // URL-specific settings outrank generic http.sslVerify. --config-env splits
@@ -132,9 +132,9 @@ fn git(args: const u8[:][:], cwd: u8[:]) -> u8[>..] {
         if a.len > 8 && a[..8] == "https://" { pack(packed, str("--config-env=http.", a, ".sslVerify=HONK_GIT_SSL_VERIFY")); }
     }
     for a in args { pack(packed, a); }
-    var out: u8[>..] = []; let code = spawn(packed, cwd, true, out);
+    var out: u8[>..] = []; let code = spawn(packed, cwd, true, out, timeout_ms);
     if code != 0 { die(str("git failed (exit ", code, ")")); }
-    while out.len > 0 && (out[out.len - 1] == '\n' || out[out.len - 1] == '\r') { out.pop(); }
+    while trim && out.len > 0 && (out[out.len - 1] == '\n' || out[out.len - 1] == '\r') { out.pop(); }
     return out;
 }
 

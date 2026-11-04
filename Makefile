@@ -16,6 +16,7 @@ check:
 	$(GOOSE) check tests/semver_probe.goose
 	$(GOOSE) check tests/process_fault.goose
 	$(GOOSE) check tests/tag_select.goose
+	$(GOOSE) check tests/tag_catalog.goose
 	git diff --check
 build:
 	$(GOOSE) build honk.goose -o .build/honk
@@ -28,6 +29,9 @@ test:
 	$(GOOSE) run tests/tag_select.goose
 	$(GOOSE) build tests/tag_select.goose -o .build/tag-select
 	./.build/tag-select
+	$(GOOSE) run tests/tag_catalog.goose
+	$(GOOSE) build tests/tag_catalog.goose -o .build/tag-catalog
+	./.build/tag-catalog
 	$(GOOSE) build tests/process.goose -o .build/process-probe
 	./.build/process-probe
 	./.build/process-probe closed
@@ -39,11 +43,14 @@ test:
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/manifest_edit_cli.py
+	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/version_deps_cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/logging.py
 	$(GOOSE) build tests/semver_probe.goose -o .build/semver-probe
 	HONK=$(CURDIR)/.build/honk SEMVER_PROBE=$(CURDIR)/.build/semver-probe GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	$(MAKE) metadata-test
 sanitize:
+	$(GOOSE) build tests/tag_catalog.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/tag-catalog-sanitize
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/tag-catalog-sanitize
 	$(GOOSE) build tests/tag_select.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/tag-select-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/tag-select-sanitize
 	$(GOOSE) build tests/process.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/process-sanitize
@@ -61,6 +68,7 @@ sanitize:
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize SEMVER_PROBE=$(CURDIR)/.build/semver-probe-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/security.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/manifest_edit_cli.py
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/version_deps_cli.py
 	$(MAKE) metadata-sanitize
 portable:
 	$(GOOSE) build honk.goose --debug --no-bce --cc $(CURDIR)/scripts/portable-cc.sh -o .build/honk-portable
