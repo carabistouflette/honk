@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Consolidate dependency editing through the canonical TOML legacy profile and
+  its reviewed thin companion adapter, retaining the existing public behavior,
+  byte/error contract and limits. Exact provenance is recorded in vendor metadata.
+  Correct stale TOML notice provenance and check that all recorded library
+  revisions appear in the third-party notices.
+
 - Advance goose-semver to the reviewed 0.1.1 source, fixing consumer `copy`, `str`
   and `min` overload interference while preserving API, grammar and limits.
 - Add bounded internal selection from sorted enumerated Git tags, with strict

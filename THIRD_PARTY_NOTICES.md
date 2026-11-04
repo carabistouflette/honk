@@ -7,7 +7,8 @@ release; changing them requires explicit review and validation.
 
 | Component | Upstream commit | Included source | License |
 | --- | --- | --- | --- |
-| [goose-toml](https://github.com/carabistouflette/goose-toml) | `fb055e32098c3de312896952aa86d18edafdaf98` | `vendor/goose-toml/toml.goose` | [Apache-2.0](vendor/goose-toml/LICENSE) |
+| [goose-toml](https://github.com/carabistouflette/goose-toml) | `de7dfe092f6d72811417355044e5d024d5600613` | `vendor/goose-toml/` canonical parser/writer/source profile | [Apache-2.0](vendor/goose-toml/LICENSE) |
+| [goose-toml-edit](https://github.com/carabistouflette/goose-toml-edit) | `ae32f13d69b69c9604a44d7acd71d2f966daef35` | `vendor/goose-toml-edit/toml_edit.goose` thin legacy adapter | [Apache-2.0](vendor/goose-toml-edit/LICENSE) |
 | [goose-argparse](https://github.com/carabistouflette/goose-argparse) | `d23af7aff17c6720d17a2e8f6b80bd3bf8f14275` | `vendor/goose-argparse/argparse.goose` | [Apache-2.0](vendor/goose-argparse/LICENSE) |
 | [goose-log](https://github.com/carabistouflette/goose-log) | `a3919c5e9135b9812db422d5052bb1ea5d1d202b` | `vendor/goose-log/logger.goose` | [Apache-2.0](vendor/goose-log/LICENSE), [NOTICE](vendor/goose-log/NOTICE) |
 | [goose-text](https://github.com/carabistouflette/goose-text) | `46059e30be79ece6efd4317eb0adc6d213c808ab` | `vendor/goose-text/text.goose` | [Apache-2.0](vendor/goose-text/LICENSE) |

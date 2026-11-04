@@ -4,11 +4,13 @@
     {
       "directory": "goose-toml",
       "repository": "https://github.com/carabistouflette/goose-toml",
-      "revision": "c1c703f8dd4ac4e0ebc95f35981e87becad76957",
+      "revision": "de7dfe092f6d72811417355044e5d024d5600613",
       "license": "Apache-2.0",
       "files": {
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+        "source/README.md": "16a6f2f1ea2aad78c6bcaa89b561e13b31b62fe6896cf57dc44718e263acbb77",
+        "source/editor.goose": "7664b58ea6901c422a95d676ecc7c4bc50613754db5d76580b37bd6a13f791a9",
         "toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
         "vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
@@ -39,10 +41,10 @@
     {
       "directory": "goose-toml-edit",
       "repository": "https://github.com/carabistouflette/goose-toml-edit",
-      "revision": "cedb2c3c98affbeb45bd34bc7a6618f5a9b75ad0",
+      "revision": "ae32f13d69b69c9604a44d7acd71d2f966daef35",
       "license": "Apache-2.0",
       "files": {
-        "toml_edit.goose": "1c91847f3e2543f4b8b928f53ca4f1c8ab2a40e5cdad431fe1f42d0d2cd4362d",
+        "toml_edit.goose": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
     },

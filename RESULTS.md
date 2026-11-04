@@ -214,3 +214,34 @@ proofs, the same seven cases passed with those assertions under normal, GCC and
 Clang builds. The review also narrowed movement claims to commit identity and
 qualified the general no-deadline documentation. No registry, graph solver, tag
 signature verification or frozen-v0.1.0 feature is implied by this evidence.
+
+
+## Canonical dependency editor adoption
+
+The [isolated acceptance record](docs/results/canonical-editor-acceptance.json)
+identifies public consumer base `1e0a117d5c4b11bfa1d9342314b2f04bb8e63a8b`,
+the tested staged tree, compiler binary/source identities, all nine canonical
+source/license hashes and wrapper source/license hashes. Fresh anonymous clones
+verified canonical `de7dfe092f6d72811417355044e5d024d5600613`. Both normal and
+frozen self-check/package passed with unchanged locks, identical archive bytes
+and an inspected source-only export, alongside five editing and seven Git
+workflow methods.
+
+Companion candidate `b9b6ab1b8d9defb9c296891d57311a2162ebddb7` had both exact-head
+validations green. Its runtime graph is unchanged from the earlier reviewed
+source; merged/released `ae32f13d69b69c9604a44d7acd71d2f966daef35` has the exact
+same Git tree `45100cfbaa13720fab07efb90c94b3490adf7462`. The full published merge
+revision is used in Honk. The wrapper calls only the canonical legacy profile;
+public behavior, aliases, limits and error bytes are retained. Honk's previous
+private editor implementation is removed.
+
+The upstream [parity/ownership record](https://github.com/carabistouflette/goose-toml-edit/blob/ae32f13d69b69c9604a44d7acd71d2f966daef35/docs/results/adapter-de7dfe0-validation.json)
+and [both paired timing series](https://github.com/carabistouflette/goose-toml-edit/blob/ae32f13d69b69c9604a44d7acd71d2f966daef35/bench/results/canonical-adapter/README.md)
+retain material regressions and shared-host sensitivity. They measure full
+library calls, not end-to-end Honk commands. This adoption centralizes the
+editing implementation; it does not claim a universal speedup.
+
+The adoption also corrects a historical TOML revision in the notices table and
+adds a revision-presence guard to vendor verification. An isolated negative
+probe rejects stale notices even under optimized Python; matching pins pass.
+Frozen Honk v0.1.0 remains unchanged.

@@ -1,0 +1,88 @@
+{
+  "accepted": true,
+  "consumer_base": "1e0a117d5c4b11bfa1d9342314b2f04bb8e63a8b",
+  "consumer_index_tree": "a0b0b517b574f482220991bbd222109514b75918",
+  "consumer_patch_sha256": "bdc8e01278a8657401299362376a08ed4c44b2174aa0eb9e16aa2a3d8aed2558",
+  "wrapper_reviewed_source": "5cce82b84c554cfb89227658f905bcd28c7f73bd",
+  "wrapper_accepted_pin": "b9b6ab1b8d9defb9c296891d57311a2162ebddb7",
+  "wrapper_bridge_changed_files": [
+    "README.md"
+  ],
+  "canonical_pin": "de7dfe092f6d72811417355044e5d024d5600613",
+  "canonical_graph_sha256": {
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+    "source/README.md": "16a6f2f1ea2aad78c6bcaa89b561e13b31b62fe6896cf57dc44718e263acbb77",
+    "source/editor.goose": "7664b58ea6901c422a95d676ecc7c4bc50613754db5d76580b37bd6a13f791a9",
+    "toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
+    "vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
+    "vendor/text.goose": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d",
+    "writer.goose": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a"
+  },
+  "wrapper_source_sha256": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791",
+  "wrapper_license_sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "compiler_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+  "compiler_version": "goose eadca40 (runtime 3025e5810379)",
+  "commands": [
+    [
+      "make",
+      "GOOSE=$GOOSE",
+      "check",
+      "build"
+    ],
+    [
+      "python3",
+      "tests/manifest_edit_cli.py"
+    ],
+    [
+      "python3",
+      "tests/version_deps_cli.py"
+    ],
+    [
+      "$CONSUMER/.build/honk",
+      "check",
+      "--frozen"
+    ],
+    [
+      "$CONSUMER/.build/honk",
+      "package",
+      "--frozen"
+    ],
+    [
+      "$CONSUMER/.build/honk",
+      "check"
+    ],
+    [
+      "$CONSUMER/.build/honk",
+      "package"
+    ]
+  ],
+  "frozen_lock_unchanged": true,
+  "required_export_files_compared": 15,
+  "export_files": 126,
+  "generated_export_state_absent": true,
+  "completed_utc": "2026-11-04T19:41:53.462535+00:00",
+  "normal_and_frozen_package_sha256": "0fdfe73029c4003c5f26862cf17c264a7c3398a460462ecf1f5eee06af5633ca",
+  "normal_and_frozen_lock_unchanged": true,
+  "consumer_binary_sha256": "19ff25d5df2cda70ed6ede8bccef7bb16ecfab3d277710cedea4fbe43c2dda6e",
+  "compiler_worktree_clean": true,
+  "compiler_tree": "aaa8bd785a444891123109572a6b5913706798d9",
+  "root_input_audit": {
+    "root_input_hashes": {
+      "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+      "vendor/manifest.json": "289fac429db541e3ff688d82c86dacfea55864f8d3eee78110c5c43db344b1f6"
+    },
+    "driver_sha256": "4e1142bd329e4434f1944b02fc011b1f331d9084baa8d3c260f2b40fd8fc846d"
+  },
+  "wrapper_exact_head_green_runs": [
+    "41898704393",
+    "41898695814"
+  ],
+  "merged_wrapper_pin": "ae32f13d69b69c9604a44d7acd71d2f966daef35",
+  "merge_bridge_identical_tree": "45100cfbaa13720fab07efb90c94b3490adf7462",
+  "evidence_scope": "One isolated consumer acceptance on the stated b9 candidate tree, bridged by identical upstream tree to merged ae32. Final Honk adoption additionally corrects historical notice metadata and runs its own full checks.",
+  "local_report_sha256": "4b28f231798da0804ac0bfdc4697e6a05bd90de63730004961a8fd7bf05eafac"
+}

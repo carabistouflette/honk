@@ -7,9 +7,12 @@ from pathlib import Path
 
 root = Path(__file__).resolve().parents[1] / 'vendor'
 manifest = json.loads((root / 'manifest.json').read_text())
+notices = (root.parent / 'THIRD_PARTY_NOTICES.md').read_text()
 if manifest['schema'] != 1:
     raise SystemExit('unsupported vendor manifest schema')
 for library in manifest['libraries']:
+    if library['revision'] not in notices:
+        raise SystemExit(f"pinned revision missing from third-party notices: {library['directory']}")
     directory = Path(library['directory'])
     if directory.is_absolute() or len(directory.parts) != 1 or directory.name in {'.', '..'}:
         raise SystemExit('unsafe vendor directory')
