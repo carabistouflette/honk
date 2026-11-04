@@ -40,3 +40,6 @@ validates the portable implementation under native sanitizers.
 hardware, raw files and limitations. Report every workload, including slowdowns
 and noisy/no-change results. CI smoke-runs benchmarks without wall-clock gates;
 local results are not universal rankings or a claim of Cargo parity.
+
+[Follow-up audit measurements](../docs/AUDIT-2026-11-04.md) compare the hardened
+implementation with the first public main and retain every measured workload.

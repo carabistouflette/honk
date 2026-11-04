@@ -540,6 +540,9 @@ class CLI(unittest.TestCase):
         self.run_honk('fmt', cwd=p)
         self.run_honk('fmt', '--check', cwd=p)
         self.assertIn('fn helper() {', files[-1].read_text())
+        files[-1].write_text('fn helper(')
+        failed = self.run_honk('fmt', '--check', cwd=p, ok=False)
+        self.assertNotEqual(failed.returncode, 125, 'batch failure lost formatter status')
     def test_fmt_without_sources_does_not_consume_stdin(self):
         p = self.new(); (p/'src/main.goose').unlink()
         proc = subprocess.run([HONK, 'fmt'], cwd=p, input=b'fn main(){print(42);}',
@@ -586,6 +589,7 @@ class CLI(unittest.TestCase):
             self.assertEqual(requests, [], 'Git contacted untrusted TLS endpoint')
             repo = next((self.root/'cache/git').iterdir())
             self.git(repo, 'config', f'http.{url}.sslVerify', 'false')
+            self.git(repo, 'config', f'http.{url}/.sslVerify', 'false')
             self.run_honk('fetch', cwd=p, env=insecure, ok=False)
             self.assertEqual(requests, [], 'URL-specific config disabled verification')
             trusted = {**insecure, 'GIT_SSL_CAINFO': str(cert)}

@@ -36,7 +36,7 @@ license detection and private vulnerability reporting.
 
 ## Independent review
 
-The publication review covers filesystem/process boundaries, dependency and
+The original publication review covers filesystem/process boundaries, dependency and
 package behavior, supported-platform/limit claims, third-party provenance and
 tracked history. Reproductions identified archive modes affected by caller
 umask, executable local Git fsmonitor configuration and invalid scaffolded
@@ -112,3 +112,10 @@ The exact-source [CI run passed](https://github.com/carabistouflette/honk/action
 including sanitizer, portable-copy and benchmark jobs. Subsequent publication
 commits contain documentation/results only; GitHub Actions records validation
 of the final published revision separately.
+
+## Follow-up deep audit
+
+The [2026-11-04 follow-up audit](docs/AUDIT-2026-11-04.md) records subsequently
+fixed bugs, independent rechecks, expanded GCC/Clang validation and complete
+paired samples against published `9874ad5`. The original measurements above
+remain tied to their stated source revisions.
