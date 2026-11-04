@@ -4,7 +4,9 @@
 import json
 import os
 from pathlib import Path
+import shutil
 import subprocess
+import tarfile
 import tempfile
 import tomllib
 import unittest
@@ -69,6 +71,34 @@ class TextCLI(unittest.TestCase):
                 proc = self.call("metadata", cwd=path, ok=False)
                 self.assertEqual(proc.stdout, b"")
                 self.assertIn(b"UTF-8 project path", proc.stderr)
+    def test_self_check_and_package_include_declared_text(self):
+        source = Path(__file__).resolve().parents[1]
+        project = self.root / "self-project"
+        project.mkdir()
+        tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=source).split(b"\0")
+        for raw in tracked:
+            if not raw:
+                continue
+            name = os.fsdecode(raw)
+            original = source / name
+            self.assertTrue(original.is_file() and not original.is_symlink(), name)
+            destination = project / name
+            destination.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(original, destination)
+        subprocess.run(["git", "init", "-q"], cwd=project, check=True, capture_output=True)
+        subprocess.run(["git", "add", "."], cwd=project, check=True, capture_output=True)
+        lock = (project / "Honk.lock").read_bytes()
+        manifest = tomllib.loads((project / "Honk.toml").read_text())
+        self.assertEqual(manifest["dependencies"]["text"], {"path": "vendor/goose-text"})
+        self.call("check", "--frozen", cwd=project)
+        self.call("package", "--frozen", cwd=project)
+        label = manifest["package"]["name"] + "-" + manifest["package"]["version"]
+        archive = project / "target" / "package" / (label + ".tar.gz")
+        with tarfile.open(archive, "r:gz") as package:
+            for name in ("text.goose", "LICENSE"):
+                expected = (project / "vendor" / "goose-text" / name).read_bytes()
+                self.assertEqual(package.extractfile(label + "/vendor/goose-text/" + name).read(), expected)
+        self.assertEqual((project / "Honk.lock").read_bytes(), lock)
 
 if __name__ == "__main__":
     unittest.main()

@@ -12,3 +12,4 @@ revision = "eadca409f68210893f366e60d0c2f0dc29a339be"
 [dependencies]
 toml = { path = "vendor/goose-toml" }
 argparse = { path = "vendor/goose-argparse" }
+text = { path = "vendor/goose-text" }

@@ -15,3 +15,10 @@ path = "vendor/goose-argparse"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "text"
+path = "vendor/goose-text"
+git = ""
+rev = ""
+commit = ""
