@@ -786,6 +786,91 @@ class CLI(unittest.TestCase):
         self.run_honk('add', 'mathx', '--path', '../mathx', cwd=p)
         self.assertIn('symlink components', self.run_honk('fetch', cwd=p, ok=False).stderr)
         self.assertEqual((p/'Honk.lock').read_bytes(), original)
+    def test_generated_mappings_preserve_original_source_byte_limit(self):
+        lib = self.new('mathx', '--lib'); p = self.new()
+        self.run_honk('add', 'mathx', '--path', '../mathx', cwd=p)
+        head = b'import mathx from "../../mathx"; fn main() { assert(mathx::answer() == 42); }\n/*'
+        original = head+b'x'*(1048576-len(head)-2)+b'*/'
+        self.assertEqual(len(original), 1048576)
+        main = p/'src/main.goose'; main.write_bytes(original)
+        self.run_honk('run', cwd=p)
+        self.assertGreater((p/'.honk/stage/app/src/main.goose').stat().st_size, 1048576)
+        for command, directory in [('test', 'tests'), ('bench', 'bench')]:
+            with self.subTest(command=command):
+                (p/directory).mkdir(); (p/directory/'check.goose').write_bytes(original)
+                self.run_honk(command, '--frozen', cwd=p)
+                self.assertEqual((p/directory/'check.goose').read_bytes(), original)
+        self.assertEqual(main.read_bytes(), original)
+        main.write_bytes(original+b' ')
+        self.assertIn('limit 1 MiB', self.run_honk('check', cwd=p, ok=False).stderr)
+    def test_clean_removes_failed_package_staging(self):
+        p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)
+        (p/'src/main.goose').write_text('fn main() { invalid syntax }')
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src')
+        self.run_honk('package', '--frozen', cwd=p, ok=False)
+        self.assertTrue((p/'.honk/package').is_dir())
+        self.run_honk('clean', cwd=p)
+        self.assertFalse((p/'.honk/package').exists()); self.assertFalse((p/'.honk/package-files').exists())
+    def test_git_cache_initialization_and_failed_repair_are_retryable(self):
+        import sys
+        remote = self.root/'remote'; remote.mkdir(); self.git_project(remote)
+        (remote/'mathx.goose').write_text('namespace mathx; fn answer() -> i64 { 42 }')
+        self.git(remote, 'add', '.'); self.git(remote, 'commit', '-qm', 'fixture')
+        tools = self.root/'tools'; tools.mkdir(); real_git = shutil.which('git')
+        proxy = tools/'git'; proxy.write_text('#!'+sys.executable+\
+            '\nimport os,subprocess,sys\na=sys.argv[1:]\n'\
+            'a=[x.replace("protocol.file.allow=never","protocol.file.allow=always") for x in a]\n'\
+            'a=['+repr(str(remote))+' if x=="https://fixture.invalid/mathx.git" else x for x in a]\n'\
+            'os.environ["GIT_ALLOW_PROTOCOL"]="file"\n'\
+            'if "init" in a and "--bare" in a and os.environ.get("FAIL_INIT"):\n subprocess.run(['+repr(real_git)+']+a,check=True)\n sys.exit(9)\n'\
+            'if "worktree" in a and "add" in a and os.environ.get("FAIL_WORKTREE"): sys.exit(9)\n'\
+            'os.execv('+repr(real_git)+',['+repr(real_git)+']+a)\n'); proxy.chmod(0o755)
+        env = {'PATH': str(tools)+os.pathsep+os.environ['PATH']}
+        for legacy in (False, True):
+            with self.subTest(legacy=legacy):
+                p = self.new('app'+str(int(legacy)))
+                home = self.root/('cache'+str(int(legacy))); local_env = {**env, 'HONK_HOME': str(home)}
+                self.run_honk('add', 'mathx', '--git', 'https://fixture.invalid/mathx.git', '--rev', 'HEAD', cwd=p)
+                self.run_honk('fetch', cwd=p, env={**local_env, 'FAIL_INIT':'1'}, ok=False)
+                temporary = next((home/'git').glob('*.initializing'))
+                if legacy: temporary.rename(Path(str(temporary)[:-len('.initializing')]))
+                self.run_honk('fetch', cwd=p, env=local_env)
+                source = next(x for x in (home/'sources').iterdir() if x.is_dir()); ready = Path(str(source)+'.ready')
+                self.assertTrue(ready.is_file()); shutil.rmtree(source)
+                self.run_honk('fetch', cwd=p, env={**local_env, 'FAIL_WORKTREE':'1'}, ok=False)
+                self.assertFalse(ready.exists())
+                self.run_honk('fetch', cwd=p, env=local_env)
+                self.run_honk('check', '--frozen', cwd=p, env=local_env)
+                repo = next(x for x in (home/'git').iterdir() if x.is_dir())
+                (repo/'honk-source').write_text('https://wrong.invalid/repo.git')
+                self.assertIn('identity mismatch', self.run_honk('fetch', cwd=p, env=local_env, ok=False).stderr)
+    def test_failed_compiler_build_is_not_a_complete_cache(self):
+        import sys
+        p = self.new(); root = self.root/'cache/toolchains/fixture'; root.mkdir(parents=True)
+        self.git_project(root); (root/'source').write_text('fixture compiler source')
+        self.git(root,'add','.');self.git(root,'commit','-qm','compiler fixture')
+        pin = self.git(root,'rev-parse','HEAD'); destination = root.parent/pin; root.rename(destination);root=destination
+        manifest = p/'Honk.toml'; original_manifest = manifest.read_text()
+        manifest.write_text(original_manifest+'\n[toolchain]\nrevision="'+pin+'"\n')
+        tools = self.root/'tools'; tools.mkdir(); real_git = shutil.which('git')
+        git_proxy = tools/'git'; git_proxy.write_text('#!'+sys.executable+'\nimport os,sys\nif "fetch" in sys.argv: sys.exit(0)\nos.execv('+repr(real_git)+',['+repr(real_git)+']+sys.argv[1:])\n'); git_proxy.chmod(0o755)
+        cmake = tools/'cmake'; version = 'goose '+pin[:7]+' (runtime fixture)'
+        failed_script = '#!'+sys.executable+'\nprint('+repr(version)+')\n'
+        valid_script = '#!'+sys.executable+'\nimport os,sys\nif "version" in sys.argv: print('+repr(version)+');sys.exit(0)\nos.execv('+repr(GOOSE)+',['+repr(GOOSE)+']+sys.argv[1:])\n'
+        cmake.write_text('#!'+sys.executable+'\nimport os,shutil,sys\nfrom pathlib import Path\nif "--build" in sys.argv:\n p=Path(sys.argv[sys.argv.index("--build")+1]);p.mkdir(parents=True,exist_ok=True)\n b=p/"goose"\n if os.environ.get("FAIL_BUILD"):\n  b.write_text('+repr(failed_script)+');b.chmod(0o755);sys.exit(9)\n b.write_text('+repr(valid_script)+');b.chmod(0o755)\n'); cmake.chmod(0o755)
+        env={'GOOSE':'','PATH':str(tools)+os.pathsep+os.environ['PATH']}
+        self.run_honk('toolchain',cwd=p,env={**env,'FAIL_BUILD':'1'},ok=False)
+        self.assertEqual(subprocess.check_output([root/'build/goose','version'],text=True).strip(),version)
+        self.assertFalse((root/'build/.honk-complete').exists())
+        self.run_honk('toolchain','--offline',cwd=p,env=env,ok=False)
+        self.run_honk('toolchain',cwd=p,env=env)
+        self.assertEqual((root/'build/.honk-complete').read_text(),pin)
+        self.run_honk('check','--offline',cwd=p,env=env)
+        (root/'build/goose').write_text('#!/bin/sh\nprintf wrong\n'); (root/'build/goose').chmod(0o755)
+        self.run_honk('toolchain','--offline',cwd=p,env=env,ok=False)
+        manifest.write_text(original_manifest)
+        linked = self.root/'compiler-link'; linked.symlink_to(GOOSE)
+        self.run_honk('check',cwd=p,env={'GOOSE':str(linked)})
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

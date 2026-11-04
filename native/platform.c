@@ -28,6 +28,11 @@ typedef struct {
 } hs;
 #define HPATH 4096
 #define HCAP (1024 * 1024)
+// Original source remains capped at HCAP. Generated import mappings can add
+// 256 JSON-escaped paths (at most six bytes per path byte, plus import names).
+#define HSTAGED_CAP (8 * HCAP)
+_Static_assert(HSTAGED_CAP >= HCAP + 256 * (6 * (HPATH + 64) + 16),
+               "staged source cap must cover bounded generated mappings");
 static bool path(hs s, char out[HPATH]) {
   if (s.len <= 0 || s.len >= HPATH || memchr(s.data, 0, (size_t)s.len))
     return false;
@@ -171,6 +176,9 @@ static bool read_bounded(hs s, gs_rref out, size_t limit) {
   return ok;
 }
 bool honk_read(hs s, gs_rref out) { return read_bounded(s, out, HCAP); }
+bool honk_read_staged(hs s, gs_rref out) {
+  return read_bounded(s, out, HSTAGED_CAP);
+}
 
 static bool write_atomic(hs s, hs data, bool executable, bool exclusive,
                          bool durable) {

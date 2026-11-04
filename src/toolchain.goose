@@ -18,23 +18,37 @@ fn compiler(p: manifest::Project&, cache: u8[:], offline: bool) -> u8[>..] {
     var selected: u8[>..] = [];
     if env("GOOSE", selected) && selected.len > 0 {
         // An explicit compiler must still match the project's pin.
-        let binary = if selected[0] == '/' { str(selected) } else { platform::absolute(selected) };
-        let argv: const u8[:][] = [binary, "version"]; let version, code = platform::command(argv, p.root, true);
-        let matching = version.len >= 13 && version[..6] == "goose " && version[6..13] == revision[..7] &&
-                       (version.len == 13 || version[13] == ' ' || version[13] == '\n' || version[13] == '\r');
-        platform::require(code == 0 && matching, "GOOSE does not match the pinned compiler revision"); return binary;
+        let binary = platform::absolute(selected);
+        validate(binary, p.root, revision); return binary;
     }
     let root = str(cache, "/toolchains/", revision); let binary = str(root, "/build/goose");
-    if !file_exists(binary) {
-        platform::require(!offline, "compiler is not cached; set GOOSE or run honk toolchain online");
+    let ready = str(root, "/build/.honk-complete");
+    let complete = platform::kind(binary) == 1 && platform::kind(ready) == 1 && platform::load(ready) == revision;
+    if !complete {
+        platform::require(!offline, "compiler cache is missing or incomplete; set GOOSE or run honk toolchain online");
+        if platform::kind(ready) != 0 { platform::require(platform::unlink_regular(ready), "cannot invalidate compiler completion marker"); }
         write_stderr(str("honk: bootstrapping Goose ", revision, "\n"));
         platform::require(platform::mkdir(root), "cannot create toolchain directory");
         if !is_dir(str(root, "/.git")) { platform::git(["init", root], p.root); }
         platform::git(["-C", root, "fetch", "--depth=1", "--", "https://github.com/aardappel/goose.git", revision], p.root);
         platform::git(["-C", root, "checkout", "--detach", revision], p.root);
+        let actual = platform::git(["-C", root, "rev-parse", "HEAD"], p.root);
+        platform::require(actual == revision, "compiler checkout has the wrong revision");
+        platform::require(platform::mkdir(str(root, "/build")), "cannot create compiler build directory");
         platform::run(["cmake", "-S", root, "-B", str(root, "/build"), "-DCMAKE_BUILD_TYPE=Release", "-DGOOSE_BUILTIN_LIBS=none"], p.root);
         platform::run(["cmake", "--build", str(root, "/build"), "--parallel", "2"], p.root);
     }
     let actual = platform::git(["-C", root, "rev-parse", "HEAD"], p.root);
-    platform::require(actual == revision, "cached compiler checkout has the wrong revision"); return binary;
+    platform::require(actual == revision, "cached compiler checkout has the wrong revision");
+    validate(binary, p.root, revision);
+    if !complete { platform::save(ready, revision); }
+    return binary;
+}
+
+fn validate(binary: u8[:], cwd: u8[:], revision: u8[:]) {
+    platform::require(platform::kind(binary) == 1, "compiler must be a regular file");
+    let argv: const u8[:][] = [binary, "version"]; let version, code = platform::command(argv, cwd, true);
+    let matching = version.len >= 13 && version[..6] == "goose " && version[6..13] == revision[..7] &&
+                   (version.len == 13 || version[13] == ' ' || version[13] == '\n' || version[13] == '\r');
+    platform::require(code == 0 && matching, "compiler does not match the pinned compiler revision");
 }

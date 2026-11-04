@@ -18,7 +18,7 @@ fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
     while cursor < queue.len {
         let current = queue[cursor]; cursor++;
         platform::require(platform::kind(str(root, "/", current)) == 2, "source directories must not be symlinks");
-        var entries: u8[>..] = []; platform::require(platform::list(str(root, "/", current), entries), "cannot list source directory");
+        var entries: u8[>..] = []; platform::require(platform::list(str(root, "/", current), entries), "cannot list source directory (limit 1 MiB of names per directory; no CR/LF names)");
         var start = 0;
         for c, i in entries {
             if c != '\n' { continue; } let name = entries[start..i]; start = i + 1;
@@ -89,7 +89,7 @@ fn imports(g: deps::Graph&, stage: u8[:], out: u8[>..]&) {
     for n in g.nodes { out.append("import "); out.append(n.name); out.append(" from "); manifest::quoted(out, str(directory, "/deps/", n.name)); out.append(";\n"); }
 }
 fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
-    let file = str(stage, "/", entry); let source = platform::load(file);
+    let file = str(stage, "/", entry); let source = platform::load_staged(file);
     // Source declarations already name their dependency; avoid duplicate declarations.
     let declared = source::requirements(source, true); var out: u8[>..] = [];
     for n in g.nodes {

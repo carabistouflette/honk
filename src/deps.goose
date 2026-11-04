@@ -70,10 +70,20 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
         // Exact source identity and commit are checked independently before use.
         let repo = str(g.cache, "/git/", hash(dep.git));
         platform::require(platform::mkdir(str(g.cache, "/git")), "cannot create Git cache");
-        if !is_dir(repo) {
+        let identity_file = str(repo, "/honk-source");
+        platform::require(platform::kind(repo) == 0 || platform::kind(repo) == 2, "Git cache must be a directory without symlinks");
+        if platform::kind(repo) == 2 && platform::kind(identity_file) == 0 {
+            platform::require(!g.offline, "incomplete Git cache cannot be repaired offline");
+            platform::require(platform::kind(str(repo, "/worktrees")) == 0, "Git cache identity missing; remove corrupted cache before fetching");
+            platform::require(platform::remove_tree(repo), "cannot clear incomplete Git cache");
+        }
+        if platform::kind(repo) == 0 {
             platform::require(!g.offline, str("dependency not cached: ", dep.name));
-            platform::git(["init", "--bare", repo], base);
-            platform::save(str(repo, "/honk-source"), dep.git);
+            let temporary = str(repo, ".initializing");
+            platform::require(platform::remove_tree(temporary), "cannot clear temporary Git initialization");
+            platform::git(["init", "--bare", temporary], base);
+            platform::save(str(temporary, "/honk-source"), dep.git);
+            platform::require(rename_file(temporary, repo), "cannot publish initialized Git cache");
         }
         let identity = platform::load(str(repo, "/honk-source")); platform::require(identity == dep.git, "Git cache identity mismatch");
         if commit.len == 0 {
@@ -84,8 +94,9 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
         platform::require(manifest::commit(commit), "Git did not resolve a full commit");
         directory = str(g.cache, "/sources/", hash(dep.git), "-", commit);
         let ready = str(directory, ".ready");
-        if !is_dir(directory) || !file_exists(ready) {
+        if platform::kind(directory) != 2 || !file_exists(ready) {
             platform::require(!g.offline, str("locked dependency source missing from cache: ", dep.name));
+            if platform::kind(ready) != 0 { platform::require(platform::unlink_regular(ready), "cannot invalidate source completion marker"); }
             platform::git(["--git-dir", repo, "fetch", "--no-tags", "--depth=1", "--", dep.git, commit], base);
             platform::require(platform::remove_tree(directory), "cannot clear incomplete source cache");
             platform::git(["--git-dir", repo, "worktree", "prune", "--expire", "now"], base);

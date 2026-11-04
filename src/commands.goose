@@ -16,6 +16,8 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     if cmd == "clean" {
         platform::require(platform::remove_tree(str(p.root, "/target")), "cannot clean target directory");
         platform::require(platform::remove_tree(str(p.root, "/.honk/stage")), "cannot clean stage directory");
+        platform::require(platform::remove_tree(str(p.root, "/.honk/package")), "cannot clean package staging directory");
+        platform::require(platform::remove_tree(str(p.root, "/.honk/package-files")), "cannot clean package file list");
         platform::unlock(lock); return;
     }
     if cmd == "add" || cmd == "remove" {
