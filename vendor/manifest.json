@@ -4,11 +4,16 @@
     {
       "directory": "goose-toml",
       "repository": "https://github.com/carabistouflette/goose-toml",
-      "revision": "fb055e32098c3de312896952aa86d18edafdaf98",
+      "revision": "c1c703f8dd4ac4e0ebc95f35981e87becad76957",
       "license": "Apache-2.0",
       "files": {
-        "toml.goose": "13545623d05ccebdfe39a81b31a368c245177b246f44323122469903ccab962d",
-        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+        "toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
+        "vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
+        "vendor/text.goose": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d",
+        "writer.goose": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a"
       }
     },
     {
@@ -28,6 +33,16 @@
       "license": "Apache-2.0",
       "files": {
         "text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-toml-edit",
+      "repository": "https://github.com/carabistouflette/goose-toml-edit",
+      "revision": "cedb2c3c98affbeb45bd34bc7a6618f5a9b75ad0",
+      "license": "Apache-2.0",
+      "files": {
+        "toml_edit.goose": "1c91847f3e2543f4b8b928f53ca4f1c8ab2a40e5cdad431fe1f42d0d2cd4362d",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
     },

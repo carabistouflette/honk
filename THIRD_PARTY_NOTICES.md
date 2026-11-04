@@ -33,4 +33,5 @@ Honk's native adapter uses system libc/POSIX/Linux interfaces. Git, CMake, C/C++
 compilers, Python, GNU tar and gzip are external development/runtime tools, not
 vendored source packages in this distribution.
 
+The vendored goose-toml-edit editor is Apache-2.0; see vendor/goose-toml-edit/LICENSE and vendor/manifest.json. Its pinned TOML parser includes the original nested vendor notices and licenses.
 The pinned goose-http test helpers in `tests/http_fixture/` are Apache-2.0; their source revision and hashes are recorded in that directory. `scripts/metadata-test-build.py` adapts the upstream test builder under the same license. Test transport redirection/CA overrides are excluded from production builds. System libcurl and its TLS/resolver dependencies are external libraries, not vendored source; distribution of those libraries follows their own licenses.

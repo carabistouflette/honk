@@ -82,6 +82,13 @@ This is an evolving Git/path package workflow. Registry publishing, semver solvi
 
 Large staged files use Linux kernel-assisted copying where supported, with a bounded portable fallback. Temporary staging rewrites are atomic without requesting crash durability; manifest, lockfile, and cache metadata writes retain their durability syncs. Snapshot tests verify byte equality, executable assets, source/copy independence, and rejection above the logical byte limit. Benchmarks record their filesystem and include a 32 MiB asset workload; `AUDIT_TEMP_ROOT` selects the fixture location.
 
+Dependency `add`/`remove` preserves comments and formatting outside edited TOML
+syntax using goose-toml-edit. Removal keeps attached comments as standalone
+comments. Inline dependency assignments, dotted dependency fields and declared
+dependency tables are supported; editing a dependency inside an inline parent
+`dependencies = { ... }` is rejected before saving. Result validation and the
+existing atomic manifest write remain in effect.
+
 Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed build or installation.
 
 Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Git/path dependencies retain exact refs: no version solver is implied. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy.
