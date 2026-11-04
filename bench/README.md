@@ -46,3 +46,5 @@ implementation with the first public main and retain every measured workload.
 
 [Source and signal audit measurements](../docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md)
 record the next reviewed source and complete paired samples against `f427cd1`.
+
+[Cache recovery measurements](../docs/CACHE-RECOVERY-AUDIT-2026-11-04.md) retain every paired workload and record CPU3 affinity.

@@ -124,3 +124,5 @@ The subsequent [source and signal audit](docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md)
 records six further reproduced fixes, the 62-case suite, independent rechecks
 and paired samples against `f427cd1`, including all slower results and remaining
 process-group cancellation limits.
+
+The [generated source/cache recovery audit](docs/CACHE-RECOVERY-AUDIT-2026-11-04.md) records five additional fixes, the 66-case suite, cache migration rules and all paired CPU3 samples against `04f7ddf`.
