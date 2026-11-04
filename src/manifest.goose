@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace manifest;
+const MAX_INPUT_BYTES = 1048576;
 import std;
 import toml;
 import json;

@@ -385,6 +385,12 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
         if (unsetenv(context[i]))
           _exit(125);
     }
+    // Archive options are application policy, not inherited executable hooks or
+    // compressor flags.
+    if (strcmp(argv[0], "tar") == 0) {
+      if (unsetenv("TAR_OPTIONS") || unsetenv("GZIP"))
+        _exit(125);
+    }
     execvp(argv[0], argv);
     _exit(errno == ENOENT ? 127 : 126);
   }
@@ -699,6 +705,63 @@ static bool remove_at(int parent, const char *name, int depth) {
   closedir(d);
   return ok && unlinkat(parent, name, AT_REMOVEDIR) == 0;
 }
+// User-selected installation prefixes may contain . or .., but no component may
+// be a symlink.
+static int directory_path(const char *path) {
+  char components[HPATH];
+  size_t length = strlen(path);
+  if (length >= sizeof components)
+    return -1;
+  memcpy(components, path, length + 1);
+  int directory =
+      open(path[0] == '/' ? "/" : ".", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
+  if (directory < 0)
+    return -1;
+  char *part = components;
+  for (;;) {
+    char *slash = strchr(part, '/');
+    if (slash)
+      *slash = 0;
+    if (*part && strcmp(part, ".")) {
+      int next = openat(directory, part,
+                        O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+      close(directory);
+      if (next < 0)
+        return -1;
+      directory = next;
+    }
+    if (!slash)
+      return directory;
+    part = slash + 1;
+  }
+}
+bool honk_unlink_regular(hs input) {
+  char pathbuf[HPATH];
+  if (!path(input, pathbuf))
+    return false;
+  char *name = strrchr(pathbuf, '/');
+  char *parent = pathbuf;
+  if (name) {
+    *name = 0;
+    name++;
+    if (!*parent)
+      parent = "/";
+  } else {
+    name = pathbuf;
+    parent = ".";
+  }
+  if (!*name || !strcmp(name, ".") || !strcmp(name, ".."))
+    return false;
+  int directory = directory_path(parent);
+  if (directory < 0)
+    return false;
+  struct stat st;
+  bool ok = fstatat(directory, name, &st, AT_SYMLINK_NOFOLLOW) == 0 &&
+            S_ISREG(st.st_mode) && unlinkat(directory, name, 0) == 0;
+  close(directory);
+  return ok;
+}
+
 bool honk_remove(hs s) {
   char p[HPATH];
   if (!path(s, p))

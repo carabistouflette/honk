@@ -15,6 +15,7 @@ extern fn unlock(fd: i64) = "honk_unlock";
 extern fn spawn(packed: const u8[:], cwd: const u8[:], capture: bool, out: u8[>..]&) -> i64 = "honk_spawn";
 extern fn copy_files(from: const u8[:], to: const u8[:], paths: const u8[:]) -> bool = "honk_copy_files";
 extern fn copy_tree(from: const u8[:], to: const u8[:]) -> bool = "honk_copy";
+extern fn unlink_regular(path: const u8[:]) -> bool = "honk_unlink_regular";
 extern fn remove_tree(path: const u8[:]) -> bool = "honk_remove";
 fn die(message: u8[:]) {
     var out = str("honk: ");

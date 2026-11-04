@@ -154,7 +154,9 @@ fn resolve(p: manifest::Project&, g: Graph&) {
     read_lock(p, g);
     for dep in p.dependencies { add(g, dep, p.root); }
     var cursor = 0; while cursor < g.nodes.len { expand(g, cursor); cursor++; } acyclic(g);
-    let text = lock_text(g); let file = str(p.root, "/Honk.lock");
+    let text = lock_text(g);
+    platform::require(text.len <= manifest::MAX_INPUT_BYTES, "resolved lockfile exceeds 1 MiB; original is unchanged");
+    let file = str(p.root, "/Honk.lock");
     if file_exists(file) { let old = platform::load(file); if old == text { return; } }
     platform::require(!g.locked, "Honk.lock is missing or out of date; run honk fetch"); platform::save(file, text);
 }

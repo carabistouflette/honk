@@ -20,7 +20,9 @@ fn compiler(p: manifest::Project&, cache: u8[:], offline: bool) -> u8[>..] {
         // An explicit compiler must still match the project's pin.
         let binary = if selected[0] == '/' { str(selected) } else { platform::absolute(selected) };
         let argv: const u8[:][] = [binary, "version"]; let version, code = platform::command(argv, p.root, true);
-        platform::require(code == 0 && version.len >= 13 && version[6..13] == revision[..7], "GOOSE does not match the pinned compiler revision"); return binary;
+        let matching = version.len >= 13 && version[..6] == "goose " && version[6..13] == revision[..7] &&
+                       (version.len == 13 || version[13] == ' ' || version[13] == '\n' || version[13] == '\r');
+        platform::require(code == 0 && matching, "GOOSE does not match the pinned compiler revision"); return binary;
     }
     let root = str(cache, "/toolchains/", revision); let binary = str(root, "/build/goose");
     if !file_exists(binary) {

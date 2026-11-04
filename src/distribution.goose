@@ -42,7 +42,7 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
     platform::save(list, names);
     let output = str(p.root, "/target/package"); platform::require(platform::mkdir(output), "cannot create package output directory");
     let archive = str(output, "/", label, ".tar.gz"); let temp = str(stage, "/archive.tar.gz");
-    platform::run(["tar", "--create", "--gzip", "--file", temp, "--directory", stage, "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--null", "--verbatim-files-from", "--no-recursion", "--files-from", list], p.root);
+    platform::run(["tar", "--create", "--gzip", "--file", temp, "--directory", stage, "--format=gnu", "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--null", "--verbatim-files-from", "--no-recursion", "--files-from", list], p.root);
     // Verify the exact exported files, rather than accidentally depending on untracked local files.
     let verify = str(stage, "/verify"); platform::require(platform::mkdir(verify), "cannot create package verification directory");
     platform::run(["tar", "--extract", "--gzip", "--file", temp, "--directory", verify, "--no-same-owner", "--no-same-permissions"], p.root);
@@ -63,6 +63,5 @@ fn install(p: manifest::Project&, release: bool, destination: u8[:], force: bool
 fn uninstall(destination: u8[:], name: u8[:]) {
     platform::require(manifest::package_name(name), "invalid executable name");
     let path = str(destination, "/bin/", name);
-    platform::require(platform::kind(path) == 1, "installed executable does not exist or is a symlink");
-    platform::require(delete_file(path), "cannot remove installed executable"); print("Uninstalled ", name);
+    platform::require(platform::unlink_regular(path), "cannot remove installed executable (missing, nonregular, or symlinked prefix)"); print("Uninstalled ", name);
 }

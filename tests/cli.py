@@ -398,6 +398,60 @@ class CLI(unittest.TestCase):
                               capture_output=True, timeout=10)
         self.assertNotEqual(proc.returncode, 0)
         self.assertEqual((p/'Honk.toml').read_bytes(), original)
+    def test_archive_environment_cannot_execute_hook(self):
+        import shlex
+        p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src')
+        with tempfile.TemporaryDirectory(prefix='honk-tar-hook-') as helper_dir:
+            hook = Path(helper_dir)/'hook'; marker = Path(helper_dir)/'ran'
+            hook.write_text('#!/bin/sh\nprintf invoked >'+shlex.quote(str(marker))+'\n'); hook.chmod(0o755)
+            options = '--checkpoint=1 --checkpoint-action=exec='+str(hook)
+            self.run_honk('package', '--frozen', cwd=p, env={'TAR_OPTIONS': options})
+            self.assertFalse(marker.exists(), 'tar executed an inherited environment hook')
+    def test_archive_ignores_compression_environment(self):
+        p = self.new(); self.run_honk('fetch', cwd=p); self.git_project(p)
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src')
+        self.run_honk('package', '--frozen', cwd=p)
+        archive = p/'target/package/hello-0.1.0.tar.gz'; original = archive.read_bytes()
+        self.run_honk('package', '--frozen', cwd=p, env={'GZIP': '-1'})
+        self.assertEqual(archive.read_bytes(), original)
+    def test_uninstall_rejects_symlink_prefix_components(self):
+        outside = self.root/'outside'; outside.mkdir()
+        prefix = self.root/'prefix'; prefix.mkdir()
+        (prefix/'bin').symlink_to(outside, target_is_directory=True)
+        victim = outside/'hello'; victim.write_text('outside executable')
+        self.run_honk('uninstall', 'hello', '--root', prefix, ok=False)
+        self.assertEqual(victim.read_text(), 'outside executable')
+    def test_compiler_version_must_be_a_goose_response(self):
+        import sys
+        p = self.new(); compiler = self.root/'not-goose'
+        short = (Path(__file__).resolve().parents[1]/'GOOSE_REVISION').read_text().strip()[:7]
+        compiler.write_text('#!'+sys.executable+'\nprint("noise!'+short+' arbitrary text")\n')
+        compiler.chmod(0o755)
+        self.run_honk('check', cwd=p, env={'GOOSE': str(compiler)}, ok=False)
+    def test_add_preserves_manifest_at_dependency_limit(self):
+        p = self.new(); original = ('[package]\nname="hello"\n[dependencies]\n'+''.join(f'd{i:03}={{path="."}}\n' for i in range(256))).encode()
+        (p/'Honk.toml').write_bytes(original)
+        self.run_honk('add', 'extra', '--path', '.', cwd=p, ok=False)
+        self.assertEqual((p/'Honk.toml').read_bytes(), original)
+    def test_add_preserves_manifest_at_byte_limit(self):
+        p = self.new(); head = '[package]\nname="hello"\n[dependencies]\n'
+        empty = ''.join(f'd{i:03} = {{ git = "https://example.invalid/", rev = "main" }}\n' for i in range(255))
+        width = (1047000-len(head)-len(empty))//255
+        original = (head+''.join(f'd{i:03} = {{ git = "https://example.invalid/{"x"*width}", rev = "main" }}\n' for i in range(255))).encode()
+        self.assertLess(len(original), 1048576)
+        (p/'Honk.toml').write_bytes(original)
+        self.run_honk('add', 'extra', '--git', 'https://example.invalid/'+'y'*4000, '--rev', 'main', cwd=p, ok=False)
+        self.assertEqual((p/'Honk.toml').read_bytes(), original)
+    def test_fetch_preserves_lockfile_at_byte_limit(self):
+        p = self.new(); self.run_honk('fetch', cwd=p); original = (p/'Honk.lock').read_bytes()
+        lib = self.root/'lib'; lib.mkdir()
+        for i in range(256): (lib/f'd{i:03}.goose').write_text(f'namespace d{i:03}; fn value() -> i64 {{ 1 }}')
+        path = './'*2012+'../lib'
+        manifest = '[package]\nname="hello"\n[dependencies]\n'+''.join(f'd{i:03}={{path="{path}"}}\n' for i in range(256))
+        self.assertLess(len(manifest), 1048576); (p/'Honk.toml').write_text(manifest)
+        self.run_honk('fetch', cwd=p, ok=False)
+        self.assertEqual((p/'Honk.lock').read_bytes(), original)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')
