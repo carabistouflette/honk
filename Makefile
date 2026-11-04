@@ -10,6 +10,7 @@ check:
 	$(GOOSE) check honk.goose
 	$(GOOSE) check tests/core.goose
 	$(GOOSE) check tests/process.goose
+	$(GOOSE) check tests/semver_probe.goose
 	git diff --check
 build:
 	$(GOOSE) build honk.goose -o .build/honk
@@ -26,15 +27,19 @@ test:
 	./.build/process-probe missing
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py
+	$(GOOSE) build tests/semver_probe.goose -o .build/semver-probe
+	HONK=$(CURDIR)/.build/honk SEMVER_PROBE=$(CURDIR)/.build/semver-probe GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 sanitize:
 	$(GOOSE) build tests/process.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/process-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize closed
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize overflow
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize signal
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize missing
+	$(GOOSE) build tests/semver_probe.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/semver-probe-sanitize
 	$(GOOSE) build honk.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/honk-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize SEMVER_PROBE=$(CURDIR)/.build/semver-probe-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/security.py
 portable:
 	$(GOOSE) build honk.goose --debug --no-bce --cc $(CURDIR)/scripts/portable-cc.sh -o .build/honk-portable

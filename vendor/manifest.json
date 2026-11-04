@@ -30,6 +30,16 @@
         "text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
+    },
+    {
+      "directory": "goose-semver",
+      "repository": "https://github.com/carabistouflette/goose-semver",
+      "revision": "2c91a8be80b231f725a18003f7e47ca99880d6dc",
+      "license": "Apache-2.0",
+      "files": {
+        "semver.goose": "6da6de08dc5a20bfa5a2e41d03bb9e82f80d305c43b6df3ceafbd7c19164260d",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
     }
   ]
 }

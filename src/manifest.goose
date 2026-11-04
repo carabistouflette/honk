@@ -2,6 +2,7 @@
 namespace manifest;
 const MAX_INPUT_BYTES = 1048576;
 import std;
+import semver;
 import toml;
 import text;
 import json;
@@ -73,14 +74,10 @@ fn commit(s: u8[:]) -> bool {
     return true;
 }
 fn version(s: u8[:]) -> bool {
-    var dots = 0; var digits = 0;
-    for c in s {
-        if c == '.' { if digits == 0 { return false; } dots++; digits = 0; }
-        else if c >= '0' && c <= '9' { if digits > 0 && s.len > 128 { return false; } digits++; }
-        else { return false; }
-    }
-    return dots == 2 && digits > 0 && s.len <= 64;
+    if s.len > 64 { return false; }
+    let parsed, error = semver::parse(s); return error.kind == semver::ErrorKind.None;
 }
+
 fn string(doc: toml::Document&, parent: i64, key: u8[:], fallback: u8[:] = "") -> u8[] {
     let id = toml::find(doc, parent, key);
     if id < 0 { return str(fallback); }
@@ -141,7 +138,7 @@ fn load(root: u8[:], project: Project&) {
         project.name = string(doc, package, "name"); project.version = string(doc, package, "version", "0.1.0");
         project.kind = string(doc, package, "kind", "bin");
         platform::require(package_name(project.name), "invalid package name (lowercase ASCII, digits, hyphen, underscore)");
-        platform::require(version(project.version), "version must have three numeric components");
+        platform::require(version(project.version), "version must be strict SemVer (limit 64 bytes)");
         platform::require(project.kind == "bin" || project.kind == "lib", "kind must be bin or lib");
         project.entry = string(doc, package, "entry", if project.kind == "bin" { "src/main.goose" } else { "src/lib.goose" });
         platform::require(source_entry(project.entry), "entry must be a safe relative .goose path");
