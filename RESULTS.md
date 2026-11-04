@@ -156,3 +156,35 @@ throughput or memory benchmark, or a guarantee about arbitrary descendants or
 signal storms. The existing terminal/recovery regressions exercise separate
 paths. The evidence does not claim Cargo parity or remove the documented
 platform, trust and cleanup limits.
+
+
+## Experimental 0.1.0 release checkpoint
+
+The accepted editor integration is public merge
+`1ce304fe9e672ab8452e34dd888f0f540653fc79`, whose tree matches reviewed head
+`866e5853bfcbeef1ad2069126fcb8979a355c85e`. It pins TOML
+`c1c703f8dd4ac4e0ebc95f35981e87becad76957` and goose-toml-edit
+`cedb2c3c98affbeb45bd34bc7a6618f5a9b75ad0`. The integrated five-case CLI suite
+checks byte preservation for LF/CRLF, inline/dotted/header dependency syntax,
+comments, EOF, missing sections, resource bounds and atomic rejection. The
+editor owner also completed 5,107 oracle calls, independent review and both
+native sanitizer toolchains before merge.
+
+The [reviewed-head matrix](https://github.com/carabistouflette/honk/actions/runs/41883903729)
+and [merged-main matrix](https://github.com/carabistouflette/honk/actions/runs/41885151398)
+passed with GCC and Clang. An independent fresh public clone passed vendor
+verification, build, frozen self-check and self-package verification using the
+exact pinned compiler and isolated cache directories.
+
+The release preparation changes only CLI version text and documentation after
+that merge. The local normal release checks (`make format check test security`),
+Clang static analysis of both native application files, and optimized-Python
+vendor verification passed. Final sanitizer and standalone release-candidate
+checks are release gates; their completion is recorded in the release notes and
+the exact candidate's hosted CI. No library, native adapter, compiler pin or
+lockfile is changed by release preparation.
+
+Unfinished Git-tag requirement selection and the pending SemVer
+consumer-overload fix are excluded from this release tree. Existing package
+version validation and workspace selection use the accepted parse/compare API;
+this CLI does not expose requirement-based dependency selection.

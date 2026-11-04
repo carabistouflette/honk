@@ -1,14 +1,17 @@
 # Changelog
 
-## Unreleased — experimental 0.1.0 candidate
+## 0.1.0 — 2026-11-04 (experimental prerelease)
 
-The intended candidate is a source-only release for Linux x86-64. No `v0.1.0` Honk tag or
-stable compatibility promise is implied by this section.
+Source-only release for Linux x86-64/glibc. APIs, manifests and lockfile formats
+may change; this release makes no stable compatibility promise.
 
 ### Project workflows
 
 - Scaffold binary/library projects; build, run, check, test, benchmark and format
   through an exact Goose compiler revision.
+- Preserve comments and formatting outside edited dependency TOML syntax;
+  validate edited manifests under the project lock before atomic replacement.
+  Inline parent-table edits fail safely without normalizing the source.
 - Resolve explicit Git/path dependency graphs, retain Git commits in a lockfile,
   and support locked/offline/frozen workflows and explicit workspace members.
 - Stage validated sources without modifying originals, check exported source
@@ -50,9 +53,8 @@ stable compatibility promise is implied by this section.
 ### Scope and limits
 
 Registry publishing/version solving, cross compilation, Windows/macOS and
-process-tree supervision remain outside this candidate. Dependency editing
-currently normalizes manifests and removes comments; comment-preserving editing
-is not claimed until its separate integration is validated.
+process-tree supervision remain outside this release. Git-tag requirement
+selection remains separate unfinished work and is not included.
 
 The HTTP transfer timeout is not a hard wall-clock DNS cancellation bound, and
 source metadata is not compiler-binary authentication or install authorization.
