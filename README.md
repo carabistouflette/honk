@@ -20,8 +20,8 @@ cd hello-honk
 The example creates a sibling application and leaves the Honk checkout clean.
 Build/test prerequisites: Linux, Git 2.31+, CMake 3.27+, C/C++20 compilers, Make,
 libc development headers, Python 3.11+, GNU tar, gzip and OpenSSL (TLS tests). The tests exercise
-packaging as well as builds. GCC is required by the provided sanitizer and
-portable-copy scripts.
+packaging as well as builds. The sanitizer and portable-copy scripts default to GCC; set
+`HONK_SANITIZER_CC=clang` to validate with Clang instead.
 The release workflow is initially validated on Linux x86-64/glibc; Windows,
 macOS, other architectures and libc implementations are not validated.
 

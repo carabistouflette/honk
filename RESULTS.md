@@ -11,6 +11,7 @@ GOOSE_REVISION. Then run:
 ```sh
 make check test security
 make sanitize portable
+HONK_SANITIZER_CC=clang make sanitize portable
 make bench
 ```
 
@@ -22,7 +23,7 @@ output limits, signalled children and launch failure. `security` runs 213
 seeded malformed-import probes and rejects FIFO manifests without blocking.
 
 `sanitize` instruments Honk's native adapter and generated native code with GCC
-AddressSanitizer/UndefinedBehaviorSanitizer, leak detection, Goose debug checks
+(default) or Clang AddressSanitizer/UndefinedBehaviorSanitizer, leak detection, Goose debug checks
 and bounds-check elimination disabled. It runs the integration/hostile suites
 and process probes. `portable` forces large-file kernel assistance off and tests
 binary source equality/independence, logical size limits and tracked-file staging
