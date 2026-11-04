@@ -18,8 +18,8 @@ cd hello-honk
 ```
 
 The example creates a sibling application and leaves the Honk checkout clean.
-Build/test prerequisites: Linux, Git, CMake 3.27+, C/C++20 compilers, Make,
-libc development headers, Python 3.11+, GNU tar and gzip. The tests exercise
+Build/test prerequisites: Linux, Git 2.31+, CMake 3.27+, C/C++20 compilers, Make,
+libc development headers, Python 3.11+, GNU tar, gzip and OpenSSL (TLS tests). The tests exercise
 packaging as well as builds. GCC is required by the provided sanitizer and
 portable-copy scripts.
 The release workflow is initially validated on Linux x86-64/glibc; Windows,
@@ -68,7 +68,7 @@ All project commands discover Honk.toml upward from cwd. Program arguments retai
 
 ## Reproducibility and safety
 
-Commit Honk.lock. It records the compiler revision and dependencies. An oversized resolved lockfile is rejected before replacing the original. Git refs resolve to full commits. `--locked` forbids lockfile changes; `--offline` forbids network/bootstrap but may write a lockfile for local dependencies; `--frozen` combines both. Local dependencies remain live source trees, not immutable releases. HTTPS is the only network Git transport. Credentials in manifests, shell commands, automatic lifecycle scripts, and Git hooks and fsmonitor commands are disabled for CLI Git invocations. Credentials may be supplied by Git transport environment/agents under your control; Git repository-context environment overrides (such as GIT_INDEX_FILE) are cleared and global Git configuration is deliberately disabled, so credential helpers and URL rewrites from it are not loaded. Native dependencies and the selected compiler can execute code; build only trusted projects.
+Commit Honk.lock. It records the compiler revision and dependencies. An oversized resolved lockfile is rejected before replacing the original. Git refs resolve to full commits. `--locked` forbids lockfile changes; `--offline` forbids network/bootstrap but may write a lockfile for local dependencies; `--frozen` combines both. Local dependencies remain live source trees, not immutable releases. HTTPS is the only network Git transport. Certificate and hostname verification are forced, including over inherited `GIT_SSL_NO_VERIFY` and URL-specific cache configuration; system Git CA settings remain available. Credentials in manifests, shell commands, automatic lifecycle scripts, and Git hooks and fsmonitor commands are disabled for CLI Git invocations. Credentials may be supplied by Git transport environment/agents under your control; Git repository-context environment overrides (such as GIT_INDEX_FILE) are cleared and global Git configuration is deliberately disabled, so credential helpers and URL rewrites from it are not loaded. Native dependencies and the selected compiler can execute code; build only trusted projects.
 
 Honk stages source trees under `.honk/` and leaves original sources intact. Source trees reject symlinks and special files and are bounded to 100,000 entries, 256 MiB, and depth 64 per tree; Goose sources and manifests are limited to 1 MiB each. Resolution is bounded to 256 packages; source discovery is bounded to 4096 Goose files and directories. Captured subprocess stdout is bounded to 1 MiB. Honk uses nonblocking project/cache locks: concurrent operations fail clearly; retry after the other process exits. Atomic text updates preserve existing ordinary permission bits; newly created text metadata is owner-only. Private per-user caches and project directories must not be writable by untrusted users.
 

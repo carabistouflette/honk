@@ -378,7 +378,8 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
       if (setenv("GIT_CONFIG_NOSYSTEM", "1", 1) ||
           setenv("GIT_CONFIG_GLOBAL", "/dev/null", 1) ||
           setenv("GIT_TERMINAL_PROMPT", "0", 1) ||
-          setenv("GIT_ALLOW_PROTOCOL", "https", 1))
+          setenv("GIT_ALLOW_PROTOCOL", "https", 1) ||
+          setenv("HONK_GIT_SSL_VERIFY", "true", 1))
         _exit(125);
       const char *context[] = {"GIT_TEMPLATE_DIR",
                                "GIT_DIR",
@@ -392,7 +393,8 @@ int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
                                "GIT_CONFIG_COUNT",
                                "GIT_CONFIG_PARAMETERS",
                                "GIT_CONFIG",
-                               "GIT_REPLACE_REF_BASE"};
+                               "GIT_REPLACE_REF_BASE",
+                               "GIT_SSL_NO_VERIFY"};
       for (size_t i = 0; i < sizeof context / sizeof context[0]; i++)
         if (unsetenv(context[i]))
           _exit(125);

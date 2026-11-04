@@ -547,6 +547,63 @@ class CLI(unittest.TestCase):
                               capture_output=True, timeout=10)
         self.assertEqual(proc.returncode, 0, proc.stderr)
         self.assertEqual(proc.stdout, b'')
+    def test_git_enforces_certificate_and_hostname_verification(self):
+        import http.server
+        import ssl
+        import threading
+        cert = self.root/'cert.pem'; key = self.root/'key.pem'
+        subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
+                        '-days', '1', '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost',
+                        '-keyout', str(key), '-out', str(cert)],
+                       check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=30)
+        requests = []; plain_requests = []; redirect = []
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def handle(self):
+                try: super().handle()
+                except (ssl.SSLError, ConnectionError): pass  # Rejected TLS peers may abort before HTTP.
+            def do_GET(self):
+                requests.append(self.path)
+                self.send_response(302 if redirect else 404)
+                if redirect: self.send_header('Location', redirect[0])
+                self.send_header('Content-Length', '0'); self.end_headers()
+            def log_message(self, *args): pass
+        class PlainHandler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                plain_requests.append(self.path)
+                self.send_response(404); self.send_header('Content-Length', '0'); self.end_headers()
+            def log_message(self, *args): pass
+        server = http.server.HTTPServer(('127.0.0.1', 0), Handler)
+        plain = http.server.HTTPServer(('127.0.0.1', 0), PlainHandler)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER); context.load_cert_chain(cert, key)
+        server.socket = context.wrap_socket(server.socket, server_side=True)
+        threads = [threading.Thread(target=lambda s=s: s.serve_forever(poll_interval=0.02), daemon=True) for s in (server, plain)]
+        for thread in threads: thread.start()
+        try:
+            p = self.new(); url = f'https://localhost:{server.server_port}/repo=fixture.git'
+            self.run_honk('add', 'helper', '--git', url, '--rev', 'HEAD', cwd=p)
+            insecure = {'GIT_SSL_NO_VERIFY': '1', 'HONK_GIT_SSL_VERIFY': 'false'}
+            self.run_honk('fetch', cwd=p, env=insecure, ok=False)
+            self.assertEqual(requests, [], 'Git contacted untrusted TLS endpoint')
+            repo = next((self.root/'cache/git').iterdir())
+            self.git(repo, 'config', f'http.{url}.sslVerify', 'false')
+            self.run_honk('fetch', cwd=p, env=insecure, ok=False)
+            self.assertEqual(requests, [], 'URL-specific config disabled verification')
+            trusted = {**insecure, 'GIT_SSL_CAINFO': str(cert)}
+            self.run_honk('fetch', cwd=p, env=trusted, ok=False)
+            self.assertGreater(len(requests), 0, 'trusted TLS never reached the HTTP handler')
+            previous = len(requests)
+            redirect.append(f'http://127.0.0.1:{plain.server_port}/repo.git')
+            self.run_honk('fetch', cwd=p, env=trusted, ok=False)
+            self.assertGreater(len(requests), previous)
+            self.assertEqual(plain_requests, [], 'HTTPS downgraded to HTTP')
+            previous = len(requests)
+            self.run_honk('remove', 'helper', cwd=p)
+            self.run_honk('add', 'helper', '--git', f'https://127.0.0.1:{server.server_port}/repo.git', '--rev', 'HEAD', cwd=p)
+            self.run_honk('fetch', cwd=p, env=trusted, ok=False)
+            self.assertEqual(len(requests), previous, 'Git ignored hostname mismatch')
+        finally:
+            for active in (server, plain): active.shutdown(); active.server_close()
+            for thread in threads: thread.join(timeout=5)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

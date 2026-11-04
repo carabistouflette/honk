@@ -50,7 +50,12 @@ fn run(args: const u8[:][:], cwd: u8[:]) {
 }
 fn git(args: const u8[:][:], cwd: u8[:]) -> u8[>..] {
     var packed: u8[>..] = [];
-    for a in ["git", "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.ext.allow=never", "-c", "protocol.file.allow=never"] { pack(packed, a); }
+    for a in ["git", "-c", "core.hooksPath=/dev/null", "-c", "core.fsmonitor=false", "-c", "protocol.ext.allow=never", "-c", "protocol.file.allow=never", "-c", "http.sslVerify=true"] { pack(packed, a); }
+    // URL-specific settings outrank generic http.sslVerify. --config-env splits
+    // at the final '=', retaining valid URL paths that themselves contain '='.
+    for a in args {
+        if a.len > 8 && a[..8] == "https://" { pack(packed, str("--config-env=http.", a, ".sslVerify=HONK_GIT_SSL_VERIFY")); }
+    }
     for a in args { pack(packed, a); }
     var out: u8[>..] = []; let code = spawn(packed, cwd, true, out);
     if code != 0 { die(str("git failed (exit ", code, ")")); }
