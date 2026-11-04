@@ -81,3 +81,10 @@ This is an evolving Git/path package workflow. Registry publishing, semver solvi
 `make check test` runs formatting, typechecking, and black-box process tests. `make portable` exercises source-copy independence, byte limits, and tracked-file staging with kernel-assisted copying disabled and native sanitizers enabled. `make security` runs 213 deterministic malformed-import probes and FIFO rejection. `make sanitize` runs integration and hostile-input suites with AddressSanitizer, UndefinedBehaviorSanitizer, debug checks, and bounds-check elimination disabled in Honk. `make bench` records all raw samples, compiler, platform and source revision in `.build/bench.json`, plus wide-directory and dense production/dev dependency-graph workloads in `.build/audit-perf.json`. `tests/audit_perf.py` can interleave a comparison binary from `HONK_BASELINE` against `HONK`; no timing threshold or universal performance claim.
 
 Large staged files use Linux kernel-assisted copying where supported, with a bounded portable fallback. Temporary staging rewrites are atomic without requesting crash durability; manifest, lockfile, and cache metadata writes retain their durability syncs. Snapshot tests verify byte equality, executable assets, source/copy independence, and rejection above the logical byte limit. Benchmarks record their filesystem and include a 32 MiB asset workload; `AUDIT_TEMP_ROOT` selects the fixture location.
+
+Dependency `add`/`remove` preserves comments and formatting outside edited TOML
+syntax using goose-toml-edit. Removal keeps attached comments as standalone
+comments. Inline dependency assignments, dotted dependency fields and declared
+dependency tables are supported; editing a dependency inside an inline parent
+`dependencies = { ... }` is rejected before saving. Result validation and the
+existing atomic manifest write remain in effect.

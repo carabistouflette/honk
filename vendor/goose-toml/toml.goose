@@ -1,7 +1,11 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace toml;
 import std;
+import vendor.text;
+import document;
+import writer;
 
+enum Version { V1_0, V1_1 }
 enum Kind { Table, Array, String, Integer, Float, Boolean, OffsetDateTime, LocalDateTime, LocalDate, LocalTime }
 // Declaration state is distinct from value kind. Inline tables are sealed recursively.
 enum State { Implicit, Dotted, Explicit, Inline, Sealed, ArrayOfTables }
@@ -14,7 +18,7 @@ struct Node {
     integer: i64                             = 0, number: f64 = 0.0, boolean: bool = false,
 }
 root struct Document { indexed: i64 = 0, nodes: Node[>..], bytes: u8[>..], index: i64[>..] }
-struct Reader { source: const u8[:], pos: i64 = 0, work: i64 = 0, error: u8[>..] }
+struct Reader { source: const u8[:], version: Version = Version.V1_0, pos: i64 = 0, work: i64 = 0, error: u8[>..] }
 let MAX_INPUT_BYTES = 1048576;
 let MAX_NODES = 65536;
 let MAX_DEPTH = 64;
@@ -22,11 +26,11 @@ let MAX_NUMBER_BYTES = 128;
 let MAX_KEY_WORK = 16777216;
 
 // Replaces the destination. A failure leaves a partial document: discard it.
-fn parse_into(source: u8[:], doc: Document&) -> u8[>..] {
+fn parse_into(source: u8[:], doc: Document&, version: Version = Version.V1_0) -> u8[>..] {
     doc.indexed = 0; doc.nodes.clear(); doc.bytes.clear(); doc.index.clear();
     if source.len > MAX_INPUT_BYTES { return str("toml: input exceeds 1 MiB at byte 0"); }
     if !valid_utf8(source) { return str("toml: invalid UTF-8 at byte 0"); }
-    var r = Reader { source: source, error: [] };
+    var r = Reader { source: source, version: version, error: [] };
     doc.nodes.push(Node { state: State.Explicit, .. });
     var current = 0;
     while r.pos < source.len && r.error.len == 0 {
@@ -278,14 +282,18 @@ recursive fn value(r: Reader&, doc: Document&, id: i64) {
         expect(r, ']');
     } else if c == '{' {
         doc.nodes[id].kind = Kind.Table; doc.nodes[id].state = State.Inline; r.pos++;
-        horizontal(r);
+        if r.version == Version.V1_1 { whitespace(r); } else { horizontal(r); }
         if peek(r) != '}' {
             loop {
                 assignment(r, doc, id);
                 if r.error.len > 0 { return; }
-                horizontal(r);
+                if r.version == Version.V1_1 { whitespace(r); } else { horizontal(r); }
                 if peek(r) != ',' { break; }
                 r.pos++;
+                if r.version == Version.V1_1 {
+                    whitespace(r);
+                    if peek(r) == '}' { break; }
+                }
             }
         }
         if !expect(r, '}') { return; }
@@ -299,12 +307,17 @@ fn hex(c: u8) -> i64 {
     if c >= 'A' && c <= 'F' { return (c - 'A') as i64 + 10; }
     return -1;
 }
-fn utf8(out: u8[>..]&, code: i64) {
-    if code < 128 { out.push(code as u8); }
-    else if code < 2048 { out.push((192 | (code >> 6)) as u8); out.push((128 | (code & 63)) as u8); }
-    else if code < 65536 { out.push((224 | (code >> 12)) as u8); out.push((128 | ((code >> 6) & 63)) as u8); out.push((128 | (code & 63)) as u8); }
-    else { out.push((240 | (code >> 18)) as u8); out.push((128 | ((code >> 12) & 63)) as u8); out.push((128 | ((code >> 6) & 63)) as u8); out.push((128 | (code & 63)) as u8); }
+// Prepared once. The standard byte-set search uses bounded loads and may scan
+// several bytes at a time; all special bytes still enter the scalar decoder.
+fn string_stop_set(quote: u8) -> ByteSet {
+    var members: bool[256] = [false; 256];
+    for c in 32 { if c != 9 { members[c] = true; } }
+    members[127] = true; members[quote] = true;
+    if quote == '"' { members['\\'] = true; }
+    return byte_set(members);
 }
+let BASIC_STRING_STOPS = string_stop_set('"');
+let LITERAL_STRING_STOPS = string_stop_set('\'');
 fn string(r: Reader&, out: u8[>..]&, multiline_allowed: bool) {
     let quote = peek(r); r.pos++;
     var multi = false;
@@ -312,6 +325,11 @@ fn string(r: Reader&, out: u8[>..]&, multiline_allowed: bool) {
     // Copy the ordinary prefix in one span. After its first escape/newline,
     // use the scalar decoder, avoiding repeated scans in escape-heavy text.
     let start = r.pos;
+    if r.source.len - r.pos >= 128 {
+        let stop = if quote == '"' { find_any(r.source[r.pos..], BASIC_STRING_STOPS) }
+            else { find_any(r.source[r.pos..], LITERAL_STRING_STOPS) };
+        r.pos = if stop < 0 { r.source.len } else { r.pos + stop };
+    }
     while r.pos < r.source.len {
         let c = peek(r);
         if c == quote || (c == '\\' && quote == '\"') || (c < 32 && c != '\t') || c == 127 { break; }
@@ -353,8 +371,9 @@ fn string(r: Reader&, out: u8[>..]&, multiline_allowed: bool) {
         if e == 'b' { out.push(8); } else if e == 't' { out.push('\t'); }
         else if e == 'n' { out.push('\n'); } else if e == 'f' { out.push(12); }
         else if e == 'r' { out.push('\r'); } else if e == '"' || e == '\\' { out.push(e); }
-        else if e == 'u' || e == 'U' {
-            let digits = if e == 'u' { 4 } else { 8 };
+        else if e == 'e' && r.version == Version.V1_1 { out.push(27); }
+        else if e == 'u' || e == 'U' || (e == 'x' && r.version == Version.V1_1) {
+            let digits = if e == 'x' { 2 } else if e == 'u' { 4 } else { 8 };
             var code = 0;
             for i in digits {
                 if r.pos >= r.source.len { fail(r, "unfinished Unicode escape"); return; }
@@ -363,7 +382,7 @@ fn string(r: Reader&, out: u8[>..]&, multiline_allowed: bool) {
                 code = code * 16 + d; r.pos++;
             }
             if code > 1114111 || (code >= 55296 && code <= 57343) { fail(r, "invalid Unicode scalar"); return; }
-            utf8(out, code);
+            assert(toml_text::append_utf8(out, code));
         } else { fail(r, "invalid escape"); return; }
     }
     fail(r, "unterminated string");
@@ -390,8 +409,8 @@ fn scalar(r: Reader&, doc: Document&, id: i64) {
     }
     let token = r.source[start..r.pos];
     if token == "true" || token == "false" { doc.nodes[id].kind = Kind.Boolean; doc.nodes[id].boolean = token == "true"; return; }
-    if (token.len >= 10 && token[4] == '-' && token[7] == '-') || (token.len >= 8 && token[2] == ':' && token[5] == ':') {
-        let kind, ok = datetime(token);
+    if (token.len >= 10 && token[4] == '-' && token[7] == '-') || (token.len >= 5 && token[2] == ':') {
+        let kind, ok = datetime(token, r.version);
         if !ok { fail(r, "invalid date/time"); return; }
         let offset = doc.bytes.len;
         doc.bytes.append(token);
@@ -466,7 +485,7 @@ fn decimal(s: u8[:]) -> i64 {
     return n;
 }
 // Retain arbitrary fractional precision lexically; do not round or apply timezones.
-fn datetime(s: u8[:]) -> Kind, bool {
+fn datetime(s: u8[:], version: Version = Version.V1_0) -> Kind, bool {
     var i = 0; var date = false;
     if s.len >= 10 && s[4] == '-' && s[7] == '-' {
         let year = decimal(s[..4]); let month = decimal(s[5..7]); let day = decimal(s[8..10]);
@@ -479,11 +498,19 @@ fn datetime(s: u8[:]) -> Kind, bool {
         if s[10] != 'T' && s[10] != 't' && s[10] != ' ' { return Kind.LocalDateTime, false; }
         i = 11; date = true;
     }
-    if s.len - i < 8 || s[i + 2] != ':' || s[i + 5] != ':' { return Kind.LocalTime, false; }
-    let hour = decimal(s[i..i + 2]); let minute = decimal(s[i + 3..i + 5]); let second = decimal(s[i + 6..i + 8]);
-    if hour < 0 || hour > 23 || minute < 0 || minute > 59 || second < 0 || second > 60 { return Kind.LocalTime, false; }
-    i += 8;
+    if s.len - i < 5 || s[i + 2] != ':' { return Kind.LocalTime, false; }
+    let hour = decimal(s[i..i + 2]); let minute = decimal(s[i + 3..i + 5]);
+    if hour < 0 || hour > 23 || minute < 0 || minute > 59 { return Kind.LocalTime, false; }
+    i += 5;
+    var seconds = false;
+    if i < s.len && s[i] == ':' {
+        if s.len - i < 3 { return Kind.LocalTime, false; }
+        let second = decimal(s[i + 1..i + 3]);
+        if second < 0 || second > 60 { return Kind.LocalTime, false; }
+        i += 3; seconds = true;
+    } else if version == Version.V1_0 { return Kind.LocalTime, false; }
     if i < s.len && s[i] == '.' {
+        if !seconds { return Kind.LocalTime, false; }
         i++;
         let fraction = i;
         while i < s.len && digit(s[i]) { i++; }
@@ -497,33 +524,6 @@ fn datetime(s: u8[:]) -> Kind, bool {
     return Kind.OffsetDateTime, oh >= 0 && oh <= 23 && om >= 0 && om <= 59;
 }
 
-fn valid_utf8(text: u8[:]) -> bool {
-    var i = 0;
-    // Scan an ASCII prefix in safe eight-byte chunks, then use the scalar
-    // validator for the remainder. No word casts or alignment assumptions.
-    while text.len - i >= 8 && (text[i] | text[i + 1] | text[i + 2] | text[i + 3] |
-            text[i + 4] | text[i + 5] | text[i + 6] | text[i + 7]) < 0x80 { i += 8; }
-    while i < text.len {
-        let c = text[i];
-        i++;
-        if c < 0x80 { continue; }
-        var count = 0;
-        var lo: u8 = 0x80;
-        var hi: u8 = 0xbf;
-        if c >= 0xc2 && c <= 0xdf { count = 1; }
-        else if c >= 0xe0 && c <= 0xef {
-            count = 2;
-            if c == 0xe0 { lo = 0xa0; }
-            if c == 0xed { hi = 0x9f; }
-        } else if c >= 0xf0 && c <= 0xf4 {
-            count = 3;
-            if c == 0xf0 { lo = 0x90; }
-            if c == 0xf4 { hi = 0x8f; }
-        } else { return false; }
-        if count > text.len - i { return false; }
-        if text[i] < lo || text[i] > hi { return false; }
-        for j in 1..count { if text[i + j] < 0x80 || text[i + j] > 0xbf { return false; } }
-        i += count;
-    }
-    return true;
-}
+// Supported compatibility entry point; accepts Unicode scalars including NUL.
+// TOML syntax applies its own control-character restrictions after preflight.
+fn valid_utf8(source: u8[:]) -> bool { toml_text::valid_utf8(source) }

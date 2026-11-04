@@ -3,6 +3,7 @@ namespace commands;
 import std;
 import os;
 import argparse;
+import toml_edit;
 import .platform;
 import .manifest;
 import .project;
@@ -23,22 +24,36 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     if cmd == "add" || cmd == "remove" {
         platform::require(options.positionals.len == 1, "add/remove needs one dependency import name");
         let name = options.positionals[0]; platform::require(manifest::identifier(name), "invalid dependency import name");
+        // Re-read and validate after taking the project lock. Decisions and
+        // source spans must describe the same manifest snapshot.
+        let source = platform::load(str(p.root, "/Honk.toml"));
+        var current = manifest::Project { root: str(p.root), .. };
+        manifest::parse(source, current);
+        var edited: u8[>..] = [];
         if cmd == "add" {
-            platform::require(p.dependencies.len < 256, "dependency limit is 256");
-            platform::require(deps_name(p, name) < 0, "dependency already exists; remove it before replacing it");
+            platform::require(current.dependencies.len < 256, "dependency limit is 256");
+            platform::require(deps_name(current, name) < 0, "dependency already exists; remove it before replacing it");
             var dep = manifest::Dependency { name: str(name), path: str(options.get("path")), git: str(options.get("git")), rev: str(options.get("rev")), dev: options.has("dev") };
             manifest::validate_dependency(dep);
-            p.dependencies.push(copy(dep));
+            var value = str("{ ");
+            if dep.path.len > 0 { value.append("path = "); manifest::quoted(value, dep.path); }
+            else { value.append("git = "); manifest::quoted(value, dep.git); value.append(", rev = "); manifest::quoted(value, dep.rev); }
+            value.append(" }");
+            let path: const u8[:][] = [if dep.dev { "dev-dependencies" } else { "dependencies" }, name];
+            let error = toml_edit::set(source, path, value, edited);
+            platform::require(error.len == 0, error);
         } else {
-            platform::require(deps_name(p, name) >= 0, "dependency does not exist");
-            // Rebuild once: variable-size array elements are sequential, not random-access.
-            var kept: manifest::Dependency[>..] = [];
-            for dep in p.dependencies { if dep.name != name { kept.push(copy(dep)); } }
-            p.dependencies.clear(); for dep in kept { p.dependencies.push(copy(dep)); }
+            platform::require(deps_name(current, name) >= 0, "dependency does not exist");
+            var dev = false;
+            for dep in current.dependencies { if dep.name == name { dev = dep.dev; } }
+            let path: const u8[:][] = [if dev { "dev-dependencies" } else { "dependencies" }, name];
+            let error = toml_edit::remove(source, path, edited);
+            platform::require(error.len == 0, error);
         }
-        let text = manifest::serialize(p);
-        platform::require(text.len <= manifest::MAX_INPUT_BYTES, "updated manifest exceeds 1 MiB; original is unchanged");
-        platform::save(str(p.root, "/Honk.toml"), text);
+        platform::require(edited.len <= manifest::MAX_INPUT_BYTES, "updated manifest exceeds 1 MiB; original is unchanged");
+        var validated = manifest::Project { root: str(p.root), .. };
+        manifest::parse(edited, validated);
+        platform::save(str(p.root, "/Honk.toml"), edited);
         print(if cmd == "add" { "Added " } else { "Removed " }, name, "; run honk fetch to update Honk.lock");
         platform::unlock(lock); return;
     }

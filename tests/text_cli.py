@@ -71,7 +71,7 @@ class TextCLI(unittest.TestCase):
                 proc = self.call("metadata", cwd=path, ok=False)
                 self.assertEqual(proc.stdout, b"")
                 self.assertIn(b"UTF-8 project path", proc.stderr)
-    def test_self_check_and_package_include_declared_text(self):
+    def test_self_check_and_package_include_declared_libraries(self):
         source = Path(__file__).resolve().parents[1]
         project = self.root / "self-project"
         project.mkdir()
@@ -90,6 +90,7 @@ class TextCLI(unittest.TestCase):
         lock = (project / "Honk.lock").read_bytes()
         manifest = tomllib.loads((project / "Honk.toml").read_text())
         self.assertEqual(manifest["dependencies"]["text"], {"path": "vendor/goose-text"})
+        self.assertEqual(manifest["dependencies"]["toml_edit"], {"path": "vendor/goose-toml-edit"})
         self.call("check", "--frozen", cwd=project)
         self.call("package", "--frozen", cwd=project)
         label = manifest["package"]["name"] + "-" + manifest["package"]["version"]
@@ -98,6 +99,9 @@ class TextCLI(unittest.TestCase):
             for name in ("text.goose", "LICENSE"):
                 expected = (project / "vendor" / "goose-text" / name).read_bytes()
                 self.assertEqual(package.extractfile(label + "/vendor/goose-text/" + name).read(), expected)
+            for name in ("toml_edit.goose", "LICENSE"):
+                expected = (project / "vendor" / "goose-toml-edit" / name).read_bytes()
+                self.assertEqual(package.extractfile(label + "/vendor/goose-toml-edit/" + name).read(), expected)
         self.assertEqual((project / "Honk.lock").read_bytes(), lock)
 
 if __name__ == "__main__":

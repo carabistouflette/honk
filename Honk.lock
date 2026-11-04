@@ -3,6 +3,13 @@ version = 1
 compiler = "eadca409f68210893f366e60d0c2f0dc29a339be"
 
 [[dependency]]
+name = "toml_edit"
+path = "vendor/goose-toml-edit"
+git = ""
+rev = ""
+commit = ""
+
+[[dependency]]
 name = "toml"
 path = "vendor/goose-toml"
 git = ""

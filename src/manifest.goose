@@ -131,6 +131,9 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
 fn load(root: u8[:], project: Project&) {
     project.root = platform::absolute(root);
     let input = platform::load(str(project.root, "/Honk.toml"));
+    parse(input, project);
+}
+fn parse(input: u8[:], project: Project&) {
     var doc = toml::Document { .. }; let error = toml::parse_into(input, doc);
     platform::require(error.len == 0, error);
     keys(doc, 0, ["package", "dependencies", "dev-dependencies", "toolchain", "workspace"]);

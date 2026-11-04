@@ -26,6 +26,7 @@ test:
 	./.build/process-probe missing
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py
+	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/manifest_edit_cli.py
 sanitize:
 	$(GOOSE) build tests/process.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/process-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize closed
@@ -36,6 +37,7 @@ sanitize:
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/security.py
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/manifest_edit_cli.py
 portable:
 	$(GOOSE) build honk.goose --debug --no-bce --cc $(CURDIR)/scripts/portable-cc.sh -o .build/honk-portable
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-portable GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py CLI.test_binary_source_snapshots_are_independent CLI.test_oversized_staging_file_fails_before_copy CLI.test_package_stages_only_tracked_files

@@ -27,3 +27,5 @@ redistributing compiler/build outputs, retain their applicable upstream notices.
 Honk's native adapter uses system libc/POSIX/Linux interfaces. Git, CMake, C/C++
 compilers, Python, GNU tar and gzip are external development/runtime tools, not
 vendored source packages in this distribution.
+
+The vendored goose-toml-edit editor is Apache-2.0; see vendor/goose-toml-edit/LICENSE and vendor/manifest.json. Its pinned TOML parser includes the original nested vendor notices and licenses.
