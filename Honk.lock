@@ -29,3 +29,10 @@ path = "vendor/goose-text"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "semver"
+path = "vendor/goose-semver"
+git = ""
+rev = ""
+commit = ""

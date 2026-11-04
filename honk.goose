@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import semver from "./vendor/goose-semver";
 import text from "./vendor/goose-text";
 import toml_edit from "./vendor/goose-toml-edit";
 import toml from "./vendor/goose-toml";
@@ -10,6 +11,7 @@ import .src.deps;
 import .src.build;
 import .src.toolchain;
 import .src.commands;
+import .src.version_policy;
 import std;
 import os;
 fn usage() {
@@ -97,7 +99,14 @@ fn emit_metadata(p: manifest::Project&, options: const argparse::Result&) {
     platform::require(selected > 0, "no workspace package matched"); write_stdout("]\n");
 }
 
-fn selected_member(p: manifest::Project&, name: u8[:]) -> u8[>..] {
+fn selected_member(p: manifest::Project&, selector: u8[:]) -> u8[>..] {
+    var at = selector.len; for c, i in selector { if c == '@' { at = i; break; } }
+    let name = selector[..at]; platform::require(manifest::package_name(name), "invalid workspace package selector");
+    let versioned = at < selector.len;
+    let requested_text = if versioned { selector[at + 1..] } else { "0.0.0" };
+    platform::require(requested_text.len <= 64, "workspace selector version exceeds 64 bytes");
+    let requested, requested_error = semver::parse(requested_text);
+    platform::require(requested_error.kind == semver::ErrorKind.None, "workspace selector needs a strict full SemVer version");
     platform::require(p.members.len > 0, "manifest has no workspace members");
     var selected: u8[>..] = [];
     for member in p.members {
@@ -105,6 +114,11 @@ fn selected_member(p: manifest::Project&, name: u8[:]) -> u8[>..] {
         var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
         platform::require(child.members.len == 0, "nested workspaces are not supported");
         if child.name != name { continue; }
+        if versioned {
+            let candidate, error = semver::parse(child.version);
+            platform::require(error.kind == semver::ErrorKind.None, "invalid workspace member version");
+            if semver::compare(candidate, requested) != 0 { continue; }
+        }
         platform::require(selected.len == 0, "ambiguous workspace package name"); selected = str(child.root);
     }
     platform::require(selected.len > 0, "no workspace package matched"); return selected;

@@ -1,7 +1,7 @@
 # Vendored libraries
 
 Honk includes unmodified Apache-2.0 snapshots of goose-toml, goose-argparse,
-goose-text and goose-toml-edit.
+goose-text, goose-semver and goose-toml-edit.
 Exact upstream URLs, full commits, source/license SHA-256 values and included
 files are recorded in [manifest.json](manifest.json). Attribution and license
 links are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
