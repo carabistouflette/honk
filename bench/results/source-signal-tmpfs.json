@@ -1,0 +1,136 @@
+{
+  "binary": "honk",
+  "binary_sha256": "62f030828ed42c6cbd49f7672b8294db87629d5fd57043a61119ed72e5d4adfd",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "revision": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+  "compiler": "goose eadca40 (runtime 3025e5810379)",
+  "dirty": false,
+  "samples": {
+    "wide_check": {
+      "after": {
+        "milliseconds": [
+          36.379816,
+          37.835469,
+          37.619075,
+          35.549703,
+          35.396874,
+          38.108676,
+          38.736664,
+          38.402954,
+          38.641773
+        ],
+        "median_ms": 37.835469
+      },
+      "before": {
+        "milliseconds": [
+          37.454934,
+          36.278109,
+          37.24753,
+          37.404995,
+          34.443097,
+          37.293683,
+          41.717828,
+          40.217266,
+          37.326864
+        ],
+        "median_ms": 37.326864
+      }
+    },
+    "dense_graph_check": {
+      "after": {
+        "milliseconds": [
+          47.278845,
+          49.476345,
+          50.01992,
+          48.801983,
+          47.411467,
+          47.030223,
+          47.171004,
+          48.005591,
+          48.787215
+        ],
+        "median_ms": 48.005591
+      },
+      "before": {
+        "milliseconds": [
+          46.98226,
+          47.680029,
+          48.946402,
+          48.207477,
+          47.531467,
+          45.959933,
+          47.667275,
+          48.344998,
+          52.304373
+        ],
+        "median_ms": 47.680029
+      }
+    },
+    "dense_dev_graph_check": {
+      "after": {
+        "milliseconds": [
+          27.759029,
+          20.684146,
+          20.326423,
+          18.640467,
+          19.202932,
+          19.266454,
+          18.759877,
+          18.783465,
+          19.117524
+        ],
+        "median_ms": 19.202932
+      },
+      "before": {
+        "milliseconds": [
+          39.458197,
+          22.613381,
+          19.477443,
+          18.887452,
+          18.692593,
+          18.279902,
+          19.000242,
+          18.998862,
+          18.39494
+        ],
+        "median_ms": 18.998862
+      }
+    },
+    "asset_32mib_check": {
+      "after": {
+        "milliseconds": [
+          38.833617,
+          34.324961,
+          40.669628,
+          39.622615,
+          39.018821,
+          38.751938,
+          38.541555,
+          39.1252,
+          38.833852
+        ],
+        "median_ms": 38.833852
+      },
+      "before": {
+        "milliseconds": [
+          39.753982,
+          37.206884,
+          39.345254,
+          36.80108,
+          39.955719,
+          38.963426,
+          38.14746,
+          38.953998,
+          39.494642
+        ],
+        "median_ms": 38.963426
+      }
+    }
+  },
+  "baseline": "honk-before-source-signal-audit",
+  "baseline_binary_sha256": "1e6efb9cc22fbe49f9cc6b5cb6a6db28628ce17685b3372f155dc1bd76ef4a9b",
+  "baseline_revision": "f427cd1e39191b7ce6da06c6916f79487676a5ff",
+  "cpu_model": "Intel(R) Core(TM) Ultra 7 258V",
+  "build_method": "make build: Goose default optimization and C backend default -O2; caller-supplied comparison binaries must use the same flags",
+  "filesystem": "tmpfs"
+}

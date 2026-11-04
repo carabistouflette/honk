@@ -119,3 +119,8 @@ The [2026-11-04 follow-up audit](docs/AUDIT-2026-11-04.md) records subsequently
 fixed bugs, independent rechecks, expanded GCC/Clang validation and complete
 paired samples against published `9874ad5`. The original measurements above
 remain tied to their stated source revisions.
+
+The subsequent [source and signal audit](docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md)
+records six further reproduced fixes, the 62-case suite, independent rechecks
+and paired samples against `f427cd1`, including all slower results and remaining
+process-group cancellation limits.

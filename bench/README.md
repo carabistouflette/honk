@@ -43,3 +43,6 @@ local results are not universal rankings or a claim of Cargo parity.
 
 [Follow-up audit measurements](../docs/AUDIT-2026-11-04.md) compare the hardened
 implementation with the first public main and retain every measured workload.
+
+[Source and signal audit measurements](../docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md)
+record the next reviewed source and complete paired samples against `f427cd1`.
