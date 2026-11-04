@@ -1,0 +1,602 @@
+{
+  "revision": "db81d8fe552b233231ff8ff29af9e75761484cd6",
+  "dirty": true,
+  "source_sha256": {
+    "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+    "Makefile": "f9872c48d4046cdde3147c107bce625a2bd32aa79ef9904008d55d4f1e2dc57c",
+    "bench/process.goose": "e8d3cb46e8985b64a0f1ea2c4430069d055548ccecae20cbb1bee0a8851ee43b",
+    "bench/process_profile.py": "ca6640bf7c934e9dad7c6c2f8a2144e9b5c565365a8d54fa6201c6ee19705f88",
+    "honk.build": "f4880cbe94d4638a72d713187d60a8192e46950a9615e19a683db97e85d5d48a",
+    "honk.goose": "6b7e4d4f6883bf25ebc15759a8a451280988c2c1371a6da4ec7999aa38d28339",
+    "native/platform.c": "ab89c4bc0da70cfd13de030f3553a167d33cdae27e98a6ea800b1436d7d0aa3e",
+    "scripts/process-fault-cc.sh": "bab9a6e4e001261227eee8a949935e790d164fa2875faf068ca9c212894d55e9",
+    "scripts/sanitizer-cc.sh": "5e2587f55f6ef0d5355de9c375fe8eb6d57b7858fab9e4d3abb8b95b2dfff428",
+    "src/build.goose": "c8d6a38379ded93730f64fceb71c582cf9c6e9ad46449c2c50c7852501d8b3a7",
+    "src/commands.goose": "927c1cd94dafc0dfae3d8dbbe9349a8f2f69b88c3a542057edb75c14c7a17026",
+    "src/deps.goose": "71bfec311d90150ce02497e26b54e4ddfd849be08356021c034b153f4a5a9034",
+    "src/distribution.goose": "fc4580e5ad5c3ee774f297af0df50e5272eb8f9ee1ee356d40b98ee17c1b4212",
+    "src/manifest.goose": "8f2120996138c048154b25ae5ce1bd5c856f8f00135efc2fa75982a03d46afda",
+    "src/platform.goose": "a11e0ef78e284680e13adf3ce1d6f66a84066164120a9454719b42431acb0f52",
+    "src/project.goose": "3cbe345e9c4751525001194312d04fc1d8eba4b6f60ad8e97faa0eaeb34be936",
+    "src/source.goose": "ffe15c4a90bb0fdec88e30f2e42d435291878c08bcc723cbf0fde6a423566d4f",
+    "src/toolchain.goose": "eec16b369eb0a867a78152db73f247091bb3489667f75093a4ba89ba0e859325",
+    "src/version_policy.goose": "cfffd55622e7dc8fc6d7f5b4655113ec224fec6b2b1628c5b32db1ab946d0ea0",
+    "tests/core.goose": "8ca82a794b2998732b6ebdceb128fe76c137d7f96f3b4eb54dc792931b5129ec",
+    "tests/process.goose": "6d79e4add608d8eba419bb599556b3b9c893e7b2531d6e2af0f73f615ce184c9",
+    "tests/process_fault.c": "db15059de033fd8a1f4773e7681c91657952fb4bff15d99c37c40e73941e5ba3",
+    "tests/process_fault.goose": "0d4b9bd2f336eeecf496a321dccbeac09f1ef1c442f7d7daa28b4c34c0278c4c",
+    "tests/semver_probe.goose": "a29a1d7ba1af87688dca57c5b42265c7900134d9ff984826a70f7a6152f2210c",
+    "vendor/goose-argparse/argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
+    "vendor/goose-process/native/internal.h": "b2c259a1cca4ad5dabd41fa979a4bfdaa6b143e356944d3b0dc57f824d2f901a",
+    "vendor/goose-process/native/launch.c": "1b893ad4bb688af81d8f2ef1e3dbddaabcadeede23768e4da6d518b86c607c3e",
+    "vendor/goose-process/native/process.c": "30bc91f9fbefb82e6fd61b0723047a638339dfd736a6777be836965e0fb04819",
+    "vendor/goose-process/native/process.h": "cea1518e8bdf6a37710473f9f96d5e588adeafbace7b7393c1b3f5a39ebe8d38",
+    "vendor/goose-process/process.build": "8ad78d100d5840ac5b96356d2cac08af1189a86ef738878f3457945365671a26",
+    "vendor/goose-process/process.goose": "b28d4f10a408d5eaf444550fab8861a80b63a358f4aa0ce49174d59ca34c6327",
+    "vendor/goose-semver/semver.goose": "6da6de08dc5a20bfa5a2e41d03bb9e82f80d305c43b6df3ceafbd7c19164260d",
+    "vendor/goose-text/text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+    "vendor/goose-toml/toml.goose": "13545623d05ccebdfe39a81b31a368c245177b246f44323122469903ccab962d"
+  },
+  "binaries_sha256": {
+    "before": "9e703d693083f761df7e887760dff91b34d4d7d6548ee722e751865949173580",
+    "after": "3f392ae94f39968de733b350650525fc7613a6c06057e414889bb383329f00a7"
+  },
+  "before_requested_revision": "75d5d73647467040e7c3634cd9473aeff3859c18",
+  "goose_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+  "cc_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287",
+  "goose_version": "goose eadca40 (runtime 3025e5810379)",
+  "cc_version": "gcc (GCC) 16.2.1 20260810",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "affinity": [
+    3
+  ],
+  "cpu_model": "Intel(R) Core(TM) Ultra 7 258V",
+  "seed": 491,
+  "rounds": 9,
+  "children_per_batch": 200,
+  "samples": [
+    {
+      "round": 0,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 156.44893,
+      "cpu_ms": 150.755,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 0,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 115.174858,
+      "cpu_ms": 111.874,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 0,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 226.77696,
+      "cpu_ms": 220.432,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 0,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 204.766319,
+      "cpu_ms": 199.42300000000003,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 0,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 185.947986,
+      "cpu_ms": 180.672,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 0,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 201.840529,
+      "cpu_ms": 195.61,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 1,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 114.191854,
+      "cpu_ms": 110.771,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 1,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 139.917756,
+      "cpu_ms": 136.606,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 1,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 199.340307,
+      "cpu_ms": 193.84399999999997,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 1,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 187.227919,
+      "cpu_ms": 182.442,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 1,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 204.131005,
+      "cpu_ms": 199.05499999999998,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 1,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 225.61308,
+      "cpu_ms": 219.62199999999999,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 2,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 112.415803,
+      "cpu_ms": 109.32300000000001,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 2,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 140.567402,
+      "cpu_ms": 137.219,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 2,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 226.146583,
+      "cpu_ms": 219.855,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 2,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 207.150737,
+      "cpu_ms": 201.569,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 2,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 203.719601,
+      "cpu_ms": 197.55299999999997,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 2,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 192.586501,
+      "cpu_ms": 186.662,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 3,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 121.240216,
+      "cpu_ms": 117.38799999999999,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 3,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 143.510492,
+      "cpu_ms": 139.82899999999998,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 3,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 236.520603,
+      "cpu_ms": 228.856,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 3,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 207.730327,
+      "cpu_ms": 202.13899999999995,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 3,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 189.096024,
+      "cpu_ms": 183.732,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 3,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 199.676411,
+      "cpu_ms": 193.886,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 4,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 189.348809,
+      "cpu_ms": 183.62800000000001,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 4,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 199.970553,
+      "cpu_ms": 194.093,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 4,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 138.934446,
+      "cpu_ms": 135.105,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 4,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 112.838784,
+      "cpu_ms": 109.32,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 4,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 228.440712,
+      "cpu_ms": 221.67,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 4,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 209.636552,
+      "cpu_ms": 203.662,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 5,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 190.180731,
+      "cpu_ms": 184.158,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 5,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 205.607814,
+      "cpu_ms": 198.899,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 5,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 149.306956,
+      "cpu_ms": 144.735,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 5,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 118.646033,
+      "cpu_ms": 114.643,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 5,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 219.471855,
+      "cpu_ms": 212.57999999999998,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 5,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 229.78839,
+      "cpu_ms": 223.18699999999995,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 6,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 117.136362,
+      "cpu_ms": 113.21799999999999,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 6,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 144.497719,
+      "cpu_ms": 140.442,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 6,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 204.959234,
+      "cpu_ms": 198.448,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 6,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 191.668701,
+      "cpu_ms": 185.894,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 6,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 229.526187,
+      "cpu_ms": 222.793,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 6,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 209.441735,
+      "cpu_ms": 203.867,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 7,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 114.752595,
+      "cpu_ms": 111.39399999999999,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 7,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 143.242949,
+      "cpu_ms": 139.1,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 7,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 227.016526,
+      "cpu_ms": 220.319,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 7,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 209.844404,
+      "cpu_ms": 204.05399999999997,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 7,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 189.093897,
+      "cpu_ms": 183.742,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 7,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 203.917654,
+      "cpu_ms": 197.468,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 8,
+      "case": "tiny",
+      "binary": "before",
+      "wall_ms": 200.139917,
+      "cpu_ms": 194.38,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 8,
+      "case": "tiny",
+      "binary": "after",
+      "wall_ms": 191.205749,
+      "cpu_ms": 185.485,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 8,
+      "case": "64k",
+      "binary": "after",
+      "wall_ms": 218.526363,
+      "cpu_ms": 211.587,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 8,
+      "case": "64k",
+      "binary": "before",
+      "wall_ms": 231.669291,
+      "cpu_ms": 224.429,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 8,
+      "case": "inherit",
+      "binary": "after",
+      "wall_ms": 114.490869,
+      "cpu_ms": 111.02199999999999,
+      "max_rss_kib": 27628
+    },
+    {
+      "round": 8,
+      "case": "inherit",
+      "binary": "before",
+      "wall_ms": 144.977952,
+      "cpu_ms": 140.748,
+      "max_rss_kib": 27628
+    }
+  ],
+  "method": "Goose default optimized build/C backend -O2; matched argv/stdin/stderr/capture caps/no deadline. Different launch/ownership implementations, not a language ranking. Shared host; no exclusive isolation. Wall includes batch startup; CPU and maxRSS are wait4 reports for the batch and kernel-accounted waited children, not combined simultaneous memory or allocation counts.",
+  "summary": {
+    "inherit": {
+      "before": {
+        "wall_ms": {
+          "median": 143.510492,
+          "minimum": 138.934446,
+          "maximum": 156.44893
+        },
+        "cpu_ms": {
+          "median": 139.82899999999998,
+          "minimum": 135.105,
+          "maximum": 150.755
+        },
+        "max_rss_kib": {
+          "median": 27628,
+          "minimum": 27628,
+          "maximum": 27628
+        }
+      },
+      "after": {
+        "wall_ms": {
+          "median": 114.752595,
+          "minimum": 112.415803,
+          "maximum": 121.240216
+        },
+        "cpu_ms": {
+          "median": 111.39399999999999,
+          "minimum": 109.32,
+          "maximum": 117.38799999999999
+        },
+        "max_rss_kib": {
+          "median": 27628,
+          "minimum": 27628,
+          "maximum": 27628
+        }
+      }
+    },
+    "tiny": {
+      "before": {
+        "wall_ms": {
+          "median": 201.840529,
+          "minimum": 199.340307,
+          "maximum": 205.607814
+        },
+        "cpu_ms": {
+          "median": 195.61,
+          "minimum": 193.84399999999997,
+          "maximum": 198.899
+        },
+        "max_rss_kib": {
+          "median": 27628,
+          "minimum": 27628,
+          "maximum": 27628
+        }
+      },
+      "after": {
+        "wall_ms": {
+          "median": 189.348809,
+          "minimum": 185.947986,
+          "maximum": 192.586501
+        },
+        "cpu_ms": {
+          "median": 183.742,
+          "minimum": 180.672,
+          "maximum": 186.662
+        },
+        "max_rss_kib": {
+          "median": 27628,
+          "minimum": 27628,
+          "maximum": 27628
+        }
+      }
+    },
+    "64k": {
+      "before": {
+        "wall_ms": {
+          "median": 228.440712,
+          "minimum": 225.61308,
+          "maximum": 236.520603
+        },
+        "cpu_ms": {
+          "median": 221.67,
+          "minimum": 219.62199999999999,
+          "maximum": 228.856
+        },
+        "max_rss_kib": {
+          "median": 27628,
+          "minimum": 27628,
+          "maximum": 27628
+        }
+      },
+      "after": {
+        "wall_ms": {
+          "median": 209.441735,
+          "minimum": 204.131005,
+          "maximum": 219.471855
+        },
+        "cpu_ms": {
+          "median": 203.662,
+          "minimum": 199.05499999999998,
+          "maximum": 212.57999999999998
+        },
+        "max_rss_kib": {
+          "median": 27628,
+          "minimum": 27628,
+          "maximum": 27628
+        }
+      }
+    }
+  }
+}

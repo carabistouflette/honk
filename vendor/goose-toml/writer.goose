@@ -1,9 +1,14 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace toml;
 import std;
+import json;
 
 let MAX_OUTPUT_BYTES = 8388608;
 let MAX_WRITE_TEXT_WORK = 8388608;
+// This is the pinned runtime routine used by builtin float formatting.
+// A fixed local buffer below provides its proven maximum output capacity;
+// calling it directly avoids global consumer formatting overloads.
+extern fn runtime_format_float(destination: u8&, value: f64) -> i64 = "gs_fmt_f64";
 // Borrow fixed views of scratch allocated once in serialize, keeping recursive
 // calls compact. Document views are read-only; the backing arrays never resize.
 struct WriteName { id: i64 = -1, hash: u64 = 0 }
@@ -28,10 +33,43 @@ fn write_byte(w: Writer&, value: u8) {
 }
 fn write_integer(w: Writer&, value: i64) {
     if w.error.len > 0 { return; }
-    // Every i64 fits in 20 decimal bytes, including the sign of MIN_I64.
-    // Near the output cap, check the actual length through the bounded path.
-    if MAX_OUTPUT_BYTES - w.output.len >= 20 { format(w.output, value); }
-    else { write_bytes(w, str(value)); }
+    if value >= 0 && value < 10 { write_byte(w, '0' + value as u8); return; }
+    var text: u8[20] = [0; 20];
+    // Form MIN_I64's magnitude without overflowing signed arithmetic.
+    var magnitude = if value < 0 { (-(value + 1)) as u64 + 1 } else { value as u64 };
+    var at = 20;
+    loop {
+        let pair = magnitude % 100; magnitude /= 100;
+        if magnitude > 0 || pair >= 10 {
+            at -= 2; text[at] = '0' + (pair / 10) as u8;
+            text[at + 1] = '0' + (pair % 10) as u8;
+        } else { at--; text[at] = '0' + pair as u8; }
+        if magnitude == 0 { break; }
+    }
+    if value < 0 { at--; text[at] = '-'; }
+    write_bytes(w, text[at..]);
+}
+fn write_finite_float(w: Writer&, number: f64) {
+    // This conservative magnitude window stays inside the pinned standard
+    // formatter's exact Ryu fast path (binary exponents -14 through 46).
+    // Its fixed-decimal layout here never calls global integer formatting.
+    // Keep the original fallback for extreme values; JSON's general path
+    // performs extra decimal shortening that is unnecessary for TOML.
+    let magnitude = if number < 0.0 { -number } else { number };
+    if magnitude >= 1e-4 && magnitude <= 1e14 {
+        var value: u8[>..] = [];
+        json::format_number(value, number);
+        write_bytes(w, value);
+    } else {
+        // Finite binary64 text is at most 24 bytes in the pinned formatter.
+        var text: u8[32] = [0; 32];
+        let len = toml::runtime_format_float(text[0], number);
+        if len <= 0 || len > text.len { write_fail(w, "invalid runtime float formatting"); return; }
+        let value = text[..len];
+        var marker = false;
+        for c in value { if c == '.' || c == 'e' || c == 'E' { marker = true; } }
+        write_bytes(w, value); if !marker { write_bytes(w, ".0"); }
+    }
 }
 fn checked_span(w: Writer&, doc: const WriteDocument&, span: Span) -> bool {
     if span.start < 0 || span.len < 0 || span.start > doc.bytes.len || span.len > doc.bytes.len - span.start {
@@ -148,10 +186,7 @@ recursive fn write_value(w: Writer&, doc: const WriteDocument&, id: i64, parent:
         else if n.number - n.number != 0.0 { write_bytes(w, if negative { "-inf" } else { "inf" }); }
         else if n.number == 0.0 { write_bytes(w, if negative { "-0.0" } else { "0.0" }); }
         else {
-            let value = str(n.number);
-            var marker = false;
-            for c in value { if c == '.' || c == 'e' || c == 'E' { marker = true; } }
-            write_bytes(w, value); if !marker { write_bytes(w, ".0"); }
+            write_finite_float(w, n.number);
         }
     } else { write_fail(w, "unsupported value kind"); }
 }
@@ -161,11 +196,11 @@ recursive fn write_value(w: Writer&, doc: const WriteDocument&, id: i64, parent:
 // On failure the output is empty. Document storage and IDs remain unchanged.
 fn serialize(doc: Document&) -> u8[>..], u8[>..] {
     if doc.nodes.len == 0 || doc.nodes.len > MAX_NODES || doc.bytes.len > MAX_INPUT_BYTES {
-        return [], str("toml: invalid document size");
+        return [], toml::own_bytes("toml: invalid document size");
     }
     let root = doc.nodes[0];
     if root.kind != Kind.Table || root.parent != -1 || root.depth != 0 || root.next != -1 {
-        return [], str("toml: root must be a document table");
+        return [], toml::own_bytes("toml: root must be a document table");
     }
     var output: u8[>..]   = []; var error: u8[>..] = [];
     var seen:   bool[>..] = []; var names: WriteName[>..] = [];
@@ -180,6 +215,6 @@ fn serialize(doc: Document&) -> u8[>..], u8[>..] {
     var w = Writer { output: output, error: error, seen: seen, names: names, .. };
     var view = WriteDocument { nodes: doc.nodes, bytes: doc.bytes };
     write_value(w, view, 0, -1, 0);
-    if w.error.len > 0 { return [], copy(w.error); }
-    return copy(w.output), [];
+    if w.error.len > 0 { return [], toml::own_bytes(w.error); }
+    return toml::own_bytes(w.output), [];
 }

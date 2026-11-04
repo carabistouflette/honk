@@ -15,3 +15,7 @@ toml = { path = "vendor/goose-toml" }
 argparse = { path = "vendor/goose-argparse" }
 text = { path = "vendor/goose-text" }
 semver = { path = "vendor/goose-semver" }
+process = { path = "vendor/goose-process" }
+http = { path = "vendor/goose-http" }
+honk_metadata = { path = "vendor/honk-metadata" }
+logger = { path = "vendor/goose-log" }

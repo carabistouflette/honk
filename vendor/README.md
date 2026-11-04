@@ -1,7 +1,8 @@
 # Vendored libraries
 
-Honk includes unmodified Apache-2.0 snapshots of goose-toml, goose-argparse,
-goose-text, goose-semver and goose-toml-edit.
+Honk includes unmodified Apache-2.0 snapshots of goose-toml, goose-toml-edit,
+goose-argparse, goose-text, goose-semver, goose-process, goose-http and goose-log,
+plus the pinned HTTP metadata consumer example.
 Exact upstream URLs, full commits, source/license SHA-256 values and included
 files are recorded in [manifest.json](manifest.json). Attribution and license
 links are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
@@ -13,3 +14,5 @@ reviewed repository metadata, not an upstream signature verification service.
 Vendoring makes Honk's own libraries available in a standalone clone. Compiler
 bootstrap still fetches the pinned Goose compiler unless an existing matching
 GOOSE executable is supplied. Library updates are explicit reviewed commits.
+
+Optional explicit diagnostics use the pinned goose-log snapshot, including its upstream NOTICE. Full source/license/notice identity remains in manifest.json.

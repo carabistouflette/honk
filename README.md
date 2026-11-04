@@ -1,6 +1,6 @@
 # Honk
 
-A Goose project manager, written in Goose. Apache-2.0. Pre-release; Linux x86-64/glibc is the initial target. Uses the Goose compiler for compilation and goose-toml/goose-argparse for parsing. A C adapter supplies missing process/filesystem primitives.
+A Goose project manager, written in Goose. Apache-2.0. Pre-release; Linux x86-64/glibc is the initial target. Uses the pinned Goose compiler and vendored parsing, text, version and process libraries. A small C adapter supplies filesystem operations and application signal guards.
 
 ```sh
 git clone https://github.com/carabistouflette/honk.git
@@ -19,13 +19,13 @@ cd hello-honk
 
 The example creates a sibling application and leaves the Honk checkout clean.
 Build/test prerequisites: Linux, Git 2.31+, CMake 3.27+, C/C++20 compilers, Make,
-libc development headers, Python 3.11+, GNU tar, gzip and OpenSSL (TLS tests). The tests exercise
+libc and libcurl development headers (libcurl >=7.85 with TLS, asynchronous DNS and thread-safe initialization), pkg-config, Python 3.11+, GNU tar, gzip and OpenSSL (TLS tests). The tests exercise
 packaging as well as builds. The sanitizer and portable-copy scripts default to GCC; set
 `HONK_SANITIZER_CC=clang` to validate with Clang instead.
 The release workflow is initially validated on Linux x86-64/glibc; Windows,
 macOS, other architectures and libc implementations are not validated.
 
-[Validation results](RESULTS.md), [benchmark methods and raw samples](bench/README.md),
+[Changelog](CHANGELOG.md), [validation results](RESULTS.md), [benchmark methods and raw samples](bench/README.md),
 [security policy](SECURITY.md), and [third-party notices](THIRD_PARTY_NOTICES.md).
 
 Without `GOOSE`, Honk builds and caches the exact pinned compiler using Git, CMake 3.27+, C/C++20 compilers, and Make/Ninja. Linux also needs libc development headers. `HONK_HOME` selects Honk's cache; default is `$XDG_CACHE_HOME/honk` or `$HOME/.cache/honk`. Projects may override the compiler with `[toolchain] revision = "<full commit>"`. `GOOSE` explicitly selects a compiler and checks its advertised short revision against the pin. You must trust that binary; this is not cryptographic verification. Source bootstraps additionally verify the full Git commit. Honk-managed compiler caches require a successful-build completion marker and matching checkout/version; older caches without that marker need one online rebuild/validation or an explicit matching `GOOSE` before offline use. Incomplete Git initialization and failed source repairs are retryable online; completed cache identity mismatches still fail closed.
@@ -64,7 +64,7 @@ Use `import mathx;` in application source. Library names and namespaces are sepa
 - `install [--root PREFIX] [--force]`: build release and atomically install `PREFIX/bin/NAME`; default prefix is `HONK_HOME/installed`. Existing executables require `--force`. Add that bin directory to PATH yourself. `uninstall NAME [--root PREFIX]` works outside a project; empty roots, unsupported project flags and symlinks in every prefix component are rejected.
 - `doc`: save the compiler's API declaration/documentation dump under `target/doc/NAME.goose`.
 - `clean`: remove project build/staging directories without following symlinks.
-- `toolchain`: obtain/report the pinned compiler; `version`, `help`.
+- `toolchain`: obtain/report the pinned compiler. Opt-in `toolchain --metadata [--manifest-path PATH]` reads anonymous GitHub source metadata for the project pin or built-in default outside a project. It performs no compiler/Git/cache/bootstrap work; `--offline`, `--frozen`, `--locked` and package/workspace flags are rejected. `version`, `help` remain local.
 
 All project commands discover Honk.toml upward from cwd. Program arguments retain their exact boundaries, including empty arguments; child exit codes propagate. SIGINT/SIGTERM sent to Honk are forwarded to the direct child; a terminal Ctrl-C already delivered to their shared foreground group is not sent twice. Honk retains its locks while waiting for child cleanup. For scripted cancellation, signal Honk's PID: external group-wide signals cannot be distinguished from direct signals and can reach the child twice. This does not supervise arbitrary grandchildren created by an application. `--manifest-path PATH` explicitly selects a file named Honk.toml and rejects a final symlink. `[workspace] members = ["one", "two"]` supports explicit members; `--workspace` executes each, `-p NAME` selects one unambiguous member, and `-p NAME@FULL_VERSION` compares strict SemVer precedence to disambiguate versions before any package command runs. Multiple matching members are rejected, including with `--workspace`. Virtual workspaces execute all members by default. Each member keeps its own lockfile and output directory. Nested workspaces and symlinks in workspace-member paths are rejected, including for clean.
 
@@ -92,3 +92,36 @@ existing atomic manifest write remain in effect.
 Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed build or installation.
 
 Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Git/path dependencies retain exact refs: no version solver is implied. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy.
+
+Honk delegates child ownership to pinned goose-process. This requires Linux kernel 5.3+ and glibc 2.34+. Commands explicitly use Child with no overall deadline, preserving long-running `run` servers; the parent pumps bounded 20 ms steps, forwards pending cancellation through pidfds, and retains locks through direct-child cleanup or exceptional transferred-child recovery. Recovery may wait indefinitely if OS permissions prevent proving cleanup. Captured stdout is capped at 1 MiB; stderr and stdin remain inherited. Argument limits include argv[0]: 4,096 arguments, 1 MiB total, 131,071 bytes per argument. PATH lookup uses the child's effective environment/cwd; it does not invoke a shell fallback for executable text without a shebang. Descendants and capture pipes they keep open remain outside direct-child supervision. Terminal Ctrl-C suppression is best effort during launch, when the application cannot distinguish a signal predating the child from one already delivered to its foreground group.
+
+The metadata command requests only the fixed Goose-upstream commit endpoint with HTTPS certificate/hostname verification, anonymous headers and identity content encoding. It makes one request with no proxy, credentials, redirect or retry, caps body/header callback bytes at 256 KiB/32 KiB, requires HTTP 200 and full returned SHA equality, and emits escaped JSON. The 5000 ms transfer timeout is **not** a hard wall deadline: threaded DNS cleanup can take longer. Metadata does not authenticate compiler binaries, authorize installation or prove upstream trust. Returned URL/subject strings remain untrusted data. libcurl callback normalization/trailer limitations mean security-critical headers/digests must never be inferred from transfer success; this consumer validates the required JSON SHA directly. `make metadata-test` and `make metadata-sanitize` use only local TLS fixtures with a test-only shim; ordinary builds contain no shim.
+
+
+## Optional diagnostic file
+
+Add `--log-file PATH` after an ordinary command, for example
+`honk metadata --log-file /private/directory/honk.log`. Help/version retain
+existing early-return behavior. Without the option no diagnostics are emitted
+and no log path is opened. Machine-readable stdout remains separate.
+
+Records contain only fixed lifecycle event names, elapsed nanoseconds, and
+numeric outcome codes. Arguments, environment values, project text, paths and
+Git URLs are not copied into them. `returned` is emitted only after Honk's own
+stdout flush succeeds. Errors and child failures after logging is configured
+use fixed error events; signal handlers never log. Abrupt termination cannot guarantee an event.
+
+The application-owned Linux adapter rejects symlinks in every supplied path
+component and accepts only euid-owned, single-link regular files of exact mode
+0600. New files are created privately; parents are never created. Each append
+uses a nonblocking advisory exclusive lock, checks a 16417-byte line cap and
+16MiB total cap, completes short/EINTR writes, and checks close. Existing prefix
+bytes remain. Writers ignoring the lock and same-user pathname changes are
+outside this coordination contract. This is not a path sandbox or durability
+promise. A busy/invalid/full/failed destination returns nonzero; partial output
+or already-completed application work is not rolled back. There is no automatic
+retry, rotation or fsync. Use a fresh private file when the cap is reached.
+
+The opt-in toolchain metadata command also accepts explicit `--log-file`; those records contain only fixed lifecycle events and numeric duration/outcome fields, never response URLs, subjects, pins or bodies. Logging is the only explicit file output added to that otherwise cache/compiler-free path.
+
+Explicit diagnostics may record `started`/`failed` even when a metadata flag combination is rejected before transport. Log delivery can fail after stdout or command side effects; no rollback is promised, and callers must check the exit status.

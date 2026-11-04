@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: Apache-2.0
+import http from "../vendor/goose-http";
+import honk_metadata from "../vendor/honk-metadata";
+import process from "../vendor/goose-process";
 import semver from "../vendor/goose-semver";
 import text from "../vendor/goose-text";
 import toml_edit from "../vendor/goose-toml-edit";
 import toml from "../vendor/goose-toml";
 import argparse from "../vendor/goose-argparse";
+import logger from "../vendor/goose-log";
 import honk from "..";
 import std;
 fn main() {

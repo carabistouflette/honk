@@ -20,6 +20,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 typedef struct {
@@ -30,6 +31,25 @@ typedef struct {
 #define HCAP (1024 * 1024)
 bool honk_flush_stdout(void) {
   return fflush(stdout) == 0 && !ferror(stdout);
+}
+// libcurl NOSIGNAL does not establish process-wide SIGPIPE policy. This CLI is
+// single-threaded at dispatch and keeps this application guard only for fetch.
+static struct sigaction metadata_pipe;
+static bool metadata_active;
+bool honk_metadata_begin(void) {
+  if (metadata_active) return false;
+  struct sigaction ignored;
+  memset(&ignored, 0, sizeof ignored);
+  ignored.sa_handler = SIG_IGN;
+  sigemptyset(&ignored.sa_mask);
+  if (sigaction(SIGPIPE, &ignored, &metadata_pipe) < 0) return false;
+  metadata_active = true;
+  return true;
+}
+bool honk_metadata_end(void) {
+  if (!metadata_active || sigaction(SIGPIPE, &metadata_pipe, NULL) < 0) return false;
+  metadata_active = false;
+  return true;
 }
 // Original source remains capped at HCAP. Generated import mappings can add
 // 256 JSON-escaped paths (at most six bytes per path byte, plus import names).
@@ -253,251 +273,107 @@ void honk_unlock(int64_t fd) {
   if (fd >= 0)
     close((int)fd);
 }
-// A synchronous runner retains its project/cache locks until the direct child
-// has exited. Block cancellation across fork so a signal cannot land before the
-// child PID is registered.
-static volatile sig_atomic_t waiting_child = 0;
+// Application-owned cancellation guard. Handlers never use child identities.
+static volatile sig_atomic_t pending_signals = 0;
 static volatile sig_atomic_t interrupted = 0;
-typedef struct {
+static struct {
   struct sigaction old_int, old_term, old_chld;
   sigset_t mask, blocked;
-} signal_guard;
-static void forward_signal(int number, siginfo_t *info, void *context) {
+  bool active;
+} process_guard;
+static void latch_signal(int number, siginfo_t *info, void *context) {
   (void)context;
   int saved = errno;
   interrupted = number;
-  if (waiting_child > 0) {
-    pid_t child = (pid_t)waiting_child;
-    // A terminal already delivers SIGINT to every foreground-group member.
-    // Re-forwarding it can interrupt the child's graceful cleanup a second time.
-    bool terminal_group = number == SIGINT && info && info->si_code == SI_KERNEL &&
-                          getpgid(child) == getpgrp();
-    if (!terminal_group)
-      kill(child, number);
-  }
+  pending_signals |= number == SIGTERM ? 4 :
+      (info && info->si_code == SI_KERNEL ? 2 : 1);
   errno = saved;
 }
-static bool guard_begin(signal_guard *guard) {
-  sigemptyset(&guard->blocked);
-  sigaddset(&guard->blocked, SIGINT);
-  sigaddset(&guard->blocked, SIGTERM);
-  sigaddset(&guard->blocked, SIGCHLD);
-  if (sigprocmask(SIG_BLOCK, &guard->blocked, &guard->mask) < 0)
+bool honk_process_guard_begin(void) {
+  if (process_guard.active) return false;
+  sigemptyset(&process_guard.blocked);
+  sigaddset(&process_guard.blocked, SIGINT);
+  sigaddset(&process_guard.blocked, SIGTERM);
+  sigaddset(&process_guard.blocked, SIGCHLD);
+  if (sigprocmask(SIG_BLOCK, &process_guard.blocked, &process_guard.mask) < 0)
     return false;
-  if (sigaction(SIGINT, NULL, &guard->old_int) < 0 ||
-      sigaction(SIGTERM, NULL, &guard->old_term) < 0 ||
-      sigaction(SIGCHLD, NULL, &guard->old_chld) < 0) {
-    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
-    return false;
-  }
+  if (sigaction(SIGINT, NULL, &process_guard.old_int) < 0 ||
+      sigaction(SIGTERM, NULL, &process_guard.old_term) < 0 ||
+      sigaction(SIGCHLD, NULL, &process_guard.old_chld) < 0) goto mask_failure;
   struct sigaction action;
   memset(&action, 0, sizeof action);
-  sigemptyset(&action.sa_mask);
-  // SIG_IGN/SA_NOCLDWAIT would auto-reap the child and invalidate both exit
-  // status and the zombie PID reservation used by cancellation.
+  action.sa_mask = process_guard.blocked;
   action.sa_handler = SIG_DFL;
-  if (sigaction(SIGCHLD, &action, NULL) < 0) {
-    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
-    return false;
-  }
-  action.sa_sigaction = forward_signal;
+  if (sigaction(SIGCHLD, &action, NULL) < 0) goto mask_failure;
+  action.sa_sigaction = latch_signal;
   action.sa_flags = SA_SIGINFO;
-  if (sigaction(SIGINT, &action, NULL) < 0) {
-    sigaction(SIGCHLD, &guard->old_chld, NULL);
-    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
-    return false;
-  }
-  if (sigaction(SIGTERM, &action, NULL) < 0) {
-    sigaction(SIGINT, &guard->old_int, NULL);
-    sigaction(SIGCHLD, &guard->old_chld, NULL);
-    sigprocmask(SIG_SETMASK, &guard->mask, NULL);
-    return false;
-  }
-  waiting_child = 0;
+  if (sigaction(SIGINT, &action, NULL) < 0) goto child_failure;
+  if (sigaction(SIGTERM, &action, NULL) < 0) goto int_failure;
+  pending_signals = 0;
   interrupted = 0;
-  return true;
+  process_guard.active = true;
+  if (sigprocmask(SIG_SETMASK, &process_guard.mask, NULL) == 0) return true;
+  process_guard.active = false;
+  sigaction(SIGTERM, &process_guard.old_term, NULL);
+int_failure:
+  sigaction(SIGINT, &process_guard.old_int, NULL);
+child_failure:
+  sigaction(SIGCHLD, &process_guard.old_chld, NULL);
+mask_failure:
+  sigprocmask(SIG_SETMASK, &process_guard.mask, NULL);
+  return false;
 }
-static int guard_end(signal_guard *guard, bool child) {
-  waiting_child = 0;
-  sigprocmask(SIG_BLOCK, &guard->blocked, NULL);
+int64_t honk_process_guard_take(int64_t child) {
+  sigset_t previous;
+  if (!process_guard.active ||
+      sigprocmask(SIG_BLOCK, &process_guard.blocked, &previous) < 0) return -1;
+  int pending = pending_signals;
+  pending_signals = 0;
+  // Positive id is queried immediately before this call, with no external
+  // reaper or intervening Child operation. An exited child is still reserved.
+  if ((pending & 2) && child > 0 && child <= INT_MAX &&
+      getpgid((pid_t)child) == getpgrp()) pending &= ~2;
+  if (sigprocmask(SIG_SETMASK, &previous, NULL) < 0) return -1;
+  return pending;
+}
+int64_t honk_process_guard_end(void) {
+  if (!process_guard.active ||
+      sigprocmask(SIG_BLOCK, &process_guard.blocked, NULL) < 0) return -1;
   int received = interrupted;
-  sigaction(SIGINT, &guard->old_int, NULL);
-  sigaction(SIGTERM, &guard->old_term, NULL);
-  // Exec children need waitable descendants too; preserve SIG_DFL there.
-  if (!child)
-    sigaction(SIGCHLD, &guard->old_chld, NULL);
-  sigprocmask(SIG_SETMASK, &guard->mask, NULL);
-  return received;
+  bool ok = sigaction(SIGINT, &process_guard.old_int, NULL) == 0;
+  ok = sigaction(SIGTERM, &process_guard.old_term, NULL) == 0 && ok;
+  ok = sigaction(SIGCHLD, &process_guard.old_chld, NULL) == 0 && ok;
+  ok = sigprocmask(SIG_SETMASK, &process_guard.mask, NULL) == 0 && ok;
+  if (ok) process_guard.active = false;
+  return ok ? received : -1;
 }
-// packed argv consists of nonempty NUL-terminated arguments. User empty args
-// are supported.
-int64_t honk_spawn(hs packed, hs cwd, bool capture, gs_rref out) {
-  char dir[HPATH];
-  if (!path(cwd, dir) || packed.len < 2 || packed.len > HCAP ||
-      packed.data[packed.len - 1] != 0)
-    return 125;
-  size_t count = 0;
-  for (int64_t i = 0; i < packed.len; i++)
-    if (!packed.data[i])
-      count++;
-  if (count > 4096 || packed.data[0] == 0)
-    return 125;
-  char *buf = malloc((size_t)packed.len);
-  char **argv = calloc(count + 1, sizeof *argv);
-  if (!buf || !argv) {
-    free(buf);
-    free(argv);
-    return 125;
-  }
-  memcpy(buf, packed.data, (size_t)packed.len);
-  size_t k = 0;
-  argv[k++] = buf;
-  for (int64_t i = 0; i < packed.len - 1; i++)
-    if (!buf[i])
-      argv[k++] = buf + i + 1;
-  int fds[2] = {-1, -1};
-  if (capture && pipe(fds) < 0) {
-    free(buf);
-    free(argv);
-    return 125;
-  }
-  if (capture) {
-    if (fcntl(fds[0], F_SETFD, FD_CLOEXEC) < 0 ||
-        fcntl(fds[1], F_SETFD, FD_CLOEXEC) < 0) {
-      close(fds[0]);
-      close(fds[1]);
-      free(buf);
-      free(argv);
-      return 125;
-    }
-  }
-  signal_guard guard;
-  if (!guard_begin(&guard)) {
-    if (capture) {
-      close(fds[0]);
-      close(fds[1]);
-    }
-    free(buf);
-    free(argv);
-    return 125;
-  }
-  pid_t pid = fork();
-  if (pid < 0) {
-    guard_end(&guard, false);
-    if (capture) {
-      close(fds[0]);
-      close(fds[1]);
-    }
-    free(buf);
-    free(argv);
-    return 125;
-  }
-  if (pid == 0) {
-    guard_end(&guard, true);
-    if (chdir(dir) < 0)
-      _exit(125);
-    if (capture) {
-      close(fds[0]);
-      if (fds[1] != STDOUT_FILENO) {
-        if (dup2(fds[1], STDOUT_FILENO) < 0)
-          _exit(125);
-        close(fds[1]);
-      } else if (fcntl(STDOUT_FILENO, F_SETFD, 0) < 0) {
-        _exit(125);
-      }
-    }
-    // Disable implicit Git configuration, interactive prompts, and repository
-    // hooks.
-    if (strcmp(argv[0], "git") == 0) {
-      if (setenv("GIT_CONFIG_NOSYSTEM", "1", 1) ||
-          setenv("GIT_CONFIG_GLOBAL", "/dev/null", 1) ||
-          setenv("GIT_TERMINAL_PROMPT", "0", 1) ||
-          setenv("GIT_ALLOW_PROTOCOL", "https", 1) ||
-          setenv("HONK_GIT_SSL_VERIFY", "true", 1))
-        _exit(125);
-      const char *context[] = {"GIT_TEMPLATE_DIR",
-                               "GIT_DIR",
-                               "GIT_WORK_TREE",
-                               "GIT_COMMON_DIR",
-                               "GIT_INDEX_FILE",
-                               "GIT_OBJECT_DIRECTORY",
-                               "GIT_ALTERNATE_OBJECT_DIRECTORIES",
-                               "GIT_NAMESPACE",
-                               "GIT_SHALLOW_FILE",
-                               "GIT_CONFIG_COUNT",
-                               "GIT_CONFIG_PARAMETERS",
-                               "GIT_CONFIG",
-                               "GIT_REPLACE_REF_BASE",
-                               "GIT_SSL_NO_VERIFY"};
-      for (size_t i = 0; i < sizeof context / sizeof context[0]; i++)
-        if (unsetenv(context[i]))
-          _exit(125);
-    }
-    // Archive options are application policy, not inherited executable hooks or
-    // compressor flags.
-    if (strcmp(argv[0], "tar") == 0) {
-      if (unsetenv("TAR_OPTIONS") || unsetenv("GZIP"))
-        _exit(125);
-    }
-    execvp(argv[0], argv);
-    _exit(errno == ENOENT ? 127 : 126);
-  }
-  waiting_child = (sig_atomic_t)pid;
-  sigprocmask(SIG_SETMASK, &guard.mask, NULL);
-  free(buf);
-  free(argv);
-  bool overflow = false;
-  if (capture) {
-    close(fds[1]);
-    char b[16384];
-    size_t total = 0;
-    for (;;) {
-      ssize_t n = read(fds[0], b, sizeof b);
-      if (n < 0 && errno == EINTR)
-        continue;
-      if (n < 0) {
-        overflow = true;
-        kill(pid, SIGKILL);
-        break;
-      }
-      if (!n)
-        break;
-      total += (size_t)n;
-      if (total > HCAP) {
-        overflow = true;
-        kill(pid, SIGKILL);
-        break;
-      }
-      gs_bld_append(out, b, n);
-    }
-    close(fds[0]);
-  }
-  // Observe completion without reaping first. A zombie reserves its PID until
-  // cancellation is blocked, preventing a handler from signalling a reused PID.
-  siginfo_t completion;
-  while (waitid(P_PID, (id_t)pid, &completion, WEXITED | WNOWAIT) < 0) {
-    if (errno != EINTR) {
-      guard_end(&guard, false);
-      return 125;
-    }
-  }
-  sigprocmask(SIG_BLOCK, &guard.blocked, NULL);
-  waiting_child = 0;
+void honk_process_recover(int64_t transferred) {
+  // A library Status transferred this reserved PID exactly once. Only this
+  // recovery owner may reap/signal it; Child no longer owns it.
+  if (transferred <= 0 || transferred > INT_MAX) abort();
+  pid_t pid = (pid_t)transferred;
   int status;
-  while (waitpid(pid, &status, 0) < 0) {
-    if (errno != EINTR) {
-      guard_end(&guard, false);
-      return 125;
+  bool diagnosed = false, signalled = false;
+  for (;;) {
+    pid_t result = waitpid(pid, &status, WNOHANG);
+    if (result == pid && (WIFEXITED(status) || WIFSIGNALED(status))) return;
+    if (result < 0 && errno == ECHILD) return;
+    if (result < 0 && errno == EINTR) continue;
+    if (result == 0 && !signalled) {
+      // Reservation remains held; no normal Child operation follows transfer.
+      int sent;
+      do { sent = kill(pid, SIGKILL); } while (sent < 0 && errno == EINTR);
+      signalled = true;
     }
+    if (!diagnosed) {
+      fputs("honk: recovering child; retaining locks until cleanup completes\n", stderr);
+      diagnosed = true;
+    }
+    // Permission-denied waits/signals must not release locks or spin. A child
+    // that cannot be signalled may need to terminate naturally.
+    struct timespec pause = {0, 20000000};
+    while (nanosleep(&pause, &pause) < 0 && errno == EINTR) {}
   }
-  int cancellation = guard_end(&guard, false);
-  if (cancellation)
-    return 128 + cancellation;
-  if (overflow)
-    return 125;
-  return WIFEXITED(status)     ? WEXITSTATUS(status)
-         : WIFSIGNALED(status) ? 128 + WTERMSIG(status)
-                               : 125;
 }
 // Tree walks use descriptors and never follow source or destination symlinks.
 // Resource caps bound work even for unexpectedly large dependency trees.

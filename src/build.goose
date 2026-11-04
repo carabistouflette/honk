@@ -108,7 +108,7 @@ fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: b
     let argv: const u8[:][] = [compiler, "build", entry, "--offline", "-o", temporary]; for a in argv { platform::pack(packed, a); }
     if !release { platform::pack(packed, "--debug"); }
     var captured: u8[>..] = []; let code = platform::spawn(packed, root, true, captured);
-    if code != 0 { write_stdout(captured); exit(code); }
+    if code != 0 { write_stdout(captured); platform::child_exit(code); }
     platform::require(platform::install(temporary, output, true), "cannot atomically publish executable");
     print("built ", output);
 }
@@ -125,14 +125,14 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
             let entry = root_entry(stage, path, g); let executable = str(target_dir, "/", i);
             binary(compiler, entry, stage, executable, release, p.root);
             var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
-            var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+            var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }
         }
         print("Passed ", paths.len, " ", cmd, " targets"); return;
     }
     let entry = root_entry(stage, p.entry, g);
     if cmd == "doc" {
         let argv: const u8[:][] = [compiler, "--check", "--dump-docs", "--offline", entry];
-        let text, status = platform::command(argv, p.root, true); if status != 0 { exit(status); }
+        let text, status = platform::command(argv, p.root, true); if status != 0 { platform::child_exit(status); }
         let directory = str(p.root, "/target/doc"); platform::require(platform::mkdir(directory), "cannot create documentation directory");
         let output = str(directory, "/", p.name, ".goose"); platform::save(output, text); print(output); return;
     }
@@ -143,6 +143,6 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
     let executable = str(output, "/", p.name); binary(compiler, entry, stage, executable, release, p.root);
     if cmd == "run" {
         var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
-        var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+        var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }
     }
 }

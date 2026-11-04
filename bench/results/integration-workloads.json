@@ -1,0 +1,53 @@
+{
+  "binary": "honk",
+  "binary_sha256": "90202601238038645d9bc6c61597ec7f3e446973c31defad9cbc2c2505638516",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "revision": "00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6",
+  "compiler": "goose eadca40 (runtime 3025e5810379)",
+  "dirty": false,
+  "samples": {
+    "wide_check": {
+      "after": {
+        "milliseconds": [
+          41.997397,
+          41.791846,
+          42.22794
+        ],
+        "median_ms": 41.997397
+      }
+    },
+    "dense_graph_check": {
+      "after": {
+        "milliseconds": [
+          50.644538,
+          50.684972,
+          50.044882
+        ],
+        "median_ms": 50.644538
+      }
+    },
+    "dense_dev_graph_check": {
+      "after": {
+        "milliseconds": [
+          24.006779,
+          23.528863,
+          22.758774
+        ],
+        "median_ms": 23.528863
+      }
+    },
+    "asset_32mib_check": {
+      "after": {
+        "milliseconds": [
+          44.703683,
+          44.839439,
+          45.564067
+        ],
+        "median_ms": 44.839439
+      }
+    }
+  },
+  "cpu_model": "Intel(R) Core(TM) Ultra 7 258V",
+  "build_method": "make build: Goose default optimization and C backend default -O2; caller-supplied comparison binaries must use the same flags",
+  "filesystem": "tmpfs"
+}

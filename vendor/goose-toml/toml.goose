@@ -25,11 +25,26 @@ let MAX_DEPTH = 64;
 let MAX_NUMBER_BYTES = 128;
 let MAX_KEY_WORK = 16777216;
 
+// Internal ownership and diagnostics must not bind to consumer overloads of
+// global str/copy helpers. These use only builtin builder operations.
+fn own_bytes(value: const u8[:]) -> u8[>..] {
+    var out: u8[>..] = []; out.append(value); return out;
+}
+fn append_position(out: u8[>..]&, position: i64) {
+    assert(position >= 0);
+    var digits: u8[20] = [0; 20]; var at = 20; var remaining = position;
+    loop {
+        at--; digits[at] = ('0' + remaining % 10) as u8;
+        remaining /= 10; if remaining == 0 { break; }
+    }
+    out.append(digits[at..]);
+}
+
 // Replaces the destination. A failure leaves a partial document: discard it.
 fn parse_into(source: u8[:], doc: Document&, version: Version = Version.V1_0) -> u8[>..] {
     doc.indexed = 0; doc.nodes.clear(); doc.bytes.clear(); doc.index.clear();
-    if source.len > MAX_INPUT_BYTES { return str("toml: input exceeds 1 MiB at byte 0"); }
-    if !valid_utf8(source) { return str("toml: invalid UTF-8 at byte 0"); }
+    if source.len > MAX_INPUT_BYTES { return toml::own_bytes("toml: input exceeds 1 MiB at byte 0"); }
+    if !valid_utf8(source) { return toml::own_bytes("toml: invalid UTF-8 at byte 0"); }
     var r = Reader { source: source, version: version, error: [] };
     doc.nodes.push(Node { state: State.Explicit, .. });
     var current = 0;
@@ -44,7 +59,7 @@ fn parse_into(source: u8[:], doc: Document&, version: Version = Version.V1_0) ->
         if peek(r) == '#' { comment(r); }
         if r.pos < source.len && !newline(r) { fail(r, "expected newline"); }
     }
-    return copy(r.error);
+    return toml::own_bytes(r.error);
 }
 
 // Look up one decoded key (dots are literal). Returns -1 for missing/wrong parent.
@@ -75,7 +90,10 @@ fn fail(r: Reader&, message: u8[:]) {
     if r.error.len > 0 { return; }
     var line = 1; var column = 1;
     for c in r.source[..r.pos] { if c == '\n' { line++; column = 1; } else { column++; } }
-    r.error = str("toml: ", message, " at byte ", r.pos, " (line ", line, ", byte column ", column, ")");
+    r.error.append("toml: "); r.error.append(message); r.error.append(" at byte ");
+    toml::append_position(r.error, r.pos); r.error.append(" (line ");
+    toml::append_position(r.error, line); r.error.append(", byte column ");
+    toml::append_position(r.error, column); r.error.push(')');
 }
 fn peek(r: Reader&) -> u8 { if r.pos < r.source.len { r.source[r.pos] } else { 0 } }
 fn horizontal(r: Reader&) { while r.pos < r.source.len && (peek(r) == ' ' || peek(r) == '\t') { r.pos++; } }
@@ -129,8 +147,9 @@ fn index_node(r: Reader&, doc: Document&, id: i64) {
     // entries so a large preceding array does not amplify table growth work.
     doc.indexed++;
     if doc.index.len < doc.indexed * 2 {
-        let previous = copy(doc.index);
-        let size = max(16, doc.index.len * 2);
+        var previous: i64[>..] = []; previous.append(doc.index);
+        let doubled = doc.index.len * 2;
+        let size = if doubled < 16 { 16 } else { doubled };
         doc.index.clear();
         for i in size { doc.index.push(-1); }
         for old in previous {
@@ -470,11 +489,11 @@ fn number(r: Reader&, doc: Document&, id: i64, token: u8[:]) {
     }
     if i != clean.len { fail(r, "invalid scalar"); return; }
     if floating {
-        let n, ok = parse_flt(clean);
+        let n, ok = parse_flt(clean[..]);
         if !ok || n != n || n > 1.7976931348623157e308 || n < -1.7976931348623157e308 { fail(r, "float outside finite f64 range"); return; }
         doc.nodes[id].kind = Kind.Float; doc.nodes[id].number = n;
     } else {
-        let n, ok = parse_int(clean);
+        let n, ok = parse_int(clean[..], 10);
         if !ok { fail(r, "integer outside i64 range"); return; }
         doc.nodes[id].kind = Kind.Integer; doc.nodes[id].integer = n;
     }
