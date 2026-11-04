@@ -6,6 +6,7 @@ import semver from "../vendor/goose-semver";
 import text from "../vendor/goose-text";
 import toml from "../vendor/goose-toml";
 import argparse from "../vendor/goose-argparse";
+import logger from "../vendor/goose-log";
 import honk from "..";
 import std;
 fn main() {

@@ -89,3 +89,32 @@ Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving
 Honk delegates child ownership to pinned goose-process. This requires Linux kernel 5.3+ and glibc 2.34+. Commands explicitly use Child with no overall deadline, preserving long-running `run` servers; the parent pumps bounded 20 ms steps, forwards pending cancellation through pidfds, and retains locks through direct-child cleanup or exceptional transferred-child recovery. Recovery may wait indefinitely if OS permissions prevent proving cleanup. Captured stdout is capped at 1 MiB; stderr and stdin remain inherited. Argument limits include argv[0]: 4,096 arguments, 1 MiB total, 131,071 bytes per argument. PATH lookup uses the child's effective environment/cwd; it does not invoke a shell fallback for executable text without a shebang. Descendants and capture pipes they keep open remain outside direct-child supervision. Terminal Ctrl-C suppression is best effort during launch, when the application cannot distinguish a signal predating the child from one already delivered to its foreground group.
 
 The metadata command requests only the fixed Goose-upstream commit endpoint with HTTPS certificate/hostname verification, anonymous headers and identity content encoding. It makes one request with no proxy, credentials, redirect or retry, caps body/header callback bytes at 256 KiB/32 KiB, requires HTTP 200 and full returned SHA equality, and emits escaped JSON. The 5000 ms transfer timeout is **not** a hard wall deadline: threaded DNS cleanup can take longer. Metadata does not authenticate compiler binaries, authorize installation or prove upstream trust. Returned URL/subject strings remain untrusted data. libcurl callback normalization/trailer limitations mean security-critical headers/digests must never be inferred from transfer success; this consumer validates the required JSON SHA directly. `make metadata-test` and `make metadata-sanitize` use only local TLS fixtures with a test-only shim; ordinary builds contain no shim.
+
+
+## Optional diagnostic file
+
+Add `--log-file PATH` after an ordinary command, for example
+`honk metadata --log-file /private/directory/honk.log`. Help/version retain
+existing early-return behavior. Without the option no diagnostics are emitted
+and no log path is opened. Machine-readable stdout remains separate.
+
+Records contain only fixed lifecycle event names, elapsed nanoseconds, and
+numeric outcome codes. Arguments, environment values, project text, paths and
+Git URLs are not copied into them. `returned` is emitted only after Honk's own
+stdout flush succeeds. Errors and child failures after logging is configured
+use fixed error events; signal handlers never log. Abrupt termination cannot guarantee an event.
+
+The application-owned Linux adapter rejects symlinks in every supplied path
+component and accepts only euid-owned, single-link regular files of exact mode
+0600. New files are created privately; parents are never created. Each append
+uses a nonblocking advisory exclusive lock, checks a 16417-byte line cap and
+16MiB total cap, completes short/EINTR writes, and checks close. Existing prefix
+bytes remain. Writers ignoring the lock and same-user pathname changes are
+outside this coordination contract. This is not a path sandbox or durability
+promise. A busy/invalid/full/failed destination returns nonzero; partial output
+or already-completed application work is not rolled back. There is no automatic
+retry, rotation or fsync. Use a fresh private file when the cap is reached.
+
+The opt-in toolchain metadata command also accepts explicit `--log-file`; those records contain only fixed lifecycle events and numeric duration/outcome fields, never response URLs, subjects, pins or bodies. Logging is the only explicit file output added to that otherwise cache/compiler-free path.
+
+Explicit diagnostics may record `started`/`failed` even when a metadata flag combination is rejected before transport. Log delivery can fail after stdout or command side effects; no rollback is promised, and callers must check the exit status.

@@ -45,7 +45,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     let offline = options.has("offline") || options.has("frozen");
     if cmd == "toolchain" {
         let binary = toolchain::compiler(p, cache, offline); let argv: const u8[:][] = [binary, "version"];
-        let text, status = platform::command(argv, p.root, true); write_stdout(text); if status != 0 { exit(status); }
+        let text, status = platform::command(argv, p.root, true); write_stdout(text); if status != 0 { platform::child_exit(status); }
         platform::unlock(lock); return;
     }
     if cmd == "fmt" {
@@ -57,7 +57,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         for path in paths {
             let absolute = str(p.root, "/", path);
             if count > 0 && (count >= 256 || packed.len + absolute.len + 1 > 65536) {
-                var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+                var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }
                 packed.clear(); count = 0;
             }
             if count == 0 {
@@ -67,7 +67,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
             platform::pack(packed, absolute); count++;
         }
         if count > 0 {
-            var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+            var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }
         }
         platform::unlock(lock); return;
     }

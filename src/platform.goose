@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace platform;
+import .diagnostics;
 import std;
 import process;
 import os;
@@ -88,6 +89,7 @@ extern fn copy_tree(from: const u8[:], to: const u8[:]) -> bool = "honk_copy";
 extern fn unlink_regular(path: const u8[:]) -> bool = "honk_unlink_regular";
 extern fn remove_tree(path: const u8[:]) -> bool = "honk_remove";
 fn die(message: u8[:]) {
+    if !diagnostics::write(diagnostics::Event.Failed, 0, 1) { write_stderr("honk: diagnostic log failed\n"); }
     var out = str("honk: ");
     for c, i in message {
         if i >= 4096 { out.append("..."); break; }
@@ -119,7 +121,7 @@ fn command(args: const u8[:][:], cwd: u8[:], capture: bool = false) -> u8[>..], 
     var out:    u8[>..] = []; let status = spawn(packed, cwd, capture, out); return out, status;
 }
 fn run(args: const u8[:][:], cwd: u8[:]) {
-    let out, status = command(args, cwd); if status != 0 { exit(status); }
+    let out, status = command(args, cwd); if status != 0 { child_exit(status); }
 }
 fn git(args: const u8[:][:], cwd: u8[:]) -> u8[>..] {
     var packed: u8[>..] = [];
@@ -134,4 +136,11 @@ fn git(args: const u8[:][:], cwd: u8[:]) -> u8[>..] {
     if code != 0 { die(str("git failed (exit ", code, ")")); }
     while out.len > 0 && (out[out.len - 1] == '\n' || out[out.len - 1] == '\r') { out.pop(); }
     return out;
+}
+
+// Called after subprocess cleanup, never from a signal handler.
+fn child_exit(status: i64) {
+    let outcome = if status >= 0 && status <= 4294967295 { status as u32 } else { 125 as u32 };
+    if !diagnostics::write(diagnostics::Event.ChildFailed, 0, outcome) { write_stderr("honk: diagnostic log failed\n"); }
+    exit(status);
 }

@@ -122,4 +122,18 @@ class MetadataCLI(unittest.TestCase):
             self.assertEqual(p.returncode, 90)
             self.assertIn(b'missing fixture environment', p.stderr)
 
+    def test_explicit_diagnostics_preserve_metadata_and_redact_source_fields(self):
+        with fixture.fixture() as (server, env):
+            server.reply = fixture.response(fixture.document())
+            log = self.root / 'events.log'
+            p = self.call(env, 'toolchain', '--metadata', '--log-file', str(log), stdout=subprocess.PIPE)
+            self.assertEqual(p.returncode, 0, p.stderr)
+            self.assertEqual(json.loads(p.stdout)['subject'], fixture.MESSAGE.split('\n')[0])
+            lines = log.read_bytes().splitlines()
+            self.assertEqual(len(lines), 2)
+            for line in lines:
+                self.assertRegex(line, rb'^\[INFO\] (started|returned) duration_ns=[0-9]+ outcome=0$')
+            self.assertNotIn(fixture.REVISION.encode(), log.read_bytes())
+            self.assertNotIn(fixture.URL.encode(), log.read_bytes())
+
 if __name__ == '__main__': unittest.main()
