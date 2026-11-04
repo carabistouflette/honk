@@ -11,6 +11,11 @@ fn main() {
     assert(!manifest::relative("../main.goose"));
     assert(!manifest::relative("src/../main.goose"));
     assert(!manifest::relative("target/main.goose"));
+    assert(manifest::module_entry("Src/from.goose"));
+    assert(manifest::module_entry("src/std.goose"));
+    assert(!manifest::module_entry("src/fn.goose"));
+    assert(!manifest::module_entry("src/lib-entry.goose"));
+    assert(!manifest::source_entry("src/main.txt"));
     assert(manifest::commit(toolchain::REVISION));
     assert(!manifest::commit("main"));
     assert(source::requirements("/* nested /* import bad from \"x\"; */ */ fn main() {}").len == 0);

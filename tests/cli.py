@@ -735,6 +735,57 @@ class CLI(unittest.TestCase):
                     if proc.poll() is None:
                         os.killpg(proc.pid, signal.SIGKILL); proc.communicate(timeout=5)
                     os.close(master)
+    def test_non_goose_entries_cannot_bypass_import_or_package_validation(self):
+        outside = self.root/'outside'; outside.mkdir()
+        (outside/'helper.goose').write_text('namespace helper; fn answer() -> i64 { 1337 }')
+        p = self.new(); self.run_honk('fetch', cwd=p)
+        source = 'import helper from '+json.dumps(str(outside))+'; fn main() { print(helper::answer()); }'
+        (p/'src/main.goose').write_text(source)
+        self.assertIn('undeclared source import', self.run_honk('check', cwd=p, ok=False).stderr)
+        (p/'src/main.goose').rename(p/'src/main.txt')
+        (p/'Honk.toml').write_text((p/'Honk.toml').read_text().replace('src/main.goose', 'src/main.txt'))
+        self.git_project(p); self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src')
+        for args in [('metadata',), ('fetch',), ('check',), ('run',), ('package', '--frozen')]:
+            with self.subTest(args=args):
+                self.assertIn('.goose', self.run_honk(*args, cwd=p, ok=False).stderr)
+        self.assertFalse((p/'target/package').exists())
+    def test_library_entries_use_real_goose_module_grammar(self):
+        lib = self.new('mathx', '--lib'); original = (lib/'Honk.toml').read_text()
+        for entry in ['src/lib-entry.goose', 'src/lib.entry.goose', 'src/fn.goose', 'src/lib space.goose', 'src/é.goose']:
+            with self.subTest(entry=entry):
+                (lib/'Honk.toml').write_text(original.replace('src/lib.goose', entry))
+                self.assertIn('Goose identifiers', self.run_honk('metadata', cwd=lib, ok=False).stderr)
+        (lib/'Src').mkdir(); p = self.new()
+        self.run_honk('add', 'mathx', '--path', '../mathx', cwd=p)
+        (p/'src/main.goose').write_text('import mathx; fn main() { print(mathx::answer()); }')
+        for name in ['from', 'std', 'FN']:
+            with self.subTest(name=name):
+                (lib/'Src'/f'{name}.goose').write_text('namespace mathx; fn answer() -> i64 { 42 }')
+                (lib/'Honk.toml').write_text(original.replace('src/lib.goose', f'Src/{name}.goose'))
+                self.assertIn('42', self.run_honk('run', cwd=p).stdout)
+        app = self.new('hyphen-entry'); (app/'src/main.goose').rename(app/'src/main-file.goose')
+        (app/'Honk.toml').write_text((app/'Honk.toml').read_text().replace('src/main.goose', 'src/main-file.goose'))
+        self.run_honk('check', cwd=app)
+        (app/'tests').mkdir(); (app/'tests/self.goose').write_text('import entry from ".."; fn main() {}')
+        self.assertIn('import adapter', self.run_honk('test', cwd=app, ok=False).stderr)
+    def test_generated_import_paths_accept_quoted_project_roots(self):
+        lib = self.new('mathx', '--lib'); p = self.new('with"quote', '--name', 'hello')
+        self.run_honk('add', 'mathx', '--path', '../mathx', cwd=p)
+        source = 'import mathx from "../../mathx"; fn main() { print(mathx::answer()); }'
+        (p/'src/main.goose').write_text(source)
+        self.assertIn('42', self.run_honk('run', cwd=p).stdout)
+        self.assertEqual((p/'src/main.goose').read_text(), source)
+        (p/'src/main.goose').write_text('import mathx from "../../math\\x78"; fn main() {}')
+        self.assertIn('plain strings without escapes', self.run_honk('check', cwd=p, ok=False).stderr)
+    def test_fetch_rejects_symlinked_dependency_entry_parents(self):
+        lib = self.new('mathx', '--lib'); (lib/'src/lib.goose').unlink(); (lib/'src').rmdir()
+        outside = self.root/'outside'; outside.mkdir()
+        (outside/'lib.goose').write_text('namespace mathx; fn answer() -> i64 { 42 }')
+        (lib/'src').symlink_to(outside, target_is_directory=True)
+        p = self.new(); self.run_honk('fetch', cwd=p); original = (p/'Honk.lock').read_bytes()
+        self.run_honk('add', 'mathx', '--path', '../mathx', cwd=p)
+        self.assertIn('symlink components', self.run_honk('fetch', cwd=p, ok=False).stderr)
+        self.assertEqual((p/'Honk.lock').read_bytes(), original)
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

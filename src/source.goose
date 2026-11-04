@@ -46,7 +46,9 @@ fn token(r: Reader&) -> Token {
     if alpha(c) { while r.pos < s.len && alpha(s[r.pos]) { r.pos++; } }
     return Token { start, r.pos, false };
 }
-fn requirements(text: u8[:]) -> Requirement[>..] {
+// Generated mode is only for declaration names after strict staging/rewrite.
+// It does not decode or authorize original import sources.
+fn requirements(text: u8[:], generated: bool = false) -> Requirement[>..] {
     var r = Reader { text: text }; var out: Requirement[>..] = [];
     loop {
         let t = token(r); if t.start == t.end { break; }
@@ -56,7 +58,7 @@ fn requirements(text: u8[:]) -> Requirement[>..] {
         platform::require(!name.quoted && manifest::identifier(text[name.start..name.end]), "invalid sourced import name");
         let value = token(r); platform::require(value.quoted && value.end - value.start >= 2 && text[value.start] == '"' && text[value.end - 1] == '"', "expected quoted import source");
         let s = text[value.start + 1..value.end - 1];
-        for c in s { platform::require(c >= 32 && c != 127 && c != '\\' && c != '"', "import sources must be plain strings without escapes"); }
+        if !generated { for c in s { platform::require(c >= 32 && c != 127 && c != '\\' && c != '"', "import sources must be plain strings without escapes"); } }
         platform::require(out.len < 256, "source import limit is 256 per file");
         out.push(Requirement { name: str(text[name.start..name.end]), source: str(s), start: from.start, end: value.end });
     }

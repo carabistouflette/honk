@@ -11,16 +11,43 @@ root struct Project {
     root:     u8[>..], name: u8[>..], version: u8[>..], entry: u8[>..], kind: u8[>..],
     revision: u8[>..], description: u8[>..], license: u8[>..], dependencies: Dependency[>..], members: u8[][>..],
 }
+// Exact keywords from the pinned compiler lexer. Contextual names and builtin
+// module names remain valid components of relative module imports.
+fn keyword(s: u8[:]) -> bool {
+    for reserved in ["import", "namespace", "struct", "enum", "type", "fn", "thread_fn", "export", "simd", "recursive",
+                     "let", "var", "extern", "const", "pad", "reusable", "if", "else", "while", "for",
+                     "in", "loop", "block", "guard", "match", "defer", "return", "break", "continue", "as",
+                     "true", "false", "null", "self", "bool", "varint", "i8", "i16", "i32", "i64",
+                     "u8", "u16", "u32", "u64", "f32", "f64"] {
+        if s == reserved { return true; }
+    }
+    return false;
+}
+fn module_component(s: u8[:]) -> bool {
+    if s.len == 0 { return false; }
+    for c, i in s {
+        if !((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (i > 0 && c >= '0' && c <= '9')) { return false; }
+    }
+    return !keyword(s);
+}
+fn source_entry(s: u8[:]) -> bool { relative(s) && s.len > 6 && s[s.len - 6..] == ".goose" }
+fn module_entry(s: u8[:]) -> bool {
+    if !source_entry(s) { return false; }
+    let name = s[..s.len - 6]; var start = 0;
+    for c, i in name {
+        if c == '/' { if !module_component(name[start..i]) { return false; } start = i + 1; }
+    }
+    return module_component(name[start..]);
+}
 fn identifier(s: u8[:]) -> bool {
     if s.len == 0 || s.len > 64 { return false; }
     for c, i in s {
         if !((c >= 'a' && c <= 'z') || c == '_' || (i > 0 && c >= '0' && c <= '9')) { return false; }
     }
-    for reserved in ["std", "os", "json", "math", "string", "base64", "binary", "csv", "exception", "ffi", "regex", "vec", "rng", "utf8", "thread", "slot_pool", "slice_pool", "simd", "dictionary",
-                     "import", "from", "namespace", "struct", "root", "enum", "type", "fn", "thread_fn", "export", "extern", "inline", "recursive",
-                     "pad", "reusable", "in", "block", "defer", "as", "null", "self", "bool", "varint",
-                     "i8", "i16", "i32", "i64", "u8", "u16", "u32", "u64", "f32", "f64",
-                     "let", "var", "const", "if", "else", "for", "while", "loop", "match", "return", "break", "continue", "guard", "true", "false"] {
+    if keyword(s) { return false; }
+    for reserved in ["std", "os", "json", "math", "string", "base64", "binary", "csv", "exception", "ffi",
+                     "regex", "vec", "rng", "utf8", "thread", "slot_pool", "slice_pool", "dictionary", "from", "root",
+                     "inline"] {
         if s == reserved { return false; }
     }
     return true;
@@ -116,7 +143,8 @@ fn load(root: u8[:], project: Project&) {
         platform::require(version(project.version), "version must have three numeric components");
         platform::require(project.kind == "bin" || project.kind == "lib", "kind must be bin or lib");
         project.entry = string(doc, package, "entry", if project.kind == "bin" { "src/main.goose" } else { "src/lib.goose" });
-        platform::require(relative(project.entry), "entry must be a safe relative path");
+        platform::require(source_entry(project.entry), "entry must be a safe relative .goose path");
+        if project.kind == "lib" { platform::require(module_entry(project.entry), "library entry path components must be Goose identifiers (not keywords)"); }
     }
     let toolchain = toml::find(doc, 0, "toolchain");
     if toolchain >= 0 {

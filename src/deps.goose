@@ -105,6 +105,8 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
         var child = manifest::Project { .. }; manifest::load(directory, child);
         platform::require(child.kind == "lib", "dependency Honk.toml must describe a library"); entry = str(child.entry);
     }
+    var parents = entry.len; while parents > 0 && entry[parents - 1] != '/' { parents--; }
+    if parents > 0 { platform::require(platform::directory(directory, entry[..parents - 1]), "dependency entry parent must be a directory without symlink components"); }
     platform::require(file_exists(str(directory, "/", entry)), str("missing dependency entry: ", dep.name, " (", entry, ")"));
     let id = g.nodes.len;
     // Keep path spellings in the lockfile portable for direct local dependencies.

@@ -52,7 +52,7 @@ fn rewrite(text: u8[:], g: deps::Graph&, directory: u8[:], original: u8[:], p: m
     out.append(text[start..]); return out;
 }
 fn module(path: u8[:]) -> u8[>..] {
-    platform::require(suffix(path, ".goose"), "entry must have .goose extension"); var out: u8[>..] = [];
+    platform::require(manifest::module_entry(path), "entry used through an import adapter must have Goose identifier path components"); var out: u8[>..] = [];
     for c in path[..path.len - 6] { out.push(if c == '/' { '.' } else { c }); } return out;
 }
 fn prepare(p: manifest::Project&, g: deps::Graph&) -> u8[>..] {
@@ -91,7 +91,7 @@ fn imports(g: deps::Graph&, stage: u8[:], out: u8[>..]&) {
 fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
     let file = str(stage, "/", entry); let source = platform::load(file);
     // Source declarations already name their dependency; avoid duplicate declarations.
-    let declared = source::requirements(source); var out: u8[>..] = [];
+    let declared = source::requirements(source, true); var out: u8[>..] = [];
     for n in g.nodes {
         if !n.enabled { continue; }
         var found = false; for req in declared { if req.name == n.name { found = true; } }

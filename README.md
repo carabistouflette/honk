@@ -47,6 +47,8 @@ mathx = { path = "../mathx" }
 # test support; excluded when this project is consumed as a dependency
 ```
 
+Entries must be safe relative paths ending in `.goose`. Library entry path components (without the extension) must be ASCII Goose identifiers: letters/underscore first, then letters/digits/underscore, excluding language keywords. Uppercase, contextual names such as `from`, and builtin module names remain valid path components. Binary filenames may use other safe characters for standalone compilation; using the entry through a root import adapter requires identifier path components too.
+
 Use `import mathx;` in application source. Library names and namespaces are separate; declare the namespace in library source. Scaffolding replaces hyphens with underscores for library namespaces and rejects reserved names before creating files. The dependency key is the Goose import name: identifiers with underscores, not hyphens. Existing libraries need `<import-name>.goose` at their root. Honk libraries may use a manifest entry elsewhere; Honk creates an adapter in its staging directory. Existing sourced imports are remapped to the explicit manifest graph. Honk discovers transitive manifests and sourced imports in legacy dependency entry files, rejects conflicting identities/refs and cycles, and checks cached Git checkouts for local changes before use. Declare other package requirements in Honk.toml; no untracked compiler fetch is allowed.
 
 ## Commands
