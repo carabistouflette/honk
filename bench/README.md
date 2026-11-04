@@ -50,3 +50,5 @@ record the next reviewed source and complete paired samples against `f427cd1`.
 [Cache recovery measurements](../docs/CACHE-RECOVERY-AUDIT-2026-11-04.md) retain every paired workload and record CPU3 affinity.
 
 The [process consumer audit](../docs/PROCESS-CONSUMER-2026-11-04.md) records paired real child-launch workloads, all samples and caveats. `bench/process_profile.py` checks source/binary/compiler identities before and after measurement.
+
+Current combined integration samples at clean production source `00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6` are in [integration-cli.json](results/integration-cli.json) and [integration-workloads.json](results/integration-workloads.json). They are current-workload samples, not a matched comparison against earlier feature sets; CPU 3 affinity was applied on a shared host.

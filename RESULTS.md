@@ -130,3 +130,5 @@ The [generated source/cache recovery audit](docs/CACHE-RECOVERY-AUDIT-2026-11-04
 The [process consumer checkpoint](docs/PROCESS-CONSUMER-2026-11-04.md) records the goose-process migration, signal/ownership fault tests, normal/GCC/Clang/portable validation, review state and paired caller measurements with full provenance.
 
 The [HTTPS metadata consumer report](docs/HTTP-METADATA-2026-11-04.md) records fixed-origin request policy, dispatch/output/state-isolation tests, real loopback TLS and GCC/Clang sanitizer validation, the explicit live smoke and remaining transport limitations.
+
+The [diagnostics integration report](docs/DIAGNOSTICS-2026-11-04.md) records the final combined checks, native import exclusion regression, fixed-record privacy and file-failure tests, exact library/component pins, and current CLI/workload samples.
