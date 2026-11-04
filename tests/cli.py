@@ -628,6 +628,53 @@ class CLI(unittest.TestCase):
         proc = subprocess.run([HONK, 'metadata'], cwd=directory, env=env, capture_output=True, timeout=10)
         self.assertNotEqual(proc.returncode, 0)
         self.assertEqual(proc.stdout, b''); self.assertIn(b'UTF-8 project path', proc.stderr)
+    def test_bootstrap_ignores_ambient_git_policy_and_origin(self):
+        import shlex
+        import sys
+        upstream = self.root/'upstream'; upstream.mkdir(); self.git_project(upstream)
+        (upstream/'source').write_text('reviewed fixture')
+        self.git(upstream, 'add', 'source'); self.git(upstream, 'commit', '-qm', 'fixture')
+        revision = self.git(upstream, 'rev-parse', 'HEAD')
+        bootstrap = self.root/'bootstrap'; (bootstrap/'scripts').mkdir(parents=True)
+        script = bootstrap/'scripts/setup-goose.sh'
+        shutil.copyfile(Path(__file__).resolve().parents[1]/'scripts/setup-goose.sh', script)
+        (bootstrap/'GOOSE_REVISION').write_text(revision+'\n')
+        toolchain = bootstrap/'.toolchain/goose'
+        subprocess.run(['git', 'clone', '-q', str(upstream), str(toolchain)], check=True)
+        self.git(toolchain, 'remote', 'set-url', 'origin', 'https://example.invalid/wrong-upstream')
+        hooks = self.root/'hooks'; hooks.mkdir(); marker = self.root/'hook-ran'
+        hook = hooks/'post-checkout'
+        hook.write_text('#!/bin/sh\nprintf invoked >'+shlex.quote(str(marker))+'\n'); hook.chmod(0o755)
+        self.git(toolchain, 'config', 'core.hooksPath', str(hooks))
+        global_config = self.root/'global-config'
+        global_config.write_text('[core]\n hooksPath = '+json.dumps(str(hooks))+'\n')
+        helpers = self.root/'helpers'; helpers.mkdir(); real_git = shutil.which('git')
+        # Substitute only the fixed network endpoint with a real local Git repo.
+        # Checkout/config/hook handling still executes real Git; CMake is inert.
+        proxy = helpers/'git'; proxy.write_text('#!'+sys.executable+\
+            '\nimport json,os,subprocess,sys\nfrom pathlib import Path\na=sys.argv[1:]\n'\
+            'if "fetch" in a:\n url="https://github.com/aardappel/goose.git"\n'\
+            ' if url not in a: sys.exit(89)\n'\
+            ' Path(os.environ["BOOTSTRAP_ENV_LOG"]).write_text(json.dumps(dict(os.environ)))\n'\
+            ' a[a.index(url)]='+repr(str(upstream))+'\n os.environ["GIT_ALLOW_PROTOCOL"]="file"\n'\
+            'sys.exit(subprocess.call(['+repr(real_git)+']+a))\n'); proxy.chmod(0o755)
+        configured = self.root/'cmake-ran'; cmake = helpers/'cmake'
+        cmake.write_text('#!/bin/sh\nprintf configured >'+shlex.quote(str(configured))+'\n'); cmake.chmod(0o755)
+        env_log = self.root/'bootstrap-env.json'
+        proc = subprocess.run(['bash', str(script)], cwd=bootstrap, capture_output=True, timeout=30,
+                              env={**os.environ, 'PATH': str(helpers)+os.pathsep+os.environ['PATH'],
+                                   'GIT_CONFIG_GLOBAL': str(global_config), 'GIT_SSL_NO_VERIFY': '1',
+                                   'GIT_DIR': str(self.root/'wrong-context'), 'BOOTSTRAP_ENV_LOG': str(env_log)})
+        self.assertEqual(proc.returncode, 0, proc.stdout+proc.stderr)
+        self.assertFalse(marker.exists(), 'bootstrap executed a checkout hook')
+        self.assertTrue(configured.exists()); self.assertEqual(self.git(toolchain, 'rev-parse', 'HEAD'), revision)
+        observed = json.loads(env_log.read_text())
+        self.assertNotIn('GIT_SSL_NO_VERIFY', observed); self.assertNotIn('GIT_DIR', observed)
+        self.assertEqual(observed['GIT_CONFIG_GLOBAL'], '/dev/null')
+        self.assertEqual(observed['HONK_GIT_SSL_VERIFY'], 'true')
+        configured.unlink(); (bootstrap/'GOOSE_REVISION').write_text('not-a-full-pin\n')
+        proc = subprocess.run(['bash', str(script)], cwd=bootstrap, capture_output=True, timeout=10)
+        self.assertNotEqual(proc.returncode, 0); self.assertFalse(configured.exists())
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

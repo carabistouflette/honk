@@ -20,10 +20,11 @@ advertised short version is checked, not authenticated cryptographically.
 
 The CLI uses argv arrays, never implicit shell interpolation. Git transports
 are restricted to HTTPS, repository-context environment overrides are cleared,
-and hooks/fsmonitor are disabled. Certificate/hostname checks are forced over
-inherited verification-disable switches and URL-specific settings; Git CA
-configuration still selects trusted roots. Tar option and gzip environment overrides are
-ignored. Arbitrary runtime program arguments and output are forwarded as data;
+and hooks/fsmonitor are disabled. The standalone bootstrap script applies the
+same policy and fetches the fixed compiler upstream rather than a cached origin.
+Certificate/hostname checks are forced over inherited verification-disable
+switches and URL-specific settings; Git CA configuration still selects trusted
+roots. Tar option and gzip environment overrides are ignored. Arbitrary runtime program arguments and output are forwarded as data;
 Honk does not sanitize a trusted program's terminal output.
 
 Source staging, workspace selection and installation/removal reject symlinks at
