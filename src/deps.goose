@@ -160,8 +160,17 @@ fn resolve(p: manifest::Project&, g: Graph&) {
 }
 
 fn activate(g: Graph&, include_dev: bool) {
-    for round in g.nodes.len {
-        for edge in g.edges { if node(g, edge.parent).production { node(g, edge.child).production = true; } }
+    // Fixed-size node IDs permit constant-time propagation without rescanning variable-size owners.
+    var active: bool[256] = [false; 256];
+    for node, i in g.nodes { active[i] = include_dev || node.production; }
+    if !include_dev {
+        for round in g.nodes.len {
+            var changed = false;
+            for edge in g.edges {
+                if active[edge.parent] && !active[edge.child] { active[edge.child] = true; changed = true; }
+            }
+            if !changed { break; }
+        }
     }
-    for node in g.nodes { node.enabled = include_dev || node.production; }
+    for node, i in g.nodes { node.enabled = active[i]; }
 }

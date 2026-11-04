@@ -37,3 +37,4 @@ security: build
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/security.py
 bench: build
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/bench.py
+	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) AUDIT_SAMPLES=3 python3 tests/audit_perf.py

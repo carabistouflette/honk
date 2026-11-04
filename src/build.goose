@@ -10,13 +10,13 @@ import .source;
 import .deps;
 fn suffix(s: u8[:], ending: u8[:]) -> bool { s.len >= ending.len && s[s.len - ending.len..] == ending }
 fn skip(name: u8[:]) -> bool { name == ".git" || name == "target" || name == ".honk" || name == ".toolchain" || name == ".build" }
-fn item(paths: u8[][:], index: i64) -> u8[:] {
-    for path, i in paths { if i == index { return path; } } abort("invalid source index");
-}
 fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
-    var directories: u8[][>..] = []; directories.push(str(prefix)); var cursor = 0;
-    while cursor < directories.len {
-        let current = item(directories, cursor); cursor++;
+    var directories: u8[][>..]        = [];
+    var queue:       const u8[:][>..] = [];
+    let first .= directories.push(str(prefix)); queue.push(first);
+    var cursor = 0;
+    while cursor < queue.len {
+        let current = queue[cursor]; cursor++;
         platform::require(platform::kind(str(root, "/", current)) == 2, "source directories must not be symlinks");
         var entries: u8[>..] = []; platform::require(platform::list(str(root, "/", current), entries), "cannot list source directory");
         var start = 0;
@@ -26,7 +26,7 @@ fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
             let path = if current.len > 0 { str(current, "/", name) } else { str(name) };
             let kind = platform::kind(str(root, "/", path)); platform::require(kind == 1 || kind == 2, "source tree contains a symlink or special file");
             if kind == 2 {
-                platform::require(directories.len < 4096, "source directory limit is 4096"); directories.push(str(path));
+                platform::require(directories.len < 4096, "source directory limit is 4096"); let next .= directories.push(str(path)); queue.push(next);
             } else if suffix(name, ".goose") {
                 platform::require(out.len < 4096, "source file limit is 4096"); out.push(str(path));
             }
@@ -97,7 +97,7 @@ fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
         var found = false; for req in declared { if req.name == n.name { found = true; } }
         if !found { out.append("import "); out.append(n.name); out.append(" from "); manifest::quoted(out, str(project::parent(stage), "/deps/", n.name)); out.append(";\n"); }
     }
-    out.append(source); platform::save(file, out); return file;
+    out.append(source); if out != source { platform::save(file, out); } return file;
 }
 fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: bool, root: u8[:]) {
     let kind = platform::kind(output);
