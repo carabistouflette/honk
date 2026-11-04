@@ -245,3 +245,29 @@ The adoption also corrects a historical TOML revision in the notices table and
 adds a revision-presence guard to vendor verification. An isolated negative
 probe rejects stale notices even under optimized Python; matching pins pass.
 Frozen Honk v0.1.0 remains unchanged.
+
+
+## Recovery diagnostic SIGPIPE regression
+
+A local real-transfer fault reproduction on the pre-fix adapter terminated with
+SIGPIPE before recovery could kill/reap its silent child. A private subreaper
+proved that the child remained alive and cleaned it through a reserved owned PID
+and pidfd. Bypassing only the recovery warning made the same regression pass.
+The full CLI fault path independently reproduced the orphan before the fix and
+proved cleanup complete after it. Later ordinary CLI error output can still
+receive SIGPIPE after cleanup; this change protects the ownership-critical
+diagnostic without installing a global signal policy.
+
+`tests/process_cli.py` exercises the real library transfer and application
+recovery with readerless stderr under default, ignored, custom-handler, blocked
+and already-pending SIGPIPE states. The native fixture checks the real lock and
+normalized SIGCHLD through denied waits, then checks actual reaping and restored
+disposition/mask/pending state. The controller uses a private subreaper and
+pidfds to clean failed fixtures, including registration failures.
+
+The readerless-stderr case routes sanitizer reports to a private file and
+requires no report, with leak detection enabled. The fixture first asserts
+Honk restored its intentionally ignored SIGCHLD, then restores the fixture's
+original waitable policy before LeakSanitizer starts its own tracing child.
+This avoids autoreaped sanitizer-helper status warnings; it does not weaken
+the application's restoration checks or disable leak detection.

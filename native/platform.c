@@ -347,6 +347,32 @@ int64_t honk_process_guard_end(void) {
   if (ok) process_guard.active = false;
   return ok ? received : -1;
 }
+// Best-effort diagnostics cannot abandon a transferred child on EPIPE.
+// This single-threaded application does not spawn while the mask is scoped.
+// Keep the disposition and any SIGPIPE already pending on entry unchanged.
+static void recovery_diagnostic(void) {
+  static const char message[] =
+      "honk: recovering child; retaining locks until cleanup completes\n";
+  int saved = errno;
+  sigset_t pipe, previous, pending;
+  if (sigemptyset(&pipe) < 0 || sigaddset(&pipe, SIGPIPE) < 0 ||
+      sigprocmask(SIG_BLOCK, &pipe, &previous) < 0) {
+    errno = saved;
+    return;
+  }
+  if (sigpending(&pending) == 0) {
+    bool already_pending = sigismember(&pending, SIGPIPE) == 1;
+    ssize_t count;
+    do { count = write(STDERR_FILENO, message, sizeof message - 1); }
+    while (count < 0 && errno == EINTR);
+    if (count < 0 && errno == EPIPE && !already_pending) {
+      struct timespec immediate = {0, 0};
+      while (sigtimedwait(&pipe, NULL, &immediate) < 0 && errno == EINTR) {}
+    }
+  }
+  (void)sigprocmask(SIG_SETMASK, &previous, NULL);
+  errno = saved;
+}
 void honk_process_recover(int64_t transferred) {
   // A library Status transferred this reserved PID exactly once. Only this
   // recovery owner may reap/signal it; Child no longer owns it.
@@ -366,7 +392,7 @@ void honk_process_recover(int64_t transferred) {
       signalled = true;
     }
     if (!diagnosed) {
-      fputs("honk: recovering child; retaining locks until cleanup completes\n", stderr);
+      recovery_diagnostic();
       diagnosed = true;
     }
     // Permission-denied waits/signals must not release locks or spin. A child

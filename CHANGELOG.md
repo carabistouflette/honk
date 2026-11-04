@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Protect transferred-child recovery from diagnostic-generated SIGPIPE when
+  inherited stderr has no reader. Keep ownership/locks until actual cleanup;
+  preserve the caller's SIGPIPE disposition, mask and pre-existing pending signal.
+
 - Consolidate dependency editing through the canonical TOML legacy profile and
   its reviewed thin companion adapter, retaining the existing public behavior,
   byte/error contract and limits. Exact provenance is recorded in vendor metadata.
