@@ -15,6 +15,7 @@ check:
 	$(GOOSE) check tests/process.goose
 	$(GOOSE) check tests/semver_probe.goose
 	$(GOOSE) check tests/process_fault.goose
+	$(GOOSE) check tests/tag_select.goose
 	git diff --check
 build:
 	$(GOOSE) build honk.goose -o .build/honk
@@ -24,6 +25,9 @@ test:
 	$(GOOSE) run tests/core.goose
 	$(GOOSE) build tests/core.goose -o .build/core
 	./.build/core
+	$(GOOSE) run tests/tag_select.goose
+	$(GOOSE) build tests/tag_select.goose -o .build/tag-select
+	./.build/tag-select
 	$(GOOSE) build tests/process.goose -o .build/process-probe
 	./.build/process-probe
 	./.build/process-probe closed
@@ -40,6 +44,8 @@ test:
 	HONK=$(CURDIR)/.build/honk SEMVER_PROBE=$(CURDIR)/.build/semver-probe GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	$(MAKE) metadata-test
 sanitize:
+	$(GOOSE) build tests/tag_select.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/tag-select-sanitize
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/tag-select-sanitize
 	$(GOOSE) build tests/process.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/process-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize closed
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize overflow

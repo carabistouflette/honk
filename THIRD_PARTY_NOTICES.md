@@ -11,7 +11,7 @@ release; changing them requires explicit review and validation.
 | [goose-argparse](https://github.com/carabistouflette/goose-argparse) | `d23af7aff17c6720d17a2e8f6b80bd3bf8f14275` | `vendor/goose-argparse/argparse.goose` | [Apache-2.0](vendor/goose-argparse/LICENSE) |
 | [goose-log](https://github.com/carabistouflette/goose-log) | `a3919c5e9135b9812db422d5052bb1ea5d1d202b` | `vendor/goose-log/logger.goose` | [Apache-2.0](vendor/goose-log/LICENSE), [NOTICE](vendor/goose-log/NOTICE) |
 | [goose-text](https://github.com/carabistouflette/goose-text) | `46059e30be79ece6efd4317eb0adc6d213c808ab` | `vendor/goose-text/text.goose` | [Apache-2.0](vendor/goose-text/LICENSE) |
-| [goose-semver](https://github.com/carabistouflette/goose-semver) | `2c91a8be80b231f725a18003f7e47ca99880d6dc` | `vendor/goose-semver/semver.goose` | [Apache-2.0](vendor/goose-semver/LICENSE) |
+| [goose-semver](https://github.com/carabistouflette/goose-semver) | `2311ae69a7edacb545f284b02e345be07dd2fb05` | `vendor/goose-semver/semver.goose` | [Apache-2.0](vendor/goose-semver/LICENSE) |
 | [goose-process](https://github.com/carabistouflette/goose-process) | `191a9423197e850e699eff500620a5c7d111aa54` | `vendor/goose-process/process.goose`, `process.build`, `native/` | [Apache-2.0](vendor/goose-process/LICENSE) |
 | [goose-http](https://github.com/carabistouflette/goose-http) | `c879c6fec88eaf7229f890a5dd6e3fc313261eab` | `vendor/goose-http/` Goose/build/CMake/native files | [Apache-2.0](vendor/goose-http/LICENSE) |
 | [Honk metadata example](https://github.com/carabistouflette/goose-http) | `c879c6fec88eaf7229f890a5dd6e3fc313261eab` | `vendor/honk-metadata/honk_metadata.goose` | [Apache-2.0](vendor/honk-metadata/LICENSE) |

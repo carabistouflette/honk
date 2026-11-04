@@ -35,7 +35,7 @@ fn digit_end_set() -> ByteSet {
 // Small identifiers stay inline; larger tails use the standard bounded scanner.
 fn scan_end<F>(text: const u8[:], start: i64, endings: ByteSet&) -> i64 {
     var end = start;
-    let limit = min(text.len, start + 16);
+    let limit = if text.len < start + 16 { text.len } else { start + 16 };
     while end < limit {
         if F(text[end]) { return end; }
         end += 1;
@@ -79,7 +79,7 @@ fn identifiers(text: const u8[:], at: i64&, prerelease: bool) -> Error {
 // one-byte core component. Longer components keep the same bounded copy path.
 inline fn own_core(text: const u8[:]) -> u8[] {
     if text.len == 1 { return [text[0]]; }
-    str(text)
+    owned_bytes(text)
 }
 
 // Validate before copying. Returned fields own their bytes, including suffixes.
@@ -121,8 +121,8 @@ inline fn parse(text: const u8[:]) -> Version, Error {
     if at != text.len { return Version { .. }, Error { ErrorKind.Syntax, at }; }
     return Version {
         own_core(text[..major_end]), own_core(text[minor_start..minor_end]),
-        own_core(text[patch_start..patch_end]), str(text[pre_start..pre_end]),
-        str(text[build_start..]),
+        own_core(text[patch_start..patch_end]), owned_bytes(text[pre_start..pre_end]),
+        owned_bytes(text[build_start..]),
     }, Error { .. };
 }
 
@@ -202,12 +202,25 @@ fn compare(a: Version&, b: Version&) -> i64 {
     prerelease_compare(a.prerelease, b.prerelease)
 }
 fn format(version: Version&) -> u8[>..] {
-    var out = str(version.major, ".", version.minor, ".", version.patch);
+    var out: u8[>..] = [];
+    out.append(version.major); out.push('.'); out.append(version.minor); out.push('.'); out.append(version.patch);
     if version.prerelease.len > 0 { out.push('-'); out.append(version.prerelease); }
     if version.build.len > 0 { out.push('+'); out.append(version.build); }
     out
 }
 fn whitespace(c: u8) -> bool { c == ' ' || c == '\t' }
+// Member append is a builtin; root copy/str overloads cannot replace these
+// owned snapshots. Returning the whole local buffer preserves move ownership.
+fn owned_bytes(text: const u8[:]) -> u8[] {
+    var out: u8[>..] = []; out.append(text); return out;
+}
+fn snapshot_version(version: Version&) -> Version {
+    return Version { own_core(version.major), own_core(version.minor), own_core(version.patch),
+                     owned_bytes(version.prerelease), owned_bytes(version.build) };
+}
+fn snapshot_comparators(source: const Comparator[:]) -> Comparator[] {
+    var out: Comparator[>..] = []; out.append(source); return out;
+}
 fn skip_space(text: const u8[:], at: i64&) {
     while at < text.len && whitespace(text[at]) { at += 1; }
 }
@@ -246,14 +259,14 @@ fn parse_requirement(text: const u8[:]) -> Requirement, Error {
         if error.kind != ErrorKind.None {
             return Requirement { .. }, Error { error.kind, start + error.offset };
         }
-        comparators.push(Comparator { op, copy(version) });
+        comparators.push(Comparator { op, snapshot_version(version) });
         skip_space(text, at);
         if at == text.len { break; }
         if text[at] != ',' { return Requirement { .. }, Error { ErrorKind.Syntax, at }; }
         at += 1;
         skip_space(text, at);
     }
-    return Requirement { valid: true, comparators: copy(comparators) }, Error { .. };
+    return Requirement { valid: true, comparators: snapshot_comparators(comparators) }, Error { .. };
 }
 fn comparator_matches(comparator: Comparator&, version: Version&) -> bool {
     let target .= comparator.version;

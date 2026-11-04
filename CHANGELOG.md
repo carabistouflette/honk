@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Advance goose-semver to the reviewed 0.1.1 source, fixing consumer `copy`, `str`
+  and `min` overload interference while preserving API, grammar and limits.
+- Add bounded internal selection from sorted enumerated Git tags, with strict
+  requirements, highest-precedence matching, ambiguity rejection and owned
+  outputs. Contract tests include hostile consumer overloads. This does not
+  expose a requirement-based CLI resolver or change exact Git/path workflows.
+
 ## 0.1.0 — 2026-11-04 (experimental prerelease)
 
 Source-only release for Linux x86-64/glibc. APIs, manifests and lockfile formats

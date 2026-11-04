@@ -17,6 +17,7 @@ import .src.build;
 import .src.toolchain;
 import .src.commands;
 import .src.version_policy;
+import .src.tag_select;
 import std;
 import os;
 fn usage() {
