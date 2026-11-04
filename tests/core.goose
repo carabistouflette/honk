@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import text from "../vendor/goose-text";
 import toml from "../vendor/goose-toml";
 import argparse from "../vendor/goose-argparse";
 import honk from "..";

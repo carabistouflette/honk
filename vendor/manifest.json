@@ -20,6 +20,16 @@
         "argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
+    },
+    {
+      "directory": "goose-text",
+      "repository": "https://github.com/carabistouflette/goose-text",
+      "revision": "46059e30be79ece6efd4317eb0adc6d213c808ab",
+      "license": "Apache-2.0",
+      "files": {
+        "text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
     }
   ]
 }

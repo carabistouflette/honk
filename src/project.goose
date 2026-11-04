@@ -3,7 +3,7 @@ namespace project;
 import std;
 import os;
 import json;
-import toml;
+import text;
 import .manifest;
 import .platform;
 fn parent(path: u8[:]) -> u8[>..] {
@@ -44,7 +44,7 @@ fn create(path: u8[:], name: u8[:], library: bool, init: bool) {
     print("Created ", if library { "library " } else { "application " }, name);
 }
 fn metadata(p: manifest::Project&) -> u8[>..] {
-    platform::require(toml::valid_utf8(p.root), "metadata requires a UTF-8 project path");
+    platform::require(text::validate_utf8(p.root) == -1, "metadata requires a UTF-8 project path");
     var out = str("{\"name\":"); json::format_string(out, p.name);
     out.append(",\"version\":"); json::format_string(out, p.version);
     out.append(",\"root\":"); json::format_string(out, p.root);
