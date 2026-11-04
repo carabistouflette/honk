@@ -36,3 +36,17 @@ path = "vendor/goose-process"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "http"
+path = "vendor/goose-http"
+git = ""
+rev = ""
+commit = ""
+
+[[dependency]]
+name = "honk_metadata"
+path = "vendor/honk-metadata"
+git = ""
+rev = ""
+commit = ""

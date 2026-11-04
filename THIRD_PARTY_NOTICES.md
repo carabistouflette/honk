@@ -12,6 +12,8 @@ release; changing them requires explicit review and validation.
 | [goose-text](https://github.com/carabistouflette/goose-text) | `46059e30be79ece6efd4317eb0adc6d213c808ab` | `vendor/goose-text/text.goose` | [Apache-2.0](vendor/goose-text/LICENSE) |
 | [goose-semver](https://github.com/carabistouflette/goose-semver) | `2c91a8be80b231f725a18003f7e47ca99880d6dc` | `vendor/goose-semver/semver.goose` | [Apache-2.0](vendor/goose-semver/LICENSE) |
 | [goose-process](https://github.com/carabistouflette/goose-process) | `191a9423197e850e699eff500620a5c7d111aa54` | `vendor/goose-process/process.goose`, `process.build`, `native/` | [Apache-2.0](vendor/goose-process/LICENSE) |
+| [goose-http](https://github.com/carabistouflette/goose-http) | `c879c6fec88eaf7229f890a5dd6e3fc313261eab` | `vendor/goose-http/` Goose/build/CMake/native files | [Apache-2.0](vendor/goose-http/LICENSE) |
+| [Honk metadata example](https://github.com/carabistouflette/goose-http) | `c879c6fec88eaf7229f890a5dd6e3fc313261eab` | `vendor/honk-metadata/honk_metadata.goose` | [Apache-2.0](vendor/honk-metadata/LICENSE) |
 
 The source bytes and license copies were compared with the immutable Git objects
 at these upstream commits during the publication audit. None of the pinned trees has
@@ -29,3 +31,5 @@ redistributing compiler/build outputs, retain their applicable upstream notices.
 Honk's native adapter uses system libc/POSIX/Linux interfaces. Git, CMake, C/C++
 compilers, Python, GNU tar and gzip are external development/runtime tools, not
 vendored source packages in this distribution.
+
+The pinned goose-http test helpers in `tests/http_fixture/` are Apache-2.0; their source revision and hashes are recorded in that directory. `scripts/metadata-test-build.py` adapts the upstream test builder under the same license. Test transport redirection/CA overrides are excluded from production builds. System libcurl and its TLS/resolver dependencies are external libraries, not vendored source; distribution of those libraries follows their own licenses.

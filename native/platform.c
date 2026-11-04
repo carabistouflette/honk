@@ -32,6 +32,25 @@ typedef struct {
 bool honk_flush_stdout(void) {
   return fflush(stdout) == 0 && !ferror(stdout);
 }
+// libcurl NOSIGNAL does not establish process-wide SIGPIPE policy. This CLI is
+// single-threaded at dispatch and keeps this application guard only for fetch.
+static struct sigaction metadata_pipe;
+static bool metadata_active;
+bool honk_metadata_begin(void) {
+  if (metadata_active) return false;
+  struct sigaction ignored;
+  memset(&ignored, 0, sizeof ignored);
+  ignored.sa_handler = SIG_IGN;
+  sigemptyset(&ignored.sa_mask);
+  if (sigaction(SIGPIPE, &ignored, &metadata_pipe) < 0) return false;
+  metadata_active = true;
+  return true;
+}
+bool honk_metadata_end(void) {
+  if (!metadata_active || sigaction(SIGPIPE, &metadata_pipe, NULL) < 0) return false;
+  metadata_active = false;
+  return true;
+}
 // Original source remains capped at HCAP. Generated import mappings can add
 // 256 JSON-escaped paths (at most six bytes per path byte, plus import names).
 #define HSTAGED_CAP (8 * HCAP)

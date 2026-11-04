@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+import http from "../vendor/goose-http";
+import honk_metadata from "../vendor/honk-metadata";
 import process from "../vendor/goose-process";
 import semver from "../vendor/goose-semver";
 import text from "../vendor/goose-text";

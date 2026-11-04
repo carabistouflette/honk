@@ -128,3 +128,5 @@ process-group cancellation limits.
 The [generated source/cache recovery audit](docs/CACHE-RECOVERY-AUDIT-2026-11-04.md) records five additional fixes, the 66-case suite, cache migration rules and all paired CPU3 samples against `04f7ddf`.
 
 The [process consumer checkpoint](docs/PROCESS-CONSUMER-2026-11-04.md) records the goose-process migration, signal/ownership fault tests, normal/GCC/Clang/portable validation, review state and paired caller measurements with full provenance.
+
+The [HTTPS metadata consumer report](docs/HTTP-METADATA-2026-11-04.md) records fixed-origin request policy, dispatch/output/state-isolation tests, real loopback TLS and GCC/Clang sanitizer validation, the explicit live smoke and remaining transport limitations.

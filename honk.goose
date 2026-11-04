@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+import http from "./vendor/goose-http";
+import honk_metadata from "./vendor/honk-metadata";
 import process from "./vendor/goose-process";
 import semver from "./vendor/goose-semver";
 import text from "./vendor/goose-text";
@@ -26,7 +28,7 @@ fn cli_main() {
     if argv.len < 2 || argv[1] == "help" || argv[1] == "--help" || argv[1] == "-h" { usage(); return; }
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.1.0-dev"); return; }
-    let spec = [argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
+    let spec = [argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
                 argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
@@ -35,6 +37,7 @@ fn cli_main() {
     if options.error != argparse::Error.None { platform::die(options.message); }
     if options.has("help") { usage(); return; }
     validate_options(cmd, options, program_args.len);
+    if options.has("metadata") { emit_toolchain_metadata(options); return; }
     if cmd == "new" || cmd == "init" {
         platform::require(options.positionals.len <= 1, "expected one project path");
         let path = if options.positionals.len > 0 { options.positionals[0] } else { "." };
@@ -129,7 +132,8 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {
     platform::require(arguments == 0 || cmd == "run" || cmd == "test" || cmd == "bench", "only run/test/bench accept arguments after --");
     for entry in options.entries {
         let name = entry.name; var allowed = false;
-        if name == "help" { allowed = true; }
+        if name == "metadata" { allowed = cmd == "toolchain"; }
+        else if name == "help" { allowed = true; }
         else if name == "lib" || name == "name" { allowed = cmd == "new" || cmd == "init"; }
         else if name == "path" || name == "git" || name == "rev" || name == "dev" { allowed = cmd == "add"; }
         else if name == "root" { allowed = cmd == "install" || cmd == "uninstall"; }
@@ -149,4 +153,29 @@ fn select_root(options: argparse::Result&) -> u8[>..] {
     // Check the selected file without following a final symlink before canonicalizing its parent.
     let content = platform::load(path);
     return project::parent(platform::absolute(path));
+}
+
+// This opt-in branch runs before home/cache locks, compiler selection or Git.
+fn emit_toolchain_metadata(options: argparse::Result&) {
+    platform::require(options.positionals.len == 0, "toolchain metadata accepts no positional arguments");
+    for entry in options.entries {
+        platform::require(entry.name == "metadata" || entry.name == "manifest-path", "toolchain --metadata supports only --manifest-path; offline/frozen cannot request network metadata");
+    }
+    var p = manifest::Project { .. };
+    if options.has("manifest-path") { manifest::load(select_root(options), p); }
+    else {
+        var root = platform::absolute(".");
+        while true {
+            if platform::kind(str(root, "/Honk.toml")) != 0 { manifest::load(root, p); break; }
+            if root == "/" { break; }
+            let next = project::parent(root); root = copy(next);
+        }
+    }
+    let revision = if p.revision.len > 0 { p.revision[..] } else { toolchain::REVISION };
+    platform::require(platform::metadata_begin(), "cannot establish HTTPS signal policy");
+    var info, error = honk_metadata::fetch(revision);
+    let restored = platform::metadata_end();
+    platform::require(restored, "cannot restore HTTPS signal policy");
+    platform::require(error.len == 0, error);
+    print(honk_metadata::render(info));
 }

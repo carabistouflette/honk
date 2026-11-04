@@ -65,3 +65,7 @@ still owns its unreaped identity. Directory locks are cooperative and local file
 See [RESULTS.md](RESULTS.md) for the concrete test/review evidence and its scope.
 Passing tests, sanitizers and fuzz probes is not a proof of security or absence
 of bugs.
+
+## Opt-in source metadata
+
+`toolchain --metadata` is a fixed-origin anonymous HTTPS metadata lookup before any cache/compiler actions. It rejects offline/frozen and unrelated flags, bounds response/parser work, rejects compressed responses and validates HTTP 200/full JSON SHA equality. It provides source metadata, not executable or publisher authentication. JSON output escapes untrusted URL/subject values; it must not be treated as safe HTML or a validated navigation URL. The application temporarily ignores SIGPIPE while libcurl runs and restores its prior disposition before output. The transfer timeout is not a wall-clock cancellation bound when system DNS cleanup blocks. No redirect/credential/proxy policy or installer is introduced. Production does not include the local test transport/CA override.

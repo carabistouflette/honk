@@ -3,6 +3,8 @@ namespace platform;
 import std;
 import process;
 import os;
+extern fn metadata_begin() -> bool = "honk_metadata_begin";
+extern fn metadata_end() -> bool = "honk_metadata_end";
 extern fn flush_stdout() -> bool = "honk_flush_stdout";
 extern fn real(path: const u8[:], out: u8[>..]&) -> bool = "honk_real";
 extern fn list(path: const u8[:], out: u8[>..]&) -> bool = "honk_list";
