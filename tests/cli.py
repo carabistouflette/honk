@@ -513,6 +513,40 @@ class CLI(unittest.TestCase):
         self.assertFalse((self.root/'Honk.toml').exists())
         self.assertFalse((self.root/'src').exists())
         lib = self.new('my-lib', '--lib'); self.run_honk('check', '--offline', cwd=lib)
+    def test_deep_sources_remain_rebuildable_and_cleanable(self):
+        p = self.new(); deepest = p/'assets'
+        deepest.mkdir()
+        for _ in range(63): deepest = deepest/'d'; deepest.mkdir()
+        (deepest/'asset.bin').write_bytes(b'deep source')
+        self.run_honk('check', cwd=p)
+        self.run_honk('check', '--frozen', cwd=p)
+        self.git_project(p); self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'src', 'assets')
+        self.run_honk('package', '--frozen', cwd=p)
+        self.run_honk('package', '--frozen', cwd=p)
+        self.assertFalse((p/'.honk/package').exists())
+        self.run_honk('clean', cwd=p)
+        self.assertFalse((p/'.honk/stage').exists())
+        (deepest/'too-deep').mkdir()
+        self.run_honk('check', '--frozen', cwd=p, ok=False)
+        self.run_honk('clean', cwd=p)
+        self.assertEqual((deepest/'asset.bin').read_bytes(), b'deep source')
+    def test_fmt_batches_supported_file_and_argument_byte_limits(self):
+        p = self.new(); directory = p/('d'*220); directory.mkdir()
+        files = [p/'src/main.goose']
+        for i in range(4095):
+            file = directory/f'f{i:04}.goose'; file.write_text('fn helper(){print(1);}')
+            files.append(file)
+        self.assertGreater(sum(len(os.fsencode(f))+1 for f in files), 1048576)
+        self.run_honk('fmt', cwd=p)
+        self.run_honk('fmt', '--check', cwd=p)
+        self.assertIn('fn helper() {', files[-1].read_text())
+    def test_fmt_without_sources_does_not_consume_stdin(self):
+        p = self.new(); (p/'src/main.goose').unlink()
+        proc = subprocess.run([HONK, 'fmt'], cwd=p, input=b'fn main(){print(42);}',
+                              env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache')},
+                              capture_output=True, timeout=10)
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        self.assertEqual(proc.stdout, b'')
     def test_help_and_errors(self):
         self.run_honk('--help')
         self.run_honk('version')

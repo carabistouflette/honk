@@ -46,11 +46,25 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     }
     if cmd == "fmt" {
         let compiler = toolchain::compiler(p, cache, offline);
-        var paths:  u8[][>..] = []; build::files(p.root, "", paths);
-        var packed: u8[>..]   = []; platform::pack(packed, compiler); platform::pack(packed, "format");
-        if options.has("check") { platform::pack(packed, "--check"); }
-        for path in paths { platform::pack(packed, str(p.root, "/", path)); }
-        var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+        var paths: u8[][>..] = []; build::files(p.root, "", paths);
+        // Bound both argv count and bytes; the supported source-file limit is
+        // larger than one subprocess argv. An empty list must not format stdin.
+        var packed: u8[>..] = []; var count = 0;
+        for path in paths {
+            let absolute = str(p.root, "/", path);
+            if count > 0 && (count >= 256 || packed.len + absolute.len + 1 > 65536) {
+                var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+                packed.clear(); count = 0;
+            }
+            if count == 0 {
+                platform::pack(packed, compiler); platform::pack(packed, "format");
+                if options.has("check") { platform::pack(packed, "--check"); }
+            }
+            platform::pack(packed, absolute); count++;
+        }
+        if count > 0 {
+            var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { exit(status); }
+        }
         platform::unlock(lock); return;
     }
     var graph = deps::Graph { cache: str(cache), locked: options.has("locked") || options.has("frozen"), offline: offline, update: cmd == "update", .. };

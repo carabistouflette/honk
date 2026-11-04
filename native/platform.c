@@ -717,7 +717,9 @@ bool honk_copy(hs from, hs to) {
   return ok;
 }
 static bool remove_at(int parent, const char *name, int depth) {
-  if (depth > 64)
+  // Source depth is 64; private staging/package verification adds wrappers and
+  // a final regular-file level. Cleanup must accept every tree we can create.
+  if (depth > 80)
     return false;
   struct stat st;
   if (fstatat(parent, name, &st, AT_SYMLINK_NOFOLLOW) < 0)
