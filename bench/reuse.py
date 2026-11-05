@@ -13,6 +13,7 @@ import re
 import resource
 import select
 import signal
+import shutil
 import subprocess
 import tempfile
 import time
@@ -96,7 +97,11 @@ def main():
     work = Path(tempfile.mkdtemp(prefix='reuse-profile-', dir=ROOT/'.build'))
     print('Retained work '+str(work), flush=True)
     env = {**os.environ, 'GOOSE': str(args.goose), 'GOOSE_HOME': str(work/'goose'), 'HONK_HOME': str(work/'cache')}
-    inputs = {'harness': sha(Path(__file__)), 'candidate': sha(args.honk), 'baseline': sha(args.baseline), 'compiler': sha(args.goose)}
+    cc_path = shutil.which('cc')
+    if not cc_path: raise RuntimeError('default C compiler missing')
+    cc = Path(cc_path).resolve(strict=True)
+    cc_version = subprocess.check_output([str(cc), '--version'], text=True, timeout=10).splitlines()[0]
+    inputs = {'harness': sha(Path(__file__)), 'candidate': sha(args.honk), 'baseline': sha(args.baseline), 'compiler': sha(args.goose), 'cc': sha(cc)}
     fixtures = {}; fingerprints = {}; operations = []
     for name in ['source_only', 'conservative_fallback']:
         project = work/name; (project/'src').mkdir(parents=True); (project/'vendor/semver').mkdir(parents=True)
@@ -158,12 +163,12 @@ def main():
             print(round_number, name, mode, record['wall_ms'], flush=True)
     for name, project in fixtures.items():
         if fingerprint(project) != fingerprints[name]: raise RuntimeError('fixture/lock changed')
-    if any(inputs[name] != sha(path) for name, path in [('harness', Path(__file__)), ('candidate', args.honk), ('baseline', args.baseline), ('compiler', args.goose)]):
+    if any(inputs[name] != sha(path) for name, path in [('harness', Path(__file__)), ('candidate', args.honk), ('baseline', args.baseline), ('compiler', args.goose), ('cc', cc)]):
         raise RuntimeError('measurement executable/source inputs changed')
     if subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip() != revision or subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain']).strip():
         raise RuntimeError('harness source revision/clean state changed')
     report = {'revision': revision, 'source_clean': True, 'sha256': inputs,
-              'compiler_revision': (ROOT/'GOOSE_REVISION').read_text().strip(), 'semver_pin': PIN,
+              'compiler_revision': (ROOT/'GOOSE_REVISION').read_text().strip(), 'c_compiler_version': cc_version, 'semver_pin': PIN,
               'fixture_entries': fingerprints, 'started_utc': started_utc,
               'finished_utc': datetime.now(timezone.utc).isoformat(), 'platform': platform.platform(),
               'affinity': sorted(os.sched_getaffinity(0)), 'seed': 20261105,

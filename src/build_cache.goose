@@ -100,14 +100,12 @@ fn key(compiler: u8[:], entry: u8[:], stage: u8[:], release: bool, root: u8[:], 
     let compiler_home = if home[0] == '/' { str(home) } else { str(root, "/", home) };
     if platform::kind(str(compiler_home, "/config")) != 0 { return []; }
     if compiler.len == 0 || compiler[0] != '/' { return []; }
-    let compiler_hash, compiler_elf = digest(compiler, 268435456); if !compiler_elf { return []; }
     cc = on_path("cc", root); if cc.len == 0 { return []; }
     var cc_real: u8[>..] = []; if !platform::real(cc, cc_real) { return []; }
-    let cc_hash, cc_elf = digest(cc_real, 268435456); if !cc_elf { return []; }
     var state = crypto::Sha256 { .. };
     if crypto::init(state) != crypto::Error.None { return []; }
     var environment: u8[>..] = []; if !platform::cache_environment(environment) { return []; }
-    for text in ["honk-reuse-1-standalone", compiler, compiler_hash[..], cc[..], cc_real[..], cc_hash[..], environment[..], root, entry, if release { "release" } else { "debug" }] {
+    for text in ["honk-reuse-1-standalone", compiler, cc[..], cc_real[..], environment[..], root, entry, if release { "release" } else { "debug" }] {
         if !feed(state, text) { return []; }
     }
     let original_std = std_source(compiler, root); if original_std.len == 0 { return []; }
@@ -142,6 +140,11 @@ fn key(compiler: u8[:], entry: u8[:], stage: u8[:], release: bool, root: u8[:], 
             if !feed(state, data) { return []; }
         }
     }
+    // Source eligibility is cheaper than reading executable images; keep every
+    // tool digest in the key, but avoid that work for conservative fallback.
+    let compiler_hash, compiler_elf = digest(compiler, 268435456); if !compiler_elf { return []; }
+    let cc_hash, cc_elf = digest(cc_real, 268435456); if !cc_elf { return []; }
+    if !feed(state, compiler_hash) || !feed(state, cc_hash) { return []; }
     var hash: u8[32] = [0; 32]; var hex: u8[64] = [0; 64];
     if crypto::finish(state, hash[..]) != crypto::Error.None || crypto::hex_encode(hash[..], hex[..]) != crypto::Error.None { return []; }
     var out: u8[>..] = []; out.append(hex[..]); return out;

@@ -76,6 +76,7 @@ sanitize:
 portable:
 	$(GOOSE) build honk.goose --debug --no-bce --cc $(CURDIR)/scripts/portable-cc.sh -o .build/honk-portable
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-portable GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py CLI.test_binary_source_snapshots_are_independent CLI.test_oversized_staging_file_fails_before_copy CLI.test_package_stages_only_tracked_files
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-portable GOOSE=$(abspath $(GOOSE)) python3 tests/build_cache_cli.py BuildCache.test_verified_hit_republishes_independent_output BuildCache.test_corrupt_missing_and_unsafe_cache_entries
 security: build
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/security.py
 bench: build

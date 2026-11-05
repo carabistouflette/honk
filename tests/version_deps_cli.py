@@ -87,6 +87,26 @@ class VersionDependencies(unittest.TestCase):
         self.call('update'); self.assertEqual(self.queries(),2); self.assertIn(later.encode(),self.lock())
         fetches=self.fetches(); queries=self.queries()
         self.assertIn('111',self.call('run','--frozen').stdout); self.assertEqual(self.fetches(),fetches); self.assertEqual(self.queries(),queries)
+    def test_reused_build_still_validates_git_sources(self):
+        self.env['GOOSE_HOME'] = str(self.root/'goose')
+        self.add('^1.2.3'); self.call('fetch')
+        self.assertIn('110', self.call('run', '--reuse-build', '--frozen').stdout)
+        record = self.project/'.honk/reuse/debug/record'
+        self.assertTrue(record.is_file(), 'Git fixture did not qualify for reuse')
+        old_record = record.read_bytes(); lock = self.lock()
+        queries = self.queries(); fetches = self.fetches()
+        self.assertIn('110', self.call('run', '--reuse-build', '--frozen').stdout)
+        self.assertEqual(record.read_bytes(), old_record)
+        self.assertEqual(self.lock(), lock)
+        self.assertEqual(self.queries(), queries); self.assertEqual(self.fetches(), fetches)
+        sources = list((self.root/'cache/sources').glob('*/mathx.goose'))
+        self.assertEqual(len(sources), 1)
+        sources[0].write_text(sources[0].read_text().replace('110', '999'))
+        result = self.call('run', '--reuse-build', '--frozen', ok=False)
+        self.assertIn('local changes', result.stderr); self.assertEqual(result.stdout, '')
+        self.assertEqual(record.read_bytes(), old_record); self.assertEqual(self.lock(), lock)
+        self.assertEqual(self.queries(), queries); self.assertEqual(self.fetches(), fetches)
+
     def test_prerelease_and_changed_requirement_locked(self):
         self.add('>=2.0.0-alpha.0,<2.0.0'); self.assertIn('200',self.call('run').stdout)
         before = self.lock(); queries=self.queries(); fetches=self.fetches()
