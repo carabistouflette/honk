@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## 0.3.0 — 2026-11-05 (experimental prerelease)
+
+Source-only Linux x86-64/glibc release. CLI, manifest and lockfile formats
+remain experimental. Explicit diagnostic records now include a canonical quoted
+UTC timestamp; log consumers must accept the additional field. Existing exact
+Git/path syntax and monotonic duration measurement remain supported.
+
 - Add canonical UTC timestamps to the existing opt-in diagnostic file using
   pinned, vendored goose-log v0.1.3 and goose-time v0.1.0. Sample the wall clock
   only for enabled events; preserve monotonic durations, stdout, native file
