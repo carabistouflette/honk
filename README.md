@@ -101,7 +101,8 @@ invalid or unsupported requests leave the manifest untouched. Selector metadata
 is at most 5,120 bytes; manifest input/output stay capped at 1 MiB. Single-name
 removal retains its legacy bytes and output. Honk.lock is unchanged until an
 explicit `fetch`. Atomicity is per manifest; workspace members still execute
-sequentially.
+sequentially. Multiple-name removal is currently unreleased; frozen v0.3.0
+supports single-name removal only.
 
 Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed manifest edit, build or installation.
 

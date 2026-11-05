@@ -401,3 +401,29 @@ passed the full normal/security suites, all nine cache cases under GCC/Clang
 ASan/UBSan, portable-copy/cache checks and normal/frozen self-check/package with
 unchanged lock bytes and all tracked exports exact. Hosted publication-head
 validation is a separate gate.
+
+
+## Atomic per-manifest dependency removal
+
+`remove alpha beta` uses the approved canonical TOML alpha.4 snapshot API at
+`2043d9c0b32a8237d54b2a45578f2cc4b7ea384c`. All requested names must be valid,
+unique and present before a single apply against the fresh locked source and
+one final semantic validation/atomic save. Single-name removal retains the
+unchanged companion compatibility profile and output. Request/name/path and
+manifest caps are documented in README; lock refresh remains explicit.
+
+The [consumer evidence](docs/results/atomic-remove.json) identifies the tested
+application source, compiler/binary, all nine public canonical Git blobs and
+retained wrapper/license graph. Only the canonical editor and source README
+change from alpha.3. Protected native/cache/process/UTC/build/lock sources stay
+byte-identical to the prior validated main. Normal/security suites, twelve
+editing methods and eight real Git methods in both GCC/Clang debug/no-BCE
+sanitizer builds pass. Rejection cases verify unchanged bytes/inode/timestamps
+and empty stdout, including a valid first selector followed by an unsupported
+second edit. Normal/frozen self-check/package passes with unchanged lock,
+identical archives and every tracked export exact/no generated state. The
+report names the pre-evidence source; later docs-only commits preserve those
+runtime/build/vendor bytes. Hosted exact-head CI is a separate publication gate.
+No performance claim, fresh timing campaign or automatic companion release
+follows. Existing release tags remain unchanged; this workflow is unreleased and absent
+from the frozen v0.3.0 release.
