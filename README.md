@@ -57,7 +57,7 @@ Use `import mathx;` in application source. Library names and namespaces are sepa
 - `build [--release] [--bin NAME]`, `run [--release] -- ARGS`: native executable in `target/debug` or `target/release`. `--bin NAME` selects `src/bin/NAME.goose`. Executables are compiled privately and published atomically after success; a failed compiler leaves the previous binary intact, and output symlinks/special files are rejected. Debug builds enable Goose runtime checks. Libraries are source packages and `build` checks them.
 - `check`: type/lifetime checking. `test`, `bench`: build and run `.goose` programs under `tests/` or `bench/`, failing on the first nonzero exit. Test/benchmark executables have a separate reserved output directory so target names cannot overwrite application binaries. Program arguments follow `--`.
 - `fmt [--check]`: Goose formatting.
-- `add NAME --path PATH`, `add NAME --git HTTPS_URL --rev REF [--dev]`, or `add NAME --git HTTPS_URL --version REQUIREMENT [--dev]`; `remove NAME`: edit dependency syntax while preserving surrounding comments and formatting; run `fetch` to refresh the lock. Unsupported inline parent-table edits and changes exceeding dependency or metadata-size limits fail before replacing the original manifest.
+- `add NAME --path PATH`, `add NAME --git HTTPS_URL --rev REF [--dev]`, or `add NAME --git HTTPS_URL --version REQUIREMENT [--dev]`; `remove NAME [NAME ...]`: edit dependency syntax while preserving surrounding comments and formatting; run `fetch` to refresh the lock. Unsupported inline parent-table edits and changes exceeding dependency or metadata-size limits fail before replacing the original manifest.
 - `fetch`, `update`: resolve dependencies; ordinary commands preserve locked Git commits, `update` deliberately refreshes refs.
 - `tree`: list resolved dependencies. `metadata`: machine-readable JSON project metadata. `metadata -p NAME` or `metadata -p NAME@FULL_VERSION` selects one workspace member; `metadata --workspace` streams an array of members (check the exit status before consuming output). Metadata does not create caches or obtain a compiler, and rejects non-UTF-8 project paths before emitting a project object.
 - `package`: requires GNU tar/gzip; typecheck and produce a deterministic source `.tar.gz` under `target/package/`. Requires tracked Honk.toml/Honk.lock in a Git repository; copies only tracked regular files from the current working tree into private staging, excludes local untracked files, and typechecks the exact exported contents offline before publishing the archive. External path dependencies and tracked submodules are rejected. Vendored dependencies inside the project are supported. Archive modes normalize to 0644/0755 independently of caller umask. Archive creation uses an explicit GNU format and ignores inherited TAR_OPTIONS/GZIP options.
@@ -88,13 +88,22 @@ It checks actual public HTTPS Git, cache/lock recovery and exported packages.
 It runs separately from the default offline fixtures and CI benchmark smoke.
 
 Dependency `add`/`remove` preserves comments and formatting outside edited TOML
-syntax using goose-toml-edit. Removal keeps attached comments as standalone
+syntax using the canonical goose-toml source engine; single edits retain the
+goose-toml-edit compatibility profile. Removal keeps attached comments as standalone
 comments. Inline dependency assignments, dotted dependency fields and declared
 dependency tables are supported; editing a dependency inside an inline parent
 `dependencies = { ... }` is rejected before saving. Result validation and the
-existing atomic manifest write remain in effect.
+existing atomic manifest write remain in effect. `remove alpha beta` accepts
+1–64 distinct, present dependency names (each a valid import identifier of at
+most 64 bytes). All names are checked first; multiple removals use one alpha.4
+snapshot `apply` and one atomic save under the project lock. Missing, duplicate,
+invalid or unsupported requests leave the manifest untouched. Selector metadata
+is at most 5,120 bytes; manifest input/output stay capped at 1 MiB. Single-name
+removal retains its legacy bytes and output. Honk.lock is unchanged until an
+explicit `fetch`. Atomicity is per manifest; workspace members still execute
+sequentially.
 
-Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed build or installation.
+Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed manifest edit, build or installation.
 
 Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Exact Git refs and paths retain their behavior; a separate bounded Git-tag requirement workflow is described below. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy. The [bounded tag-selection policy](docs/GIT-TAG-SELECTION.md) and [transport/lock contract](docs/GIT-VERSION-DESIGN.md) describe the supported bounded Git version workflow.
 

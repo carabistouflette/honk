@@ -19,13 +19,15 @@ fn main() {
 ```
 
 The supported entry points are `toml_source::put`, `toml_source::remove`,
-`toml_source::legacy_set` and `toml_source::legacy_remove`.
-Other declarations are implementation details. All return `(owned_output,
+`toml_source::legacy_set`, `toml_source::legacy_remove`, and `toml_source::apply`,
+with the `toml_source::Edit` request type for batches.
+Other declarations are implementation details. The functions return `(owned_output,
 owned_error)`, with an empty error on success and empty output on every error.
 The application owns reading files and atomic publication after success.
 Inputs are borrowed for the duration of the call; no references or source ranges
 escape into the returned text. Each operation privately indexes the original
-source and reparses changed output before returning it.
+source and reparses changed output before returning it. A batch shares that
+source index and final validation across its requests.
 
 ## Operations
 
@@ -54,6 +56,61 @@ and `value` routines. Its private offsets refer to the original bytes, never
 the parsed document's decoded key/text arena. Parser declaration rules and work
 budgets apply unchanged. Fixture tests compare the source index's complete
 semantic node layout and arena with the ordinary parser.
+
+## Atomic snapshot batches
+
+`apply(source, edits, version = toml::Version.V1_0)` applies up to 64
+`Edit.Put {path, value}` / `Edit.Remove {path}` requests and returns one owned
+`(output, error)` pair. It uses the default source policies described above;
+the legacy compatibility profile has no batch entry point.
+
+```goose
+let name_path: (const u8[:])[2] = ["package", "name"];
+let old_path: (const u8[:])[2] = ["dependencies", "old"];
+let edits: toml_source::Edit[2] = [
+    toml_source::Edit.Put {path: name_path, value: "'renamed'"},
+    toml_source::Edit.Remove {path: old_path},
+];
+let output, error = toml_source::apply(original, edits);
+```
+
+Requests borrow their paths and raw values until `apply` returns. Bind path
+arrays before storing requests, as above, and finish growing any backing arrays
+before borrowing their slices. Explicitly type a request array as `Edit[N]` so
+an array containing only one variant still has the common enum type.
+
+Every path selects the **original source snapshot**, including insertion
+anchors. This is not a sequence in which a later request can target a value
+created by an earlier request. Equal paths and ancestor/descendant paths are
+rejected, even when missing. Independent siblings under a shared missing prefix
+are allowed. Insertions at the same original offset appear in request order;
+other spans follow original source order. Newline separation uses the bytes
+already emitted, including the effect of removals. Unsupported inline children,
+header replacements, parser limits and version selection follow `put`/`remove`.
+
+Validation stages are count/path/budget/conflict preflight, all replacement
+fragments, original-source indexing, span planning, then rendering and final
+parsing. Request-local errors include `batch edit N` with a zero-based index;
+source, total-budget, output-size and final-parser errors are batch-wide.
+The stages determine error precedence, rather than the lowest request index
+across all stages. Every failure returns empty output and an owned diagnostic;
+there is no partial result to publish. An empty batch or all-missing removals
+still validates the source and returns its independent owned copy.
+
+The aggregate decoded path bytes plus raw replacement bytes cannot exceed
+1 MiB. Each individual path/fragment and the completed source also obey the
+limits below. One original source index and one final parse cover a changed
+batch, in addition to an independent parse of each replacement fragment. The
+planner shares statement and subtree metadata; bounded lookup costs up to
+O(edits × parser nodes), conflict checks O(edits² × path segments), and span
+sorting O(spans log spans). Temporary storage includes the index, parser nodes,
+statement metadata, and rendered output. This does not promise a strict heap
+allocation budget or a speedup for every batch size/layout.
+
+Batch validation and the complete-operation measurements, including the
+slower single-edit control and shared-host limits, are retained in the
+[atomic batch report](tests/results/atomic-batches/README.md). This API is
+introduced in `v0.1.0-alpha.4`; alpha.1 through alpha.3 do not contain it.
 
 ## Companion compatibility profile
 
@@ -113,7 +170,7 @@ in this version. They return an error and empty output. Replacing or removing th
 entire directly assigned inline table is supported. Replacing a header-declared
 table or AoT with a raw value is also unsupported. A source-preserving caller
 should report unsupported layouts without falling back to whole-file
-normalization. Array ordinals, formatting cleanup and multi-edit plans are not
+normalization. Array ordinals, formatting cleanup and sequential dependent edit plans are not
 part of this API.
 
 Each call is bounded independently:
@@ -122,10 +179,12 @@ Each call is bounded independently:
 - Replacement fragment: at most 1 MiB minus four wrapper bytes.
 - Path: 1..64 segments and at most 4,096 total decoded key bytes.
 - Index: at most 65,536 statements, plus existing parser node/depth/key-work limits.
-- At most three bounded parsing passes for insertion/replacement, two for removal.
+- Single edits: at most three bounded parsing passes for insertion/replacement, two for removal.
+- Batches: at most 64 requests, 1 MiB aggregate decoded paths/raw values, and the parsing stages above.
 
 Outside existing metered parser/index work, scans, path walks and copying are
-linear in bounded input plus output size. Storage is O(input bytes + parser
+linear in bounded input plus output size for single edits; batch planning has
+the additional costs stated above. Storage is O(input bytes + parser
 nodes + statements), not a strict allocation-byte budget. Runtime allocation
 failure follows Goose's normal policy. Applications must bound repeated calls
 and input I/O themselves. No native kernel or runtime dependency is introduced.
@@ -143,8 +202,8 @@ make -C source fuzz
 ```
 
 The opt-in target has its own Makefile and tests. Tests include exact source
-comparisons, all ASCII key bytes, source-context cases, 2,405 generated
-semantic/preservation checks against Python `tomllib`, 21 frozen legacy
+comparisons, all ASCII key bytes, source-context cases, 2,405 single-edit and over 800 batch
+semantic/preservation/failure checks against Python `tomllib`, 21 frozen legacy
 output/diagnostic fixtures plus 512 independent insertion byte checks, and source-index equality
 on all pinned TOML 1.0 and 1.1 fixtures. Python comparisons use their shared
 TOML 1.0 subset; explicit tests cover version-specific behavior. Sanitizers

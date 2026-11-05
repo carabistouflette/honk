@@ -56,7 +56,7 @@ fn index(source: const u8[:], doc: toml::Document&, statements: Statement[>..]&,
     }
     return owned(r.error);
 }
-fn check_path(path: const u8[:][:], profile: Profile) -> u8[>..] {
+fn check_path(path: const (const u8[:])[:], profile: Profile) -> u8[>..] {
     if path.len == 0 || path.len > MAX_PATH_DEPTH { return owned(if legacy(profile) { "toml-edit: path needs 1..64 decoded components" } else { "toml source: path needs 1..64 decoded key segments" }); }
     let limit = if legacy(profile) { MAX_BYTES } else { MAX_PATH_BYTES };
     var bytes = 0;
@@ -78,7 +78,7 @@ fn child(doc: toml::Document&, parent: i64, name: const u8[:]) -> i64 {
     }
     return -1;
 }
-fn resolve(doc: toml::Document&, path: const u8[:][:], profile: Profile) -> i64, const u8[:] {
+fn resolve(doc: toml::Document&, path: const (const u8[:])[:], profile: Profile) -> i64, const u8[:] {
     var id = 0;
     for part in path {
         if id < 0 { return -1, ""; }
@@ -148,6 +148,45 @@ fn quoted_key(output: u8[>..]&, name: const u8[:], profile: Profile) {
         if byte == 127 { output.append("\\u007f"); } else { output.push(byte); }
     }
 }
+// Insertion metadata is shared by single edits and snapshot batches.
+fn body_ends(doc: toml::Document&, statements: const Statement[:], profile: Profile) -> i64[>..] {
+    var ends: i64[>..] = [];
+    for node in doc.nodes { ends.push(-1); }
+    ends[0] = 0;
+    for statement in statements {
+        if !legacy(profile) || statement.header { ends[statement.context] = statement.line_end; }
+    }
+    return ends;
+}
+fn insertion_position(doc: toml::Document&, ends: const i64[:], path: const (const u8[:])[:]) -> i64, i64, const u8[:] {
+    var parent = 0; var context = 0; var depth = 0;
+    for part, i in path[..path.len - 1] {
+        let next = child(doc, parent, part);
+        if next < 0 { break; }
+        if doc.nodes[next].kind != toml::Kind.Table { return 0, 0, "toml source: path crosses a non-table"; }
+        if doc.nodes[next].state == toml::State.Sealed || doc.nodes[next].state == toml::State.Inline {
+            return 0, 0, "toml source: editing inside inline tables is unsupported";
+        }
+        parent = next;
+        if ends[parent] >= 0 { context = parent; depth = i + 1; }
+    }
+    return ends[context], depth, "";
+}
+fn insertion_text(path: const (const u8[:])[:], value: const u8[:], depth: i64, eol: const u8[:], leading: bool, profile: Profile) -> u8[>..], u8[>..] {
+    var addition: u8[>..] = [];
+    if leading { addition.append(eol); }
+    for part, i in path[depth..] {
+        if i > 0 { addition.push('.'); }
+        if legacy(profile) && (addition.len > MAX_BYTES - 2 || part.len > (MAX_BYTES - addition.len - 2) / 6) {
+            return [], owned("toml-edit: rendered path exceeds 1 MiB");
+        }
+        quoted_key(addition, part, profile);
+    }
+    if legacy(profile) && (addition.len > MAX_BYTES - 3 || value.len > MAX_BYTES - addition.len - 3 ||
+        eol.len > MAX_BYTES - addition.len - 3 - value.len) { return [], owned("toml-edit: output exceeds 1 MiB"); }
+    addition.append(" = "); addition.append(value); addition.append(eol);
+    return addition, [];
+}
 // Replace a directly assigned value or insert a new member. Existing bytes
 // outside the splice, including comments and source spellings, are copied.
 fn put_impl(source: const u8[:], path: const u8[:][:], value: const u8[:], version: toml::Version, profile: Profile) -> u8[>..], u8[>..] {
@@ -168,38 +207,11 @@ fn put_impl(source: const u8[:], path: const u8[:][:], value: const u8[:], versi
         }
         return [], owned(if legacy(profile) { "toml-edit: replace a complete assignment, not a declared table" } else { "toml source: value is not a directly assigned source span" });
     }
-    // Choose the deepest existing body; dotted names can create missing tables
-    // without appending an assignment into the wrong current table.
-    var ends: i64[>..] = [];
-    for node in doc.nodes { ends.push(-1); }
-    ends[0] = 0;
-    for statement in statements {
-        if !legacy(profile) || statement.header { ends[statement.context] = statement.line_end; }
-    }
-    var parent = 0; var context = 0; var depth = 0;
-    for part, i in path[..path.len - 1] {
-        let next = child(doc, parent, part);
-        if next < 0 { break; }
-        if doc.nodes[next].kind != toml::Kind.Table { return [], owned("toml source: path crosses a non-table"); }
-        if doc.nodes[next].state == toml::State.Sealed || doc.nodes[next].state == toml::State.Inline {
-            return [], owned("toml source: editing inside inline tables is unsupported");
-        }
-        parent = next;
-        if ends[parent] >= 0 { context = parent; depth = i + 1; }
-    }
-    let at = ends[context]; let eol = newline(source);
-    var addition: u8[>..] = [];
-    if at > 0 && source[at - 1] != '\n' { addition.append(eol); }
-    for part, i in path[depth..] {
-        if i > 0 { addition.push('.'); }
-        if legacy(profile) && (addition.len > MAX_BYTES - 2 || part.len > (MAX_BYTES - addition.len - 2) / 6) {
-            return [], owned("toml-edit: rendered path exceeds 1 MiB");
-        }
-        quoted_key(addition, part, profile);
-    }
-    if legacy(profile) && (addition.len > MAX_BYTES - 3 || value.len > MAX_BYTES - addition.len - 3 ||
-        eol.len > MAX_BYTES - addition.len - 3 - value.len) { return [], owned("toml-edit: output exceeds 1 MiB"); }
-    addition.append(" = "); addition.append(value); addition.append(eol);
+    let ends = body_ends(doc, statements, profile);
+    let at, depth, position_error = insertion_position(doc, ends, path);
+    if position_error.len > 0 { return [], owned(position_error); }
+    let addition, addition_error = insertion_text(path, value, depth, newline(source), at > 0 && source[at - 1] != '\n', profile);
+    if addition_error.len > 0 { return [], owned(addition_error); }
     return splice(source, at, at, addition, doc, version, profile);
 }
 // Remove assignment/header token spans belonging to a named subtree. Leading
@@ -249,4 +261,125 @@ fn legacy_set(source: const u8[:], path: const u8[:][:], value: const u8[:]) -> 
 }
 fn legacy_remove(source: const u8[:], path: const u8[:][:]) -> u8[>..], u8[>..] {
     return remove_impl(source, path, toml::Version.V1_0, Profile.LegacyEditor);
+}
+
+// Requests borrow their data for apply; no views escape into the result.
+enum Edit {
+    Put { path: const (const u8[:])[:], value: const u8[:] },
+    Remove { path: const (const u8[:])[:] },
+}
+const MAX_BATCH_EDITS: i64 = 64;
+struct BatchSpan { start: i64, end: i64, request: i64, depth: i64 = -1 }
+fn batch_path(edit: Edit) -> const (const u8[:])[:] {
+    match edit { Put p => p.path, Remove r => r.path }
+}
+fn batch_value(edit: Edit) -> const u8[:] {
+    match edit { Put p => p.value, Remove r => "" }
+}
+fn batch_put(edit: Edit) -> bool {
+    match edit { Put p => true, Remove r => false }
+}
+fn batch_error(request: i64, error: const u8[:]) -> u8[>..] {
+    var output = owned("toml source: batch edit ");
+    if request >= 10 { output.push('0' + (request / 10) as u8); }
+    output.push('0' + (request % 10) as u8);
+    output.append(": "); output.append(error); return output;
+}
+fn batch_overlap(a: const (const u8[:])[:], b: const (const u8[:])[:]) -> bool {
+    for i in min(a.len, b.len) { if a[i] != b[i] { return false; } }
+    return true;
+}
+fn batch_append(output: u8[>..]&, bytes: const u8[:]) -> bool {
+    if bytes.len > MAX_BYTES - output.len { return false; }
+    output.append(bytes); return true;
+}
+// Original-snapshot selectors; no partial output is returned on any failure.
+fn apply(source: const u8[:], edits: const Edit[:], version: toml::Version = toml::Version.V1_0) -> u8[>..], u8[>..] {
+    if edits.len > MAX_BATCH_EDITS { return [], owned("toml source: batch exceeds 64 edits"); }
+    var bytes = 0;
+    for edit, i in edits {
+        let path = batch_path(edit);
+        let path_error = check_path(path, Profile.Source);
+        if path_error.len > 0 { return [], batch_error(i, path_error); }
+        for part in path {
+            if part.len > MAX_BYTES - bytes { return [], owned("toml source: batch request exceeds 1 MiB"); }
+            bytes += part.len;
+        }
+        let value = batch_value(edit);
+        if value.len > MAX_BYTES - bytes { return [], owned("toml source: batch request exceeds 1 MiB"); }
+        bytes += value.len;
+        for j in i {
+            if batch_overlap(path, batch_path(edits[j])) { return [], batch_error(i, "overlapping batch paths"); }
+        }
+    }
+    for edit, i in edits {
+        if batch_put(edit) {
+            let error = check_value(batch_value(edit), version, Profile.Source);
+            if error.len > 0 { return [], batch_error(i, error); }
+        }
+    }
+    var doc = toml::Document { .. }; var statements: Statement[>..] = [];
+    let error = index(source, doc, statements, version);
+    if error.len > 0 { return [], owned(error); }
+    if edits.len == 0 { return owned(source), []; }
+    var assignment: i64[>..] = []; var owner: i64[>..] = [];
+    for node in doc.nodes { assignment.push(-1); owner.push(-1); }
+    let ends = body_ends(doc, statements, Profile.Source);
+    var targets: i64[>..] = []; var removed: i64[>..] = [];
+    for edit, i in edits {
+        let target, lookup_error = resolve(doc, batch_path(edit), Profile.Source);
+        if lookup_error.len > 0 { return [], batch_error(i, lookup_error); }
+        targets.push(target); removed.push(0);
+        if !batch_put(edit) && target >= 0 { owner[target] = i; }
+    }
+    for node, id in doc.nodes {
+        if node.parent >= 0 && owner[node.parent] >= 0 { owner[id] = owner[node.parent]; }
+    }
+    var spans: BatchSpan[>..] = [];
+    for statement, i in statements {
+        if !statement.header { assignment[statement.node] = i; }
+        let request = owner[statement.node];
+        if request >= 0 {
+            spans.push(BatchSpan { start: statement.start, end: statement.end, request: request });
+            removed[request]++;
+        }
+    }
+    for edit, i in edits {
+        let target = targets[i];
+        if !batch_put(edit) {
+            if target >= 0 && removed[i] == 0 { return [], batch_error(i, "toml source: value is inside an unsupported inline span"); }
+        } else if target >= 0 {
+            let slot = assignment[target];
+            if slot < 0 { return [], batch_error(i, "toml source: value is not a directly assigned source span"); }
+            let statement = statements[slot];
+            spans.push(BatchSpan { start: statement.value_start, end: statement.end, request: i });
+        } else {
+            let at, depth, error = insertion_position(doc, ends, batch_path(edit));
+            if error.len > 0 { return [], batch_error(i, error); }
+            spans.push(BatchSpan { start: at, end: at, request: i, depth: depth });
+        }
+    }
+    if spans.len == 0 { return owned(source), []; }
+    sort(spans) { a, b => a.start < b.start || (a.start == b.start &&
+        (a.end < b.end || (a.end == b.end && a.request < b.request))) };
+    var output: u8[>..] = []; var copied = 0;
+    let eol = newline(source);
+    for span in spans {
+        if span.start < copied { return [], owned("toml source: overlapping batch spans"); }
+        if !batch_append(output, source[copied..span.start]) { return [], owned("toml source: output exceeds 1 MiB"); }
+        let edit = edits[span.request];
+        if batch_put(edit) {
+            if span.start == span.end {
+                let addition, error = insertion_text(batch_path(edit), batch_value(edit), span.depth, eol,
+                    output.len > 0 && output[output.len - 1] != '\n', Profile.Source);
+                if error.len > 0 { return [], batch_error(span.request, error); }
+                if !batch_append(output, addition) { return [], owned("toml source: output exceeds 1 MiB"); }
+            } else if !batch_append(output, batch_value(edit)) { return [], owned("toml source: output exceeds 1 MiB"); }
+        }
+        copied = span.end;
+    }
+    if !batch_append(output, source[copied..]) { return [], owned("toml source: output exceeds 1 MiB"); }
+    let output_error = validate_output(output, doc, version);
+    if output_error.len > 0 { return [], owned(output_error); }
+    return output, [];
 }

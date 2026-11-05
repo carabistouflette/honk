@@ -4,6 +4,7 @@ import std;
 import os;
 import argparse;
 import toml_edit;
+import toml.source.editor;
 import .platform;
 import .manifest;
 import .project;
@@ -26,8 +27,13 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         platform::unlock(lock); return;
     }
     if cmd == "add" || cmd == "remove" {
-        platform::require(options.positionals.len == 1, "add/remove needs one dependency import name");
-        let name = options.positionals[0]; platform::require(manifest::identifier(name), "invalid dependency import name");
+        if cmd == "add" { platform::require(options.positionals.len == 1, "add/remove needs one dependency import name"); }
+        else { platform::require(options.positionals.len > 0 && options.positionals.len <= 64, "remove needs 1 to 64 dependency import names"); }
+        for requested, i in options.positionals {
+            platform::require(manifest::identifier(requested), "invalid dependency import name");
+            for j in i { platform::require(options.positionals[j] != requested, "duplicate dependency import name"); }
+        }
+        let name = options.positionals[0];
         // Re-read and validate after taking the project lock. Decisions and
         // source spans must describe the same manifest snapshot.
         let source = platform::load(str(p.root, "/Honk.toml"));
@@ -50,18 +56,34 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
             let error = toml_edit::set(source, path, value, edited);
             platform::require(error.len == 0, error);
         } else {
-            platform::require(deps_name(current, name) >= 0, "dependency does not exist");
-            var dev = false;
-            for dep in current.dependencies { if dep.name == name { dev = dep.dev; } }
-            let path: const u8[:][] = [if dev { "dev-dependencies" } else { "dependencies" }, name];
-            let error = toml_edit::remove(source, path, edited);
-            platform::require(error.len == 0, error);
+            // Validate the complete request before planning any removal. The
+            // fixed count and identifier cap bound path metadata to 5,120 bytes.
+            for requested in options.positionals { platform::require(deps_name(current, requested) >= 0, "dependency does not exist"); }
+            if options.positionals.len == 1 {
+                var dev = false;
+                for dep in current.dependencies { if dep.name == name { dev = dep.dev; } }
+                let path: const u8[:][] = [if dev { "dev-dependencies" } else { "dependencies" }, name];
+                let error = toml_edit::remove(source, path, edited);
+                platform::require(error.len == 0, error);
+            } else {
+                // Finish stable path storage before requests borrow its slices.
+                var paths: (const u8[:])[2][>..] = [];
+                for requested in options.positionals {
+                    var dev = false; for dep in current.dependencies { if dep.name == requested { dev = dep.dev; } }
+                    paths.push([if dev { "dev-dependencies" } else { "dependencies" }, requested]);
+                }
+                var edits: toml_source::Edit[>..] = [];
+                for &path in paths { edits.push(toml_source::Edit.Remove { path: path }); }
+                let result, error = toml_source::apply(source, edits);
+                platform::require(error.len == 0, error); edited.append(result);
+            }
         }
         platform::require(edited.len <= manifest::MAX_INPUT_BYTES, "updated manifest exceeds 1 MiB; original is unchanged");
         var validated = manifest::Project { root: str(p.root), .. };
         manifest::parse(edited, validated);
         platform::save(str(p.root, "/Honk.toml"), edited);
-        print(if cmd == "add" { "Added " } else { "Removed " }, name, "; run honk fetch to update Honk.lock");
+        if cmd == "remove" && options.positionals.len > 1 { print("Removed ", options.positionals.len, " dependencies; run honk fetch to update Honk.lock"); }
+        else { print(if cmd == "add" { "Added " } else { "Removed " }, name, "; run honk fetch to update Honk.lock"); }
         platform::unlock(lock); return;
     }
     let offline = options.has("offline") || options.has("frozen");

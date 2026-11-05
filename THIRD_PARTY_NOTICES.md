@@ -7,7 +7,7 @@ release; changing them requires explicit review and validation.
 
 | Component | Upstream commit | Included source | License |
 | --- | --- | --- | --- |
-| [goose-toml](https://github.com/carabistouflette/goose-toml) | `fe849141405009e36e1cce6eb479b395eae18f1a` | `vendor/goose-toml/` canonical parser/writer/source profile | [Apache-2.0](vendor/goose-toml/LICENSE) |
+| [goose-toml](https://github.com/carabistouflette/goose-toml) | `2043d9c0b32a8237d54b2a45578f2cc4b7ea384c` | `vendor/goose-toml/` canonical parser/writer/source profile | [Apache-2.0](vendor/goose-toml/LICENSE) |
 | [goose-toml-edit](https://github.com/carabistouflette/goose-toml-edit) | `f8d1b1664a86b768a6f1375636d9b2c3a440aa31` | `vendor/goose-toml-edit/toml_edit.goose` thin legacy adapter | [Apache-2.0](vendor/goose-toml-edit/LICENSE) |
 | [goose-argparse](https://github.com/carabistouflette/goose-argparse) | `d23af7aff17c6720d17a2e8f6b80bd3bf8f14275` | `vendor/goose-argparse/argparse.goose` | [Apache-2.0](vendor/goose-argparse/LICENSE) |
 | [goose-crypto](https://github.com/carabistouflette/goose-crypto) | `a4643f62bd5e76b371054c6537a95169a7930101` | `vendor/goose-crypto/` SHA-256/native adapter | [Apache-2.0](vendor/goose-crypto/LICENSE) |

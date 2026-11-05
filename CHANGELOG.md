@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add atomic per-manifest `remove NAME [NAME ...]` for up to 64 unique present
+  dependency names using approved canonical TOML alpha.4. Validate all names
+  before one snapshot apply and one atomic save; preserve single-edit legacy
+  bytes, locks and explicit lockfile refresh.
+
 - Add explicit `build/run --reuse-build` for bounded source-only targets, using
   verified independent artifacts and SHA-256 from pinned goose-crypto. Reuse
   keeps dependency validation/staging and atomic output publication; it is off

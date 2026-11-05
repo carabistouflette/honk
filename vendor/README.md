@@ -28,3 +28,10 @@ UTC diagnostics reuse the unmodified application adapter from goose-log v0.1.3
 and pure goose-time v0.1.0 source. Root entrypoints declare all three logger/time/
 UTC mappings locally; ordinary application commands do not fetch these sources.
 The goose-log core bytes are unchanged from the earlier vendored logger.
+
+Dependency multi-remove uses the canonical source `Edit`/`apply` API from approved
+TOML alpha.4, pinned at full `2043d9c0b32a8237d54b2a45578f2cc4b7ea384c`.
+The companion remains the unmodified f8d1 snapshot for single edits; this adoption
+does not imply a new companion release. Only canonical source/editor and its
+README change from the previously vendored alpha.3 graph; core/parser/document/
+writer/text/compiler and canonical license bytes remain unchanged.
