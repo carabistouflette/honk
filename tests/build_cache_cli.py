@@ -131,6 +131,14 @@ class BuildCache(unittest.TestCase):
         shutil.copyfile('/bin/false', self.project/'cc'); (self.project/'cc').chmod(0o755)
         self.env['PATH'] = ':'+self.env.get('PATH', '')
         self.run_cached()
+        # Preserve the pinned POSIX PATH join rule even for a backslash name.
+        odd = self.project/('odd'+chr(92)+'cc')
+        shutil.copyfile('/bin/false', odd); odd.chmod(0o755)
+        self.env['PATH'] = 'odd'+chr(92)+':'+os.environ.get('PATH', '')
+        before = (self.project/'target/debug/demo').read_bytes()
+        self.call('build', '--reuse-build', '--frozen', cwd=self.project, ok=False)
+        self.assertEqual((self.project/'target/debug/demo').read_bytes(), before)
+        self.env['PATH'] = ':'+os.environ.get('PATH', '')
         relative_home = self.project/'runtime-home'; relative_home.mkdir()
         marker = self.root/'compiler-used'
         wrapper = self.root/'configured-cc'

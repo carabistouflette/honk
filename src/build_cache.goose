@@ -64,7 +64,8 @@ fn on_path(name: u8[:], root: u8[:]) -> u8[>..] {
         if i < path.len && path[i] != ':' { continue; }
         if i == start { start = i + 1; continue; }
         let component = path[start..i];
-        let candidate = str(if component[0] == '/' { str(component) } else { str(root, "/", component) }, "/", name); start = i + 1;
+        let separator = if component[component.len - 1] == '/' || component[component.len - 1] == '\\' { "" } else { "/" };
+        let candidate = str(if component[0] == '/' { str(component) } else { str(root, "/", component) }, separator, name); start = i + 1;
         if !platform::cache_executable(candidate) { continue; }
         var absolute: u8[>..] = []; if platform::real(candidate, absolute) { return str(candidate); }
         return [];
