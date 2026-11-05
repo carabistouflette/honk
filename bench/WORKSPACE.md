@@ -52,3 +52,6 @@ different amounts of work; their timings should be interpreted per workflow.
 Larger graphs and other hardware may behave differently. No universal speedup,
 regression or isolated-core claim is made. Release tags remain immutable while
 the example and measurements develop in later commits.
+
+[Published v0.2.0 observations](results/workspace-v020/README.md) retain both
+the plain-CLI series and the earlier instrumented controller control.

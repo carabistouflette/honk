@@ -1,0 +1,48 @@
+{
+  "series": [
+    {
+      "file": "instrumented-control.json",
+      "sha256": "6b539c28fc3458c736b0f11bf1435ae53019a2676743c7f7f186367597fa155d",
+      "harness": "1b1041905e4d99312630043dcb93b3c4e745cd87",
+      "warm_samples": 36,
+      "summaries_and_input_git_blobs_verified": true
+    },
+    {
+      "file": "direct-git.json",
+      "sha256": "57cb49a9b5fb50f2856321d88152edaab895e7de81403a6db0c638339c0a8b08",
+      "harness": "57ba12ea906536010f68ec21ac24c692aa0bf13d",
+      "warm_samples": 36,
+      "summaries_and_input_git_blobs_verified": true
+    }
+  ],
+  "same_honk_binary": true,
+  "same_source_packages_and_lock_identities": true,
+  "honk_binary_sha256": "78701624fff932ff1aecdfeb9eefb6f793a8300116a9a05d5c1da6d7d356a511",
+  "release": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "git_logs": {
+    "instrumented-control": {
+      "recorded_commands": 180,
+      "discovery_fetch_commands": 6,
+      "sanitized_log_sha256": "f1b414fe709259fd7d156c28eff633bb1212eb9a9ab958da9983e8cdfd14d636",
+      "original_log_sha256": "fe7a831a57e0b8cbc7596e9bc378062d59b8a1caabb9bc1a05658b7034b99a17",
+      "redactions": "private path anchors only; argument order/values otherwise retained"
+    },
+    "direct-git": {
+      "recorded_commands": 78,
+      "discovery_fetch_commands": 6,
+      "sanitized_log_sha256": "6462a097e60d617556663148a0588cae4255e0583b5f71d31b66e506f0aacbbe",
+      "original_log_sha256": "1a5d8e57dcf71f332b8f26b355993e5f3fceecde45e05145d4d9fed393b309a1",
+      "redactions": "private path anchors only; argument order/values otherwise retained"
+    }
+  },
+  "controller_validation": {
+    "source": "57ba12ea906536010f68ec21ac24c692aa0bf13d",
+    "command": "python3 bench/dogfood.py --self-test",
+    "normal_and_inherited_sigchld_ignored": "PASS",
+    "fd_before": 4,
+    "fd_after": 4,
+    "unwaited_children": false
+  },
+  "instrumented_control_limits": "Python Git wrapper also ran for local cache-validation commands. Popen.wait(timeout) added polling latency. This retained control is excluded from plain CLI headline timings. Both series run the same Honk binary; controller changes and different run times prevent interpreting differences as a Honk optimization."
+}

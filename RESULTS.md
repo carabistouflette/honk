@@ -295,3 +295,27 @@ The upstream successor parity/ownership evidence is
 [recorded at the released companion pin](https://github.com/carabistouflette/goose-toml-edit/blob/f8d1b1664a86b768a6f1375636d9b2c3a440aa31/docs/results/adapter-fe849-validation.json).
 Historical timing results remain qualified in their original reports; this
 adoption introduces no new performance claim.
+
+## Honk 0.2.0 workspace exercise
+
+The released `855fb0552aefd5f0c033826af64f3bdd09ae6482` binary was exercised
+through a useful version-policy CLI, two workspace members, and real public
+HTTPS Git SemVer source. Workspace check/test, application exit codes, update,
+warm and cold locked/offline behavior, exact-OID recovery, unchanged locks and
+both exported source packages passed. No runtime defect was reproduced in this
+bounded exercise; the new example/controller preflight findings were corrected
+before the final series.
+
+The [report and all raw samples](bench/results/workspace-v020/README.md) retain
+36 direct-Git warm calls in nine shuffled rounds from clean driver `57ba12ea`,
+CPU0 affinity with shared-host limits, plus first-use/network observations.
+The earlier `1b104190` controller series remains as instrumentation evidence:
+its Python Git wrapper also handled local cache checks, and timed polling added
+latency. Both series used the same Honk binary. The final driver uses pidfd exit
+notification and direct Git for first check/build and warm measurements, with
+separate instrumented functional proofs. Controller exit/timeout, descriptor
+and wait-status checks pass under normal and inherited-ignored SIGCHLD.
+
+These measurements describe the stated small workload. They do not assign
+build time to staging versus compiler work or establish universal performance.
+The release source and immutable v0.2.0 tag are unchanged by this report.
