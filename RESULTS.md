@@ -329,3 +329,25 @@ attributes about 474 ms of a 537 ms median selected warm build to the compiler
 invocation; staging is about 12 ms, while publication varies and retains its
 file sync. This is instrumented phase attribution, not a matched speedup.
 No runtime optimization, skipped validation or executable cache was adopted.
+
+## Compiler path compatibility correction
+
+A local two-project regression reproduced a source-selection defect in frozen
+Honk v0.2.0 (`855fb055`): the pinned compiler's backslash package separator
+normalization could select a sibling staged dependency when the project root
+contained a literal backslash. The fixture expected one dependency value and
+observed the sibling's value. No remote target or third-party data is involved.
+
+Compiler-facing commands now reject that root before project state, graph
+resolution or compiler work. Automatic source compiler bootstraps also reject
+backslash cache paths; an explicit trusted `GOOSE` still works with that Honk
+cache. Metadata and filesystem-only commands retain their existing behavior.
+The native adapter, vendored libraries, compiler pin and lockfile are unchanged.
+
+The two new public regressions in `tests/cli.py` verify all compiler command
+rejections, preservation of the sibling source/executable, metadata handling,
+and bootstrap refusal before a toolchain checkout. The project-root regression fails on
+the frozen release; both new cases pass on the corrective source. Local `make check test security`
+passed (71 CLI cases and the existing suites/213 malformed probes), as did both
+new cases under GCC and Clang ASan/UBSan with debug checks and no bounds-check
+elimination. Exact publication-head CI is recorded separately in the PR.
