@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import platform
 import random
+import re
 import resource
 import select
 import signal
@@ -37,7 +38,7 @@ def fingerprint(project):
     return result
 
 
-def execute(argv, cwd, env, work, label):
+def execute(argv, cwd, env, work, label, allow_runtime_init=False):
     usage = resource.getrusage(resource.RUSAGE_CHILDREN)
     started = time.perf_counter_ns()
     with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
@@ -65,7 +66,9 @@ def execute(argv, cwd, env, work, label):
               'exit': child.returncode, 'stdout_sha256': hashlib.sha256(stdout).hexdigest(),
               'stderr_sha256': hashlib.sha256(stderr).hexdigest()}
     with (work/'events.jsonl').open('a') as output: output.write(json.dumps(record)+'\n')
-    if child.returncode or len(stdout) > 1048576 or stderr:
+    known_progress = bool(allow_runtime_init and re.fullmatch(rb'compiling the runtime for [^\r\n]{1,256}\n', stderr))
+    record['runtime_initialization_progress'] = known_progress
+    if child.returncode or len(stdout) > 1048576 or (stderr and not known_progress):
         raise RuntimeError(label+': failed or unexpected output\n'+(stdout+stderr)[:4096].decode(errors='replace'))
     return record, stdout
 
@@ -110,12 +113,12 @@ def main():
         fingerprints[name] = fingerprint(project)
     modes = ['baseline_plain', 'candidate_plain', 'candidate_cold', 'candidate_warm']
 
-    def call(name, mode, label):
+    def call(name, mode, label, warmup=False):
         project = fixtures[name]
         executable = args.baseline if mode == 'baseline_plain' else args.honk
         argv = [str(executable), 'build', '--frozen']
         if mode in {'candidate_cold', 'candidate_warm'}: argv.append('--reuse-build')
-        record, stdout = execute(argv, project, env, work, label)
+        record, stdout = execute(argv, project, env, work, label, allow_runtime_init=warmup)
         if stdout != ('built '+str(project/'target/debug/reuse_gate')+'\n').encode():
             raise RuntimeError('unexpected build stdout')
         functional, output = execute([str(project/'target/debug/reuse_gate')], project, env, work, label+'_output')
@@ -125,7 +128,7 @@ def main():
         return record
 
     for name in fixtures:
-        for mode in modes: operations.append(call(name, mode, name+'_warmup_'+mode))
+        for mode in modes: operations.append(call(name, mode, name+'_warmup_'+mode, warmup=True))
     # The normal toolchain still invokes C; a cache hit must leave its log alone.
     project = fixtures['source_only']; slot = project/'.honk/reuse/debug'
     if not (slot/'record').is_file(): raise RuntimeError('source-only fixture did not qualify')
