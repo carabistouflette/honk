@@ -381,3 +381,23 @@ the frozen release; both new cases pass on the corrective source. Local `make ch
 passed (71 CLI cases and the existing suites/213 malformed probes), as did both
 new cases under GCC and Clang ASan/UBSan with debug checks and no bounds-check
 elimination. Exact publication-head CI is recorded separately in the PR.
+
+
+## Opt-in source-only build reuse
+
+The bounded local `build/run --reuse-build` path keeps fresh dependency/Git
+validation and independent staging, verifies copied artifacts using pinned
+system-libsodium-backed SHA-256, and retains atomic output publication. It is
+off by default. Native/embedded/unsupported inputs compile normally. The
+indirect system compiler inputs must remain unchanged; see the explicit
+[contract and limits](docs/INCREMENTAL-BUILDS.md).
+
+[Retained development measurements](bench/results/build-reuse/README.md) include
+all 144 observations, per-source/binary/tool/fixture provenance, substantial
+standalone cold-population cost and conservative fallback. Those timings were
+recorded before reconciliation with published UTC/v0.3.0 and the path guard;
+they are not relabeled as publication-head measurements. The reconciled source
+passed the full normal/security suites, all nine cache cases under GCC/Clang
+ASan/UBSan, portable-copy/cache checks and normal/frozen self-check/package with
+unchanged lock bytes and all tracked exports exact. Hosted publication-head
+validation is a separate gate.
