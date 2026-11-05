@@ -8,6 +8,8 @@ import toml from "../vendor/goose-toml";
 import toml_edit from "../vendor/goose-toml-edit";
 import argparse from "../vendor/goose-argparse";
 import logger from "../vendor/goose-log";
+import time from "../vendor/goose-time";
+import utc from "../vendor/goose-log/examples/utc";
 import honk from "..";
 import std;
 const FIRST = "1111111111111111111111111111111111111111";

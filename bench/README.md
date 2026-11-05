@@ -41,6 +41,12 @@ hardware, raw files and limitations. Report every workload, including slowdowns
 and noisy/no-change results. CI smoke-runs benchmarks without wall-clock gates;
 local results are not universal rankings or a claim of Cargo parity.
 
+The [UTC diagnostics harness](utc/README.md) compares the actual old and current
+opt-in diagnostics paths with independent byte/clock/sink verification. Its
+[retained records](utc/results/README.md) include disabled, enabled and real-file
+workloads. `make diagnostics-bench-smoke` checks both variants and verifier
+rejection controls without a timing threshold.
+
 [Follow-up audit measurements](../docs/AUDIT-2026-11-04.md) compare the hardened
 implementation with the first public main and retain every measured workload.
 

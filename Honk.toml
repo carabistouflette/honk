@@ -19,3 +19,5 @@ process = { path = "vendor/goose-process" }
 http = { path = "vendor/goose-http" }
 honk_metadata = { path = "vendor/honk-metadata" }
 logger = { path = "vendor/goose-log" }
+time = { path = "vendor/goose-time" }
+utc = { path = "vendor/goose-log/examples/utc" }
