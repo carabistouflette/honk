@@ -1,6 +1,6 @@
 # Honk
 
-A Goose project manager, written in Goose. Apache-2.0. Pre-release; Linux x86-64/glibc is the initial target. Uses the pinned Goose compiler and vendored parsing, text, version and process libraries. A small C adapter supplies filesystem operations and application signal guards.
+A Goose project manager, written in Goose. Experimental source release v0.4.0. Apache-2.0. Pre-release; Linux x86-64/glibc is the initial target. Uses the pinned Goose compiler and vendored parsing, text, version and process libraries. A small C adapter supplies filesystem operations and application signal guards.
 
 ```sh
 git clone https://github.com/carabistouflette/honk.git
@@ -101,7 +101,7 @@ invalid or unsupported requests leave the manifest untouched. Selector metadata
 is at most 5,120 bytes; manifest input/output stay capped at 1 MiB. Single-name
 removal retains its legacy bytes and output. Honk.lock is unchanged until an
 explicit `fetch`. Atomicity is per manifest; workspace members still execute
-sequentially. Multiple-name removal is currently unreleased; frozen v0.3.0
+sequentially. Multiple-name removal is available from v0.4.0; frozen v0.3.0
 supports single-name removal only.
 
 Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed manifest edit, build or installation.

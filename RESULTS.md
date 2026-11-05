@@ -425,5 +425,5 @@ identical archives and every tracked export exact/no generated state. The
 report names the pre-evidence source; later docs-only commits preserve those
 runtime/build/vendor bytes. Hosted exact-head CI is a separate publication gate.
 No performance claim, fresh timing campaign or automatic companion release
-follows. Existing release tags remain unchanged; this workflow is unreleased and absent
+follows. Existing release tags remain unchanged; this workflow is available from experimental v0.4.0 and absent
 from the frozen v0.3.0 release.

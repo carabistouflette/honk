@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## 0.4.0 — 2026-11-05 (experimental prerelease)
+
+Source-only Linux x86-64/glibc release. CLI, manifest and lockfile formats
+remain experimental. Build reuse is explicit and off by default: indirect
+system-toolchain inputs must remain unchanged. Cache population builds
+standalone and may cost substantially more than an ordinary build. Native,
+embedded and unsupported inputs compile normally. Multi-remove is atomic per
+manifest; workspace members still execute sequentially and lock refresh is
+explicit. Existing release tags remain immutable.
+
 - Add atomic per-manifest `remove NAME [NAME ...]` for up to 64 unique present
   dependency names using approved canonical TOML alpha.4. Validate all names
   before one snapshot apply and one atomic save; preserve single-edit legacy
