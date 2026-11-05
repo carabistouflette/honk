@@ -319,3 +319,13 @@ and wait-status checks pass under normal and inherited-ignored SIGCHLD.
 These measurements describe the stated small workload. They do not assign
 build time to staging versus compiler work or establish universal performance.
 The release source and immutable v0.2.0 tag are unchanged by this report.
+
+## Warm command phase diagnosis
+
+The [phase report](bench/results/warm-phases/README.md) retains two diagnostic
+series against the same application source, including all raw samples, tool
+hashes and an untimed syscall observation. The three-round shuffled series
+attributes about 474 ms of a 537 ms median selected warm build to the compiler
+invocation; staging is about 12 ms, while publication varies and retains its
+file sync. This is instrumented phase attribution, not a matched speedup.
+No runtime optimization, skipped validation or executable cache was adopted.

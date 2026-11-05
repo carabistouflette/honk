@@ -1,0 +1,682 @@
+{
+  "source_revision": "65d4e97d808e97cdcc2c6d1f783f440e89cb2786",
+  "source_git_blobs": {
+    ".github/workflows/ci.yml": "06309b8a78662b01d83c4766ad3744d9264e370d",
+    ".gitignore": "1ee255c63da267947dd98bfde668bc6e1a9af966",
+    "CHANGELOG.md": "29fa3c8c843b945a2676f26b43e22e756e1cbbb6",
+    "CONTRIBUTING.md": "43d49cad6d49e44e223c5ffa99a2a00ad8958513",
+    "GOOSE_REVISION": "86a83a7da7bd50a064c3e9fd23655224550fb987",
+    "Honk.lock": "a763590c6d79ade1fad6dc1d6ece5db6edce37a2",
+    "Honk.toml": "4e3d4517f09b7f73703d8cf4e514d47bc596da08",
+    "LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "Makefile": "4363d5f3495887c49232a1714c0660866808b49f",
+    "NOTICE": "293900c55e87271ff1244d6483c3909b29f0f122",
+    "README.md": "bc640c48f57540435913debdc5d6f2b6debf79bf",
+    "RESULTS.md": "19859cc5c563e2f9325f53adc5588c106aaa1c66",
+    "SECURITY.md": "9c0d48737fff4b81a116a986c7ebfc0387858e6c",
+    "THIRD_PARTY_NOTICES.md": "32e726d2b0e5dc0823723c04ff28b517d509cb87",
+    "bench/README.md": "f3385bdced3122c57d49655baa64852f18975b2c",
+    "bench/WORKSPACE.md": "b00a27585f970bf634fa1737b8245352d7f0cfad",
+    "bench/dogfood.py": "148f33f747a616d1a5fffa64abd58baa9d8d203a",
+    "bench/process.goose": "28a265e35830109db5380d62ab23ff03516aacd2",
+    "bench/process_profile.py": "c59c8c6ac8a929b86b0aa0efb40d8e8986ec96af",
+    "bench/results/cache-audit-btrfs.json": "6abb2408b520a6e3d0657d659f610f0739a20215",
+    "bench/results/cache-audit-cli.json": "943122c5fafbc5fcb98053e2a079ebe300ba2d7e",
+    "bench/results/cache-audit-tmpfs.json": "0cc6cb7488042e076fc030039578f0aa6a5d98d1",
+    "bench/results/cli.json": "2621d645675922f02dd04b61f7b77bb8778d5dea",
+    "bench/results/deep-audit-btrfs.json": "358f1b7e6d6e606f199ade3cd11f218ee32e05aa",
+    "bench/results/deep-audit-cli.json": "85c008fe56ce2ab978f19710d5c453ee40d209c7",
+    "bench/results/deep-audit-tmpfs.json": "615f0dc2c9ad1bcdee41961b13315debb292888c",
+    "bench/results/integration-cli.json": "780acd12846b38e912438e9d7afc4bcd48256e46",
+    "bench/results/integration-workloads.json": "bc69c1f49773cc8bf1d14b1504079302c4baf83a",
+    "bench/results/paired-btrfs.json": "82fe383ff5cb4f2dc2bf108a3f9dcaa6f2445363",
+    "bench/results/paired-tmpfs.json": "1fac38f38207ae4c9a28d7478307fee2fcd6fef7",
+    "bench/results/process-consumer.json": "d5d728517a97c25f65b255a049a13f16826afddc",
+    "bench/results/source-signal-btrfs.json": "51302c22a7949851a1fa16c98a5b830456c4f039",
+    "bench/results/source-signal-cli.json": "f8aa61b5d6f4d1aad522ca9576e8920060cecf03",
+    "bench/results/source-signal-tmpfs.json": "7d22a8e226d18abfa21668d6a1cab3040720e69c",
+    "bench/results/workspace-v020/README.md": "378c5299b1ce4905ed1ceb07f7425bbc25f59d79",
+    "bench/results/workspace-v020/direct-git-git.jsonl": "78ab5d102fea2c82eb58999adec7844460ad6fde",
+    "bench/results/workspace-v020/direct-git.json": "e128f3d20cacfb1d1349ef6f776d1dc53309dee2",
+    "bench/results/workspace-v020/instrumented-control-git.jsonl": "855ddbeb91ed649f7110bb87c8af5a30d92b64e7",
+    "bench/results/workspace-v020/instrumented-control.json": "bf16ceba4baae27da7f4121fe2c22840a0bbc7a6",
+    "bench/results/workspace-v020/verification.json": "8bae9815a3e93992a56f95864aeb843d9a724180",
+    "bench/results/workspace-v020/warm.html": "c36d904737b4da38cc169b9e5d9e3768ab5676c9",
+    "bench/workspace/.gitignore": "66de8cf39f0c41f8c69cfb00cf484ca3bf98768c",
+    "bench/workspace/Honk.toml": "c5c82d2f0df1f2d2b7ace6738bb92636a795fd0e",
+    "bench/workspace/README.md": "7f146968eb8d2ab3c0d705bb1d9bbe9fa295b3ce",
+    "bench/workspace/gate/Honk.lock": "90a45365dbc45d222e49de7c7288a03c0ed07824",
+    "bench/workspace/gate/Honk.toml": "8bc55fc579a2f79232c57becb07fcff5d9768bf8",
+    "bench/workspace/gate/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "bench/workspace/gate/THIRD_PARTY_NOTICES.md": "0f536e2827f253cdf0499f26d6bec733b3ffe50a",
+    "bench/workspace/gate/src/main.goose.in": "4eae4f108ec1a0911ad45699ae525fe681488189",
+    "bench/workspace/gate/vendor/rules/Honk.lock": "d83312c1f706a2efcda212576037c73ab45b00d6",
+    "bench/workspace/gate/vendor/rules/Honk.toml": "21b5d2c30b397e2569cd31720e77b495cc9c3ec0",
+    "bench/workspace/gate/vendor/rules/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "bench/workspace/gate/vendor/rules/rules.goose.in": "2ba200cab40b8a5b1f9d8256eb54cb5e6b0b4e6b",
+    "bench/workspace/gate/vendor/rules/tests/rules.goose.in": "0555ab3564d91b5e4a849846820cfa437355ae84",
+    "docs/ARCHITECTURE.md": "37a99055d4df9a9541c46888695570bb98f094ee",
+    "docs/AUDIT-2026-11-04.md": "0e05bb60cdf8cf7d69337505e006908fa0e81b20",
+    "docs/CACHE-RECOVERY-AUDIT-2026-11-04.md": "7b11ae9c804176e54f10b6765ae182dad7ddf475",
+    "docs/DIAGNOSTICS-2026-11-04.md": "07c947bdd010fd42d24bba07a3432bb6c19a987c",
+    "docs/GIT-TAG-SELECTION.md": "ed8eebef9faad710e6fc0e516cea82159dd84559",
+    "docs/GIT-VERSION-DESIGN.md": "cca4b569d484db7b9837d416ea9db5b37cbf9447",
+    "docs/HTTP-METADATA-2026-11-04.md": "4d234674ed2ae4cca6abab7cf7df7d8e486d3e88",
+    "docs/PROCESS-CONSUMER-2026-11-04.md": "369658dfbd422b2a9874faab8e0db7941003f01c",
+    "docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md": "d23545a01dfb1252eb79113ade103945009152d5",
+    "docs/results/canonical-editor-acceptance.json": "a97d020786b6bdf53a88ad0df1136d90974eee14",
+    "honk.build": "7e45d2e49bda3f90f6a4033ede72a2b3741565a9",
+    "honk.goose": "8e8784eebcb3bd34ba0647c72a1cee4fe8c1b306",
+    "native/log_sink.c": "e8364ffb95a82e90542a279eb1a45d4031702a06",
+    "native/platform.c": "c4786838f237beab786dae93cbd1d662d5069703",
+    "scripts/check-vendor.py": "72879ee7d6c5ce267500e16577aa7bdf90aa5ab3",
+    "scripts/metadata-test-build.py": "fd3c7921ef141b45f79daab0a2caa6c0556a3c30",
+    "scripts/portable-cc.sh": "9d0bb67de2abb2a602ea8dd9ffce4a4c7a795bde",
+    "scripts/process-fault-cc.sh": "7ce076ab847deaf03e8e89fa2c064dcef8b02d56",
+    "scripts/process-fixture.py": "36689080622c3eb20ddcde998191a250f165e56c",
+    "scripts/sanitizer-cc.sh": "9c9fb6653173cb07b1ab4dd644d0c33561d7f9c7",
+    "scripts/setup-goose.sh": "c1794d7eb8919659d70d3699d7c58d6681f5ecc4",
+    "src/build.goose": "b5257a3f061ebd6017832a1fc0e36a0c2555ac0a",
+    "src/commands.goose": "3ad9632e3c09c999cda7d088ed86830ef75ced60",
+    "src/deps.goose": "67bd79350ff99e3049be11c4c14d607403c98377",
+    "src/diagnostics.goose": "b992d5bb98ebd6bcc237054f0af3b0e59af309ab",
+    "src/distribution.goose": "88af594cc0708a29cb9963b64abb246dc3775333",
+    "src/manifest.goose": "22818cc82ac71b6579a428a103c04ebe12410ff2",
+    "src/platform.goose": "f0c97a573abf97cbae77a8578f053f5889b87f14",
+    "src/project.goose": "ebae0ee1f6b5fa62bb639dd60a55fb14db37c94c",
+    "src/source.goose": "445a909157f10c48a2f1343cfcbdc4533abd8180",
+    "src/tag_catalog.goose": "6cce61beee0f404185cd9b737700a84e66ef62f5",
+    "src/tag_select.goose": "85ce20502f73ef3d586baccbb1e9ff74a06874a4",
+    "src/toolchain.goose": "b2131b8284bfd45b03384587584710fe77c3ea13",
+    "src/version_policy.goose": "4d69eaab758c779453f695c05b346947eddf543c",
+    "tests/audit_perf.py": "feb53e4fb7eb70af0ad7c54864e5279206ec28a8",
+    "tests/bench.py": "1920879dd68e65ef19a9f2180e4f69de953f16d5",
+    "tests/cli.py": "36cb44071d36b54e5ff7f8aee2c3022862dcc457",
+    "tests/core.goose": "b6d0780caba243cfe4af784cd78e78bd2eae3453",
+    "tests/http_fixture/README.md": "d9cca7f5f50c3f352b7a454a332b503172c5c629",
+    "tests/http_fixture/integration.py": "701eaf8ee6a6255696193f5e6ae06341d6c3ab64",
+    "tests/http_fixture/metadata.py": "18498ede22d9512a59e096aafce7793de6e5c3dd",
+    "tests/http_fixture/metadata_transport.c": "97ea7b218d43230481d8b0be4bde6b8a594aaa4a",
+    "tests/http_metadata.py": "f369c650a7104d4e0e2ad4f8cfd867ac46fe1e52",
+    "tests/logging.py": "cc3bd9c726536c71194eda925f06d455224bac93",
+    "tests/manifest_edit_cli.py": "a82c38047064ed0061de86b92bdf9ab0eb7f7fc9",
+    "tests/native_import.py": "13f5d7ee478b311d25fca98e09f01db7c448f41f",
+    "tests/process.goose": "c61a2001e55a6ae42a71a92be17ac82c343619b5",
+    "tests/process_cli.py": "f13a191e94304886899e13483464a2fe0cbddb20",
+    "tests/process_fault.c": "e64096e51dd9fd2ab6839184390e3aaaf6daa8c0",
+    "tests/process_fault.goose": "988ed8ccc6403c8915a627b15f3acc80c692f3f6",
+    "tests/security.py": "277864aefff032cdf189e53799752dcbe74278e9",
+    "tests/semver_cli.py": "67e53f99530b0a246ce7eb6ecf88f4aa70e5428e",
+    "tests/semver_probe.goose": "09c5fc7271c33b38960b02f82a5c150a4a9d1d36",
+    "tests/tag_catalog.goose": "24b79441b42fe72adeb3565bee3da49929b6dbd5",
+    "tests/tag_select.goose": "8da8e5d96c1a85935faeef299a965cecad34e32c",
+    "tests/text_cli.py": "66c90416a67013274e6f547489d2c2a043b617b0",
+    "tests/version_deps_cli.py": "6a7a0217810e1e809339f73874475e85520fb269",
+    "vendor/README.md": "b569840e2b1731b72ca9c84da542fe28285d8398",
+    "vendor/goose-argparse/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-argparse/REVISION": "ed81f8954f545379848fa76d9e07cb8563425f32",
+    "vendor/goose-argparse/argparse.goose": "2041b0ab9e93dc4a56a30a621028238f032ee296",
+    "vendor/goose-http/CMakeLists.txt": "e3f31df4c45011a4cae64c47489d3e241db5b792",
+    "vendor/goose-http/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-http/http.build": "ae18530f75a0b3c4eb022d68a5a671c8f289d5f6",
+    "vendor/goose-http/http.goose": "cba0e5eee5ed974907f5ac3d8a464797fac9a710",
+    "vendor/goose-http/native/http.c": "8eeb1f811d9a1bab4f5e0fc61480fe8736b5b789",
+    "vendor/goose-http/native/http.h": "9baab6a101692783e130f1aeb99f929d26860486",
+    "vendor/goose-log/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-log/NOTICE": "ffa64f7214df895968856a323eead92ff1ec10cc",
+    "vendor/goose-log/logger.goose": "336fae4a31dc5b5b09ca2c36e3219732b4513e2e",
+    "vendor/goose-process/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-process/native/internal.h": "1b857c0ed1d1b23a2fddb45a56dcbfe543f7da4c",
+    "vendor/goose-process/native/launch.c": "36277383a7d2d877febc312a61efaedef375d904",
+    "vendor/goose-process/native/process.c": "b49f7c1b4351590cb3c177bd9d44bc0cb8cf70f5",
+    "vendor/goose-process/native/process.h": "f55fbb373962825587998b15c0a7a501b2f28c13",
+    "vendor/goose-process/process.build": "796cf7c557b057e70fc95bc3ae9be78add46e7ed",
+    "vendor/goose-process/process.goose": "bd512e93bf4ac2ee5b3d71042cba5586bff69b0c",
+    "vendor/goose-semver/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-semver/semver.goose": "1c1283b003fb67632d37f386473d197282bf5262",
+    "vendor/goose-text/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-text/text.goose": "88b5eae747767f7719b9bb404354d57d5e12f49d",
+    "vendor/goose-toml-edit/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-toml-edit/toml_edit.goose": "e5278da5511b5b7d38399dad1ea35f93e893b1e9",
+    "vendor/goose-toml/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-toml/document.goose": "f4b18994f81fa0962d28a327a319a3a0172c056e",
+    "vendor/goose-toml/source/README.md": "77dfda9848b39c8d5ec9cce12a0c894c23989c2b",
+    "vendor/goose-toml/source/editor.goose": "2194fa6e6685f311f9a50bbe3813a038e8e85a0f",
+    "vendor/goose-toml/toml.goose": "01dafc34ba5cd714e7c9a8ef402c74c8992fc4ea",
+    "vendor/goose-toml/vendor/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/goose-toml/vendor/README.md": "33e1d5f8912de1d4ef382276e36f6d1dda421a3a",
+    "vendor/goose-toml/vendor/text.goose": "e3cb74a254b65c14e77dcd6adfb3211fe346ec51",
+    "vendor/goose-toml/writer.goose": "4b1237d42c5cb4c7b488c6f54fc20c029ebe25c4",
+    "vendor/honk-metadata/LICENSE": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+    "vendor/honk-metadata/honk_metadata.goose": "606927f7aff4a140cbe360b6c15b77dcd26d6c60",
+    "vendor/manifest.json": "4ce081e52b2d1641d7cdd6006e39e3db1f0f7b1c"
+  },
+  "changes": {
+    "src/commands.goose": {
+      "original_sha256": "c782ec929f87eeed46f6ae4fa079be94d6a0b06c504b482c9c7cec12726c7959",
+      "instrumented_sha256": "a4532a71099fb377a49b98fbb7fe70842cdbbc8682c162be004b4fd83ae94cb3"
+    },
+    "src/build.goose": {
+      "original_sha256": "0114402122ba61a0267675af3da9a3511463cc22ae56c0b6521da2ebec062a16",
+      "instrumented_sha256": "6cdef16a8bc69fa366518f8faa9a1108817737824ddb0aa7e74aa2bed8204988"
+    }
+  },
+  "binary_sha256": {
+    "baseline": "78701624fff932ff1aecdfeb9eefb6f793a8300116a9a05d5c1da6d7d356a511",
+    "compiler": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+    "git": "2912a2a32f408c9b8122e476251b32f4b35f4c3f0c15961686ae87ca456d384c",
+    "cc": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287",
+    "instrumented": "eed82346aea702430ddfdb643fb3107ace74364d18c1a03ff121273a77c2f884"
+  },
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "harness_sha256": "2581a2cdc5ea9109da49891b178fab95d4e538f22a9016c48a9494edce91ac18",
+  "workspace_sha256": {
+    "Honk.toml": "f455f33cb843284df819751785915408734ee0d47ce460c70ddeb0d2b7817f9d",
+    ".gitignore": "eb4e33480eaf67166c3e26d7870a90f16b486e8ec9515988f6acd12526f2edab",
+    "README.md": "05243a2a3762c43550ef998a2e20b2c7a4e57a7c9029817821baa07210973af0",
+    "gate/Honk.toml": "25c67a91241d95ae040550b0c4c229ebf78beecebdb21479e6cb79c01fd3ddda",
+    "gate/THIRD_PARTY_NOTICES.md": "294203f3249e4ea68dd47292a2016659f44a95538a37fb710e3e94cc1d6fd6d9",
+    "gate/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "gate/Honk.lock": "ce66d63610a2adf6cf7b636f1c51c3f2ee07084a6d0e3868e2ead77be6494b9e",
+    "gate/src/main.goose": "9f622750887d36036e91e6192e9767b4b2b3895e4b20e104cf01ba9ddda63cae",
+    "gate/vendor/rules/Honk.toml": "563c55cdd3f8be4eb3d7feb779e06494ae7e1a0fb3b13ba3039b6eeb75e8254a",
+    "gate/vendor/rules/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "gate/vendor/rules/rules.goose": "165eabd22cf535a55ef2c191a696bd45d68f787e9dc07bef4288e163abe7add2",
+    "gate/vendor/rules/Honk.lock": "23e9611609865e3b77f31015181c97d1966c4443c471e8c14f16e9417a336c4e",
+    "gate/vendor/rules/tests/rules.goose": "544491833fe4d70655f9391404ba2a0b546b4f671d483b88fcae7961f5201508"
+  },
+  "instrumented_sources_sha256": {
+    ".gitignore": "106abb04d2682cafd4815744719eea606b2a7848deef539ea4df4421aacea9db",
+    "CHANGELOG.md": "07c8a08d872c40bf32ef53b6c46c91d6fdbd3abf348a68ba1323a3f782ddf4a2",
+    "CONTRIBUTING.md": "a2f3021f49ea32788232b086003b7932fb6575286f5cb139e39884961265493c",
+    "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+    "Honk.lock": "6f9bc6fb4e64c4c685627ffb7c653b9793a9de70ce9242095d981593c49d1753",
+    "Honk.toml": "fbcc1a64ee85fb15635b2c7b6ce63f57aed510ac16df680e0db6a107e047bdd6",
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "Makefile": "5ad9d29de7d5c18b2c1d6cbbe5164316d72680fb21b2f873280dba685e273e35",
+    "NOTICE": "7a1359d71ce894afaf05aa0d4c6cec2e0e1a548925ab1723e99be5136089407f",
+    "README.md": "325de61d4e72889f18a75117dbd7577c21027a7706c0e8453f3da299f4e71a90",
+    "RESULTS.md": "328f45ec0ef8320f1748d568cf400fb7267b7b2edfb450da50b45946929c1e48",
+    "SECURITY.md": "f7ec0204ec1313928944d64f11c171b231abe7528d77a3d4307ea8a29a89c3fe",
+    "THIRD_PARTY_NOTICES.md": "44eddb7ac89db49d661a831507df73bdcad4e94da364a81ea20049874b097db5",
+    "honk.build": "5dba10ee95ba70ef47666be42858286c9845aaa3a95395ed077bd0baa427c57a",
+    "honk.goose": "9982875bb5999f0dcfad942bc209b2115975e1b94027d653121a1f8417552acd",
+    "bench/README.md": "b75a2857591144100450bb401a30702e6486a7efbd3391b65855c9b9ab045241",
+    "bench/WORKSPACE.md": "2f2ae7825860814e96f49771fc587b837bdc0101be2f6dfb9160e5886f8cfb7b",
+    "bench/dogfood.py": "b77241018a73e122ff411a7b11d1f86c1c4ec1fb25bb86c6ef1b516fe9076315",
+    "bench/process.goose": "20213ea764865eaedf55bec454c0f4fde19b51ac32564d0e8ccfaa5c55e9eb86",
+    "bench/process_profile.py": "ca6640bf7c934e9dad7c6c2f8a2144e9b5c565365a8d54fa6201c6ee19705f88",
+    "docs/ARCHITECTURE.md": "d8dea982ca88577480a5aba8d21cf2d5e76ed573f30c5e128f40cbbca2838e7f",
+    "docs/AUDIT-2026-11-04.md": "b356c67486efdc410b5d050a44f069e906a78b55f811d30f0a84e2ac0ef7deca",
+    "docs/CACHE-RECOVERY-AUDIT-2026-11-04.md": "a2191f2a1683968e9d673a2019d8e04b9f3dd62217830931aaca5a2337f0d212",
+    "docs/DIAGNOSTICS-2026-11-04.md": "59a1173e18e41b1bf51f8948caf3e7c35686a66c564eb258e8b74721d908d3b7",
+    "docs/GIT-TAG-SELECTION.md": "af516a464002f522d3578066c2611d6b7efb0612cb72d48133e0e598bb2184a4",
+    "docs/GIT-VERSION-DESIGN.md": "c4ea65ed54df43bf7bc0017eeae058030deb0d5c275237bc82d82ea0dfb5d7a5",
+    "docs/HTTP-METADATA-2026-11-04.md": "41f41d6f5176cad05d38fb7bf0e33639ac82a482cc8ca90fe5ab293283813ac0",
+    "docs/PROCESS-CONSUMER-2026-11-04.md": "1d10bb07dd1b19cf48af854c555364c2861bd4509489dafda4ab71d8b4ea027a",
+    "docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md": "60cfa2da670f6da9d5612b18571c5229954416b3c40ad9da14f54d7d01b188da",
+    "native/log_sink.c": "51dabc2881c3032e2dd3e12e535d2d6c2d634cc16506a57ccd783522a4033c5e",
+    "native/platform.c": "a511b3179e9b6fb1acd8bbe6cc2e93f9e6f87f3bea4c501f5c5631485ca22bdc",
+    "scripts/check-vendor.py": "2242335ff54c7f383c84dcf790af72cfafaa36c6411b1e5b4d59e1e1a6f33bdc",
+    "scripts/metadata-test-build.py": "6b9f896fa19e3f4f31c964629d203f435398e1963e6869e05d4cf70be68144e7",
+    "scripts/portable-cc.sh": "ab180b50aba6f19f8a7d673673cfbb98224e127e7d934ed1f06dd5820d300da8",
+    "scripts/process-fault-cc.sh": "fad6045a989dce725dc35cb123242a912fb70d5a9900d31d058c296c71ba1eff",
+    "scripts/process-fixture.py": "97920a4a7d59c87fecb231f075401831acc789ae3d4a35d8c905e97e36d597e8",
+    "scripts/sanitizer-cc.sh": "5e2587f55f6ef0d5355de9c375fe8eb6d57b7858fab9e4d3abb8b95b2dfff428",
+    "scripts/setup-goose.sh": "20f512f9040ddb90866005688790eda294a00d5f156f5df6849e771f6efd8960",
+    "src/build.goose": "6cdef16a8bc69fa366518f8faa9a1108817737824ddb0aa7e74aa2bed8204988",
+    "src/commands.goose": "a4532a71099fb377a49b98fbb7fe70842cdbbc8682c162be004b4fd83ae94cb3",
+    "src/deps.goose": "5713091c347fea5656ff032a911b2133b9094c1bba75b0a3e07b1519d7ea2d93",
+    "src/diagnostics.goose": "0047149ebc9ab0e1c07483485b132d73d12f3c2fd35566c65dff0c05a00fdbea",
+    "src/distribution.goose": "fc4580e5ad5c3ee774f297af0df50e5272eb8f9ee1ee356d40b98ee17c1b4212",
+    "src/manifest.goose": "bc81b8ad3090b7976f1397b78b9ffefac9138a7e5bb031b2f3d00ebf2e470a95",
+    "src/platform.goose": "aa0286e03f8f325edab84bf414305f5eefff1e27e7942b2e2362e5b86acecc65",
+    "src/project.goose": "67573e889ad0945b97f0c2edd4743dee5819d77c37b553d38ab5459e53f82acd",
+    "src/source.goose": "ffe15c4a90bb0fdec88e30f2e42d435291878c08bcc723cbf0fde6a423566d4f",
+    "src/tag_catalog.goose": "7c7a284fa94d0a8fd4ea06fbda743b4dfc7d161642626ae271f04d5b8b934090",
+    "src/tag_select.goose": "104b29cf38e4a1ca3bce881083787790d8a446a6b397340ece8a526c34d49f3a",
+    "src/toolchain.goose": "eec16b369eb0a867a78152db73f247091bb3489667f75093a4ba89ba0e859325",
+    "src/version_policy.goose": "cfffd55622e7dc8fc6d7f5b4655113ec224fec6b2b1628c5b32db1ab946d0ea0",
+    "tests/audit_perf.py": "e09e6bba320c5467d54ce27f325c08ffb78a52fb74d20b27cb4accd2f4eb9657",
+    "tests/bench.py": "ec18942e55bb70716431ab980b51039991087e07b0df43f5c7c7789e23a46758",
+    "tests/cli.py": "a28a40d6e67ac948d3ab7775ef2b78b8a7fb8f6b7047bc7873f2d254c911ba44",
+    "tests/core.goose": "4d5a4e0bb68816257b4880574e5c04fb16368f528fd290a07f7498e79118da99",
+    "tests/http_metadata.py": "a82259b6b898ea0e3a5819c7c4d67f841611c8738b841b6f50431421c6510068",
+    "tests/logging.py": "12f255e311735607bc67b60ad43f378115edbe4a004ccc89393d66dfd93d383c",
+    "tests/manifest_edit_cli.py": "e6581ab20ab85d9dfae8451a854b30b089500f6cbb82ad63445abc658343d23e",
+    "tests/native_import.py": "bff92f052c3aefcf2ec383ef12c9d5318644d42c66326ff6f484943ad54787d6",
+    "tests/process.goose": "4056d1d816d1ec3f1490a78e06090ee818d1bbda1522297e3d255a5c94232a6d",
+    "tests/process_cli.py": "01adf8194d9d7779b77ec9c1571877b277e2a77708715eb6e421be298ab472b5",
+    "tests/process_fault.c": "6118aad7be1d1f194b5bcda621fc6f601067769109bba929bcae2027967f459a",
+    "tests/process_fault.goose": "fd92a9c624bbdc9660f34b5db1e4125643a96034eb089fabbe5d13659b4afef5",
+    "tests/security.py": "ea856eb2991d2a073b8577ad8c9aa2ace3114c8b08804fe56ce443f98887f01b",
+    "tests/semver_cli.py": "3b96df19cc5eefdaaf6610411e00f940883dd9e736996b805f99e5508a20ed82",
+    "tests/semver_probe.goose": "d1bfcbcbb17639efa7ba564a2d021644b324228c84e0f9e29f5fa1ccd8002449",
+    "tests/tag_catalog.goose": "3a32f34cdb52ebe226c407612b55500b0b74f96299a8c6b9e8c9a80d2eccfb78",
+    "tests/tag_select.goose": "25342cd5a64d5ea897d246e46db72aeb2542e6a98aa12ad7ffa7ce7668fe6fec",
+    "tests/text_cli.py": "7687b67d0db66ce38d2480402c1f4f1fba7ce74592983090bd416e64bbbb5e6e",
+    "tests/version_deps_cli.py": "6f7827fac144a0c7cf0781b63d69a00c06aa853eecfdff8a6cee7f2af8458838",
+    "vendor/README.md": "63798cc1c0db237c17ccab94340ae9f3e3250a2ec094cb1bfb2d8e6c833f1356",
+    "vendor/manifest.json": "232a0196e6241496e912756012670c9e3325ce8bf39ec8229113a9703f565df0",
+    "vendor/goose-argparse/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-argparse/REVISION": "a8249f71943600bb9b78ef1601654aead5825af74413accec1eef03d03ac2f43",
+    "vendor/goose-argparse/argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
+    "vendor/goose-http/CMakeLists.txt": "8ff69c4076c269757632952678f35f3ede119517d161150857bc09d737610c56",
+    "vendor/goose-http/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-http/http.build": "262a70daedf657d993f54278addf7c718da8c2ccf8971640fa436ee1da3f1ec3",
+    "vendor/goose-http/http.goose": "d55f7fcc99718d28a8e8d3b800af8fd46be9772c7456d3f23cc6ac99c0026200",
+    "vendor/goose-log/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-log/NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049",
+    "vendor/goose-log/logger.goose": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+    "vendor/goose-process/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-process/process.build": "8ad78d100d5840ac5b96356d2cac08af1189a86ef738878f3457945365671a26",
+    "vendor/goose-process/process.goose": "b28d4f10a408d5eaf444550fab8861a80b63a358f4aa0ce49174d59ca34c6327",
+    "vendor/goose-semver/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-semver/semver.goose": "dde2323c3e132ed7970f97445da5493e9a1417443aa7aed7801c3f8ea2f91018",
+    "vendor/goose-text/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-text/text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+    "vendor/goose-toml-edit/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-toml-edit/toml_edit.goose": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791",
+    "vendor/goose-toml/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-toml/document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+    "vendor/goose-toml/toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
+    "vendor/goose-toml/writer.goose": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a",
+    "vendor/honk-metadata/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/honk-metadata/honk_metadata.goose": "6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150",
+    "vendor/goose-toml/source/README.md": "16a6f2f1ea2aad78c6bcaa89b561e13b31b62fe6896cf57dc44718e263acbb77",
+    "vendor/goose-toml/source/editor.goose": "1fa20fcb1bb3c7ad1751788ae34d6c91dd348397e8871283da6c687c222b59c1",
+    "vendor/goose-toml/vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-toml/vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
+    "vendor/goose-toml/vendor/text.goose": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d",
+    "vendor/goose-process/native/internal.h": "b2c259a1cca4ad5dabd41fa979a4bfdaa6b143e356944d3b0dc57f824d2f901a",
+    "vendor/goose-process/native/launch.c": "1b893ad4bb688af81d8f2ef1e3dbddaabcadeede23768e4da6d518b86c607c3e",
+    "vendor/goose-process/native/process.c": "30bc91f9fbefb82e6fd61b0723047a638339dfd736a6777be836965e0fb04819",
+    "vendor/goose-process/native/process.h": "cea1518e8bdf6a37710473f9f96d5e588adeafbace7b7393c1b3f5a39ebe8d38",
+    "vendor/goose-http/native/http.c": "5871d9ad107c8087830cae2a6070d306eb5776917212e961acd4086ed42d0334",
+    "vendor/goose-http/native/http.h": "54b063571a015100056288ac614a81af37c0cb32eca198490f733196552c8078",
+    "tests/http_fixture/README.md": "7c3daf38215c1c4225436eec22ec41eb955d0a79b335b2d917375478c10cb57f",
+    "tests/http_fixture/integration.py": "a98ccae28223f037dcde7ca5f6b3bc65849efcc2568c904c1ff03be01153b839",
+    "tests/http_fixture/metadata.py": "2b337cec0b0b8d9ef5699758a662bbe05299838d46b224defc37de19cdb0e6ea",
+    "tests/http_fixture/metadata_transport.c": "19d347b71d232033c5d82225663f8510b7e57d7d8a47e9a439e35d9a0bfe3b8e",
+    "docs/results/canonical-editor-acceptance.json": "85ce9abe0465d424d794a369cbe84d7ebbc567ba6071631ca5ba5e8d1f65f051",
+    "bench/results/cache-audit-btrfs.json": "1335c6af3846ff24a512c2f000d087818391c90adbc2f7b37b6bb44d68b465b5",
+    "bench/results/cache-audit-cli.json": "f790a93a0a161df1e8b16dbcf2a0e4abeeb9ea21338ca6515aa416139d572be9",
+    "bench/results/cache-audit-tmpfs.json": "8e3b87e081dc23b043b3dce8c2acc31fc109fde3f99d6638bd1c7419c49afb0c",
+    "bench/results/cli.json": "2e5edd4d8545b5c16ea8071e17ef61a201b7c4dd01447f13780aaf2ab4caa0f1",
+    "bench/results/deep-audit-btrfs.json": "15b6b137bb91c84d7677318a6005c6035d1a4316fb529e56a4656169bac2c727",
+    "bench/results/deep-audit-cli.json": "bf951b534f9ee0e01674505b33b5603f52fbfe0adc48e25f97763d4bec2cc16b",
+    "bench/results/deep-audit-tmpfs.json": "98eca9a807111249ce02a982c400f38c4ec85ca8426b500c974eb8025d614b20",
+    "bench/results/integration-cli.json": "1ee8809c904a9c1b533f95f6a5270e69dd0fe75ca26047a45082fa99a4c25d07",
+    "bench/results/integration-workloads.json": "7af8f75f52a86547bdd6ba8755ce787bed745da24013f013a21ac582d9e89c36",
+    "bench/results/paired-btrfs.json": "e7975be582a60f96e192b05f55aeedf862bf1568888b02a9d3678c625704def7",
+    "bench/results/paired-tmpfs.json": "cdf270752432aa5d5c0756d1931b1332e8bdc114f5c9fb7ceb9c90335b7a0baa",
+    "bench/results/process-consumer.json": "bd646d90abf0f33b4cf38db5ca235c6de292cef8c483a8a37d34c77f4ee4cda4",
+    "bench/results/source-signal-btrfs.json": "2e520112aac38d21358a5a92ba1392cf932ff777eb15e0e19b597bbf9e790241",
+    "bench/results/source-signal-cli.json": "3346f6b0db2580affa3f3385d2e09b8e4fc489c1b81f05795a6e89b20d4ddc94",
+    "bench/results/source-signal-tmpfs.json": "850fc4942891775577ca4f5d17e2bfa181d5f7b0e111cd210d44b3224956f5b9",
+    "bench/workspace/.gitignore": "eb4e33480eaf67166c3e26d7870a90f16b486e8ec9515988f6acd12526f2edab",
+    "bench/workspace/Honk.toml": "f455f33cb843284df819751785915408734ee0d47ce460c70ddeb0d2b7817f9d",
+    "bench/workspace/README.md": "05243a2a3762c43550ef998a2e20b2c7a4e57a7c9029817821baa07210973af0",
+    "bench/workspace/gate/Honk.lock": "ce66d63610a2adf6cf7b636f1c51c3f2ee07084a6d0e3868e2ead77be6494b9e",
+    "bench/workspace/gate/Honk.toml": "25c67a91241d95ae040550b0c4c229ebf78beecebdb21479e6cb79c01fd3ddda",
+    "bench/workspace/gate/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "bench/workspace/gate/THIRD_PARTY_NOTICES.md": "294203f3249e4ea68dd47292a2016659f44a95538a37fb710e3e94cc1d6fd6d9",
+    "bench/workspace/gate/src/main.goose.in": "9f622750887d36036e91e6192e9767b4b2b3895e4b20e104cf01ba9ddda63cae",
+    "bench/workspace/gate/vendor/rules/Honk.lock": "23e9611609865e3b77f31015181c97d1966c4443c471e8c14f16e9417a336c4e",
+    "bench/workspace/gate/vendor/rules/Honk.toml": "563c55cdd3f8be4eb3d7feb779e06494ae7e1a0fb3b13ba3039b6eeb75e8254a",
+    "bench/workspace/gate/vendor/rules/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "bench/workspace/gate/vendor/rules/rules.goose.in": "165eabd22cf535a55ef2c191a696bd45d68f787e9dc07bef4288e163abe7add2",
+    "bench/workspace/gate/vendor/rules/tests/rules.goose.in": "544491833fe4d70655f9391404ba2a0b546b4f671d483b88fcae7961f5201508",
+    "bench/results/workspace-v020/README.md": "303cced447afa7f5b63993752f16c270c61fa689b02eb6ecfcc988800aab3ffd",
+    "bench/results/workspace-v020/direct-git-git.jsonl": "6462a097e60d617556663148a0588cae4255e0583b5f71d31b66e506f0aacbbe",
+    "bench/results/workspace-v020/direct-git.json": "57cb49a9b5fb50f2856321d88152edaab895e7de81403a6db0c638339c0a8b08",
+    "bench/results/workspace-v020/instrumented-control-git.jsonl": "f1b414fe709259fd7d156c28eff633bb1212eb9a9ab958da9983e8cdfd14d636",
+    "bench/results/workspace-v020/instrumented-control.json": "6b539c28fc3458c736b0f11bf1435ae53019a2676743c7f7f186367597fa155d",
+    "bench/results/workspace-v020/verification.json": "e223b54eaa152d1e45afe7f48ca9cb0ceedaaf29a1c5a35f19523888be774828",
+    "bench/results/workspace-v020/warm.html": "ca49812bc3a1e10d0322d2a95beec6bae769ebece9920e015706f8dae3cba546",
+    ".github/workflows/ci.yml": "26666aa7f2f20a0f8530fc7d520759e2f289619b164ad32c75bf0c2c6575e44f"
+  },
+  "started_utc": "2026-11-05T07:18:23.744397+00:00",
+  "finished_utc": "2026-11-05T07:18:27.484784+00:00",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "affinity": [
+    0
+  ],
+  "scope": "Temporary instrumented copy, numeric stderr probes and altered source/build path. Diagnostic phase attribution only; baseline validates stdout, not a latency comparison. Shared host, warm fixture; no network tracing or RSS measurement.",
+  "seed": 20261105,
+  "samples": [
+    {
+      "label": "run",
+      "wall_ms": 539.4498,
+      "cpu_ms": 493.534000000001,
+      "exit": 0,
+      "stdout_sha256": "0e45ff9278747b38c3b6355552168096a9006842a3e5b9f5a65ac7c481e6903a",
+      "stderr_sha256": "53d047e51375df14c328736f4d9a42e9294d2d3f6c7c70fdfc9625e3032c8370",
+      "case": "run",
+      "round": 0,
+      "phases_ms": {
+        "resolve_ns": [
+          9.658821
+        ],
+        "compiler_identity_ns": [
+          4.013786
+        ],
+        "prepare_ns": [
+          11.604472
+        ],
+        "entry_ns": [
+          0.160379
+        ],
+        "compile_ns": [
+          469.291285
+        ],
+        "publish_ns": [
+          34.001809
+        ],
+        "run_ns": [
+          1.739327
+        ]
+      }
+    },
+    {
+      "label": "tree",
+      "wall_ms": 27.952632,
+      "cpu_ms": 26.87999999999935,
+      "exit": 0,
+      "stdout_sha256": "dc782c7ad23569c7fce2061bae73dd70bcdf42923ec007e6254ceaee7bc9894a",
+      "stderr_sha256": "7e9421386a10a3a40491c7cc8bed763a94633cca7bda16ea46034f4738f87f1c",
+      "case": "tree",
+      "round": 0,
+      "phases_ms": {
+        "resolve_ns": [
+          10.094316,
+          8.936864
+        ]
+      }
+    },
+    {
+      "label": "build",
+      "wall_ms": 536.721605,
+      "cpu_ms": 488.08200000000255,
+      "exit": 0,
+      "stdout_sha256": "5ee9f94f75942f0a981afed547d913583010193aed06903a3ff3c4e845d2b014",
+      "stderr_sha256": "b1db0984e95759d093e3c2f4b11706a95d78e42739871adaf5ad7002d9e9d74b",
+      "case": "build",
+      "round": 0,
+      "phases_ms": {
+        "resolve_ns": [
+          11.138133
+        ],
+        "compiler_identity_ns": [
+          4.405757
+        ],
+        "prepare_ns": [
+          11.742566
+        ],
+        "entry_ns": [
+          0.191892
+        ],
+        "compile_ns": [
+          463.248009
+        ],
+        "publish_ns": [
+          36.531927
+        ]
+      }
+    },
+    {
+      "label": "check",
+      "wall_ms": 115.708392,
+      "cpu_ms": 109.36099999999982,
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "bbe4e050c605e283ae2e05dd5d651d1c1f4273a3daa0494c5e7f0bcb0dc45e73",
+      "case": "check",
+      "round": 0,
+      "phases_ms": {
+        "resolve_ns": [
+          10.50874,
+          9.663448
+        ],
+        "compiler_identity_ns": [
+          4.395038,
+          3.048556
+        ],
+        "prepare_ns": [
+          11.379824,
+          10.269155
+        ],
+        "entry_ns": [
+          0.158458,
+          0.169492
+        ],
+        "check_ns": [
+          33.764997,
+          22.98889
+        ]
+      }
+    },
+    {
+      "label": "build",
+      "wall_ms": 550.212951,
+      "cpu_ms": 499.1889999999992,
+      "exit": 0,
+      "stdout_sha256": "5ee9f94f75942f0a981afed547d913583010193aed06903a3ff3c4e845d2b014",
+      "stderr_sha256": "4fe6d71ad3647de9ef7e724ff87d73ea81aff0d0e7e020d08b03c500c4ffbc72",
+      "case": "build",
+      "round": 1,
+      "phases_ms": {
+        "resolve_ns": [
+          9.897668
+        ],
+        "compiler_identity_ns": [
+          4.269792
+        ],
+        "prepare_ns": [
+          11.586762
+        ],
+        "entry_ns": [
+          0.158108
+        ],
+        "compile_ns": [
+          476.041599
+        ],
+        "publish_ns": [
+          39.090146
+        ]
+      }
+    },
+    {
+      "label": "run",
+      "wall_ms": 526.544042,
+      "cpu_ms": 486.6560000000011,
+      "exit": 0,
+      "stdout_sha256": "0e45ff9278747b38c3b6355552168096a9006842a3e5b9f5a65ac7c481e6903a",
+      "stderr_sha256": "24de96bcd74b85d1ee39f24ee7300a2eac2fa9f348560cbebf16926629b415df",
+      "case": "run",
+      "round": 1,
+      "phases_ms": {
+        "resolve_ns": [
+          9.455166
+        ],
+        "compiler_identity_ns": [
+          3.863684
+        ],
+        "prepare_ns": [
+          11.968134
+        ],
+        "entry_ns": [
+          0.151571
+        ],
+        "compile_ns": [
+          462.962378
+        ],
+        "publish_ns": [
+          27.936892
+        ],
+        "run_ns": [
+          1.694923
+        ]
+      }
+    },
+    {
+      "label": "check",
+      "wall_ms": 120.554668,
+      "cpu_ms": 113.87999999999909,
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "86ee935185a3044b87032c36f49a5cf1c768a61f303f1c8fd967c8e4284e8450",
+      "case": "check",
+      "round": 1,
+      "phases_ms": {
+        "resolve_ns": [
+          10.183068,
+          10.99243
+        ],
+        "compiler_identity_ns": [
+          4.281959,
+          3.216204
+        ],
+        "prepare_ns": [
+          11.227345,
+          10.805777
+        ],
+        "entry_ns": [
+          0.157225,
+          0.151333
+        ],
+        "check_ns": [
+          35.577674,
+          24.624483
+        ]
+      }
+    },
+    {
+      "label": "tree",
+      "wall_ms": 33.587859,
+      "cpu_ms": 28.777000000000275,
+      "exit": 0,
+      "stdout_sha256": "dc782c7ad23569c7fce2061bae73dd70bcdf42923ec007e6254ceaee7bc9894a",
+      "stderr_sha256": "9c5b2ad2138e28defc56286afde902632d891064e5f84b19903ecaa36e9cf7e4",
+      "case": "tree",
+      "round": 1,
+      "phases_ms": {
+        "resolve_ns": [
+          14.988392,
+          9.490995
+        ]
+      }
+    },
+    {
+      "label": "build",
+      "wall_ms": 534.110393,
+      "cpu_ms": 493.96300000000036,
+      "exit": 0,
+      "stdout_sha256": "5ee9f94f75942f0a981afed547d913583010193aed06903a3ff3c4e845d2b014",
+      "stderr_sha256": "f7b76525be0f78d3be338795c8a260af48da6f542a2526d585d70a30f5e5f5df",
+      "case": "build",
+      "round": 2,
+      "phases_ms": {
+        "resolve_ns": [
+          9.916335
+        ],
+        "compiler_identity_ns": [
+          4.461484
+        ],
+        "prepare_ns": [
+          11.835957
+        ],
+        "entry_ns": [
+          0.14791
+        ],
+        "compile_ns": [
+          473.761686
+        ],
+        "publish_ns": [
+          24.821677
+        ]
+      }
+    },
+    {
+      "label": "tree",
+      "wall_ms": 27.705168,
+      "cpu_ms": 26.796999999999294,
+      "exit": 0,
+      "stdout_sha256": "dc782c7ad23569c7fce2061bae73dd70bcdf42923ec007e6254ceaee7bc9894a",
+      "stderr_sha256": "180c4cc22b4ddd3ea4724232a700d2084ab198e718e862b4e68cd416542711a6",
+      "case": "tree",
+      "round": 2,
+      "phases_ms": {
+        "resolve_ns": [
+          10.164964,
+          8.929596
+        ]
+      }
+    },
+    {
+      "label": "check",
+      "wall_ms": 120.451194,
+      "cpu_ms": 110.5580000000006,
+      "exit": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "ca319fcc4d18fba2074b01e73d086afb80b530818fce66a8a7691885653104a6",
+      "case": "check",
+      "round": 2,
+      "phases_ms": {
+        "resolve_ns": [
+          9.454351,
+          9.680939
+        ],
+        "compiler_identity_ns": [
+          4.030955,
+          2.941782
+        ],
+        "prepare_ns": [
+          11.316557,
+          14.873554
+        ],
+        "entry_ns": [
+          0.160163,
+          0.444072
+        ],
+        "check_ns": [
+          33.878959,
+          24.655855
+        ]
+      }
+    },
+    {
+      "label": "run",
+      "wall_ms": 552.872315,
+      "cpu_ms": 509.76699999999875,
+      "exit": 0,
+      "stdout_sha256": "0e45ff9278747b38c3b6355552168096a9006842a3e5b9f5a65ac7c481e6903a",
+      "stderr_sha256": "b2efaa3fa7ca567bd1cb3c113bba7cb928d63355c9bb7c22fd299551388acc56",
+      "case": "run",
+      "round": 2,
+      "phases_ms": {
+        "resolve_ns": [
+          12.555093
+        ],
+        "compiler_identity_ns": [
+          4.232622
+        ],
+        "prepare_ns": [
+          12.052195
+        ],
+        "entry_ns": [
+          0.16082
+        ],
+        "compile_ns": [
+          484.542894
+        ],
+        "publish_ns": [
+          28.476244
+        ],
+        "run_ns": [
+          1.578938
+        ]
+      }
+    }
+  ]
+}
