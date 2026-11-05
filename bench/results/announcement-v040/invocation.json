@@ -1,0 +1,41 @@
+{
+  "reservation": "HONK-ANN-01",
+  "started_utc": "2026-11-05T21:26:25.373797+00:00",
+  "finished_utc": "2026-11-05T21:27:17.069724+00:00",
+  "elapsed_seconds": 51.69595588603988,
+  "exit": 0,
+  "timed_out": false,
+  "argv": [
+    "taskset",
+    "-c",
+    "0",
+    "python3",
+    "-I",
+    "/tmp/honk-v040-public-2s0x2mx5/honk/bench/reuse.py",
+    "--honk",
+    "/home/arobin/Work/Projects/goose-libs/honk/.build/handoff/honk-v040-3fb4f51de6d8",
+    "--baseline",
+    "/home/arobin/Work/Projects/goose-libs/honk/.build/handoff/honk-v020-78701624",
+    "--goose",
+    "/tmp/goose-argparse-toolchain/build/goose",
+    "--rounds",
+    "9",
+    "--output",
+    "/tmp/honk-v040-public-2s0x2mx5/honk/.build/docs-v040-reuse.json"
+  ],
+  "controller_pid": 2540495,
+  "controller_waited": true,
+  "controller_group_absent": true,
+  "adopted_children": [],
+  "input_sha256": {
+    "/tmp/honk-v040-public-2s0x2mx5/honk/bench/reuse.py": "d7d538fee3cd3cc7b51d7c04db8b1d63284a54937c346e8e7757e3d02b74111b",
+    "/home/arobin/Work/Projects/goose-libs/honk/.build/handoff/honk-v040-3fb4f51de6d8": "3fb4f51de6d84e0f398fc22915f93bf78538d6cc410f2c0b9f32206ffaf00981",
+    "/home/arobin/Work/Projects/goose-libs/honk/.build/handoff/honk-v020-78701624": "78701624fff932ff1aecdfeb9eefb6f793a8300116a9a05d5c1da6d7d356a511",
+    "/tmp/goose-argparse-toolchain/build/goose": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+    "/tmp/honk-v040-public-2s0x2mx5/honk/vendor/goose-semver/semver.goose": "dde2323c3e132ed7970f97445da5493e9a1417443aa7aed7801c3f8ea2f91018"
+  },
+  "inputs_match": true,
+  "source_clean_after": true,
+  "report_sha256": "9fc594a60c66f54054d2f3d12645a953df1adb28f1ecd914255f2f915f319334",
+  "log_sha256": "7918fe0c3969c8a294297ebc833cc2a0340a944fb5ddc39b06016c66433b2720"
+}

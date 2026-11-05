@@ -37,9 +37,12 @@ are inferred from these correctness checks.
 
 ## Performance
 
-No current command-latency, throughput or Cargo-comparison number is advertised.
+The [v0.4.0 build-reuse measurement](bench/results/announcement-v040/README.md)
+records one bounded workload with actual release binaries: 72 samples, cold
+population, eligible hits and conservative fallback, with all medians/ranges.
+No general command-latency ranking, throughput or Cargo comparison is claimed.
 The [performance audit](docs/PERFORMANCE.md) identifies the measured code behind
-each retained series and why it is historical rather than current v0.4.0 timing.
+each other retained series and why those older timings remain historical.
 The [benchmark guide](bench/README.md) gives reproduction commands and limits.
 All earlier samples, including slower outcomes, remain unchanged.
 

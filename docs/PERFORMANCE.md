@@ -10,6 +10,7 @@ source comparisons and the original raw-artifact hashes.
 
 | Series | Measured implementation | How to use it |
 | --- | --- | --- |
+| [Released build reuse](../bench/results/announcement-v040/README.md) | v0.4.0 `f9f35e20` vs v0.2.0 `855fb055` | One current bounded workload; 72 samples, full cold/warm/fallback ranges, actual executable/compiler hashes and checked source bridge. |
 | Initial CLI/filesystem audits | Individual revisions in each root `bench/results/*.json` | Historical CLI workloads, not v0.4.0 latency. Older reports identify the binary and advertised compiler but lack a full executable/compiler/dependency build attestation. |
 | Process caller | `db81d8f` plus its recorded benchmark source; requested before `75d5d73` | Historical whole-implementation comparison. Later recovery changes prevent using it as current process latency. Recorded RSS is unusable for a memory comparison. |
 | Git/path workspace | Honk v0.2.0 `855fb055`, harness identities in each report | A small earlier workflow, with all cold/network/warm samples and controller differences kept separate. |
@@ -31,11 +32,12 @@ shows actual compiler skipping on an eligible verified hit, content invalidation
 fallback, atomic edits and packages. It is not a latency or memory measurement.
 It needs no timing rerun to support those functional claims.
 
-The existing build-reuse protocol can compare frozen v0.4.0 and v0.2.0 binaries
-with the unchanged `bench/reuse.py`: nine shuffled rounds of ordinary, cold-slot,
-warm-hit and native-sidecar fallback builds. Until a v0.4.0 record is linked
-here, no current numeric reuse claim is made. A new date alone is not a reason
-to rerun unrelated historical workloads or create a general ranking.
+The [v0.4.0 build-reuse record](../bench/results/announcement-v040/README.md)
+uses frozen release binaries and the unchanged `bench/reuse.py`: nine shuffled
+rounds per fixture/mode, 72 samples with full ranges. It retains slow population
+and fallback as well as eligible hits. All listed runtime/build/vendor inputs
+match the release and this documentation branch. This narrow current workload
+does not update unrelated historical CLI, workspace or component numbers.
 
 ## Reproduction and limits
 
@@ -52,3 +54,17 @@ build. Shared-host affinity is not isolation. Instrumented component batches,
 network operations, process launches and whole CLI timings are different scopes.
 No general speed, allocation-free, memory-leak, stability or Cargo-parity claim
 follows from these small experiments.
+
+For a retained report, compare the measured source with the release explicitly:
+
+```sh
+git diff MEASURED_FULL_SHA f9f35e20e4407df56b2ad45310266c9238403144 -- \
+  honk.goose honk.build src native vendor GOOSE_REVISION Honk.toml Honk.lock
+git show MEASURED_FULL_SHA:GOOSE_REVISION
+sha256sum /path/to/measured/honk /path/to/measured/goose
+```
+
+The structured inventory records these object comparisons; an executable hash
+alone does not attest a build, and matching source does not imply identical
+executables. The new reuse record includes actual image hashes and the checked
+release-to-docs source map.

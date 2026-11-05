@@ -77,5 +77,6 @@ artifacts and records, failed compilation preserving the old executable,
 symlink/private-mode refusal, native/embedded-file fallback, ordinary build
 refresh, and clean behavior. Output and lock semantics must match the ordinary
 path. The [measurement guide](../bench/README.md) keeps cold, warm and fallback
-workloads separate. Existing samples describe historical development versions,
-not current release latency.
+workloads separate. The [v0.4.0 record](../bench/results/announcement-v040/README.md)
+checks the released implementation; older development samples retain their
+original source labels and are not current release latency.

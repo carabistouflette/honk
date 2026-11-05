@@ -34,8 +34,9 @@ mathx = { path = "../mathx" }
 # test support; excluded when this project is consumed as a dependency
 ```
 
-For the local dependency above, create the sibling library first. With the
-matching compiler and `honk_bin` from the quickstart, inside the application:
+Starting with a fresh application scaffold, these commands create and declare a
+sibling library. Use the matching compiler and `honk_bin` from the quickstart,
+inside the application:
 
 ```sh
 "$honk_bin" new ../mathx --lib
@@ -44,8 +45,6 @@ matching compiler and `honk_bin` from the quickstart, inside the application:
 "$honk_bin" check --frozen
 ```
 
-Declare `import mathx;` to use its namespace (the scaffold exports `mathx::answer()`).
-
 Entries must be safe relative paths ending in `.goose`. Library entry path components
 (without the extension) must be ASCII Goose identifiers: letters/underscore first, then
 letters/digits/underscore, excluding language keywords. Uppercase, contextual names such
@@ -53,7 +52,8 @@ as `from`, and builtin module names remain valid path components. Binary filenam
 use other safe characters for standalone compilation; using the entry through a root
 import adapter requires identifier path components too.
 
-Use `import mathx;` in application source. Library names and namespaces are separate;
+Use `import mathx;` in application source; the scaffold exports `mathx::answer()`.
+Library names and namespaces are separate;
 declare the namespace in library source. Scaffolding replaces hyphens with underscores
 for library namespaces and rejects reserved names before creating files. The dependency
 key is the Goose import name: identifiers with underscores, not hyphens. Existing
@@ -83,8 +83,9 @@ allowed.
 All project commands discover Honk.toml upward from cwd. Program arguments retain their
 exact boundaries, including empty arguments; child exit codes propagate.
 
-SIGINT/SIGTERM sent to Honk are forwarded to the direct child; a terminal Ctrl-C already
-delivered to their shared foreground group is not sent twice. Honk retains its locks
+SIGINT/SIGTERM sent to Honk are forwarded to the direct child. A terminal Ctrl-C
+already delivered to a registered child in the same foreground group is suppressed;
+classification during child launch is best effort. Honk retains its locks
 while waiting for child cleanup. For scripted cancellation, signal Honk's PID: external
 group-wide signals cannot be distinguished from direct signals and can reach the child
 twice. This does not supervise arbitrary grandchildren created by an application.
@@ -186,7 +187,7 @@ delivered to its foreground group.
 
 ## HTTPS source metadata
 
-The metadata command requests only the fixed Goose-upstream commit endpoint with HTTPS
+`toolchain --metadata` requests only the fixed Goose-upstream commit endpoint with HTTPS
 certificate/hostname verification, anonymous headers and identity content encoding. It
 makes one request with no proxy, credentials, redirect or retry, caps body/header
 callback bytes at 256 KiB/32 KiB, requires HTTP 200 and full returned SHA equality, and
@@ -199,7 +200,7 @@ validates the required JSON SHA directly. `make metadata-test` and `make metadat
 sanitize` use only local TLS fixtures with a test-only shim; ordinary builds contain no
 shim.
 
- ## Optional diagnostic file
+## Optional diagnostic file
 
 Add `--log-file PATH` after an ordinary command, for example `honk metadata --log-file
 /private/directory/honk.log`. Help/version retain existing early-return behavior.
@@ -251,7 +252,7 @@ Explicit diagnostics may record `started`/`failed` even when a metadata flag com
 is rejected before transport. Log delivery can fail after stdout or command side
 effects; no rollback is promised, and callers must check the exit status.
 
- ## Git version requirements
+## Git version requirements
 
 Since v0.2.0, Git dependencies can specify `version` instead of `rev`. Only one may be
 present. Requirements use full versions, explicit operators and ASCII spaces. Honk

@@ -89,10 +89,11 @@
     {
       "path": "RESULTS.md",
       "scope": "maintained guide/reference/legal",
-      "sha256": "31db36a194c3106d63f1ce161f42db7937749250c442ab0610ee447dcd17b6f0",
+      "sha256": "b73664d91db841b29b748a3576bd5aad63dad48e0d613f53dddc730be33bf800",
       "table_lines": [],
       "claim_lines": [
-        40
+        41,
+        43
       ]
     },
     {
@@ -129,21 +130,21 @@
     {
       "path": "bench/README.md",
       "scope": "maintained guide/reference/legal",
-      "sha256": "433042091f5f94f10827530447b22e06367ecb621215579f4beced798dc6f33a",
+      "sha256": "aca9d847605fc492ec463be931b919a49a77a12d25b05441802459e56f136588",
       "table_lines": [
         [
-          47,
-          54
+          49,
+          56
         ]
       ],
       "claim_lines": [
         3,
-        22,
-        23,
-        39,
-        52,
+        5,
+        24,
+        25,
+        41,
         54,
-        58
+        60
       ]
     },
     {
@@ -159,6 +160,29 @@
         45,
         47,
         57
+      ]
+    },
+    {
+      "path": "bench/results/announcement-v040/README.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "797f605a56ca433938665e5c1ad29373e5b87f8adf69988e8a7aeaff820db766",
+      "table_lines": [
+        [
+          48,
+          57
+        ]
+      ],
+      "claim_lines": [
+        32,
+        33,
+        45,
+        53,
+        57,
+        59,
+        62,
+        63,
+        68,
+        127
       ]
     },
     {
@@ -363,21 +387,21 @@
     {
       "path": "docs/INCREMENTAL-BUILDS.md",
       "scope": "maintained guide/reference/legal",
-      "sha256": "1a4d646f2e186c3ec25fe9c6beac8c31e7cf82d088b27af5d3501699a63ae1f4",
+      "sha256": "981806cb683d51f18eb4f62175026b5a564764fc39cc00ab3858a865fecf12a0",
       "table_lines": [],
       "claim_lines": [
         79,
-        81
+        82
       ]
     },
     {
       "path": "docs/PERFORMANCE.md",
       "scope": "maintained guide/reference/legal",
-      "sha256": "f269fa23f8e1817d98a58b321741cbd499c22798caf1076b20a000e6279b5377",
+      "sha256": "befaeb07adb27e07f3d90be920d4191695a8dd55f4835d39713e5b0b047cb2e3",
       "table_lines": [
         [
           11,
-          18
+          19
         ]
       ],
       "claim_lines": [
@@ -385,11 +409,10 @@
         14,
         15,
         16,
-        18,
-        31,
-        35,
-        36,
-        49
+        17,
+        19,
+        32,
+        51
       ]
     },
     {
@@ -410,10 +433,10 @@
     {
       "path": "docs/REFERENCE.md",
       "scope": "maintained guide/reference/legal",
-      "sha256": "e616550e45f120ef7a68fc1db0b7db9080ef69924ab3d0d074916bd89a94ed85",
+      "sha256": "667f5045b5d950bd704567e35837b4235b9e69d12f71935ad61c4028201456a2",
       "table_lines": [],
       "claim_lines": [
-        210
+        211
       ]
     },
     {
@@ -499,17 +522,40 @@
   ],
   "timing_records": [
     {
+      "path": "bench/results/announcement-v040/samples.json",
+      "raw_sha256": "9fc594a60c66f54054d2f3d12645a953df1adb28f1ecd914255f2f915f319334",
+      "reported_source": "f9f35e20e4407df56b2ad45310266c9238403144",
+      "applicability": "current bounded build-reuse workload; source bridge checked, no general CLI claim",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "Same project/compiler/output paths per fixture, shared host. Real source-only SemVer CLI versus conservative unused-sidecar fallback. Selected debug builds. Cold means empty Honk reuse slot only: compiler/runtime and OS page caches are warm. Warm preparation/functional checks outside timing are retained separately. Cached builds use standalone runtime; no equal-cold-codegen claim. RSS not measured. No timing threshold.",
+      "source_comparison": "f9f35e20e4407df56b2ad45310266c9238403144"
+    },
+    {
+      "path": "bench/results/announcement-v040/verification.json",
+      "raw_sha256": "f778db526a85f01e441dae38dd82140abeb3ebd64511ca2a81c911d8ec0dac43",
+      "reported_source": "f9f35e20e4407df56b2ad45310266c9238403144",
+      "applicability": "current bounded build-reuse workload; source bridge checked, no general CLI claim",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+      "platform": null,
+      "raw_samples_present": false,
+      "scope": null,
+      "source_comparison": "f9f35e20e4407df56b2ad45310266c9238403144"
+    },
+    {
       "path": "bench/results/build-reuse/final.json",
       "raw_sha256": "4021d88557a85eabb13654c1421f0d01ce6d63c3fe5bc0daa5fc1bc0fa4ceec4",
       "reported_source": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
       "applicability": "historical; not current whole-CLI timing",
       "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
-      "actual_compiler_executable_sha256": null,
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
       "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
       "raw_samples_present": true,
       "scope": "Same project/compiler/output paths per fixture, shared host. Real source-only SemVer CLI versus conservative unused-sidecar fallback. Selected debug builds. Cold means empty Honk reuse slot only: compiler/runtime and OS page caches are warm. Warm preparation/functional checks outside timing are retained separately. Cached builds use standalone runtime; no equal-cold-codegen claim. RSS not measured. No timing threshold.",
-      "source_comparison": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
-      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+      "source_comparison": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2"
     },
     {
       "path": "bench/results/build-reuse/post-merge-selfhost.json",
@@ -529,12 +575,11 @@
       "reported_source": "1fdf5e54e645743f3ca0137cde84880890ecdbb6",
       "applicability": "historical; not current whole-CLI timing",
       "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
-      "actual_compiler_executable_sha256": null,
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
       "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
       "raw_samples_present": true,
       "scope": "Same project/compiler/output paths per fixture, shared host. Real source-only SemVer CLI versus conservative unused-sidecar fallback. Selected debug builds. Cold means empty Honk reuse slot only: compiler/runtime and OS page caches are warm. Warm preparation/functional checks outside timing are retained separately. Cached builds use standalone runtime; no equal-cold-codegen claim. RSS not measured. No timing threshold.",
-      "source_comparison": "1fdf5e54e645743f3ca0137cde84880890ecdbb6",
-      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+      "source_comparison": "1fdf5e54e645743f3ca0137cde84880890ecdbb6"
     },
     {
       "path": "bench/results/build-reuse/selfhost.json",
@@ -833,6 +878,13 @@
     }
   ],
   "source_comparisons": {
+    "f9f35e20e4407df56b2ad45310266c9238403144": {
+      "source_resolves": true,
+      "full_commit": "f9f35e20e4407df56b2ad45310266c9238403144",
+      "changed_runtime_build_vendor_paths": [],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": true
+    },
     "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2": {
       "source_resolves": true,
       "full_commit": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
@@ -1420,7 +1472,21 @@
     "bench/utc/results/smoke/traces/1-candidate-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
     "bench/utc/results/smoke/traces/1-candidate-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
   },
+  "new_bounded_measurement_files": {
+    "bench/results/announcement-v040/events.jsonl": "1c66f4360d4d2f4c001642957e77e4aedecaa1309e319f124aa18c99299eb151",
+    "bench/results/announcement-v040/invocation.json": "2a2eca3b8714c84adc3d0218f77507c807185d02190ec419f89d2f0ae55fd2ee",
+    "bench/results/announcement-v040/run.log": "7918fe0c3969c8a294297ebc833cc2a0340a944fb5ddc39b06016c66433b2720",
+    "bench/results/announcement-v040/samples.json": "9fc594a60c66f54054d2f3d12645a953df1adb28f1ecd914255f2f915f319334",
+    "bench/results/announcement-v040/verification.json": "f778db526a85f01e441dae38dd82140abeb3ebd64511ca2a81c911d8ec0dac43"
+  },
   "upstream_snapshot_prose": "Vendored upstream READMEs/docs remain byte-pinned; vendor/README.md is Honk-maintained and audited. Other owners handle upstream projects.",
-  "current_timing_refresh": "No v0.4.0 numeric reuse result is linked yet; historical observations are not current timing.",
+  "current_timing_refresh": {
+    "record": "bench/results/announcement-v040/samples.json",
+    "verification": "bench/results/announcement-v040/verification.json",
+    "source": "f9f35e20e4407df56b2ad45310266c9238403144",
+    "samples": 72,
+    "protocol": "One unchanged published bench/reuse.py invocation, 2 fixtures \u00d7 4 modes \u00d7 9 shuffled rounds, exact release/baseline/compiler binaries; full cold/fallback/slower observations retained. No other timing rerun or general ranking.",
+    "runtime_bridge": "Every measured runtime/build/vendor/compiler input listed in verification.json matches the release and final documentation tree."
+  },
   "scope": "Read-only provenance/link inventory; no benchmark executed by this audit script. Dates alone are not source identity. No runtime/compiler/vendor or tag change."
 }

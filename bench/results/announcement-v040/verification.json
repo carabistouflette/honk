@@ -1,0 +1,332 @@
+{
+  "task": "GL-DOCSHONK-01",
+  "reservation": "HONK-ANN-01",
+  "candidate_source": "f9f35e20e4407df56b2ad45310266c9238403144",
+  "baseline_source": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+  "candidate_binary_sha256": "3fb4f51de6d84e0f398fc22915f93bf78538d6cc410f2c0b9f32206ffaf00981",
+  "baseline_binary_sha256": "78701624fff932ff1aecdfeb9eefb6f793a8300116a9a05d5c1da6d7d356a511",
+  "compiler_source": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "compiler_binary_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+  "compiler_source_checkout_verified_clean": true,
+  "compiler_stdlib_tree": "a9d2f9404c1ae437f3185df0876ff607e4541975",
+  "compiler_runtime_tree": "bc7561b7fadfea8e442c4a22d1835c0b5f5232fc",
+  "c_compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287",
+  "c_compiler_version": "gcc (GCC) 16.2.1 20260810",
+  "machine": {
+    "os": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+    "cpu": "Intel(R) Core(TM) Ultra 7 258V",
+    "affinity": [
+      0
+    ],
+    "fixture_filesystem": "tmpfs (/tmp)",
+    "host_scope": "Other coordinated owners held heavy work for this invocation; ordinary host activity remains. CPU affinity is not isolation."
+  },
+  "protocol": {
+    "harness_sha256": "d7d538fee3cd3cc7b51d7c04db8b1d63284a54937c346e8e7757e3d02b74111b",
+    "rounds": 9,
+    "fixtures": 2,
+    "modes": 4,
+    "shuffle_seed": 20261105,
+    "timed_samples": 72,
+    "units": [
+      "wall_ms",
+      "cpu_ms"
+    ],
+    "warmup": "One untimed build and functional run per fixture/mode; extra warm-cache preparation separately retained. Compiler/runtime and OS caches warm.",
+    "cold_scope": "Empty Honk reuse slot only; standalone cache population differs from ordinary compiler runtime-cache work.",
+    "default_build": "debug, no --release; exact argv/protocol in frozen bench/reuse.py",
+    "summary": "Median and full min/max of nine per group, no trimming or threshold.",
+    "rss": "not measured",
+    "new_invocations": 1,
+    "retry": false
+  },
+  "summary": [
+    {
+      "fixture": "conservative_fallback",
+      "mode": "baseline_plain",
+      "samples": 9,
+      "wall_ms": {
+        "median": 491.302962,
+        "min": 450.970117,
+        "max": 502.748219
+      },
+      "cpu_ms": {
+        "median": 470.2999999999995,
+        "min": 446.37400000000093,
+        "max": 479.75100000000293
+      }
+    },
+    {
+      "fixture": "conservative_fallback",
+      "mode": "candidate_cold",
+      "samples": 9,
+      "wall_ms": {
+        "median": 494.613026,
+        "min": 445.330737,
+        "max": 518.816218
+      },
+      "cpu_ms": {
+        "median": 474.06900000000184,
+        "min": 440.61199999999934,
+        "max": 478.69100000000043
+      }
+    },
+    {
+      "fixture": "conservative_fallback",
+      "mode": "candidate_plain",
+      "samples": 9,
+      "wall_ms": {
+        "median": 480.656829,
+        "min": 444.690765,
+        "max": 498.067914
+      },
+      "cpu_ms": {
+        "median": 472.24200000000405,
+        "min": 440.32900000000154,
+        "max": 475.19500000000005
+      }
+    },
+    {
+      "fixture": "conservative_fallback",
+      "mode": "candidate_warm",
+      "samples": 9,
+      "wall_ms": {
+        "median": 482.593223,
+        "min": 442.353549,
+        "max": 497.340212
+      },
+      "cpu_ms": {
+        "median": 466.421999999999,
+        "min": 437.85799999999807,
+        "max": 473.3499999999999
+      }
+    },
+    {
+      "fixture": "source_only",
+      "mode": "baseline_plain",
+      "samples": 9,
+      "wall_ms": {
+        "median": 490.874388,
+        "min": 446.884119,
+        "max": 499.051081
+      },
+      "cpu_ms": {
+        "median": 468.14899999999903,
+        "min": 442.36499999999967,
+        "max": 478.96900000000153
+      }
+    },
+    {
+      "fixture": "source_only",
+      "mode": "candidate_cold",
+      "samples": 9,
+      "wall_ms": {
+        "median": 1514.83343,
+        "min": 1459.225011,
+        "max": 1604.101401
+      },
+      "cpu_ms": {
+        "median": 1494.299999999999,
+        "min": 1447.5230000000026,
+        "max": 1530.275999999997
+      }
+    },
+    {
+      "fixture": "source_only",
+      "mode": "candidate_plain",
+      "samples": 9,
+      "wall_ms": {
+        "median": 487.987217,
+        "min": 454.157464,
+        "max": 578.802272
+      },
+      "cpu_ms": {
+        "median": 468.0950000000013,
+        "min": 449.3440000000026,
+        "max": 553.6130000000012
+      }
+    },
+    {
+      "fixture": "source_only",
+      "mode": "candidate_warm",
+      "samples": 9,
+      "wall_ms": {
+        "median": 72.580207,
+        "min": 68.007924,
+        "max": 73.728138
+      },
+      "cpu_ms": {
+        "median": 69.52100000000038,
+        "min": 66.92800000000032,
+        "max": 71.13100000000072
+      }
+    }
+  ],
+  "event_count": 170,
+  "all_events_exit_zero": true,
+  "backend_and_independent_artifact_digest_control": true,
+  "clean_source_before_and_after": true,
+  "invocation_elapsed_seconds": 51.69595588603988,
+  "controller_waited": true,
+  "controller_group_absent": true,
+  "adopted_children": [],
+  "files_sha256": {
+    "samples.json": "9fc594a60c66f54054d2f3d12645a953df1adb28f1ecd914255f2f915f319334",
+    "run.log": "7918fe0c3969c8a294297ebc833cc2a0340a944fb5ddc39b06016c66433b2720",
+    "invocation.json": "2a2eca3b8714c84adc3d0218f77507c807185d02190ec419f89d2f0ae55fd2ee",
+    "events.jsonl": "1c66f4360d4d2f4c001642957e77e4aedecaa1309e319f124aa18c99299eb151"
+  },
+  "release_to_documentation_source_bridge": {
+    "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+    "Honk.lock": "253bafbd3976c5d989f03696cca5f8e80679ef5db0996349576bc50546311878",
+    "Honk.toml": "e38ab5757551919c9fc77e1f1f61808b5eff8fdcb18c71bd912e702e81cb2e98",
+    "Makefile": "b3bf2f7c6fe6dcfca83dab14bd00881afabb2c8be98e10781cce1b9012419e00",
+    "bench/reuse.py": "d7d538fee3cd3cc7b51d7c04db8b1d63284a54937c346e8e7757e3d02b74111b",
+    "honk.build": "5dba10ee95ba70ef47666be42858286c9845aaa3a95395ed077bd0baa427c57a",
+    "honk.goose": "f887b5a345f65bcf40819bbd3d80bd9fa9a6efaa661bd929d3ac8162bc30a78b",
+    "native/log_sink.c": "51dabc2881c3032e2dd3e12e535d2d6c2d634cc16506a57ccd783522a4033c5e",
+    "native/platform.c": "a8b19bd3d3e7a4aaa501175b6f8ead793b230e50b51a7c1c77e74a894647cece",
+    "scripts/check-vendor.py": "2242335ff54c7f383c84dcf790af72cfafaa36c6411b1e5b4d59e1e1a6f33bdc",
+    "scripts/metadata-test-build.py": "6b9f896fa19e3f4f31c964629d203f435398e1963e6869e05d4cf70be68144e7",
+    "scripts/portable-cc.sh": "ab180b50aba6f19f8a7d673673cfbb98224e127e7d934ed1f06dd5820d300da8",
+    "scripts/process-fault-cc.sh": "fad6045a989dce725dc35cb123242a912fb70d5a9900d31d058c296c71ba1eff",
+    "scripts/process-fixture.py": "97920a4a7d59c87fecb231f075401831acc789ae3d4a35d8c905e97e36d597e8",
+    "scripts/sanitizer-cc.sh": "5e2587f55f6ef0d5355de9c375fe8eb6d57b7858fab9e4d3abb8b95b2dfff428",
+    "scripts/setup-goose.sh": "20f512f9040ddb90866005688790eda294a00d5f156f5df6849e771f6efd8960",
+    "src/build.goose": "3fc938a988ec1faba2b38811b432a7d9fd04df27c47c01a6a98e8d08f4ee13c5",
+    "src/build_cache.goose": "1df7857ab7795233e729af812c96c3d8ab12dd120e959d98a5bc59c9a27d2072",
+    "src/commands.goose": "2cdeb3517b388da17be85fb7c58e34aa5b17e53fbd2aa178dddf142c68afb2da",
+    "src/deps.goose": "5713091c347fea5656ff032a911b2133b9094c1bba75b0a3e07b1519d7ea2d93",
+    "src/diagnostics.goose": "d98a33a3584492abf464e1d07d7091d8e3eac07299573e7b0a132963270b68f7",
+    "src/distribution.goose": "fc4580e5ad5c3ee774f297af0df50e5272eb8f9ee1ee356d40b98ee17c1b4212",
+    "src/manifest.goose": "bc81b8ad3090b7976f1397b78b9ffefac9138a7e5bb031b2f3d00ebf2e470a95",
+    "src/platform.goose": "7a67be6471b5318c6f5c1aaeac2ced527a4ce11f6356d8ee814bad54716fa80c",
+    "src/project.goose": "67573e889ad0945b97f0c2edd4743dee5819d77c37b553d38ab5459e53f82acd",
+    "src/source.goose": "ffe15c4a90bb0fdec88e30f2e42d435291878c08bcc723cbf0fde6a423566d4f",
+    "src/tag_catalog.goose": "7c7a284fa94d0a8fd4ea06fbda743b4dfc7d161642626ae271f04d5b8b934090",
+    "src/tag_select.goose": "104b29cf38e4a1ca3bce881083787790d8a446a6b397340ece8a526c34d49f3a",
+    "src/toolchain.goose": "efc777ee772a5448900d0b3f34ef38642b756b450c9e289be7265b2ffb708ece",
+    "src/version_policy.goose": "cfffd55622e7dc8fc6d7f5b4655113ec224fec6b2b1628c5b32db1ab946d0ea0",
+    "vendor/goose-argparse/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-argparse/REVISION": "a8249f71943600bb9b78ef1601654aead5825af74413accec1eef03d03ac2f43",
+    "vendor/goose-argparse/argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
+    "vendor/goose-crypto/CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+    "vendor/goose-crypto/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-crypto/crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+    "vendor/goose-crypto/crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+    "vendor/goose-crypto/native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+    "vendor/goose-crypto/native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+    "vendor/goose-crypto/native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+    "vendor/goose-http/CMakeLists.txt": "8ff69c4076c269757632952678f35f3ede119517d161150857bc09d737610c56",
+    "vendor/goose-http/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-http/http.build": "262a70daedf657d993f54278addf7c718da8c2ccf8971640fa436ee1da3f1ec3",
+    "vendor/goose-http/http.goose": "d55f7fcc99718d28a8e8d3b800af8fd46be9772c7456d3f23cc6ac99c0026200",
+    "vendor/goose-http/native/http.c": "5871d9ad107c8087830cae2a6070d306eb5776917212e961acd4086ed42d0334",
+    "vendor/goose-http/native/http.h": "54b063571a015100056288ac614a81af37c0cb32eca198490f733196552c8078",
+    "vendor/goose-log/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-log/NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049",
+    "vendor/goose-log/examples/utc/utc.goose": "831865065c7b86c92439de601a5fb65a52d15630b914cd3b5ffd75614fa3d67e",
+    "vendor/goose-log/logger.goose": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+    "vendor/goose-process/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-process/native/internal.h": "b2c259a1cca4ad5dabd41fa979a4bfdaa6b143e356944d3b0dc57f824d2f901a",
+    "vendor/goose-process/native/launch.c": "1b893ad4bb688af81d8f2ef1e3dbddaabcadeede23768e4da6d518b86c607c3e",
+    "vendor/goose-process/native/process.c": "30bc91f9fbefb82e6fd61b0723047a638339dfd736a6777be836965e0fb04819",
+    "vendor/goose-process/native/process.h": "cea1518e8bdf6a37710473f9f96d5e588adeafbace7b7393c1b3f5a39ebe8d38",
+    "vendor/goose-process/process.build": "8ad78d100d5840ac5b96356d2cac08af1189a86ef738878f3457945365671a26",
+    "vendor/goose-process/process.goose": "b28d4f10a408d5eaf444550fab8861a80b63a358f4aa0ce49174d59ca34c6327",
+    "vendor/goose-semver/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-semver/semver.goose": "dde2323c3e132ed7970f97445da5493e9a1417443aa7aed7801c3f8ea2f91018",
+    "vendor/goose-text/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-text/text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+    "vendor/goose-time/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-time/THIRD_PARTY_NOTICES.md": "558bfffa1dd0f318bad5df0cab38831b9966429672d6475d9e9ec20466e3bc2a",
+    "vendor/goose-time/detail.goose": "54e54e81fa2efc3efb00d380f19ca46af5ca728fbc8e9004d562c965357754d6",
+    "vendor/goose-time/time.goose": "9a43e3f14b838ab7f40e9968ce35c0972f23cfd663408d773bff67da491cb2b7",
+    "vendor/goose-toml-edit/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-toml-edit/toml_edit.goose": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791",
+    "vendor/goose-toml/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-toml/document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+    "vendor/goose-toml/source/README.md": "ea35941965f451d56394607388a3e093595473ccb8394cb33affadfbfa8071f7",
+    "vendor/goose-toml/source/editor.goose": "63bcce775165d33a63acb160799262bf1b4e400d34a2d6b49fcf48f4098d21f6",
+    "vendor/goose-toml/toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
+    "vendor/goose-toml/vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/goose-toml/vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
+    "vendor/goose-toml/vendor/text.goose": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d",
+    "vendor/goose-toml/writer.goose": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a",
+    "vendor/honk-metadata/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "vendor/honk-metadata/honk_metadata.goose": "6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150",
+    "vendor/manifest.json": "4f7c93d32271fa37a31507d599bfc95123a217a7326c9285119d0de1e0d34b50"
+  },
+  "bridge_scope": "Every listed file equals released f9; owner-maintained vendor/README.md prose excluded. Final documentation commit may change prose and add evidence only. This proves tracked-source equality, not bit-reproducible executables or a hermetic system toolchain.",
+  "binary_provenance": "Candidate is the previously validated public-v0.4.0 binary; baseline is the retained v0.2.0 binary. Exact executed hashes retained. No rebuild performed for this measurement. Different whole implementations are compared, not one isolated optimization.",
+  "limits": [
+    "Single shared-host invocation; no confidence interval or general workload claim.",
+    "No speed, memory, uptime, security or Cargo-parity guarantee.",
+    "Indirect C-toolchain inputs are not exhaustively fingerprinted.",
+    "All cold/fallback/slower results retained; earlier artifacts unchanged."
+  ],
+  "system_libraries_observed_after_run": {
+    "candidate": {
+      "/usr/lib/libbrotlicommon.so.1.2.1": "98826693f4a8c563890f89ed04ab255d871948e07eabf314d10f79c895e0f03c",
+      "/usr/lib/libbrotlidec.so.1.2.1": "380ec042c35705a2dbfcb3e0ed392ce7e1262d62b7e626252cd8bce4adad43f2",
+      "/usr/lib/libbrotlienc.so.1.2.1": "036fd3cac00bc8a28de8b9e01380a8872e034203b81222ee3c4f92510593805f",
+      "/usr/lib/libc.so.6": "02c8c3d06180beee9c7d0392aa85736c7d19f274a81e7f8f0b3d9e28e0641524",
+      "/usr/lib/libcom_err.so.2.1": "67ed8a11c44542ffdbaa04b3521f48729afddf936568632b6aa9d04c595316cd",
+      "/usr/lib/libcrypto.so.3": "a75a864dcda6ef9e4dc29fad4b7988ca832b904c3915a63c920062c40763dae1",
+      "/usr/lib/libcurl.so.4.8.0": "d53ce30e973b9120643dfb53b9c99986330f28d2db245189e6bda6bc1aa55bdd",
+      "/usr/lib/libgssapi_krb5.so.2.2": "db71de39831ad557f7c75fadf772575f1180c4e1e7f83ec7318fabd78e129296",
+      "/usr/lib/libidn2.so.0.4.0": "9a36fa67dc82ce0e5dc38ef190c76231f532676f7ba13e363fc1df16a9c50a15",
+      "/usr/lib/libk5crypto.so.3.1": "e9ea7950674f25a6951b830036f95a595e1fc112247a69d11bc0003124ab7338",
+      "/usr/lib/libkeyutils.so.1.10": "a82e692581b6215475c03538fa4b25681b5c71e8554c67afa7e34074b968b0d7",
+      "/usr/lib/libkrb5.so.3.3": "eb8369680ba30529b30abeaca57429b67f9af42ac43efdd5d95ca1901bb9c44c",
+      "/usr/lib/libkrb5support.so.0.1": "941f17df15bc3ed160b392dee2930bd68565f445b8fe8d87ad522256c972967f",
+      "/usr/lib/libm.so.6": "965106704753eefe8c31ae7da6daba3ead3d18c52b19b5fcc41178bcc4aa999d",
+      "/usr/lib/libnghttp2.so.14.29.5": "dc9f6c8c911dc14aef9585aed5cadf35ae5037175130753cd058d7eb353fb717",
+      "/usr/lib/libnghttp3.so.9.9.0": "7d826dfe4128cab08a32609c56d67c9ce1383295cbce7ac0fa50449704b7479a",
+      "/usr/lib/libngtcp2.so.16.11.0": "524535e51383d20818e3878e0c819cae6249662dcfc168c0bfbb30aa8ba4f2b3",
+      "/usr/lib/libngtcp2_crypto_ossl.so.0.3.1": "867135c8d1f2787c1bd5eca09f204e086d6c2c1e3030613f1b5792d92034fb2f",
+      "/usr/lib/libpsl.so.5.3.5": "b5189c9a4b32b15f0bb1bab989069acd2d0dc89723b990266ad5566cd16f1924",
+      "/usr/lib/libresolv.so.2": "ee828b251a61761a9e529a791758ec8a1fbefd85693e2dc23501fedb8cf2f31d",
+      "/usr/lib/libsodium.so.26.4.0": "1be30f075ad90cb94bb4ae4b70f77bcd8f4a07d346f165cb2033d0958a62bcfd",
+      "/usr/lib/libssh2.so.1.0.1": "8e31bb8758d4f780fd635aa47ca3c0306ccbfbadd7de6c85478a7d712d5ae4b4",
+      "/usr/lib/libssl.so.3": "f6409e9f083faae79a622c9534be6ed2456d0102cd8ea2b52eb18c9d72f1f41e",
+      "/usr/lib/libunistring.so.5.2.1": "ba7a4afb4b6f823d64ebe324416e182cd42a981dba049e3ddcfa1c9af03cb7f3",
+      "/usr/lib/libz.so.1.3.2": "6c78c5e58c3bb49a1cd151a95cdf1a17fe07a91a57a59e0279b984c533075ca9",
+      "/usr/lib/libzstd.so.1.5.7": "f023d49e85fb22057bfdd21857263d2638b73356c06f3b342f678a75212379f8",
+      "/usr/lib/ld-linux-x86-64.so.2": "f5e11cc62f8f2c24dff532982559f4303dba3b17e7450551372a88c8e7ea8757"
+    },
+    "baseline": {
+      "/usr/lib/libbrotlicommon.so.1.2.1": "98826693f4a8c563890f89ed04ab255d871948e07eabf314d10f79c895e0f03c",
+      "/usr/lib/libbrotlidec.so.1.2.1": "380ec042c35705a2dbfcb3e0ed392ce7e1262d62b7e626252cd8bce4adad43f2",
+      "/usr/lib/libbrotlienc.so.1.2.1": "036fd3cac00bc8a28de8b9e01380a8872e034203b81222ee3c4f92510593805f",
+      "/usr/lib/libc.so.6": "02c8c3d06180beee9c7d0392aa85736c7d19f274a81e7f8f0b3d9e28e0641524",
+      "/usr/lib/libcom_err.so.2.1": "67ed8a11c44542ffdbaa04b3521f48729afddf936568632b6aa9d04c595316cd",
+      "/usr/lib/libcrypto.so.3": "a75a864dcda6ef9e4dc29fad4b7988ca832b904c3915a63c920062c40763dae1",
+      "/usr/lib/libcurl.so.4.8.0": "d53ce30e973b9120643dfb53b9c99986330f28d2db245189e6bda6bc1aa55bdd",
+      "/usr/lib/libgssapi_krb5.so.2.2": "db71de39831ad557f7c75fadf772575f1180c4e1e7f83ec7318fabd78e129296",
+      "/usr/lib/libidn2.so.0.4.0": "9a36fa67dc82ce0e5dc38ef190c76231f532676f7ba13e363fc1df16a9c50a15",
+      "/usr/lib/libk5crypto.so.3.1": "e9ea7950674f25a6951b830036f95a595e1fc112247a69d11bc0003124ab7338",
+      "/usr/lib/libkeyutils.so.1.10": "a82e692581b6215475c03538fa4b25681b5c71e8554c67afa7e34074b968b0d7",
+      "/usr/lib/libkrb5.so.3.3": "eb8369680ba30529b30abeaca57429b67f9af42ac43efdd5d95ca1901bb9c44c",
+      "/usr/lib/libkrb5support.so.0.1": "941f17df15bc3ed160b392dee2930bd68565f445b8fe8d87ad522256c972967f",
+      "/usr/lib/libm.so.6": "965106704753eefe8c31ae7da6daba3ead3d18c52b19b5fcc41178bcc4aa999d",
+      "/usr/lib/libnghttp2.so.14.29.5": "dc9f6c8c911dc14aef9585aed5cadf35ae5037175130753cd058d7eb353fb717",
+      "/usr/lib/libnghttp3.so.9.9.0": "7d826dfe4128cab08a32609c56d67c9ce1383295cbce7ac0fa50449704b7479a",
+      "/usr/lib/libngtcp2.so.16.11.0": "524535e51383d20818e3878e0c819cae6249662dcfc168c0bfbb30aa8ba4f2b3",
+      "/usr/lib/libngtcp2_crypto_ossl.so.0.3.1": "867135c8d1f2787c1bd5eca09f204e086d6c2c1e3030613f1b5792d92034fb2f",
+      "/usr/lib/libpsl.so.5.3.5": "b5189c9a4b32b15f0bb1bab989069acd2d0dc89723b990266ad5566cd16f1924",
+      "/usr/lib/libresolv.so.2": "ee828b251a61761a9e529a791758ec8a1fbefd85693e2dc23501fedb8cf2f31d",
+      "/usr/lib/libssh2.so.1.0.1": "8e31bb8758d4f780fd635aa47ca3c0306ccbfbadd7de6c85478a7d712d5ae4b4",
+      "/usr/lib/libssl.so.3": "f6409e9f083faae79a622c9534be6ed2456d0102cd8ea2b52eb18c9d72f1f41e",
+      "/usr/lib/libunistring.so.5.2.1": "ba7a4afb4b6f823d64ebe324416e182cd42a981dba049e3ddcfa1c9af03cb7f3",
+      "/usr/lib/libz.so.1.3.2": "6c78c5e58c3bb49a1cd151a95cdf1a17fe07a91a57a59e0279b984c533075ca9",
+      "/usr/lib/libzstd.so.1.5.7": "f023d49e85fb22057bfdd21857263d2638b73356c06f3b342f678a75212379f8",
+      "/usr/lib/ld-linux-x86-64.so.2": "f5e11cc62f8f2c24dff532982559f4303dba3b17e7450551372a88c8e7ea8757"
+    }
+  },
+  "system_dependency_versions_observed_after_run": {
+    "libcurl": "8.23.0",
+    "libsodium": "1.0.22"
+  },
+  "system_library_scope": "Post-run resolved-library snapshot, not before/after attestation of every header/plugin/support program. Indirect-toolchain assumption remains explicit."
+}

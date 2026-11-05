@@ -1,6 +1,8 @@
 # Measurements
 
-Honk has no published current latency ranking or Cargo comparison. Read the
+Honk has no general latency ranking or Cargo comparison. The
+[released v0.4.0 reuse record](results/announcement-v040/README.md) is one bounded
+current build workload, with full cold, warm and fallback ranges. Read the
 [performance currentness audit](../docs/PERFORMANCE.md) before quoting results.
 Old tables and every raw sample remain available as historical observations;
 changing a compiler, dependency, relevant implementation or build can invalidate
@@ -51,7 +53,7 @@ create new published performance claims.
 | Git/path workspace | [method](WORKSPACE.md), [example](workspace/README.md) | [v0.2.0 series](results/workspace-v020/README.md) |
 | Warm phases | [instrumented method](PHASES.md) | [phase series](results/warm-phases/README.md) |
 | UTC diagnostics | [method](utc/README.md) | [captures and replay limits](utc/results/README.md) |
-| Build reuse | `bench/reuse.py --help` | [prototype/cold/warm/fallback series](results/build-reuse/README.md) |
+| Build reuse | `bench/reuse.py --help` | [v0.4.0 current workload](results/announcement-v040/README.md), [older development series](results/build-reuse/README.md) |
 
 The v0.4.0 [functional receipt](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.json)
 checks actual workspace behavior. It contains no timing result and must not be
