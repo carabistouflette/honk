@@ -91,6 +91,8 @@ class TextCLI(unittest.TestCase):
         manifest = tomllib.loads((project / "Honk.toml").read_text())
         self.assertEqual(manifest["dependencies"]["text"], {"path": "vendor/goose-text"})
         self.assertEqual(manifest["dependencies"]["toml_edit"], {"path": "vendor/goose-toml-edit"})
+        self.assertEqual(manifest["dependencies"]["time"], {"path": "vendor/goose-time"})
+        self.assertEqual(manifest["dependencies"]["utc"], {"path": "vendor/goose-log/examples/utc"})
         self.call("check", "--frozen", cwd=project)
         self.call("package", "--frozen", cwd=project)
         label = manifest["package"]["name"] + "-" + manifest["package"]["version"]
@@ -102,6 +104,11 @@ class TextCLI(unittest.TestCase):
             for name in ("toml_edit.goose", "LICENSE"):
                 expected = (project / "vendor" / "goose-toml-edit" / name).read_bytes()
                 self.assertEqual(package.extractfile(label + "/vendor/goose-toml-edit/" + name).read(), expected)
+            for path in ("goose-time/time.goose", "goose-time/detail.goose", "goose-time/LICENSE",
+                         "goose-time/THIRD_PARTY_NOTICES.md", "goose-log/examples/utc/utc.goose",
+                         "goose-log/LICENSE", "goose-log/NOTICE"):
+                expected = (project / "vendor" / path).read_bytes()
+                self.assertEqual(package.extractfile(label + "/vendor/" + path).read(), expected)
         self.assertEqual((project / "Honk.lock").read_bytes(), lock)
 
 if __name__ == "__main__":

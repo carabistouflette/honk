@@ -1,0 +1,66 @@
+{
+  "baseline": {
+    "accepted_fixed": {
+      "max_ns_per_call": 281.36776,
+      "median_ns_per_call": 265.25148,
+      "min_ns_per_call": 244.86959
+    },
+    "accepted_os": {
+      "max_ns_per_call": 270.79399,
+      "median_ns_per_call": 260.22524,
+      "min_ns_per_call": 249.9795
+    },
+    "file": {
+      "max_ns_per_call": 27601.794,
+      "median_ns_per_call": 25778.591,
+      "min_ns_per_call": 24913.186
+    },
+    "filtered": {
+      "max_ns_per_call": 7.19258,
+      "median_ns_per_call": 5.67915,
+      "min_ns_per_call": 4.91354
+    },
+    "no_log": {
+      "max_ns_per_call": 3.27362,
+      "median_ns_per_call": 2.90589,
+      "min_ns_per_call": 2.62972
+    },
+    "off": {
+      "max_ns_per_call": 4.99076,
+      "median_ns_per_call": 4.59614,
+      "min_ns_per_call": 4.51033
+    }
+  },
+  "candidate": {
+    "accepted_fixed": {
+      "max_ns_per_call": 425.73796,
+      "median_ns_per_call": 391.41518,
+      "min_ns_per_call": 373.8894
+    },
+    "accepted_os": {
+      "max_ns_per_call": 507.7165,
+      "median_ns_per_call": 484.76239,
+      "min_ns_per_call": 478.15438
+    },
+    "file": {
+      "max_ns_per_call": 27061.876,
+      "median_ns_per_call": 26323.308,
+      "min_ns_per_call": 25370.839
+    },
+    "filtered": {
+      "max_ns_per_call": 7.98822,
+      "median_ns_per_call": 7.30204,
+      "min_ns_per_call": 6.71645
+    },
+    "no_log": {
+      "max_ns_per_call": 5.10621,
+      "median_ns_per_call": 4.44533,
+      "min_ns_per_call": 4.01473
+    },
+    "off": {
+      "max_ns_per_call": 6.63991,
+      "median_ns_per_call": 6.3716,
+      "min_ns_per_call": 6.0802
+    }
+  }
+}

@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: Apache-2.0
-// Application-owned CLI diagnostics: only fixed events and numeric data.
+// Application-owned CLI diagnostics: canonical UTC, fixed events and numeric data.
 import logger;
+import time;
+import utc;
+import os;
 namespace diagnostics;
 
 enum Event { Started, ItemCompleted, Returned, Failed, ChildFailed }
@@ -69,19 +72,28 @@ fn configure(path: const u8[:], minimum: log::Level = log::Level.Info) -> bool {
 // State/Off guard for lifecycle clocks; not a per-event severity check.
 fn active() -> bool { configured && !failed && config.minimum != log::Level.Off }
 
-fn write(event: Event, duration_ns: u64 = 0, outcome: u32 = 0) -> bool {
+// Shared production/test seam: callbacks are single-threaded and non-reentrant.
+// Filtering precedes message construction, wall-clock acquisition and buffers.
+fn write_with<Clock, Sink>(event: Event, duration_ns: u64, outcome: u32) -> bool {
     if failed { return false; }
     if !configured { return true; }
-    // A lexical buffer keeps terminal logging from shrinking shared storage
-    // while a caller holds borrowed parser/manifest data in the pinned compiler.
-    var scratch: u8[>..] = [];
-    fn build_message() -> u8[>..] { message(event, duration_ns, outcome) }
-    let status = log::emit_lazy(config, level(event), scratch, build_message) { line =>
-        append(destination[..destination_length], line)
-    };
+    let severity = level(event);
+    if !log::enabled(config, severity) { return true; }
+    // Keep lexical buffers: terminal diagnostics must not shrink shared storage
+    // while callers hold parser/manifest borrows in the pinned compiler.
+    var timestamp: u8[>..] = [];
+    var scratch:   u8[>..] = [];
+    let text = message(event, duration_ns, outcome);
+    let status = utc_log::emit(config, severity, text, timestamp, scratch, Clock, Sink);
     if status == log::Status.SinkError {
         failed = true;
         return false;
     }
     true
+}
+fn wall_clock() -> i64 { time_ns() }
+fn write(event: Event, duration_ns: u64 = 0, outcome: u32 = 0) -> bool {
+    return write_with(event, duration_ns, outcome, wall_clock) { line =>
+        append(destination[..destination_length], line)
+    };
 }
