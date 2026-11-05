@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Reject compiler-incompatible backslash project/cache paths before compiler
+  work, preventing a normalized path from selecting a sibling staged tree.
+
 - Add an opt-in functional Git/path workspace example and a reproducible driver
   for cold operations, warm CLI samples, locked/offline recovery and packaging.
 

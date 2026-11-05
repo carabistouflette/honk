@@ -35,6 +35,36 @@ class CLI(unittest.TestCase):
         self.assertEqual(meta['name'], 'hello')
         self.assertEqual(meta['entry'], 'src/main.goose')
         self.run_honk('new', p, ok=False)
+    def test_compiler_roots_cannot_alias_backslash_paths(self):
+        def create(path, answer):
+            (path/'src').mkdir(parents=True); (path/'lib').mkdir()
+            (path/'Honk.toml').write_text('[package]\nname="gate"\nversion="0.1.0"\nentry="src/main.goose"\n[dependencies]\nmathx={path="lib"}\n')
+            (path/'src/main.goose').write_text('import mathx; fn main(){print(mathx::answer());}\n')
+            (path/'lib/mathx.goose').write_text(f'namespace mathx; fn answer() -> i64 {{ {answer} }}\n')
+        normal = self.root/'a/b'; literal = self.root/('a'+chr(92)+'b')
+        create(normal, 41); create(literal, 99)
+        self.assertIn('41', self.run_honk('run', cwd=normal).stdout)
+        before = (normal/'src/main.goose').read_bytes()
+        binary = (normal/'target/debug/gate').read_bytes()
+        for command in ['check', 'build', 'run', 'fmt', 'test', 'bench', 'doc', 'package', 'install', 'toolchain']:
+            with self.subTest(command=command):
+                result = self.run_honk(command, cwd=literal, ok=False)
+                self.assertIn('project path contains a backslash', result.stderr)
+                self.assertEqual(result.stdout, '')
+                self.assertEqual((normal/'src/main.goose').read_bytes(), before)
+                self.assertEqual((normal/'target/debug/gate').read_bytes(), binary)
+                self.assertFalse((literal/'.honk').exists())
+        self.assertEqual(json.loads(self.run_honk('metadata', cwd=literal).stdout)['root'], str(literal))
+
+    def test_bootstrap_cache_requires_compiler_compatible_path(self):
+        project = self.new()
+        cache = self.root/('compiler'+chr(92)+'cache')
+        result = self.run_honk('check', cwd=project, env={'GOOSE': '', 'HONK_HOME': str(cache)}, ok=False)
+        self.assertIn('compiler cache path contains a backslash', result.stderr)
+        self.assertFalse((cache/'toolchains').exists())
+        # An explicit trusted compiler needs no bootstrap in that cache.
+        self.run_honk('check', cwd=project, env={'HONK_HOME': str(cache)})
+
     def test_init_preserves_existing(self):
         self.run_honk('init', '--name', 'hello')
         original = (self.root/'src/main.goose').read_bytes()

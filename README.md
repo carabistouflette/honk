@@ -159,3 +159,9 @@ or fetch. Failed resolution preserves lock bytes. Distinct requirements for one
 import identity fail as a conflict; there is no graph backtracking or registry.
 The optional new lock `requirement` key is rejected by older Honk versions.
 This workflow is available from v0.2.0 and absent from the frozen v0.1.0 release.
+
+Compiler-facing commands reject project paths containing a literal backslash:
+the pinned compiler interprets it as a package separator, even on Linux. Source
+compiler bootstraps also require a backslash-free `HONK_HOME`; an explicit
+`GOOSE` avoids that bootstrap constraint. Metadata and filesystem-only project
+commands keep their existing path handling.
