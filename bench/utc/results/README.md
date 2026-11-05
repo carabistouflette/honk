@@ -1,5 +1,9 @@
 # Clean Honk UTC diagnostics capture
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](../../../docs/PERFORMANCE.md). Raw records and slower results are unchanged.
+
 Both captures started from clean source `e092d63c15e13958d26e3b2982d35a468f03ab7d`.
 The immutable public baseline is `65d4e97d808e97cdcc2c6d1f783f440e89cb2786`.
 Its real `diagnostics::write` is exported unchanged; the candidate invokes the

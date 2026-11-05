@@ -1,5 +1,9 @@
 # Source and signal audit — 2026-11-04
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](PERFORMANCE.md). Raw records and slower results are unchanged.
+
 Reviewed and measured source: `4ac1a73d15de92eac2c7350dddc25d00756d4431`.
 Baseline: published `f427cd1e39191b7ce6da06c6916f79487676a5ff`.
 

@@ -20,15 +20,18 @@ reusable library API.
 3. Select production/dev graph nodes. Copy source trees into private staging,
    reject unsupported entries and remap root source declarations to resolved
    local packages. User source files remain unchanged.
-4. Invoke the selected Goose compiler with offline dependency fetching. Source
-   libraries are checked; native programs compile to a private output.
+4. Normally invoke the selected Goose compiler with offline dependency fetching.
+   An explicit eligible `--reuse-build` hit verifies and copies a cached program
+   instead. Both paths keep graph validation, fresh staging and atomic output.
+   Libraries are source-checked; native programs compile privately on a miss.
 5. Atomically publish successful executables. Test/benchmark outputs have a
    reserved directory and cannot collide with the application's executable.
 
 Temporary source rewrites skip crash-durability syncs, while metadata writes
 retain their durability syncs. Kernel-assisted large-file copies have the same type, byte,
-length and snapshot-independence contract as the portable path. No input-content
-artifact cache or stale-input shortcut is introduced by these optimizations.
+length and snapshot-independence contract as the portable path. Optional content-keyed build reuse is a separate step described in
+[the reuse contract](INCREMENTAL-BUILDS.md). Its indirect toolchain inputs must
+remain unchanged; ordinary build/clean refreshes that state.
 
 ## Package sequence
 
@@ -40,6 +43,6 @@ own generated archive and checks the exact exported sources offline before
 atomically publishing it. A package is a source archive, not a signed release,
 registry publication, or promise of bit-identical executables across toolchains.
 
-The supported user interface is the CLI and manifest/lock format described in
-README. Internal module fields/functions can change before 1.0. Registry version
+The supported user interface is the CLI and manifest/lock format described in the
+[reference](REFERENCE.md). Internal module fields/functions can change before 1.0. Registry version
 solving, Windows support and process-tree supervision are outside this version.

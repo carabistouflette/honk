@@ -1,5 +1,9 @@
 # Honk 0.2.0 real workspace observations
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](../../../docs/PERFORMANCE.md). Raw records and slower results are unchanged.
+
 Measured Honk release `855fb0552aefd5f0c033826af64f3bdd09ae6482` with clean driver
 `57ba12ea906536010f68ec21ac24c692aa0bf13d`. The workspace builds a useful
 version-policy CLI from two members plus public Git SemVer source.

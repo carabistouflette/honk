@@ -1,4 +1,4 @@
-# Git version dependency design
+# Git version requirements
 
 Status: implemented contract for the bounded Git-version workflow released
 in experimental Honk v0.2.0. The frozen Honk v0.1.0 release is
@@ -65,7 +65,7 @@ Keep lock schema 1 with an optional `requirement` on version-selected entries.
 Their existing `rev` field stores the selected full tag ref, and `commit` stores
 the verified immutable commit. Omit the new field for exact-ref/path entries so
 those lock bytes remain unchanged. Older Honk versions reject the new key; the
-feature therefore needs explicit documentation in its eventual release.
+requirement field therefore needs Honk v0.2.0 or later.
 
 A present-but-empty lock `requirement` is invalid, not legacy exact mode.
 Match reusable lock entries by import name, HTTPS origin and exact requirement
@@ -84,18 +84,17 @@ rejects distinct requirement identities instead of attempting backtracking,
 multiple versions of one import or registry unification. A later solver needs a
 separate design and validation; do not approximate it silently.
 
-## Required validation before exposure
+## Maintained tests
 
-Use isolated real Git repositories behind an explicit test-only HTTPS-to-local
-transport shim. Cover annotated/lightweight tags, highest numeric matches,
+The tests use isolated real Git repositories behind a test-only HTTPS-to-local
+transport shim. They cover annotated/lightweight tags, highest numeric matches,
 prereleases, v/build ties, non-adjacent peel records, malformed/conflicting and
 oversized advertisements, selected-commit movement and same-commit tag-object replacement between
 query/fetch, manifest-version
 mismatch, changed constraints, shared-import conflicts and unchanged exact refs.
-Prove frozen/offline paths perform no enumeration/fetch, preserve old locks on
+They check that frozen/offline paths perform no enumeration/fetch, preserve old locks on
 all failures, and retain comment-preserving add/remove and self-package exports.
-Run normal/security and GCC/Clang ownership/sanitizer suites. Review this contract
-and the resulting concrete consumer diff before exposing the CLI path.
+The normal/security and GCC/Clang sanitizer suites include these cases.
 
 The wire record/peel format follows the official
 [git-ls-remote manual](https://git-scm.com/docs/git-ls-remote); ref validation

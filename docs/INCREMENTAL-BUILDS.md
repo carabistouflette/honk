@@ -1,8 +1,9 @@
-# Opt-in local build reuse (first version)
+# Opt-in local build reuse
+
+Available in experimental v0.4.0 and current main. Reuse is off by default.
 
 `build --reuse-build` and `run --reuse-build` may reuse one verified executable
-per project and profile. The recipe/key epoch must change when build flags or
-key interpretation change. Ordinary builds still invoke the compiler, and clear
+per project and profile. Ordinary builds still invoke the compiler, and clear
 the reusable marker for that profile. `clean` removes all reuse state. This is
 an opt-in local cache for trusted projects and tools, not a hermetic build or
 an authenticity boundary against the account that owns the project.
@@ -68,12 +69,13 @@ successful ordinary executable publication into a partial failure. Records are
 written atomically after program publication. No secrets, compiler diagnostics
 or original environment records are written to cache metadata.
 
-## Required verification
+## Maintained checks
 
-Public regressions must exercise actual compiler work, source/dependency/std/
+`tests/build_cache_cli.py` covers actual compiler work, source/dependency/std/
 environment/profile/compiler invalidation, same-size changes, corrupted/missing
 artifacts and records, failed compilation preserving the old executable,
 symlink/private-mode refusal, native/embedded-file fallback, ordinary build
 refresh, and clean behavior. Output and lock semantics must match the ordinary
-path. Matched measurements must retain all cold/warm samples and source/tool/
-fixture identities, and report the standalone cold-build cost separately.
+path. The [measurement guide](../bench/README.md) keeps cold, warm and fallback
+workloads separate. Existing samples describe historical development versions,
+not current release latency.

@@ -1,4 +1,9 @@
-# Real Git/path workspace exercise
+# Git/path workspace method
+
+The measurement controller deliberately builds frozen Honk v0.2.0. Its timings
+are historical, even when the controller runs from a newer checkout. For a
+current functional example use [the template guide](workspace/README.md);
+see [currentness](../docs/PERFORMANCE.md) before comparing numbers.
 
 The template in `bench/workspace/` builds a useful release-policy CLI from two
 Honk workspace members and the reviewed public SemVer library. It checks match,
@@ -50,8 +55,8 @@ It does not exercise daemon or arbitrary-descendant supervision.
 This is one small functional workspace on a shared host. The four commands do
 different amounts of work; their timings should be interpreted per workflow.
 Larger graphs and other hardware may behave differently. No universal speedup,
-regression or isolated-core claim is made. Release tags remain immutable while
-the example and measurements develop in later commits.
+regression or isolated-core claim is made. Recorded source/tag object identities identify the tested content. They do
+not by themselves establish GitHub-enforced release or asset immutability.
 
 [Published v0.2.0 observations](results/workspace-v020/README.md) retain both
 the plain-CLI series and the earlier instrumented controller control.

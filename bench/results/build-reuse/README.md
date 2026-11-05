@@ -1,5 +1,9 @@
 # Bounded opt-in build reuse: retained development records
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](../../../docs/PERFORMANCE.md). Raw records and slower results are unchanged.
+
 These reports measure the source-only implementation before reconciliation with
 UTC diagnostics/v0.3.0 and the later compiler-path guard. They identify their
 actual source and binaries; they are not measurements of a later publication

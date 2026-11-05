@@ -1,4 +1,8 @@
-# Honk UTC diagnostics: paired production-path measurements
+# UTC diagnostics measurement method
+
+The retained captures describe their recorded pre-v0.4.0 sources. The driver
+can check newer sources, but that does not update old numbers. See the
+[currentness audit](../../docs/PERFORMANCE.md).
 
 This optional Linux development tool measures the real Honk diagnostics path
 before and after UTC integration. It does not change Honk's implementation,
@@ -9,7 +13,7 @@ public commit `65d4e97` (resolved to its full SHA in each record).
 # Every run needs an absent or empty output directory.
 python3 bench/utc/run.py --goose /absolute/path/to/goose --smoke --include-file \
   --output .build/utc/smoke-01
-# Freeze/commit sources and stop competing local builds before timing.
+# Freeze sources and reserve a finite measurement window before timing.
 python3 bench/utc/run.py --goose /absolute/path/to/goose --include-file \
   --iterations 100000 --rounds 7 --warmup 64 --file-iterations 1000 \
   --cpu 0 --build-cpu 3 --output .build/utc/full-01
@@ -140,5 +144,5 @@ compact record alone. Companion smoke evidence exercises that verifier path.
 Exploratory GCC/Clang smoke corpora are preserved under ignored
 `.build/utc/precommit-proof` rather than published as clean-source measurements.
 Those tests established byte/counter agreement, real native-file delivery and
-rejection of 138 deliberate result corruptions per corpus; final release
-evidence must come from the new committed-harness captures above.
+rejection of 138 deliberate result corruptions per corpus; new performance
+evidence must identify the actual committed harness and implementation.

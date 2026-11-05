@@ -1,8 +1,9 @@
 # Git tag selection policy
 
-This is an internal, tested selection function. Honk commands still accept exact
-Git refs/commits and paths; no requirement-based dependency command, registry or
-graph solver is exposed by this checkpoint.
+This internal selection function supports Git `version` requirements in Honk
+v0.2.0 and later, including v0.4.0. Exact Git refs/commits and paths also remain
+supported. The [transport and lock contract](GIT-VERSION-DESIGN.md) describes
+the CLI workflow. This is not a registry or a general dependency solver.
 
 `tag_select::select(requirement, tags)` takes a complete, lexically sorted
 catalog of enumerated full `refs/tags/` names and lowercase 40-byte commit IDs.

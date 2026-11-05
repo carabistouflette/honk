@@ -1,37 +1,22 @@
-# Vendored libraries
+# Vendored dependencies
 
-Honk includes unmodified Apache-2.0 snapshots of goose-toml, goose-toml-edit,
-goose-argparse, goose-text, goose-semver, goose-process, goose-http, goose-log,
-goose-time and goose-crypto,
-plus the pinned HTTP metadata consumer example.
-Exact upstream URLs, full commits, source/license SHA-256 values and included
-files are recorded in [manifest.json](manifest.json). Attribution and license
-links are in [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
+Honk includes Apache-2.0 library snapshots so its own dependencies work in a
+standalone clone. [manifest.json](manifest.json) records each upstream URL,
+full revision and source/license hash. [Third-party notices](../THIRD_PARTY_NOTICES.md)
+link the licenses. To check the local copies:
 
-`python3 scripts/check-vendor.py` checks source and license hashes without a
-network connection or another checkout. This is a consistency check against
-reviewed repository metadata, not an upstream signature verification service.
+```sh
+python3 scripts/check-vendor.py
+```
 
-Vendoring makes Honk's own libraries available in a standalone clone. Compiler
-bootstrap still fetches the pinned Goose compiler unless an existing matching
-GOOSE executable is supplied. Library updates are explicit reviewed commits.
+This is a consistency check against committed metadata, not signature or
+publisher authentication. Updates are deliberate; this docs audit changes none.
+Compiler bootstrap still fetches the pinned Goose compiler unless a matching
+trusted executable is supplied explicitly.
 
-Optional explicit diagnostics use the pinned goose-log snapshot, including its upstream NOTICE. Full source/license/notice identity remains in manifest.json.
-
-The companion dependency editor is a thin adapter over the canonical TOML
-source module's `legacy_set`/`legacy_remove` profile. Its source and the complete
-canonical graph are pinned separately in manifest.json; the former private
-editing engine is no longer duplicated here. Adoption retains the legacy
-source/error/bounds contract and requires parity plus Honk consumer validation.
-
-UTC diagnostics reuse the unmodified application adapter from goose-log v0.1.3
-and pure goose-time v0.1.0 source. Root entrypoints declare all three logger/time/
-UTC mappings locally; ordinary application commands do not fetch these sources.
-The goose-log core bytes are unchanged from the earlier vendored logger.
-
-Dependency multi-remove uses the canonical source `Edit`/`apply` API from approved
-TOML alpha.4, pinned at full `2043d9c0b32a8237d54b2a45578f2cc4b7ea384c`.
-The companion remains the unmodified f8d1 snapshot for single edits; this adoption
-does not imply a new companion release. Only canonical source/editor and its
-README change from the previously vendored alpha.3 graph; core/parser/document/
-writer/text/compiler and canonical license bytes remain unchanged.
+The TOML companion supplies single-edit compatibility calls. Multi-remove uses
+canonical TOML alpha.4 `2043d9c0b32a8237d54b2a45578f2cc4b7ea384c` directly;
+the companion remains `f8d1b1664a86b768a6f1375636d9b2c3a440aa31`.
+UTC logging uses the included goose-log adapter and goose-time snapshot.
+HTTP metadata uses the included consumer example. The manifest records exact
+source files for all of them; a newer upstream release is not adopted implicitly.

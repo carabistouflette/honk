@@ -1,0 +1,1426 @@
+{
+  "task": "GL-DOCSHONK-01",
+  "audited_published_runtime": "f9f35e20e4407df56b2ad45310266c9238403144",
+  "compiler_pin": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "runtime_build_vendor_git_blobs": {
+    "GOOSE_REVISION": "86a83a7da7bd50a064c3e9fd23655224550fb987",
+    "Honk.lock": "b043d9e27219dc1c4222e186331d09a97b1837eb",
+    "Honk.toml": "a016d289a05c7d66c4376e955fbd7144f724a9b4",
+    "honk.build": "7e45d2e49bda3f90f6a4033ede72a2b3741565a9",
+    "honk.goose": "2cf6955272180c2f2d718ed2dbe4d8ca198410e2",
+    "native/log_sink.c": "e8364ffb95a82e90542a279eb1a45d4031702a06",
+    "native/platform.c": "0578997f47f1403a73c7bb729e3127fc425e75dd",
+    "src/build.goose": "88aef67903a026e7e9b081665e465740f22b40fb",
+    "src/build_cache.goose": "58c91e26a6c4fca39425d015168694a495ac3786",
+    "src/commands.goose": "fc05497db4b2673ddefc9e97f2b9c983f61359e8",
+    "src/deps.goose": "67bd79350ff99e3049be11c4c14d607403c98377",
+    "src/diagnostics.goose": "d73d7f53160e1cd4ce58221f9146b120044cea91",
+    "src/distribution.goose": "88af594cc0708a29cb9963b64abb246dc3775333",
+    "src/manifest.goose": "22818cc82ac71b6579a428a103c04ebe12410ff2",
+    "src/platform.goose": "fa69635273441a83d24371bab4d5142be101f045",
+    "src/project.goose": "ebae0ee1f6b5fa62bb639dd60a55fb14db37c94c",
+    "src/source.goose": "445a909157f10c48a2f1343cfcbdc4533abd8180",
+    "src/tag_catalog.goose": "6cce61beee0f404185cd9b737700a84e66ef62f5",
+    "src/tag_select.goose": "85ce20502f73ef3d586baccbb1e9ff74a06874a4",
+    "src/toolchain.goose": "05fe9be13a9af94dd6875c649301539e5cb6a146",
+    "src/version_policy.goose": "4d69eaab758c779453f695c05b346947eddf543c",
+    "vendor/goose-argparse/argparse.goose": "2041b0ab9e93dc4a56a30a621028238f032ee296",
+    "vendor/goose-crypto/CMakeLists.txt": "32738820a0f711247305ff8191e7eb827ebe9310",
+    "vendor/goose-crypto/crypto.build": "b30d89daf58e72269ae5de1d7e32869551d0e8a9",
+    "vendor/goose-crypto/crypto.goose": "f0e4599a1a1d9356f049a86040dbcb572544e0df",
+    "vendor/goose-crypto/native/crypto.c": "442aebb9d6677719a7cd0538fe261ddf1d07e1d0",
+    "vendor/goose-crypto/native/crypto.h": "830a76e2e40c8d20a261df4250aee736ce47fd30",
+    "vendor/goose-crypto/native/ranges.c": "cec1b27307633f420914051d6f5e678360da6ff8",
+    "vendor/goose-http/CMakeLists.txt": "e3f31df4c45011a4cae64c47489d3e241db5b792",
+    "vendor/goose-http/http.build": "ae18530f75a0b3c4eb022d68a5a671c8f289d5f6",
+    "vendor/goose-http/http.goose": "cba0e5eee5ed974907f5ac3d8a464797fac9a710",
+    "vendor/goose-http/native/http.c": "8eeb1f811d9a1bab4f5e0fc61480fe8736b5b789",
+    "vendor/goose-http/native/http.h": "9baab6a101692783e130f1aeb99f929d26860486",
+    "vendor/goose-log/examples/utc/utc.goose": "2310702e797db08a2af56c4ec16e5833848f3464",
+    "vendor/goose-log/logger.goose": "336fae4a31dc5b5b09ca2c36e3219732b4513e2e",
+    "vendor/goose-process/native/internal.h": "1b857c0ed1d1b23a2fddb45a56dcbfe543f7da4c",
+    "vendor/goose-process/native/launch.c": "36277383a7d2d877febc312a61efaedef375d904",
+    "vendor/goose-process/native/process.c": "b49f7c1b4351590cb3c177bd9d44bc0cb8cf70f5",
+    "vendor/goose-process/native/process.h": "f55fbb373962825587998b15c0a7a501b2f28c13",
+    "vendor/goose-process/process.build": "796cf7c557b057e70fc95bc3ae9be78add46e7ed",
+    "vendor/goose-process/process.goose": "bd512e93bf4ac2ee5b3d71042cba5586bff69b0c",
+    "vendor/goose-semver/semver.goose": "1c1283b003fb67632d37f386473d197282bf5262",
+    "vendor/goose-text/text.goose": "88b5eae747767f7719b9bb404354d57d5e12f49d",
+    "vendor/goose-time/detail.goose": "8040242d6cff429203dd8a0fa62d620b0e45fd01",
+    "vendor/goose-time/time.goose": "30eee718446a64aa776cc405e9bc197760a240d5",
+    "vendor/goose-toml-edit/toml_edit.goose": "e5278da5511b5b7d38399dad1ea35f93e893b1e9",
+    "vendor/goose-toml/document.goose": "f4b18994f81fa0962d28a327a319a3a0172c056e",
+    "vendor/goose-toml/source/editor.goose": "474fbedebf51bc2692a31db78b463adf62047890",
+    "vendor/goose-toml/toml.goose": "01dafc34ba5cd714e7c9a8ef402c74c8992fc4ea",
+    "vendor/goose-toml/vendor/text.goose": "e3cb74a254b65c14e77dcd6adfb3211fe346ec51",
+    "vendor/goose-toml/writer.goose": "4b1237d42c5cb4c7b488c6f54fc20c029ebe25c4",
+    "vendor/honk-metadata/honk_metadata.goose": "606927f7aff4a140cbe360b6c15b77dcd26d6c60",
+    "vendor/manifest.json": "a2e998b30e6ce9376bfd5f40cc290c417874ed93"
+  },
+  "docs": [
+    {
+      "path": "CHANGELOG.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "cd72604d78835e61f891131165532f8acff3d92364649fb159489415ce445e15",
+      "table_lines": [],
+      "claim_lines": [
+        41
+      ]
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "3e2ac4211adcdd95fb43e1d4c5e819d449f6c4e908e4136132f5ed7f3dfe1e33",
+      "table_lines": [],
+      "claim_lines": []
+    },
+    {
+      "path": "README.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "a074d12e3100b245e550d21fda0321dc26aa892ce25e55bfa6eead0850840411",
+      "table_lines": [
+        [
+          41,
+          51
+        ]
+      ],
+      "claim_lines": []
+    },
+    {
+      "path": "RESULTS.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "2a2507712fea49bf8903a2c74da969482eb468491c9229c40802de9d7ebcc1c7",
+      "table_lines": [],
+      "claim_lines": [
+        30
+      ]
+    },
+    {
+      "path": "SECURITY.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "ca915071fbfce4a1df9511cc259231d0f6d36c709b7129cc12a234c72af8c590",
+      "table_lines": [],
+      "claim_lines": []
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "2b13410b2b0c8fce33a016638bf2bbd908add0c18f2861bce02a22753d3a527e",
+      "table_lines": [
+        [
+          8,
+          20
+        ]
+      ],
+      "claim_lines": []
+    },
+    {
+      "path": "bench/PHASES.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "d56b953d26438e11924d351f0830db56ef6ce20d3cd7043e796f1e918cc5e1e9",
+      "table_lines": [],
+      "claim_lines": [
+        1,
+        37,
+        44,
+        68
+      ]
+    },
+    {
+      "path": "bench/README.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "433042091f5f94f10827530447b22e06367ecb621215579f4beced798dc6f33a",
+      "table_lines": [
+        [
+          47,
+          54
+        ]
+      ],
+      "claim_lines": [
+        3,
+        22,
+        23,
+        39,
+        52,
+        54,
+        58
+      ]
+    },
+    {
+      "path": "bench/WORKSPACE.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "f0e02423f930df2da567b69b6ea2e79004093651ccc91c25498ea20a682a5367",
+      "table_lines": [],
+      "claim_lines": [
+        11,
+        14,
+        15,
+        41,
+        45,
+        47,
+        57
+      ]
+    },
+    {
+      "path": "bench/results/build-reuse/README.md",
+      "scope": "historical report",
+      "sha256": "13cc2c56677d66165b898da5986f7850f711717ecf082c660a92cacd77313eae",
+      "table_lines": [],
+      "claim_lines": [
+        10,
+        27,
+        33,
+        34,
+        37,
+        41,
+        42
+      ]
+    },
+    {
+      "path": "bench/results/warm-phases/README.md",
+      "scope": "historical report",
+      "sha256": "d1651c909798cb547420209c21d8badd0bfedccf2f9f71de6ed486ff9b4631be",
+      "table_lines": [
+        [
+          38,
+          47
+        ]
+      ],
+      "claim_lines": [
+        1,
+        7,
+        34,
+        35,
+        36,
+        63,
+        69,
+        89
+      ]
+    },
+    {
+      "path": "bench/results/workspace-v020/README.md",
+      "scope": "historical report",
+      "sha256": "79fa357bf499289fbcf7e5633e1ceaa9554548b8a59a2989f3fb3165f6be9709",
+      "table_lines": [
+        [
+          23,
+          28
+        ],
+        [
+          42,
+          48
+        ]
+      ],
+      "claim_lines": [
+        15,
+        23,
+        30,
+        33,
+        64,
+        66,
+        68,
+        74,
+        75
+      ]
+    },
+    {
+      "path": "bench/utc/README.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "1dd2e91b0cfe048ebc6d839bbbd6b4557c68866ec556b629ce643583234c4207",
+      "table_lines": [
+        [
+          65,
+          72
+        ]
+      ],
+      "claim_lines": [
+        81,
+        102,
+        103
+      ]
+    },
+    {
+      "path": "bench/utc/results/README.md",
+      "scope": "historical report",
+      "sha256": "b576974feccdc954f19eb81bfb0a848774dfbcf1662fe5fc2c95133d2d44fd62",
+      "table_lines": [
+        [
+          50,
+          57
+        ]
+      ],
+      "claim_lines": [
+        47,
+        48,
+        66,
+        94
+      ]
+    },
+    {
+      "path": "bench/workspace/README.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "5eed03cc06bb8cdc4c407f833e5578ecf8599997cd2ed352aec3098c14d96977",
+      "table_lines": [],
+      "claim_lines": [
+        42
+      ]
+    },
+    {
+      "path": "bench/workspace/gate/THIRD_PARTY_NOTICES.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "294203f3249e4ea68dd47292a2016659f44a95538a37fb710e3e94cc1d6fd6d9",
+      "table_lines": [],
+      "claim_lines": []
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "3818619bbfc97ebfdb87c0ff83c30cf383f3229843f1fcc7fb005fbc63f5b432",
+      "table_lines": [],
+      "claim_lines": []
+    },
+    {
+      "path": "docs/AUDIT-2026-11-04.md",
+      "scope": "historical report",
+      "sha256": "33750ad0a28bb2ac443c11678f34cbd29698d3f5fcd6d5655836dada7a446e01",
+      "table_lines": [
+        [
+          83,
+          92
+        ],
+        [
+          97,
+          102
+        ]
+      ],
+      "claim_lines": [
+        79,
+        81,
+        94,
+        97,
+        101,
+        102,
+        106
+      ]
+    },
+    {
+      "path": "docs/CACHE-RECOVERY-AUDIT-2026-11-04.md",
+      "scope": "historical report",
+      "sha256": "e8a6cc80bf293224f21814d42c1a1063e9de099824946ae95ac1c603f0aea645",
+      "table_lines": [
+        [
+          81,
+          90
+        ],
+        [
+          96,
+          101
+        ]
+      ],
+      "claim_lines": [
+        79,
+        92,
+        96,
+        100,
+        101
+      ]
+    },
+    {
+      "path": "docs/DIAGNOSTICS-2026-11-04.md",
+      "scope": "historical report",
+      "sha256": "2f04043c255cdc7ba14925ef7b3314ae3dc87df6059465fd3dac05f06d608487",
+      "table_lines": [],
+      "claim_lines": [
+        17,
+        25
+      ]
+    },
+    {
+      "path": "docs/GIT-TAG-SELECTION.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "4950b8e6e45867f2d64a82435b641987dbc4973525b734f25efba07794146cb4",
+      "table_lines": [],
+      "claim_lines": []
+    },
+    {
+      "path": "docs/GIT-VERSION-DESIGN.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "e23a6c3411c9631d4bda4bad856378cd9f17bae53f5e953357b429e9cad48757",
+      "table_lines": [],
+      "claim_lines": [
+        74
+      ]
+    },
+    {
+      "path": "docs/HTTP-METADATA-2026-11-04.md",
+      "scope": "historical report",
+      "sha256": "180028c3b8741f66b75085c791738c80048fa42288c0eba1c7ab646cc55cbe34",
+      "table_lines": [],
+      "claim_lines": [
+        30
+      ]
+    },
+    {
+      "path": "docs/INCREMENTAL-BUILDS.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "1a4d646f2e186c3ec25fe9c6beac8c31e7cf82d088b27af5d3501699a63ae1f4",
+      "table_lines": [],
+      "claim_lines": [
+        79,
+        81
+      ]
+    },
+    {
+      "path": "docs/PERFORMANCE.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "f269fa23f8e1817d98a58b321741cbd499c22798caf1076b20a000e6279b5377",
+      "table_lines": [
+        [
+          11,
+          18
+        ]
+      ],
+      "claim_lines": [
+        13,
+        14,
+        15,
+        16,
+        18,
+        31,
+        35,
+        36,
+        49
+      ]
+    },
+    {
+      "path": "docs/PROCESS-CONSUMER-2026-11-04.md",
+      "scope": "historical report",
+      "sha256": "b10f55f4dcaca23c3fd441c7a2a99837bb8f6ce97563bd6e0fbb5045a139ca64",
+      "table_lines": [
+        [
+          25,
+          29
+        ]
+      ],
+      "claim_lines": [
+        25,
+        31
+      ]
+    },
+    {
+      "path": "docs/REFERENCE.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "8389f7f68acd8f9b0f2fc54d305344c1b5a4d369761e6585f7b6d4b0650b986e",
+      "table_lines": [],
+      "claim_lines": [
+        198
+      ]
+    },
+    {
+      "path": "docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md",
+      "scope": "historical report",
+      "sha256": "f5c6010fdc1925bf6558eb6ae62677aac873bba64644ebaf8ea58bdcac40ccee",
+      "table_lines": [
+        [
+          91,
+          100
+        ],
+        [
+          107,
+          112
+        ]
+      ],
+      "claim_lines": [
+        67,
+        86,
+        88,
+        102,
+        107,
+        111,
+        112
+      ]
+    },
+    {
+      "path": "docs/history/RESULTS.md",
+      "scope": "historical report",
+      "sha256": "b892f252436e537bfa53906a8f29c1881840d521431bd1a25c6b2ce2ffb3c8f4",
+      "table_lines": [
+        [
+          110,
+          119
+        ],
+        [
+          130,
+          135
+        ]
+      ],
+      "claim_lines": [
+        94,
+        95,
+        108,
+        127,
+        130,
+        134,
+        135,
+        146,
+        193,
+        242,
+        280,
+        342,
+        348,
+        352,
+        353,
+        361,
+        363,
+        366,
+        368,
+        405
+      ]
+    },
+    {
+      "path": "tests/http_fixture/README.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "7c3daf38215c1c4225436eec22ec41eb955d0a79b335b2d917375478c10cb57f",
+      "table_lines": [
+        [
+          5,
+          9
+        ]
+      ],
+      "claim_lines": []
+    },
+    {
+      "path": "vendor/README.md",
+      "scope": "maintained guide/reference/legal",
+      "sha256": "10fe0f21e1bca2e6e0279a8bc4c6fdda115576c5ad20e05bc14f0430fa67cb04",
+      "table_lines": [],
+      "claim_lines": []
+    }
+  ],
+  "timing_records": [
+    {
+      "path": "bench/results/build-reuse/final.json",
+      "raw_sha256": "4021d88557a85eabb13654c1421f0d01ce6d63c3fe5bc0daa5fc1bc0fa4ceec4",
+      "reported_source": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "Same project/compiler/output paths per fixture, shared host. Real source-only SemVer CLI versus conservative unused-sidecar fallback. Selected debug builds. Cold means empty Honk reuse slot only: compiler/runtime and OS page caches are warm. Warm preparation/functional checks outside timing are retained separately. Cached builds use standalone runtime; no equal-cold-codegen claim. RSS not measured. No timing threshold.",
+      "source_comparison": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/build-reuse/post-merge-selfhost.json",
+      "raw_sha256": "c9e25ef9ebf8f8b4dec92fbdcf9babaef4b7edabf45b2430da9b52f9ba35c949",
+      "reported_source": "7d7e8abfb6fa33345287a84f0369901625e9c8c2",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": null,
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+      "platform": null,
+      "raw_samples_present": false,
+      "scope": "Owned isolated local clone, no upstream acceptance or timing campaign; binary built from identical runtime/build/vendor working-tree bytes subsequently committed at source revision.",
+      "source_comparison": "7d7e8abfb6fa33345287a84f0369901625e9c8c2"
+    },
+    {
+      "path": "bench/results/build-reuse/prototype.json",
+      "raw_sha256": "404db3a8895df9fdb36ede40c2c37a2649433c75acdb0e5d0d17ae1509641e42",
+      "reported_source": "1fdf5e54e645743f3ca0137cde84880890ecdbb6",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "Same project/compiler/output paths per fixture, shared host. Real source-only SemVer CLI versus conservative unused-sidecar fallback. Selected debug builds. Cold means empty Honk reuse slot only: compiler/runtime and OS page caches are warm. Warm preparation/functional checks outside timing are retained separately. Cached builds use standalone runtime; no equal-cold-codegen claim. RSS not measured. No timing threshold.",
+      "source_comparison": "1fdf5e54e645743f3ca0137cde84880890ecdbb6",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/build-reuse/selfhost.json",
+      "raw_sha256": "bf48e0b4a3c6dc7c5e84ea7a8db2aa699ec6b355937ed43e0cd390911559571d",
+      "reported_source": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": null,
+      "actual_compiler_executable_sha256": null,
+      "platform": null,
+      "raw_samples_present": false,
+      "scope": "Owned isolated clean local clone; no new upstream acceptance campaign",
+      "source_comparison": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/cache-audit-btrfs.json",
+      "raw_sha256": "1335c6af3846ff24a512c2f000d087818391c90adbc2f7b37b6bb44d68b465b5",
+      "reported_source": "68b5d687badfa8c48296f7169e48c73d4d71059b",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "68b5d687badfa8c48296f7169e48c73d4d71059b",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/cache-audit-cli.json",
+      "raw_sha256": "f790a93a0a161df1e8b16dbcf2a0e4abeeb9ea21338ca6515aa416139d572be9",
+      "reported_source": "68b5d687badfa8c48296f7169e48c73d4d71059b",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "25 sequential warm local invocations; includes process startup; no network; no timing threshold",
+      "source_comparison": "68b5d687badfa8c48296f7169e48c73d4d71059b",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/cache-audit-tmpfs.json",
+      "raw_sha256": "8e3b87e081dc23b043b3dce8c2acc31fc109fde3f99d6638bd1c7419c49afb0c",
+      "reported_source": "68b5d687badfa8c48296f7169e48c73d4d71059b",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "68b5d687badfa8c48296f7169e48c73d4d71059b",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/cli.json",
+      "raw_sha256": "2e5edd4d8545b5c16ea8071e17ef61a201b7c4dd01447f13780aaf2ab4caa0f1",
+      "reported_source": "16b75c1ad4e99e93ece718383d8ae2c7c76231c0",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "25 sequential warm local invocations; includes process startup; no network; no timing threshold",
+      "source_comparison": "16b75c1ad4e99e93ece718383d8ae2c7c76231c0",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/deep-audit-btrfs.json",
+      "raw_sha256": "15b6b137bb91c84d7677318a6005c6035d1a4316fb529e56a4656169bac2c727",
+      "reported_source": "61283baabd8088446b0b69c1febccf98dffe1241",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "61283baabd8088446b0b69c1febccf98dffe1241",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/deep-audit-cli.json",
+      "raw_sha256": "bf951b534f9ee0e01674505b33b5603f52fbfe0adc48e25f97763d4bec2cc16b",
+      "reported_source": "61283baabd8088446b0b69c1febccf98dffe1241",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "25 sequential warm local invocations; includes process startup; no network; no timing threshold",
+      "source_comparison": "61283baabd8088446b0b69c1febccf98dffe1241",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/deep-audit-tmpfs.json",
+      "raw_sha256": "98eca9a807111249ce02a982c400f38c4ec85ca8426b500c974eb8025d614b20",
+      "reported_source": "61283baabd8088446b0b69c1febccf98dffe1241",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "61283baabd8088446b0b69c1febccf98dffe1241",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/integration-cli.json",
+      "raw_sha256": "1ee8809c904a9c1b533f95f6a5270e69dd0fe75ca26047a45082fa99a4c25d07",
+      "reported_source": "00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "25 sequential warm local invocations; includes process startup; no network; no timing threshold",
+      "source_comparison": "00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/integration-workloads.json",
+      "raw_sha256": "7af8f75f52a86547bdd6ba8755ce787bed745da24013f013a21ac582d9e89c36",
+      "reported_source": "00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/paired-btrfs.json",
+      "raw_sha256": "e7975be582a60f96e192b05f55aeedf862bf1568888b02a9d3678c625704def7",
+      "reported_source": "16b75c1ad4e99e93ece718383d8ae2c7c76231c0",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "16b75c1ad4e99e93ece718383d8ae2c7c76231c0",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/paired-tmpfs.json",
+      "raw_sha256": "cdf270752432aa5d5c0756d1931b1332e8bdc114f5c9fb7ceb9c90335b7a0baa",
+      "reported_source": "16b75c1ad4e99e93ece718383d8ae2c7c76231c0",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "16b75c1ad4e99e93ece718383d8ae2c7c76231c0",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/process-consumer.json",
+      "raw_sha256": "bd646d90abf0f33b4cf38db5ca235c6de292cef8c483a8a37d34c77f4ee4cda4",
+      "reported_source": "db81d8fe552b233231ff8ff29af9e75761484cd6",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "Goose default optimized build/C backend -O2; matched argv/stdin/stderr/capture caps/no deadline. Different launch/ownership implementations, not a language ranking. Shared host; no exclusive isolation. Wall includes batch startup; CPU and maxRSS are wait4 reports for the batch and kernel-accounted waited children, not combined simultaneous memory or allocation counts.",
+      "source_comparison": "db81d8fe552b233231ff8ff29af9e75761484cd6"
+    },
+    {
+      "path": "bench/results/source-signal-btrfs.json",
+      "raw_sha256": "2e520112aac38d21358a5a92ba1392cf932ff777eb15e0e19b597bbf9e790241",
+      "reported_source": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/source-signal-cli.json",
+      "raw_sha256": "3346f6b0db2580affa3f3385d2e09b8e4fc489c1b81f05795a6e89b20d4ddc94",
+      "reported_source": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "25 sequential warm local invocations; includes process startup; no network; no timing threshold",
+      "source_comparison": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/source-signal-tmpfs.json",
+      "raw_sha256": "850fc4942891775577ca4f5d17e2bfa181d5f7b0e111cd210d44b3224956f5b9",
+      "reported_source": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "goose eadca40 (runtime 3025e5810379)",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/warm-phases/exploratory.json",
+      "raw_sha256": "9c2a1630590f4b666f2bc50e4ceefed15059096ffce6006766e979b55977ea20",
+      "reported_source": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": null,
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+      "platform": null,
+      "raw_samples_present": true,
+      "scope": "temporary phase instrumented diagnostic; stderr writes and altered build path; no headline latency comparison",
+      "source_comparison": "855fb0552aefd5f0c033826af64f3bdd09ae6482"
+    },
+    {
+      "path": "bench/results/warm-phases/shuffled.json",
+      "raw_sha256": "cd031ac7e656e4405dc280b6ab0d9b40c3953473d4065e8fdfd4e3f3fd41b854",
+      "reported_source": "65d4e97d808e97cdcc2c6d1f783f440e89cb2786",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": "Temporary instrumented copy, numeric stderr probes and altered source/build path. Diagnostic phase attribution only; baseline validates stdout, not a latency comparison. Shared host, warm fixture; no network tracing or RSS measurement.",
+      "source_comparison": "65d4e97d808e97cdcc2c6d1f783f440e89cb2786",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/results/workspace-v020/direct-git.json",
+      "raw_sha256": "57cb49a9b5fb50f2856321d88152edaab895e7de81403a6db0c638339c0a8b08",
+      "reported_source": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": false,
+      "scope": "one shared-host workspace series; cold dependency/target state, OS page cache uncontrolled; no superiority or regression claim",
+      "source_comparison": "855fb0552aefd5f0c033826af64f3bdd09ae6482"
+    },
+    {
+      "path": "bench/results/workspace-v020/instrumented-control.json",
+      "raw_sha256": "6b539c28fc3458c736b0f11bf1435ae53019a2676743c7f7f186367597fa155d",
+      "reported_source": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": false,
+      "scope": "one shared-host workspace series; cold dependency/target state, OS page cache uncontrolled; no superiority or regression claim",
+      "source_comparison": "855fb0552aefd5f0c033826af64f3bdd09ae6482"
+    },
+    {
+      "path": "bench/results/workspace-v020/verification.json",
+      "raw_sha256": "e223b54eaa152d1e45afe7f48ca9cb0ceedaaf29a1c5a35f19523888be774828",
+      "reported_source": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": null,
+      "platform": null,
+      "raw_samples_present": false,
+      "scope": null,
+      "source_comparison": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/utc/results/full/metadata.json",
+      "raw_sha256": "ef7dfe0ae8388fea13cb9d1aa8189e965df371c57abda548ca1ff3a0d904a378",
+      "reported_source": "e092d63c15e13958d26e3b2982d35a468f03ab7d",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "e092d63c15e13958d26e3b2982d35a468f03ab7d",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    },
+    {
+      "path": "bench/utc/results/smoke/metadata.json",
+      "raw_sha256": "f653d6915025492a76d30a5f51e871e6608fc0de0cd39d18a0920df393e6cae5",
+      "reported_source": "e092d63c15e13958d26e3b2982d35a468f03ab7d",
+      "applicability": "historical; not current whole-CLI timing",
+      "compiler_revision_or_advertised_version": "eadca409f68210893f366e60d0c2f0dc29a339be",
+      "actual_compiler_executable_sha256": null,
+      "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+      "raw_samples_present": true,
+      "scope": null,
+      "source_comparison": "e092d63c15e13958d26e3b2982d35a468f03ab7d",
+      "provenance_limit": "Advertised compiler/source revision does not attest executable or complete dependencies."
+    }
+  ],
+  "source_comparisons": {
+    "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2": {
+      "source_resolves": true,
+      "full_commit": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/diagnostics.goose",
+        "src/toolchain.goose",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "7d7e8abfb6fa33345287a84f0369901625e9c8c2": {
+      "source_resolves": true,
+      "full_commit": "7d7e8abfb6fa33345287a84f0369901625e9c8c2",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.toml",
+        "honk.goose",
+        "src/commands.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "1fdf5e54e645743f3ca0137cde84880890ecdbb6": {
+      "source_resolves": true,
+      "full_commit": "1fdf5e54e645743f3ca0137cde84880890ecdbb6",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/diagnostics.goose",
+        "src/toolchain.goose",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "68b5d687badfa8c48296f7169e48c73d4d71059b": {
+      "source_resolves": true,
+      "full_commit": "68b5d687badfa8c48296f7169e48c73d4d71059b",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.build",
+        "honk.goose",
+        "native/log_sink.c",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/deps.goose",
+        "src/diagnostics.goose",
+        "src/manifest.goose",
+        "src/platform.goose",
+        "src/project.goose",
+        "src/tag_catalog.goose",
+        "src/tag_select.goose",
+        "src/toolchain.goose",
+        "src/version_policy.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-http/CMakeLists.txt",
+        "vendor/goose-http/http.build",
+        "vendor/goose-http/http.goose",
+        "vendor/goose-http/native/http.c",
+        "vendor/goose-http/native/http.h",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-log/logger.goose",
+        "vendor/goose-process/native/internal.h",
+        "vendor/goose-process/native/launch.c",
+        "vendor/goose-process/native/process.c",
+        "vendor/goose-process/native/process.h",
+        "vendor/goose-process/process.build",
+        "vendor/goose-process/process.goose",
+        "vendor/goose-semver/semver.goose",
+        "vendor/goose-text/text.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml-edit/toml_edit.goose",
+        "vendor/goose-toml/document.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/goose-toml/toml.goose",
+        "vendor/goose-toml/vendor/text.goose",
+        "vendor/goose-toml/writer.goose",
+        "vendor/honk-metadata/honk_metadata.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "16b75c1ad4e99e93ece718383d8ae2c7c76231c0": {
+      "source_resolves": true,
+      "full_commit": "16b75c1ad4e99e93ece718383d8ae2c7c76231c0",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.build",
+        "honk.goose",
+        "native/log_sink.c",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/deps.goose",
+        "src/diagnostics.goose",
+        "src/manifest.goose",
+        "src/platform.goose",
+        "src/project.goose",
+        "src/source.goose",
+        "src/tag_catalog.goose",
+        "src/tag_select.goose",
+        "src/toolchain.goose",
+        "src/version_policy.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-http/CMakeLists.txt",
+        "vendor/goose-http/http.build",
+        "vendor/goose-http/http.goose",
+        "vendor/goose-http/native/http.c",
+        "vendor/goose-http/native/http.h",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-log/logger.goose",
+        "vendor/goose-process/native/internal.h",
+        "vendor/goose-process/native/launch.c",
+        "vendor/goose-process/native/process.c",
+        "vendor/goose-process/native/process.h",
+        "vendor/goose-process/process.build",
+        "vendor/goose-process/process.goose",
+        "vendor/goose-semver/semver.goose",
+        "vendor/goose-text/text.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml-edit/toml_edit.goose",
+        "vendor/goose-toml/document.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/goose-toml/toml.goose",
+        "vendor/goose-toml/vendor/text.goose",
+        "vendor/goose-toml/writer.goose",
+        "vendor/honk-metadata/honk_metadata.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "61283baabd8088446b0b69c1febccf98dffe1241": {
+      "source_resolves": true,
+      "full_commit": "61283baabd8088446b0b69c1febccf98dffe1241",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.build",
+        "honk.goose",
+        "native/log_sink.c",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/deps.goose",
+        "src/diagnostics.goose",
+        "src/manifest.goose",
+        "src/platform.goose",
+        "src/project.goose",
+        "src/source.goose",
+        "src/tag_catalog.goose",
+        "src/tag_select.goose",
+        "src/toolchain.goose",
+        "src/version_policy.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-http/CMakeLists.txt",
+        "vendor/goose-http/http.build",
+        "vendor/goose-http/http.goose",
+        "vendor/goose-http/native/http.c",
+        "vendor/goose-http/native/http.h",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-log/logger.goose",
+        "vendor/goose-process/native/internal.h",
+        "vendor/goose-process/native/launch.c",
+        "vendor/goose-process/native/process.c",
+        "vendor/goose-process/native/process.h",
+        "vendor/goose-process/process.build",
+        "vendor/goose-process/process.goose",
+        "vendor/goose-semver/semver.goose",
+        "vendor/goose-text/text.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml-edit/toml_edit.goose",
+        "vendor/goose-toml/document.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/goose-toml/toml.goose",
+        "vendor/goose-toml/vendor/text.goose",
+        "vendor/goose-toml/writer.goose",
+        "vendor/honk-metadata/honk_metadata.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6": {
+      "source_resolves": true,
+      "full_commit": "00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.goose",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/deps.goose",
+        "src/diagnostics.goose",
+        "src/manifest.goose",
+        "src/platform.goose",
+        "src/project.goose",
+        "src/tag_catalog.goose",
+        "src/tag_select.goose",
+        "src/toolchain.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-semver/semver.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml-edit/toml_edit.goose",
+        "vendor/goose-toml/document.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/goose-toml/toml.goose",
+        "vendor/goose-toml/vendor/text.goose",
+        "vendor/goose-toml/writer.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "db81d8fe552b233231ff8ff29af9e75761484cd6": {
+      "source_resolves": true,
+      "full_commit": "db81d8fe552b233231ff8ff29af9e75761484cd6",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.build",
+        "honk.goose",
+        "native/log_sink.c",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/deps.goose",
+        "src/diagnostics.goose",
+        "src/manifest.goose",
+        "src/platform.goose",
+        "src/project.goose",
+        "src/tag_catalog.goose",
+        "src/tag_select.goose",
+        "src/toolchain.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-http/CMakeLists.txt",
+        "vendor/goose-http/http.build",
+        "vendor/goose-http/http.goose",
+        "vendor/goose-http/native/http.c",
+        "vendor/goose-http/native/http.h",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-log/logger.goose",
+        "vendor/goose-semver/semver.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml-edit/toml_edit.goose",
+        "vendor/goose-toml/document.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/goose-toml/toml.goose",
+        "vendor/goose-toml/vendor/text.goose",
+        "vendor/goose-toml/writer.goose",
+        "vendor/honk-metadata/honk_metadata.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "4ac1a73d15de92eac2c7350dddc25d00756d4431": {
+      "source_resolves": true,
+      "full_commit": "4ac1a73d15de92eac2c7350dddc25d00756d4431",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.build",
+        "honk.goose",
+        "native/log_sink.c",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/deps.goose",
+        "src/diagnostics.goose",
+        "src/manifest.goose",
+        "src/platform.goose",
+        "src/project.goose",
+        "src/tag_catalog.goose",
+        "src/tag_select.goose",
+        "src/toolchain.goose",
+        "src/version_policy.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-http/CMakeLists.txt",
+        "vendor/goose-http/http.build",
+        "vendor/goose-http/http.goose",
+        "vendor/goose-http/native/http.c",
+        "vendor/goose-http/native/http.h",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-log/logger.goose",
+        "vendor/goose-process/native/internal.h",
+        "vendor/goose-process/native/launch.c",
+        "vendor/goose-process/native/process.c",
+        "vendor/goose-process/native/process.h",
+        "vendor/goose-process/process.build",
+        "vendor/goose-process/process.goose",
+        "vendor/goose-semver/semver.goose",
+        "vendor/goose-text/text.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml-edit/toml_edit.goose",
+        "vendor/goose-toml/document.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/goose-toml/toml.goose",
+        "vendor/goose-toml/vendor/text.goose",
+        "vendor/goose-toml/writer.goose",
+        "vendor/honk-metadata/honk_metadata.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "855fb0552aefd5f0c033826af64f3bdd09ae6482": {
+      "source_resolves": true,
+      "full_commit": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.goose",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/diagnostics.goose",
+        "src/platform.goose",
+        "src/toolchain.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "65d4e97d808e97cdcc2c6d1f783f440e89cb2786": {
+      "source_resolves": true,
+      "full_commit": "65d4e97d808e97cdcc2c6d1f783f440e89cb2786",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.goose",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/diagnostics.goose",
+        "src/platform.goose",
+        "src/toolchain.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-log/examples/utc/utc.goose",
+        "vendor/goose-time/detail.goose",
+        "vendor/goose-time/time.goose",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    },
+    "e092d63c15e13958d26e3b2982d35a468f03ab7d": {
+      "source_resolves": true,
+      "full_commit": "e092d63c15e13958d26e3b2982d35a468f03ab7d",
+      "changed_runtime_build_vendor_paths": [
+        "Honk.lock",
+        "Honk.toml",
+        "honk.goose",
+        "native/platform.c",
+        "src/build.goose",
+        "src/build_cache.goose",
+        "src/commands.goose",
+        "src/platform.goose",
+        "src/toolchain.goose",
+        "vendor/goose-crypto/CMakeLists.txt",
+        "vendor/goose-crypto/crypto.build",
+        "vendor/goose-crypto/crypto.goose",
+        "vendor/goose-crypto/native/crypto.c",
+        "vendor/goose-crypto/native/crypto.h",
+        "vendor/goose-crypto/native/ranges.c",
+        "vendor/goose-toml/source/editor.goose",
+        "vendor/manifest.json"
+      ],
+      "compiler_pin_git_blob_equal": true,
+      "vendor_manifest_git_blob_equal": false
+    }
+  },
+  "utc_component_bridge": {
+    "src/diagnostics.goose": {
+      "recorded_sha256": "d98a33a3584492abf464e1d07d7091d8e3eac07299573e7b0a132963270b68f7",
+      "release_sha256": "d98a33a3584492abf464e1d07d7091d8e3eac07299573e7b0a132963270b68f7",
+      "same": true
+    },
+    "native/log_sink.c": {
+      "recorded_sha256": "51dabc2881c3032e2dd3e12e535d2d6c2d634cc16506a57ccd783522a4033c5e",
+      "release_sha256": "51dabc2881c3032e2dd3e12e535d2d6c2d634cc16506a57ccd783522a4033c5e",
+      "same": true
+    },
+    "vendor/goose-log/logger.goose": {
+      "recorded_sha256": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+      "release_sha256": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+      "same": true
+    },
+    "vendor/goose-log/examples/utc/utc.goose": {
+      "recorded_sha256": "831865065c7b86c92439de601a5fb65a52d15630b914cd3b5ffd75614fa3d67e",
+      "release_sha256": "831865065c7b86c92439de601a5fb65a52d15630b914cd3b5ffd75614fa3d67e",
+      "same": true
+    },
+    "vendor/goose-time/time.goose": {
+      "recorded_sha256": "9a43e3f14b838ab7f40e9968ce35c0972f23cfd663408d773bff67da491cb2b7",
+      "release_sha256": "9a43e3f14b838ab7f40e9968ce35c0972f23cfd663408d773bff67da491cb2b7",
+      "same": true
+    },
+    "vendor/goose-time/detail.goose": {
+      "recorded_sha256": "54e54e81fa2efc3efb00d380f19ca46af5ca728fbc8e9004d562c965357754d6",
+      "release_sha256": "54e54e81fa2efc3efb00d380f19ca46af5ca728fbc8e9004d562c965357754d6",
+      "same": true
+    },
+    "bench/utc/run.py": {
+      "recorded_sha256": "6a47c55b7991665164a0de9a155e91b91fc551370688a92a8b98eb653a5a5117",
+      "release_sha256": "6a47c55b7991665164a0de9a155e91b91fc551370688a92a8b98eb653a5a5117",
+      "same": true
+    },
+    "bench/utc/driver.goose": {
+      "recorded_sha256": "7beee28ace3d1f43ffd6a7c214c014a89984935f61208b6d033693af3b8ac128",
+      "release_sha256": "be56ee83430e0238964d393a2c752771032999f69c3addb112c667c68f27c319",
+      "same": false
+    }
+  },
+  "utc_bridge_limit": "Even matching component files do not attest a current whole-Honk executable; root/build/driver/dependency differences remain historical.",
+  "historical_raw_files_unchanged": {
+    "bench/results/build-reuse/final.json": "4021d88557a85eabb13654c1421f0d01ce6d63c3fe5bc0daa5fc1bc0fa4ceec4",
+    "bench/results/build-reuse/post-merge-selfhost.json": "c9e25ef9ebf8f8b4dec92fbdcf9babaef4b7edabf45b2430da9b52f9ba35c949",
+    "bench/results/build-reuse/prototype.json": "404db3a8895df9fdb36ede40c2c37a2649433c75acdb0e5d0d17ae1509641e42",
+    "bench/results/build-reuse/selfhost.json": "bf48e0b4a3c6dc7c5e84ea7a8db2aa699ec6b355937ed43e0cd390911559571d",
+    "bench/results/build-reuse/verification.json": "f717de1fe56a3ca3816979676d4bb991f066e8318ff631c6a67b4f9f96fd7aae",
+    "bench/results/cache-audit-btrfs.json": "1335c6af3846ff24a512c2f000d087818391c90adbc2f7b37b6bb44d68b465b5",
+    "bench/results/cache-audit-cli.json": "f790a93a0a161df1e8b16dbcf2a0e4abeeb9ea21338ca6515aa416139d572be9",
+    "bench/results/cache-audit-tmpfs.json": "8e3b87e081dc23b043b3dce8c2acc31fc109fde3f99d6638bd1c7419c49afb0c",
+    "bench/results/cli.json": "2e5edd4d8545b5c16ea8071e17ef61a201b7c4dd01447f13780aaf2ab4caa0f1",
+    "bench/results/deep-audit-btrfs.json": "15b6b137bb91c84d7677318a6005c6035d1a4316fb529e56a4656169bac2c727",
+    "bench/results/deep-audit-cli.json": "bf951b534f9ee0e01674505b33b5603f52fbfe0adc48e25f97763d4bec2cc16b",
+    "bench/results/deep-audit-tmpfs.json": "98eca9a807111249ce02a982c400f38c4ec85ca8426b500c974eb8025d614b20",
+    "bench/results/integration-cli.json": "1ee8809c904a9c1b533f95f6a5270e69dd0fe75ca26047a45082fa99a4c25d07",
+    "bench/results/integration-workloads.json": "7af8f75f52a86547bdd6ba8755ce787bed745da24013f013a21ac582d9e89c36",
+    "bench/results/paired-btrfs.json": "e7975be582a60f96e192b05f55aeedf862bf1568888b02a9d3678c625704def7",
+    "bench/results/paired-tmpfs.json": "cdf270752432aa5d5c0756d1931b1332e8bdc114f5c9fb7ceb9c90335b7a0baa",
+    "bench/results/process-consumer.json": "bd646d90abf0f33b4cf38db5ca235c6de292cef8c483a8a37d34c77f4ee4cda4",
+    "bench/results/source-signal-btrfs.json": "2e520112aac38d21358a5a92ba1392cf932ff777eb15e0e19b597bbf9e790241",
+    "bench/results/source-signal-cli.json": "3346f6b0db2580affa3f3385d2e09b8e4fc489c1b81f05795a6e89b20d4ddc94",
+    "bench/results/source-signal-tmpfs.json": "850fc4942891775577ca4f5d17e2bfa181d5f7b0e111cd210d44b3224956f5b9",
+    "bench/results/warm-phases/exploratory.json": "9c2a1630590f4b666f2bc50e4ceefed15059096ffce6006766e979b55977ea20",
+    "bench/results/warm-phases/phases.html": "a3c3d64c94494b84bddceacba26db283bb3580683be8067b42b62932504dfb9a",
+    "bench/results/warm-phases/shuffled.json": "cd031ac7e656e4405dc280b6ab0d9b40c3953473d4065e8fdfd4e3f3fd41b854",
+    "bench/results/warm-phases/verification.json": "597be1baeadc60f6d2536ac4bf28c9fc3a5416aa1389a7abd092b4124ea2291b",
+    "bench/results/workspace-v020/direct-git-git.jsonl": "6462a097e60d617556663148a0588cae4255e0583b5f71d31b66e506f0aacbbe",
+    "bench/results/workspace-v020/direct-git.json": "57cb49a9b5fb50f2856321d88152edaab895e7de81403a6db0c638339c0a8b08",
+    "bench/results/workspace-v020/instrumented-control-git.jsonl": "f1b414fe709259fd7d156c28eff633bb1212eb9a9ab958da9983e8cdfd14d636",
+    "bench/results/workspace-v020/instrumented-control.json": "6b539c28fc3458c736b0f11bf1435ae53019a2676743c7f7f186367597fa155d",
+    "bench/results/workspace-v020/verification.json": "e223b54eaa152d1e45afe7f48ca9cb0ceedaaf29a1c5a35f19523888be774828",
+    "bench/results/workspace-v020/warm.html": "ca49812bc3a1e10d0322d2a95beec6bae769ebece9920e015706f8dae3cba546",
+    "bench/utc/results/full/fixture.bin": "4ddfb4d0cc459eac24321bf12c3728f8f02bd990a6a784b9f7e90d1a044f8c66",
+    "bench/utc/results/full/metadata.json": "ef7dfe0ae8388fea13cb9d1aa8189e965df371c57abda548ca1ff3a0d904a378",
+    "bench/utc/results/full/rounds.jsonl": "cf3c4966e4ccd5065ecbaf484cf35221bd0707cda6fc1bc46477ab6e27abbf50",
+    "bench/utc/results/full/summary.json": "51850e7b9dd21f83c1f55647ba46e1d17e8db7119ba8b6a6bc339f453bdfe274",
+    "bench/utc/results/smoke/fixture.bin": "4ddfb4d0cc459eac24321bf12c3728f8f02bd990a6a784b9f7e90d1a044f8c66",
+    "bench/utc/results/smoke/metadata.json": "f653d6915025492a76d30a5f51e871e6608fc0de0cd39d18a0920df393e6cae5",
+    "bench/utc/results/smoke/rounds.jsonl": "7438f403ebe6f139a42decf7ac5d5982e233e81b9e4b1e4c5413b42815f5d2bd",
+    "bench/utc/results/smoke/summary.json": "7e2a2d004627b9e6df00bd94ecd266368e937d7a8a5f307624d881d30ffc365f",
+    "bench/utc/results/smoke/traces/0-baseline-accepted_fixed-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "bench/utc/results/smoke/traces/0-baseline-accepted_fixed-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-accepted_os-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "bench/utc/results/smoke/traces/0-baseline-accepted_os-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-file-capture.gz": "a6e0d69dd3ffde07046066c1fdd7cb39c691c6f3bd6a9342a8a05501d203fb1d",
+    "bench/utc/results/smoke/traces/0-baseline-file-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-baseline-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-candidate-accepted_fixed-capture.gz": "f6128ee6245c41c4ee685f3ba3e283df62a5a93ce67932b54a0e95da6cf69cd2",
+    "bench/utc/results/smoke/traces/0-candidate-accepted_fixed-clock.gz": "92b76e6ef01395d0336c86f2d7edfcdc52845a926c7e408db276d34d3ce1d05a",
+    "bench/utc/results/smoke/traces/0-candidate-accepted_os-capture.gz": "c0213a82b85c4820c381e710e57bea1857e5d059f8c4d9d4b895597866857b2e",
+    "bench/utc/results/smoke/traces/0-candidate-accepted_os-clock.gz": "bde2080e0bb23871d3c9c792e8ad244ed626edbcbcad7df1fdf9e89f4610f762",
+    "bench/utc/results/smoke/traces/0-candidate-file-capture.gz": "a63e5da2304f4b28256eb3ccd7723b8835324840087fd610090644a8fb2a2ae1",
+    "bench/utc/results/smoke/traces/0-candidate-file-clock.gz": "699775155d6a83767a8f05dac460ef2af55bcd7bac7d07f4fbca58680aea35e5",
+    "bench/utc/results/smoke/traces/0-candidate-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-candidate-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-candidate-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-candidate-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-candidate-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/0-candidate-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-accepted_fixed-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "bench/utc/results/smoke/traces/1-baseline-accepted_fixed-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-accepted_os-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "bench/utc/results/smoke/traces/1-baseline-accepted_os-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-file-capture.gz": "a6e0d69dd3ffde07046066c1fdd7cb39c691c6f3bd6a9342a8a05501d203fb1d",
+    "bench/utc/results/smoke/traces/1-baseline-file-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-baseline-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-candidate-accepted_fixed-capture.gz": "f6128ee6245c41c4ee685f3ba3e283df62a5a93ce67932b54a0e95da6cf69cd2",
+    "bench/utc/results/smoke/traces/1-candidate-accepted_fixed-clock.gz": "92b76e6ef01395d0336c86f2d7edfcdc52845a926c7e408db276d34d3ce1d05a",
+    "bench/utc/results/smoke/traces/1-candidate-accepted_os-capture.gz": "7728687a4042d60ac46ed13c13704bf822fcd9505fe133a64a01d13d212b014c",
+    "bench/utc/results/smoke/traces/1-candidate-accepted_os-clock.gz": "6679c7be441796cd999858e08588c81c0adc4980e4ffe48e38b84a880d262d07",
+    "bench/utc/results/smoke/traces/1-candidate-file-capture.gz": "128d473dd6b59de1be80fb89e94e99cedaeccde608390031ef2ae5e60496b43f",
+    "bench/utc/results/smoke/traces/1-candidate-file-clock.gz": "57482b78859cb44e6011c1d84107da216ed889292080714bd2b1239cee8175c1",
+    "bench/utc/results/smoke/traces/1-candidate-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-candidate-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-candidate-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-candidate-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-candidate-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "bench/utc/results/smoke/traces/1-candidate-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64"
+  },
+  "upstream_snapshot_prose": "Vendored upstream READMEs/docs remain byte-pinned; vendor/README.md is Honk-maintained and audited. Other owners handle upstream projects.",
+  "current_timing_refresh": "No v0.4.0 numeric reuse result is linked yet; historical observations are not current timing.",
+  "scope": "Read-only provenance/link inventory; no benchmark executed by this audit script. Dates alone are not source identity. No runtime/compiler/vendor or tag change."
+}

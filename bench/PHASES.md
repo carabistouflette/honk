@@ -1,5 +1,8 @@
 # Warm command phase diagnosis
 
+This method targets the historical snapshot shown below. Its phase timings
+are not measurements of v0.4.0 or latest main; see [currentness](../docs/PERFORMANCE.md).
+
 `phases.py` adds numeric stderr probes to a disposable copy of an exact Honk
 Git snapshot. Production sources, binaries and CLI options are unchanged. Use
 an already warmed copy of `bench/workspace` from the real workspace exercise;

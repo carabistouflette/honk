@@ -1,5 +1,9 @@
 # Warm workspace phase observations
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](../../../docs/PERFORMANCE.md). Raw records and slower results are unchanged.
+
 The largest observed warm build/run phase is the selected compiler invocation.
 No application optimization was adopted: the small changes considered here do
 not remove that work while preserving the existing checks and publication

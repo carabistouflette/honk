@@ -1,5 +1,9 @@
 # Process consumer validation — 2026-11-04
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](PERFORMANCE.md). Raw records and slower results are unchanged.
+
 Production checkpoint: `db81d8fe552b233231ff8ff29af9e75761484cd6` on `feat/process-consumer`, based on `75d5d73647467040e7c3634cd9473aeff3859c18`. This report describes a feature checkpoint and does not by itself claim integration into main.
 
 Honk now uses unmodified goose-process `191a9423197e850e699eff500620a5c7d111aa54`. Application handlers only latch pending signals; normal forwarding uses pidfds and immediate identity observations. Explicit Child timeout 0 preserves server lifetimes; 20 ms steps keep the application loop responsive. Git/tar environment filtering, inherited stdin/live stderr, 1 MiB stdout capture and shell-style status precedence remain application policy. Exceptional transferred-child recovery retains locks and waitable SIGCHLD until terminal wait/ECHILD, including denied cancellation and recovery waits. Launch-window terminal classification remains best effort; descendants are unsupervised.

@@ -1,5 +1,9 @@
 # Generated source and cache recovery audit — 2026-11-04
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](PERFORMANCE.md). Raw records and slower results are unchanged.
+
 Reviewed, clean measured source: `68b5d687badfa8c48296f7169e48c73d4d71059b`.
 Baseline: `04f7ddf6e2591b8568ff21074565c7e912563f68`.
 Two independent reviewers reproduced and rechecked five fixes and one limit

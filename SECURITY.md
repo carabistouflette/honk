@@ -35,7 +35,7 @@ permission bits are preserved on replacement; ownership, ACLs and extended
 attributes are not part of that promise. New text metadata is owner-only.
 
 Manifests, lockfiles, source inputs, dependency graphs, filesystem walks and
-captured stdout have fixed limits documented in README. Failed metadata updates
+captured stdout have fixed limits documented in the [reference](docs/REFERENCE.md). Failed metadata updates
 are checked before replacing the original. Entry files require a `.goose` suffix
 so they always pass source remapping; library/import-adapter paths must be
 valid module spellings. Dependency entry parents reject symlinks during

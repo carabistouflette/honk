@@ -1,63 +1,58 @@
-# Reproducible measurements
+# Measurements
 
-Build an optimized native Honk with the pinned compiler:
+Honk has no published current latency ranking or Cargo comparison. Read the
+[performance currentness audit](../docs/PERFORMANCE.md) before quoting results.
+Old tables and every raw sample remain available as historical observations;
+changing a compiler, dependency, relevant implementation or build can invalidate
+a comparison even when its date is recent.
+
+## Developer commands
+
+With a matching compiler already built:
 
 ```sh
-make setup build
-make bench
+make GOOSE=/absolute/path/to/goose build
+make GOOSE=/absolute/path/to/goose bench
 ```
 
-`tests/bench.py` records 25 warm sequential invocations of version, metadata,
-check and build. `tests/audit_perf.py` records wide-directory and dense
-production/dev dependency graphs plus 128 binary assets totaling 32 MiB.
-Fixture creation and warmups are outside timed samples. Timings include process
-startup, project/dependency validation, staging and the invoked compiler; these
-are CLI workloads, not isolated parser/kernel throughput measurements.
+`tests/bench.py` writes 25 sequential CLI samples per case to `.build/bench.json`.
+It builds the fixture once before measurement; version/metadata have no separate
+per-case warmup. `tests/audit_perf.py` checks wide directories, dense dependency
+graphs and 128 assets totaling 32 MiB, with one untimed check per binary/case.
+It writes `.build/audit-perf.json`. Samples are milliseconds and include process
+startup, validation, staging and any compiler invocation, not parser throughput.
+The scripts identify the actual binary and advertised compiler version, but do
+not independently attest a supplied binary's build history or complete compiler/
+dependency inputs. Publication needs those identities checked separately.
 
-Both scripts write all elapsed samples in milliseconds with source revision,
-dirty state, compiler/runtime version and OS provenance under `.build/`.
-Audit reports additionally record the filesystem. `.build/` is ignored; reviewed
-publication samples are copied into [results/](results/).
-
-## Paired comparison
-
-Supply optimized before/after binaries built with the same pinned compiler and
-C backend/flags. The harness alternates order on each sample to reduce drift:
+For an alternating comparison of two identically built snapshots:
 
 ```sh
-HONK=/absolute/path/to/after HONK_BASELINE=/absolute/path/to/before \
-GOOSE=/absolute/path/to/pinned/goose HONK_BASELINE_REVISION=FULL_BEFORE_COMMIT \
-AUDIT_SAMPLES=9 AUDIT_TEMP_ROOT=/directory/on/filesystem/under/test \
+HONK=/absolute/after HONK_BASELINE=/absolute/before \
+GOOSE=/absolute/pinned/goose HONK_BASELINE_REVISION=FULL_BEFORE_SHA \
+AUDIT_SAMPLES=9 AUDIT_TEMP_ROOT=/filesystem/to/test \
 AUDIT_REPORT=.build/comparison.json python3 tests/audit_perf.py
 ```
 
-The default temporary directory may be tmpfs. A disk filesystem and tmpfs are
-separate workloads; do not combine their samples or assume one predicts the
-other. Large-file kernel assistance is filesystem-dependent. `make portable`
-validates the portable implementation under native sanitizers.
+Build/flags, CPU/OS/toolchain, filesystem, fixture, warmup, sample count and
+actual executable identities belong with the raw results. Report medians and
+ranges and retain slower/noisy results. Filesystems and cold/warm states are
+separate workloads. Affinity is not machine isolation. None of these numbers
+is a CI timing threshold. On a shared machine, arrange a measurement window without competing heavy
+workloads and disclose any overlap. Ordinary correctness smoke checks do not
+create new published performance claims.
 
-[RESULTS.md](../RESULTS.md) identifies measured revisions, exact commands, flags,
-hardware, raw files and limitations. Report every workload, including slowdowns
-and noisy/no-change results. CI smoke-runs benchmarks without wall-clock gates;
-local results are not universal rankings or a claim of Cargo parity.
+## Methods and retained records
 
-The [UTC diagnostics harness](utc/README.md) compares the actual old and current
-opt-in diagnostics paths with independent byte/clock/sink verification. Its
-[retained records](utc/results/README.md) include disabled, enabled and real-file
-workloads. `make diagnostics-bench-smoke` checks both variants and verifier
-rejection controls without a timing threshold.
+| Workload | Method | Historical observations |
+| --- | --- | --- |
+| Whole CLI/filesystem | Scripts above | [audit log](../docs/history/RESULTS.md) and root `results/*.json` |
+| Process launches | [caller method](../docs/PROCESS-CONSUMER-2026-11-04.md) | [raw](results/process-consumer.json) |
+| Git/path workspace | [method](WORKSPACE.md), [example](workspace/README.md) | [v0.2.0 series](results/workspace-v020/README.md) |
+| Warm phases | [instrumented method](PHASES.md) | [phase series](results/warm-phases/README.md) |
+| UTC diagnostics | [method](utc/README.md) | [captures and replay limits](utc/results/README.md) |
+| Build reuse | `bench/reuse.py --help` | [prototype/cold/warm/fallback series](results/build-reuse/README.md) |
 
-[Follow-up audit measurements](../docs/AUDIT-2026-11-04.md) compare the hardened
-implementation with the first public main and retain every measured workload.
-
-[Source and signal audit measurements](../docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md)
-record the next reviewed source and complete paired samples against `f427cd1`.
-
-[Cache recovery measurements](../docs/CACHE-RECOVERY-AUDIT-2026-11-04.md) retain every paired workload and record CPU3 affinity.
-
-The [process consumer audit](../docs/PROCESS-CONSUMER-2026-11-04.md) records paired real child-launch workloads, all samples and caveats. `bench/process_profile.py` checks source/binary/compiler identities before and after measurement.
-
-Current combined integration samples at clean production source `00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6` are in [integration-cli.json](results/integration-cli.json) and [integration-workloads.json](results/integration-workloads.json). They are current-workload samples, not a matched comparison against earlier feature sets; CPU 3 affinity was applied on a shared host.
-
-[Opt-in build reuse development records](results/build-reuse/README.md) retain
-both measured series, cold costs, conservative fallback and source/tool identities.
+The v0.4.0 [functional receipt](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.json)
+checks actual workspace behavior. It contains no timing result and must not be
+used as latency, throughput, uptime or memory evidence.

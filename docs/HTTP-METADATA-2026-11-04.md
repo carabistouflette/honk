@@ -1,5 +1,9 @@
 # Opt-in HTTPS metadata consumer — 2026-11-04
 
+> Historical report: results and test counts apply only to the source named
+> below. They are not current v0.4.0/main performance claims. See the
+> [currentness audit](PERFORMANCE.md). Raw records and slower results are unchanged.
+
 Honk integrates the unmodified goose-http source and independent metadata example at `c879c6fec88eaf7229f890a5dd6e3fc313261eab`. The example SHA-256 is `6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150`; all Goose/build/CMake/native/license hashes are recorded in `vendor/manifest.json`. The local-only HTTPS fixtures are separate test files with their own immutable upstream provenance.
 
 `honk toolchain --metadata` validates flags, selects the nearest project/default full compiler pin (or explicit manifest), and requests the fixed anonymous GitHub commit endpoint before cache, compiler, dependency, Git or bootstrap actions. Only `--manifest-path` is accepted alongside the explicit metadata flag; offline/frozen/locked and package/workspace flags fail before transport. The command requires HTTP 200 and full returned SHA equality. It emits escaped JSON with requested revision, SHA, untrusted URL and subject. This is metadata, not artifact authentication, installation or trust authorization.
