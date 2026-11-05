@@ -1,7 +1,7 @@
 # Git version dependency design
 
-Status: implementation contract for the unreleased bounded Git-version
-workflow. Concrete source and tests must pass the stated gates before promotion. The frozen Honk v0.1.0 release is
+Status: implemented contract for the bounded Git-version workflow released
+in experimental Honk v0.2.0. The frozen Honk v0.1.0 release is
 unaffected. This adds Git-tag requirements, not a registry or a general solver.
 
 ## Manifest and command contract

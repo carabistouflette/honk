@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## 0.2.0 — 2026-11-05 (experimental prerelease)
+
+Adds bounded Git version requirements and the recovery SIGPIPE correction.
+Source-only Linux x86-64/glibc release; manifests, lockfiles and CLI remain
+experimental. Lockfiles with the optional requirement field need Honk 0.2.0.
+
 - Adopt the released TOML companion v0.1.1 and canonical alpha.3 source profile,
   preserving legacy dependency editing behavior and exact vendored provenance.
 
@@ -27,7 +33,7 @@
   verification and requirement/tag/commit locking. Matching locks rehydrate by
   commit without tag queries; offline/frozen forbid discovery, and resolution
   failures retain the old lock. Distinct import requirements conflict instead
-  of invoking a graph solver. This is unreleased and is excluded from v0.1.0.
+  of invoking a graph solver. This is included from v0.2.0 and is excluded from v0.1.0.
 
 ## 0.1.0 — 2026-11-04 (experimental prerelease)
 

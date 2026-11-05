@@ -22,7 +22,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.1.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain version help\n\nUse honk help for project conventions. --help prints this message.");
+    print("honk 0.2.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain version help\n\nUse honk help for project conventions. --help prints this message.");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -39,7 +39,7 @@ fn cli_main() {
     let argv = args();
     if argv.len < 2 || argv[1] == "help" || argv[1] == "--help" || argv[1] == "-h" { usage(); return; }
     let cmd = argv[1];
-    if cmd == "version" || cmd == "--version" { print("honk 0.1.0"); return; }
+    if cmd == "version" || cmd == "--version" { print("honk 0.2.0"); return; }
     let spec = [argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
                 argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;

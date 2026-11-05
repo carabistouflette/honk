@@ -91,7 +91,7 @@ existing atomic manifest write remain in effect.
 
 Successful CLI completion checks Honk’s own stdout writes, including metadata and toolchain reporting and buffered failures. Output errors in delegated programs remain their responsibility. A broken/full destination for Honk output returns nonzero; this does not roll back a completed build or installation.
 
-Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Exact Git refs and paths retain their behavior; a separate bounded Git-tag requirement workflow is described below. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy. The [bounded tag-selection policy](docs/GIT-TAG-SELECTION.md) and [transport/lock contract](docs/GIT-VERSION-DESIGN.md) describe the tested development workflow.
+Package versions use strict SemVer 2.0 with a Honk limit of 64 bytes, preserving safe package filename lengths. Prerelease and build metadata are supported; leading zero numeric components, partial versions and `v` prefixes are rejected. Workspace selectors ignore build metadata when comparing versions, so equal-precedence members remain ambiguous. Exact Git refs and paths retain their behavior; a separate bounded Git-tag requirement workflow is described below. The tested tag policy accepts only enumerated full `refs/tags/` names and strips at most one lowercase `v`; arbitrary branch/ref strings never enter that policy. The [bounded tag-selection policy](docs/GIT-TAG-SELECTION.md) and [transport/lock contract](docs/GIT-VERSION-DESIGN.md) describe the supported bounded Git version workflow.
 
 Honk delegates child ownership to pinned goose-process. This requires Linux kernel 5.3+ and glibc 2.34+. Commands use Child with no overall deadline by default, preserving long-running `run` servers. Git tag metadata discovery explicitly uses a 60-second deadline. The parent pumps bounded 20 ms steps, forwards pending cancellation through pidfds, and retains locks through direct-child cleanup or exceptional transferred-child recovery. Recovery may wait indefinitely if OS permissions prevent proving cleanup. Captured stdout is capped at 1 MiB; stderr and stdin remain inherited. Argument limits include argv[0]: 4,096 arguments, 1 MiB total, 131,071 bytes per argument. PATH lookup uses the child's effective environment/cwd; it does not invoke a shell fallback for executable text without a shebang. Descendants and capture pipes they keep open remain outside direct-child supervision. Terminal Ctrl-C suppression is best effort during launch, when the application cannot distinguish a signal predating the child from one already delivered to its foreground group.
 
@@ -127,7 +127,7 @@ The opt-in toolchain metadata command also accepts explicit `--log-file`; those 
 Explicit diagnostics may record `started`/`failed` even when a metadata flag combination is rejected before transport. Log delivery can fail after stdout or command side effects; no rollback is promised, and callers must check the exit status.
 
 
-### Git version requirements (unreleased)
+### Git version requirements (since v0.2.0)
 
 A Git dependency may use `version = "^1.2.3"` instead of `rev`, including through
 `add NAME --git HTTPS_URL --version REQUIREMENT`. Field presence is exclusive: both
@@ -153,4 +153,4 @@ rejects changed/missing entries before enumeration; offline/frozen never enumera
 or fetch. Failed resolution preserves lock bytes. Distinct requirements for one
 import identity fail as a conflict; there is no graph backtracking or registry.
 The optional new lock `requirement` key is rejected by older Honk versions.
-This workflow is absent from the frozen v0.1.0 release.
+This workflow is available from v0.2.0 and absent from the frozen v0.1.0 release.
