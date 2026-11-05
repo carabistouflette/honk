@@ -43,3 +43,16 @@ must remain unchanged as documented in `docs/INCREMENTAL-BUILDS.md`.
 
 Later source validation or measurements must be recorded separately and must
 not relabel these retained samples as a different source revision.
+
+## Reconciled source validation (no new timing series)
+
+`post-merge-selfhost.json` records source
+`7d7e8abfb6fa33345287a84f0369901625e9c8c2`, which preserves published
+UTC diagnostics/v0.3.0, the compiler-path correction and conservative fallback
+for normalized compiler-home configuration. Normal/frozen check/package passed
+in an isolated owned local clone. Lock bytes stayed unchanged, the two packages
+were identical, and all 240 tracked export files matched with no generated
+state. This is a correctness/export gate, not a remeasurement of the older
+144 samples. The combined normal/security suites, all nine build-reuse methods
+under GCC and Clang ASan/UBSan, and the two new path regressions passed locally.
+Hosted publication-head checks remain a separate gate.
