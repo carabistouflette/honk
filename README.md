@@ -134,6 +134,8 @@ vendored for standalone/offline operation. Event messages remain fixed/numeric;
 lexical caller-owned timestamp/line buffers preserve the compiler's borrowing
 contract during terminal cleanup. The maximum emitted fixed record is 117 bytes,
 below the unchanged native line cap. There is no shared growable scratch buffer.
+The [paired diagnostics measurements](bench/utc/results/README.md) retain the
+before/after workloads, exact source identities and instrumentation limits.
 
 The application-owned Linux adapter rejects symlinks in every supplied path
 component and accepts only euid-owned, single-link regular files of exact mode
