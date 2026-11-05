@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: Apache-2.0
 import toml_edit from "../vendor/goose-toml-edit";
 import logger from "../vendor/goose-log";
+import time from "../vendor/goose-time";
+import utc from "../vendor/goose-log/examples/utc";
 import http from "../vendor/goose-http";
 import honk_metadata from "../vendor/honk-metadata";
 import process from "../vendor/goose-process";

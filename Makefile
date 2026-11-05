@@ -13,6 +13,7 @@ check:
 	$(GOOSE) format --check honk.goose src tests
 	$(GOOSE) check honk.goose
 	$(GOOSE) check tests/core.goose
+	$(GOOSE) check tests/diagnostics_utc.goose
 	$(GOOSE) check tests/process.goose
 	$(GOOSE) check tests/semver_probe.goose
 	$(GOOSE) check tests/process_fault.goose
@@ -23,6 +24,7 @@ build:
 	$(GOOSE) build honk.goose -o .build/honk
 test:
 	$(MAKE) build
+	$(MAKE) diagnostics-test
 	GOOSE=$(abspath $(GOOSE)) python3 tests/native_import.py
 	$(GOOSE) run tests/core.goose
 	$(GOOSE) build tests/core.goose -o .build/core
@@ -50,6 +52,7 @@ test:
 	HONK=$(CURDIR)/.build/honk SEMVER_PROBE=$(CURDIR)/.build/semver-probe GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	$(MAKE) metadata-test
 sanitize:
+	$(MAKE) diagnostics-sanitize
 	$(GOOSE) build tests/tag_catalog.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/tag-catalog-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/tag-catalog-sanitize
 	$(GOOSE) build tests/tag_select.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/tag-select-sanitize
@@ -86,3 +89,19 @@ metadata-test:
 metadata-sanitize:
 	python3 scripts/metadata-test-build.py --goose "$(abspath $(GOOSE))" --cc "$(or $(HONK_SANITIZER_CC),gcc)" --mode sanitize --output .build/honk-http-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK_METADATA=$(CURDIR)/.build/honk-http-sanitize python3 tests/http_metadata.py
+
+.PHONY: diagnostics-test diagnostics-sanitize
+diagnostics-test:
+	mkdir -p .build
+	$(GOOSE) run tests/diagnostics_utc.goose
+	$(GOOSE) run tests/diagnostics_utc.goose --debug
+	$(GOOSE) build tests/diagnostics_utc.goose -o .build/diagnostics-utc
+	./.build/diagnostics-utc
+	$(GOOSE) build tests/diagnostics_utc.goose --debug --no-bce -o .build/diagnostics-utc-debug
+	./.build/diagnostics-utc-debug
+diagnostics-sanitize:
+	mkdir -p .build
+	$(GOOSE) build tests/diagnostics_utc.goose --debug --no-bce --standalone --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/diagnostics-utc-sanitize
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/diagnostics-utc-sanitize
+	$(GOOSE) build tests/diagnostics_utc.goose -O2 --standalone --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/diagnostics-utc-sanitize-release
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/diagnostics-utc-sanitize-release

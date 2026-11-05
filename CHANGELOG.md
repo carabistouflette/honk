@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add canonical UTC timestamps to the existing opt-in diagnostic file using
+  pinned, vendored goose-log v0.1.3 and goose-time v0.1.0. Sample the wall clock
+  only for enabled events; preserve monotonic durations, stdout, native file
+  policies, error/child cleanup and sink-failure latching. Opt-in record bytes
+  now contain a quoted timestamp field; existing release tags remain unchanged.
+
 - Add an opt-in functional Git/path workspace example and a reproducible driver
   for cold operations, warm CLI samples, locked/offline recovery and packaging.
 

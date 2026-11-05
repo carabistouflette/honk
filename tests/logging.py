@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Isolated application integration of the pinned goose-log consumer."""
+import datetime
 import json
 import os
 from pathlib import Path
@@ -10,7 +11,10 @@ import unittest
 
 HONK = os.environ['HONK']
 GOOSE = os.environ['GOOSE']
-EVENT = re.compile(rb'\[(INFO|ERROR)\] (started|item_completed|returned|failed|child_failed) duration_ns=([0-9]+) outcome=([0-9]+)\n')
+# Fractions have 1..9 digits and no trailing zero: canonical UTC only.
+UTC = rb'[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{0,8}[1-9])?Z'
+TIMESTAMP = re.compile(rb'timestamp="(' + UTC + rb')" ')
+EVENT = re.compile(rb'\[(INFO|ERROR)\] timestamp="' + UTC + rb'" (started|item_completed|returned|failed|child_failed) duration_ns=([0-9]+) outcome=([0-9]+)\n')
 
 class Logging(unittest.TestCase):
     def setUp(self):
@@ -33,9 +37,21 @@ class Logging(unittest.TestCase):
     def rows(self):
         data=self.log.read_bytes()
         self.assertEqual(b''.join(m.group() for m in EVENT.finditer(data)),data)
+        for match in EVENT.finditer(data):
+            self.canonical_timestamp(match.group())
         self.assertNotIn(b'private-marker-value',data)
         self.assertNotIn(str(self.log).encode(),data)
         return EVENT.findall(data)
+    def canonical_timestamp(self, row):
+        match = TIMESTAMP.search(row)
+        self.assertIsNotNone(match, row)
+        text = match.group(1).decode('ascii')
+        # datetime independently checks the civil date and time fields. Keep the
+        # regex check for nanosecond precision/canonical spelling (datetime uses us).
+        value = datetime.datetime.fromisoformat(text[:-1] + '+00:00')
+        self.assertEqual(value.utcoffset(), datetime.timedelta(0))
+        self.assertGreaterEqual(len(text), 20)
+        self.assertLessEqual(len(text), 30)
     def test_metadata_stdout_and_privacy(self):
         project=self.new()
         manifest=project/'Honk.toml'
@@ -112,17 +128,30 @@ class Logging(unittest.TestCase):
         self.assertEqual(self.log.stat().st_size,16*1024*1024)
     def test_return_log_failure_does_not_claim_command_success(self):
         project=self.new()
-        started=b'[INFO] started duration_ns=0 outcome=0\n'
+        # Reserve the maximum startup record width. After one startup, even a
+        # shortest timestamp leaves too little capacity for a minimum return.
+        max_started = len(b'[INFO] timestamp="" started duration_ns=0 outcome=0\n') + 30
+        min_started = len(b'[INFO] timestamp="" started duration_ns=0 outcome=0\n') + 20
+        min_returned = len(b'[INFO] timestamp="" returned duration_ns=0 outcome=0\n') + 20
+        self.assertLess(max_started - min_started, min_returned)
         limit=16*1024*1024
+        initial_size = limit - max_started
         self.log.touch(mode=0o600)
-        with self.log.open('r+b') as stream: stream.truncate(limit-len(started))
+        with self.log.open('r+b') as stream: stream.truncate(initial_size)
         result=self.run_honk('metadata','--log-file',self.log,cwd=project)
         self.assertEqual(result.returncode,1)
         self.assertEqual(json.loads(result.stdout)['name'],'demo')
         self.assertIn(b'diagnostic log failed',result.stderr)
         with self.log.open('rb') as stream:
-            stream.seek(-len(started),os.SEEK_END)
-            self.assertEqual(stream.read(),started)
-        self.assertEqual(self.log.stat().st_size,limit)
+            stream.seek(initial_size)
+            appended = stream.read()
+        match = EVENT.fullmatch(appended)
+        self.assertIsNotNone(match, appended)
+        self.assertEqual(match.groups(), (b'INFO', b'started', b'0', b'0'))
+        self.canonical_timestamp(appended)
+        self.assertGreaterEqual(len(appended), min_started)
+        self.assertLessEqual(len(appended), max_started)
+        self.assertEqual(self.log.stat().st_size, initial_size + len(appended))
+        self.assertLess(limit - self.log.stat().st_size, min_returned)
 
 if __name__=='__main__':unittest.main()
