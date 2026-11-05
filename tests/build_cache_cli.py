@@ -113,13 +113,18 @@ class BuildCache(unittest.TestCase):
         self.run_cached('42\n'); logs = self.mark_compiler_logs()
         standard.write_text(standard.read_text().replace('value() -> i64 { 42 }', 'value() -> i64 { 43 }'))
         self.run_cached('43\n'); self.assert_logs(logs, False)
+        logs = self.mark_compiler_logs()
+        linked = self.root/'linked-standard.goose'
+        linked.write_text(standard.read_text().replace('value() -> i64 { 43 }', 'value() -> i64 { 44 }'))
+        standard.unlink(); standard.symlink_to(linked)
+        self.run_cached('44\n'); self.assert_logs(logs, False)
         logs = self.mark_compiler_logs(); self.env['CACHE_TEST_CONTEXT'] = 'changed'
-        self.run_cached('43\n'); self.assert_logs(logs, False)
+        self.run_cached('44\n'); self.assert_logs(logs, False)
         compiler = self.root/'copied-goose'; shutil.copyfile(GOOSE, compiler); compiler.chmod(0o755)
         self.env['GOOSE'] = str(compiler)
-        self.run_cached('43\n'); logs = self.mark_compiler_logs()
+        self.run_cached('44\n'); logs = self.mark_compiler_logs()
         with compiler.open('ab') as output: output.write(b'\0')
-        self.run_cached('43\n'); self.assert_logs(logs, False)
+        self.run_cached('44\n'); self.assert_logs(logs, False)
 
     def test_compiler_paths_use_child_cwd_and_skip_empty_path_entries(self):
         # Pinned Goose skips empty PATH components, rather than searching cwd.

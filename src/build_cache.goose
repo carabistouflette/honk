@@ -82,7 +82,10 @@ fn std_source(compiler: u8[:], root: u8[:]) -> u8[>..] {
         var absolute: u8[>..] = [];
         if !platform::real(directory, absolute) { continue; }
         let file = str(absolute, "/std.goose");
-        if platform::kind(file) == 1 { return file; }
+        if platform::kind(file) == 0 { continue; }
+        var selected_file: u8[>..] = [];
+        if !platform::real(file, selected_file) || platform::kind(selected_file) != 1 { return []; }
+        return selected_file;
     }
     return [];
 }
