@@ -25,6 +25,18 @@ def sha(path):
         return hashlib.file_digest(source, 'sha256').hexdigest()
 
 
+def fingerprint(project):
+    result = {}
+    for path in project.rglob('*'):
+        name = path.relative_to(project)
+        if any(part in {'.honk', 'target'} for part in name.parts):
+            continue
+        if path.is_symlink():
+            raise RuntimeError('unexpected fixture symlink')
+        result[name.as_posix()] = sha(path) if path.is_file() else 'directory'
+    return result
+
+
 def execute(argv, cwd, env, work, label):
     usage = resource.getrusage(resource.RUSAGE_CHILDREN)
     started = time.perf_counter_ns()
@@ -67,8 +79,8 @@ def main():
     parser.add_argument('--rounds', type=int, default=9)
     args = parser.parse_args()
     args.output = args.output.resolve()
-    if args.output.exists() or not 1 <= args.rounds <= 21:
-        parser.error('require a new output path and 1..21 rounds')
+    if args.output.exists() or not args.output.parent.is_dir() or not 1 <= args.rounds <= 21:
+        parser.error('require a new output path in an existing directory and 1..21 rounds')
     if os.environ.get('GOOSE_CC'):
         parser.error('first reuse implementation requires the default C compiler')
     for name in ['honk', 'baseline', 'goose']:
@@ -95,7 +107,7 @@ def main():
         operation, _ = execute([str(args.honk), 'fetch'], project, env, work, name+'_resolve')
         operations.append(operation)
         fixtures[name] = project
-        fingerprints[name] = {p.relative_to(project).as_posix(): sha(p) for p in project.rglob('*') if p.is_file() and not any(part in {'.honk', 'target'} for part in p.relative_to(project).parts)}
+        fingerprints[name] = fingerprint(project)
     modes = ['baseline_plain', 'candidate_plain', 'candidate_cold', 'candidate_warm']
 
     def call(name, mode, label):
@@ -142,13 +154,14 @@ def main():
             record['round'] = round_number; samples.append(record)
             print(round_number, name, mode, record['wall_ms'], flush=True)
     for name, project in fixtures.items():
-        for file, expected in fingerprints[name].items():
-            if sha(project/file) != expected: raise RuntimeError('fixture/lock changed')
+        if fingerprint(project) != fingerprints[name]: raise RuntimeError('fixture/lock changed')
     if any(inputs[name] != sha(path) for name, path in [('harness', Path(__file__)), ('candidate', args.honk), ('baseline', args.baseline), ('compiler', args.goose)]):
         raise RuntimeError('measurement executable/source inputs changed')
+    if subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip() != revision or subprocess.check_output(['git', '-C', str(ROOT), 'status', '--porcelain']).strip():
+        raise RuntimeError('harness source revision/clean state changed')
     report = {'revision': revision, 'source_clean': True, 'sha256': inputs,
               'compiler_revision': (ROOT/'GOOSE_REVISION').read_text().strip(), 'semver_pin': PIN,
-              'fixtures_sha256': fingerprints, 'started_utc': started_utc,
+              'fixture_entries': fingerprints, 'started_utc': started_utc,
               'finished_utc': datetime.now(timezone.utc).isoformat(), 'platform': platform.platform(),
               'affinity': sorted(os.sched_getaffinity(0)), 'seed': 20261105,
               'scope': 'Same project/compiler/output paths per fixture, shared host. Real source-only SemVer CLI versus conservative unused-sidecar fallback. Selected debug builds. Cold means empty Honk reuse slot only: compiler/runtime and OS page caches are warm. Warm preparation/functional checks outside timing are retained separately. Cached builds use standalone runtime; no equal-cold-codegen claim. RSS not measured. No timing threshold.',
