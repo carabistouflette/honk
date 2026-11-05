@@ -34,6 +34,18 @@ mathx = { path = "../mathx" }
 # test support; excluded when this project is consumed as a dependency
 ```
 
+For the local dependency above, create the sibling library first. With the
+matching compiler and `honk_bin` from the quickstart, inside the application:
+
+```sh
+"$honk_bin" new ../mathx --lib
+"$honk_bin" add mathx --path ../mathx
+"$honk_bin" fetch
+"$honk_bin" check --frozen
+```
+
+Declare `import mathx;` to use its namespace (the scaffold exports `mathx::answer()`).
+
 Entries must be safe relative paths ending in `.goose`. Library entry path components
 (without the extension) must be ASCII Goose identifiers: letters/underscore first, then
 letters/digits/underscore, excluding language keywords. Uppercase, contextual names such

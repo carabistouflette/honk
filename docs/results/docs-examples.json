@@ -1,0 +1,229 @@
+{
+  "source": "bd7625ac681c8d33181732e993258c8e64f7c9f1",
+  "runtime_source": "f9f35e20e4407df56b2ad45310266c9238403144",
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "compiler_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+  "honk_sha256": "3dde79e09469888b7aceb1b43e2bbb63a4093bd403eee3d80916d68d8c8d949a",
+  "passed": true,
+  "commands": [
+    {
+      "argv": [
+        "make",
+        "GOOSE=<GOOSE>",
+        "check",
+        "build"
+      ],
+      "exit": 0,
+      "stdout": "python3 -m py_compile scripts/metadata-test-build.py tests/http_metadata.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py\npython3 bench/dogfood.py --self-test\ncontroller_success PASS\ncontroller_exit PASS\n{\"controller_self_test\": \"PASS\", \"fd_before\": 4, \"fd_after\": 4, \"success_exit_status\": true, \"timeout_cleanup\": true, \"unwaited_children\": false}\npython3 scripts/process-fixture.py\npython3 scripts/check-vendor.py\nVendored source and license hashes match the recorded pins\n<GOOSE> format --check honk.goose src tests bench/utc/driver.goose\n<GOOSE> check honk.goose\n<GOOSE> check tests/core.goose\n<GOOSE> check tests/diagnostics_utc.goose\n<GOOSE> check tests/process.goose\n<GOOSE> check tests/semver_probe.goose\n<GOOSE> check tests/process_fault.goose\n<GOOSE> check tests/tag_select.goose\n<GOOSE> check tests/tag_catalog.goose\n<GOOSE> check bench/utc/driver.goose\ngit diff --check\n<GOOSE> build honk.goose -o .build/honk\nbuilt .build/honk\n",
+      "stderr": "building the package honk's C\nbuilding the package crypto's C with CMake\nbuilding the package http's C with CMake\nbuilding the package process's C\ncompiling the runtime for gcc 20260810\n"
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "new",
+        "<EXAMPLES>/hello-honk"
+      ],
+      "exit": 0,
+      "stdout": "Created application hello-honk\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "run"
+      ],
+      "exit": 0,
+      "stdout": "built <EXAMPLES>/hello-honk/target/debug/hello-honk\nHello, Goose!\n",
+      "stderr": "compiling the runtime for gcc 20260810\n"
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "check",
+        "--frozen"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "new",
+        "<EXAMPLES>/mathx",
+        "--lib"
+      ],
+      "exit": 0,
+      "stdout": "Created library mathx\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "add",
+        "mathx",
+        "--path",
+        "../mathx"
+      ],
+      "exit": 0,
+      "stdout": "Added mathx; run honk fetch to update Honk.lock\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "fetch"
+      ],
+      "exit": 0,
+      "stdout": "Resolved 1 dependencies\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "run",
+        "--frozen"
+      ],
+      "exit": 0,
+      "stdout": "built <EXAMPLES>/hello-honk/target/debug/hello-honk\n42\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "remove",
+        "mathx"
+      ],
+      "exit": 0,
+      "stdout": "Removed mathx; run honk fetch to update Honk.lock\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "metadata"
+      ],
+      "exit": 0,
+      "stdout": "{\"name\":\"hello-honk\",\"version\":\"0.1.0\",\"root\":\"<EXAMPLES>/hello-honk\",\"kind\":\"bin\",\"entry\":\"src/main.goose\",\"dependencies\":[],\"members\":[]}\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "python3",
+        "bench/dogfood.py",
+        "--materialize",
+        "<EXAMPLES>/version-workspace"
+      ],
+      "exit": 0,
+      "stdout": "<EXAMPLES>/version-workspace\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "fetch",
+        "--workspace"
+      ],
+      "exit": 0,
+      "stdout": "Resolved 2 dependencies\nResolved 1 dependencies\n",
+      "stderr": "hint: Using 'master' as the name for the initial branch. This default branch name\nhint: will change to \"main\" in Git 3.0. To configure the initial branch name\nhint: to use in all of your new repositories, which will suppress this warning,\nhint: call:\nhint:\nhint: \tgit config --global init.defaultBranch <name>\nhint:\nhint: Names commonly chosen instead of 'master' are 'main', 'trunk' and\nhint: 'development'. The just-created branch can be renamed via this command:\nhint:\nhint: \tgit branch -m <name>\nhint:\nhint: Disable this message with \"git config set advice.defaultBranchName false\"\nFrom https://github.com/carabistouflette/goose-semver\n * branch            2311ae69a7edacb545f284b02e345be07dd2fb05 -> FETCH_HEAD\nPreparing worktree (detached HEAD 2311ae6)\n"
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "test",
+        "--workspace",
+        "--frozen"
+      ],
+      "exit": 0,
+      "stdout": "No tests targets\nbuilt <EXAMPLES>/version-workspace/gate/vendor/rules/target/debug/.honk/tests/0\nPassed 1 test targets\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "run",
+        "-p",
+        "version_gate",
+        "--frozen",
+        "--",
+        "^1.2.3",
+        "1.8.0"
+      ],
+      "exit": 0,
+      "stdout": "built <EXAMPLES>/version-workspace/gate/target/debug/version_gate\nmatch\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "init",
+        "--quiet"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "/usr/bin/git",
+        "-c",
+        "core.hooksPath=/dev/null",
+        "add",
+        "Honk.toml",
+        ".gitignore",
+        "gate"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "package",
+        "--workspace",
+        "--frozen"
+      ],
+      "exit": 0,
+      "stdout": "<EXAMPLES>/version-workspace/gate/target/package/version_gate-0.1.0.tar.gz\n<EXAMPLES>/version-workspace/gate/vendor/rules/target/package/version_rules-0.1.0.tar.gz\n",
+      "stderr": ""
+    }
+  ],
+  "scope": "One <=180s ordinary correctness block; no timing samples. Existing matching compiler alternative checked, compiler bootstrap not repeated; unchanged setup source/pin covered by release CI. Two bounded follow-up negative exit-code checks pass without refetch; no benchmark.",
+  "additional_negative_checks": [
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "run",
+        "-p",
+        "version_gate",
+        "--frozen",
+        "--",
+        "^2.0.0",
+        "1.8.0"
+      ],
+      "exit": 1,
+      "stdout": "built <EXAMPLES>/version-workspace/gate/target/debug/version_gate\nno match\n",
+      "stderr": ""
+    },
+    {
+      "argv": [
+        "<HONK_SOURCE>/.build/honk",
+        "run",
+        "-p",
+        "version_gate",
+        "--frozen",
+        "--",
+        "^1.2.3",
+        "oops"
+      ],
+      "exit": 2,
+      "stdout": "built <EXAMPLES>/version-workspace/gate/target/debug/version_gate\ninvalid version\n",
+      "stderr": ""
+    }
+  ],
+  "record_scope": "Successful ordinary correctness checks; private path prefixes replaced as labelled anchors, argument boundaries/outputs otherwise retained. No performance samples."
+}

@@ -89,10 +89,10 @@
     {
       "path": "RESULTS.md",
       "scope": "maintained guide/reference/legal",
-      "sha256": "2a2507712fea49bf8903a2c74da969482eb468491c9229c40802de9d7ebcc1c7",
+      "sha256": "31db36a194c3106d63f1ce161f42db7937749250c442ab0610ee447dcd17b6f0",
       "table_lines": [],
       "claim_lines": [
-        30
+        40
       ]
     },
     {
@@ -410,10 +410,10 @@
     {
       "path": "docs/REFERENCE.md",
       "scope": "maintained guide/reference/legal",
-      "sha256": "8389f7f68acd8f9b0f2fc54d305344c1b5a4d369761e6585f7b6d4b0650b986e",
+      "sha256": "e616550e45f120ef7a68fc1db0b7db9080ef69924ab3d0d074916bd89a94ed85",
       "table_lines": [],
       "claim_lines": [
-        198
+        210
       ]
     },
     {

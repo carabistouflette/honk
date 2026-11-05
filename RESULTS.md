@@ -25,6 +25,16 @@ Git/path, cache, editing, process, metadata and logging behavior. `security` run
 malformed-import/FIFO probes. Sanitizers and portable-copy checks exercise the
 native/generated code. These checks do not certify bug-free or secure software.
 
+## Documentation examples
+
+The [recorded checks](docs/results/docs-examples.json) cover the documented
+matching-compiler build alternative, scaffold/run/frozen checks, local library
+editing, and the materialized version-gate workspace: fetch/test/run/package
+plus no-match/invalid-input exit codes. The application code and compiler pin
+are unchanged from v0.4.0. A fresh compiler bootstrap is not repeated by that
+check; unchanged bootstrap source/pin are covered by the release CI. No timings
+are inferred from these correctness checks.
+
 ## Performance
 
 No current command-latency, throughput or Cargo-comparison number is advertised.
