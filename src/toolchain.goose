@@ -13,6 +13,11 @@ fn home() -> u8[>..] {
     else { value.clear(); platform::require(env("HOME", value) && value.len > 0, "set HONK_HOME or HOME"); value.append("/.cache/honk"); }
     platform::require(platform::mkdir(value), "cannot create Honk cache"); return platform::absolute(value);
 }
+// The pinned compiler treats backslashes as package path separators on POSIX.
+// Reject incompatible roots before they can select or overwrite another tree.
+fn compatible_path(path: u8[:]) -> bool {
+    for c in path { if c == '\\' { return false; } } return true;
+}
 fn compiler(p: manifest::Project&, cache: u8[:], offline: bool) -> u8[>..] {
     let revision = if p.revision.len > 0 { p.revision[..] } else { REVISION };
     var selected: u8[>..] = [];
@@ -21,6 +26,7 @@ fn compiler(p: manifest::Project&, cache: u8[:], offline: bool) -> u8[>..] {
         let binary = platform::absolute(selected);
         validate(binary, p.root, revision); return binary;
     }
+    platform::require(compatible_path(cache), "compiler cache path contains a backslash unsupported by the pinned compiler; use another HONK_HOME or explicit GOOSE");
     let root = str(cache, "/toolchains/", revision); let binary = str(root, "/build/goose");
     let ready = str(root, "/build/.honk-complete");
     let complete = platform::kind(binary) == 1 && platform::kind(ready) == 1 && platform::load(ready) == revision;

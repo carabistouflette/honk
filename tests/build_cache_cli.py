@@ -155,6 +155,14 @@ class BuildCache(unittest.TestCase):
         self.assertIn('Hello, Goose!', result.stdout)
         self.assertTrue(marker.is_file(), 'configured compiler was bypassed')
         self.assertFalse((self.slot/'record').exists())
+        # GooseHome normalizes backslashes before looking for config on POSIX.
+        normalized_home = self.project/'home/component'; normalized_home.mkdir(parents=True)
+        (normalized_home/'config').write_text('cc = '+json.dumps(str(wrapper))+';\n')
+        marker.unlink(); self.env['GOOSE_HOME'] = 'home'+chr(92)+'component'
+        result = self.call('run', '--reuse-build', '--frozen', cwd=self.project/'src')
+        self.assertIn('Hello, Goose!', result.stdout)
+        self.assertTrue(marker.is_file(), 'normalized-home compiler configuration was bypassed')
+        self.assertFalse((self.slot/'record').exists())
 
     def test_profile_ordinary_build_and_clean(self):
         self.run_cached(); logs = self.mark_compiler_logs()

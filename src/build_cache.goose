@@ -8,6 +8,7 @@ import .platform;
 import .project;
 import .source;
 import .deps;
+import .toolchain;
 const MAX_BYTES = 33554432;
 fn suffix(s: u8[:], ending: u8[:]) -> bool { s.len >= ending.len && s[s.len - ending.len..] == ending }
 fn digest(path: u8[:], limit: i64) -> u8[>..], bool {
@@ -93,11 +94,14 @@ fn std_source(compiler: u8[:], root: u8[:]) -> u8[>..] {
 // Empty key means conservative fallback. Full staging still happens either way.
 fn key(compiler: u8[:], entry: u8[:], stage: u8[:], release: bool, root: u8[:], graph: deps::Graph&, cc: u8[>..]&) -> u8[>..] {
     cc.clear();
+    if !toolchain::compatible_path(root) { return []; }
     var configured: u8[>..] = []; if env("GOOSE_CC", configured) && configured.len > 0 { return []; }
     var home:       u8[>..] = [];
     if !env("GOOSE_HOME", home) || home.len == 0 {
         home.clear(); if !env("HOME", home) || home.len == 0 { return []; } home.append("/.goose");
     }
+    // The compiler normalizes backslashes in GooseHome before reading config.
+    if !toolchain::compatible_path(home) { return []; }
     let compiler_home = if home[0] == '/' { str(home) } else { str(root, "/", home) };
     if platform::kind(str(compiler_home, "/config")) != 0 { return []; }
     if compiler.len == 0 || compiler[0] != '/' { return []; }

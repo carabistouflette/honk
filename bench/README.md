@@ -41,6 +41,12 @@ hardware, raw files and limitations. Report every workload, including slowdowns
 and noisy/no-change results. CI smoke-runs benchmarks without wall-clock gates;
 local results are not universal rankings or a claim of Cargo parity.
 
+The [UTC diagnostics harness](utc/README.md) compares the actual old and current
+opt-in diagnostics paths with independent byte/clock/sink verification. Its
+[retained records](utc/results/README.md) include disabled, enabled and real-file
+workloads. `make diagnostics-bench-smoke` checks both variants and verifier
+rejection controls without a timing threshold.
+
 [Follow-up audit measurements](../docs/AUDIT-2026-11-04.md) compare the hardened
 implementation with the first public main and retain every measured workload.
 
@@ -52,3 +58,6 @@ record the next reviewed source and complete paired samples against `f427cd1`.
 The [process consumer audit](../docs/PROCESS-CONSUMER-2026-11-04.md) records paired real child-launch workloads, all samples and caveats. `bench/process_profile.py` checks source/binary/compiler identities before and after measurement.
 
 Current combined integration samples at clean production source `00be9b04d40d46c16e5de4f7c2c8a98b7c43d0b6` are in [integration-cli.json](results/integration-cli.json) and [integration-workloads.json](results/integration-workloads.json). They are current-workload samples, not a matched comparison against earlier feature sets; CPU 3 affinity was applied on a shared host.
+
+[Opt-in build reuse development records](results/build-reuse/README.md) retain
+both measured series, cold costs, conservative fallback and source/tool identities.

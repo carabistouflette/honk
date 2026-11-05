@@ -110,11 +110,32 @@ Add `--log-file PATH` after an ordinary command, for example
 existing early-return behavior. Without the option no diagnostics are emitted
 and no log path is opened. Machine-readable stdout remains separate.
 
-Records contain only fixed lifecycle event names, elapsed nanoseconds, and
-numeric outcome codes. Arguments, environment values, project text, paths and
+Records contain a canonical UTC timestamp, fixed lifecycle event names, elapsed
+nanoseconds, and numeric outcome codes. Arguments, environment values, project text, paths and
 Git URLs are not copied into them. `returned` is emitted only after Honk's own
 stdout flush succeeds. Errors and child failures after logging is configured
 use fixed error events; signal handlers never log. Abrupt termination cannot guarantee an event.
+
+Enabled records include `timestamp="YYYY-MM-DDTHH:MM:SS[.fraction]Z"` before
+the event, using up to nine fractional digits with trailing zeroes removed.
+The timestamp is sampled once per enabled event from the OS wall clock; it may
+step backwards and is not used for deadlines or elapsed durations. Durations
+continue to use the existing monotonic clock. Unconfigured, Off, filtered, or failed
+logging returns before any wall-clock read. Signal handlers
+still never log. This changes the opt-in record bytes; consumers of these logs
+must accept the quoted timestamp field. For example:
+
+```text
+[INFO] timestamp="1970-01-01T00:00:00Z" started duration_ns=0 outcome=0
+```
+
+UTC formatting reuses pinned goose-log v0.1.3 and goose-time v0.1.0 sources,
+vendored for standalone/offline operation. Event messages remain fixed/numeric;
+lexical caller-owned timestamp/line buffers preserve the compiler's borrowing
+contract during terminal cleanup. The maximum emitted fixed record is 117 bytes,
+below the unchanged native line cap. There is no shared growable scratch buffer.
+The [paired diagnostics measurements](bench/utc/results/README.md) retain the
+before/after workloads, exact source identities and instrumentation limits.
 
 The application-owned Linux adapter rejects symlinks in every supplied path
 component and accepts only euid-owned, single-link regular files of exact mode
@@ -127,7 +148,7 @@ promise. A busy/invalid/full/failed destination returns nonzero; partial output
 or already-completed application work is not rolled back. There is no automatic
 retry, rotation or fsync. Use a fresh private file when the cap is reached.
 
-The opt-in toolchain metadata command also accepts explicit `--log-file`; those records contain only fixed lifecycle events and numeric duration/outcome fields, never response URLs, subjects, pins or bodies. Logging is the only explicit file output added to that otherwise cache/compiler-free path.
+The opt-in toolchain metadata command also accepts explicit `--log-file`; those records add only the UTC timestamp to fixed lifecycle events and numeric duration/outcome fields, never response URLs, subjects, pins or bodies. Logging is the only explicit file output added to that otherwise cache/compiler-free path.
 
 Explicit diagnostics may record `started`/`failed` even when a metadata flag combination is rejected before transport. Log delivery can fail after stdout or command side effects; no rollback is promised, and callers must check the exit status.
 
@@ -168,3 +189,9 @@ assumes unchanged administrator-controlled compiler support tools/system headers
 sysroot: run an ordinary build or `clean` after changing those inputs. Reuse is
 off by default and is not a hermetic cache. See [the complete contract and
 limits](docs/INCREMENTAL-BUILDS.md).
+
+Compiler-facing commands reject project paths containing a literal backslash:
+the pinned compiler interprets it as a package separator, even on Linux. Source
+compiler bootstraps also require a backslash-free `HONK_HOME`; an explicit
+`GOOSE` avoids that bootstrap constraint. Metadata and filesystem-only project
+commands keep their existing path handling.

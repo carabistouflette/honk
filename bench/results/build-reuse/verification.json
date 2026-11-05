@@ -1,0 +1,647 @@
+{
+  "measured_source": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
+  "source_clean_at_measurement": true,
+  "final_binary": {
+    "sha256": "3e2196c64380c62fc75f99b0814097098a2a8db0b9b06c1280c7d1e6d69aac00",
+    "runtime_revision": "9e8c24a4f4cd3fdc41875be5cd95643b28e41bb2",
+    "compiler_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+    "build_method": "make build, default Goose optimized/C -O2"
+  },
+  "runtime_build_vendor_inputs": {
+    "GOOSE_REVISION": {
+      "git_blob": "86a83a7da7bd50a064c3e9fd23655224550fb987",
+      "sha256": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15"
+    },
+    "Honk.lock": {
+      "git_blob": "1629e684a25ad048b0934b59350ec1e04c91e813",
+      "sha256": "4c9c34bf5eba14e664e759fba9a77bfc61fec3b886feba46a02bbd388b8f3bbc"
+    },
+    "Honk.toml": {
+      "git_blob": "4b3dc89b781d4cb07b89c6aaf00b836f34233680",
+      "sha256": "92e56f8c1f29e7550371b6e6bf9272628d24714455302eccd31400bc73b25ee5"
+    },
+    "honk.build": {
+      "git_blob": "7e45d2e49bda3f90f6a4033ede72a2b3741565a9",
+      "sha256": "5dba10ee95ba70ef47666be42858286c9845aaa3a95395ed077bd0baa427c57a"
+    },
+    "honk.goose": {
+      "git_blob": "dafdaae92449a4119fd96016ab7336cdad2dd8d9",
+      "sha256": "28be65cd2882bff9ef6d5110e958b14717b2498697d84face458c2ad9374023d"
+    },
+    "native/log_sink.c": {
+      "git_blob": "e8364ffb95a82e90542a279eb1a45d4031702a06",
+      "sha256": "51dabc2881c3032e2dd3e12e535d2d6c2d634cc16506a57ccd783522a4033c5e"
+    },
+    "native/platform.c": {
+      "git_blob": "0578997f47f1403a73c7bb729e3127fc425e75dd",
+      "sha256": "a8b19bd3d3e7a4aaa501175b6f8ead793b230e50b51a7c1c77e74a894647cece"
+    },
+    "src/build.goose": {
+      "git_blob": "88aef67903a026e7e9b081665e465740f22b40fb",
+      "sha256": "3fc938a988ec1faba2b38811b432a7d9fd04df27c47c01a6a98e8d08f4ee13c5"
+    },
+    "src/build_cache.goose": {
+      "git_blob": "35b0d5f20dda7bb44f6f8e7059e3c95d01f7f0bc",
+      "sha256": "c0979858d2715de726e68195587461ec8d6271a5665c5b96597aa0b404536c6d"
+    },
+    "src/commands.goose": {
+      "git_blob": "435c00b7b8e888ab094863c1a182649d1894b710",
+      "sha256": "6b243387d993e87fd2ffcf98dde3c1a7cca4904d9f00abeb8dc327b1b751a3c8"
+    },
+    "src/deps.goose": {
+      "git_blob": "67bd79350ff99e3049be11c4c14d607403c98377",
+      "sha256": "5713091c347fea5656ff032a911b2133b9094c1bba75b0a3e07b1519d7ea2d93"
+    },
+    "src/diagnostics.goose": {
+      "git_blob": "b992d5bb98ebd6bcc237054f0af3b0e59af309ab",
+      "sha256": "0047149ebc9ab0e1c07483485b132d73d12f3c2fd35566c65dff0c05a00fdbea"
+    },
+    "src/distribution.goose": {
+      "git_blob": "88af594cc0708a29cb9963b64abb246dc3775333",
+      "sha256": "fc4580e5ad5c3ee774f297af0df50e5272eb8f9ee1ee356d40b98ee17c1b4212"
+    },
+    "src/manifest.goose": {
+      "git_blob": "22818cc82ac71b6579a428a103c04ebe12410ff2",
+      "sha256": "bc81b8ad3090b7976f1397b78b9ffefac9138a7e5bb031b2f3d00ebf2e470a95"
+    },
+    "src/platform.goose": {
+      "git_blob": "fa69635273441a83d24371bab4d5142be101f045",
+      "sha256": "7a67be6471b5318c6f5c1aaeac2ced527a4ce11f6356d8ee814bad54716fa80c"
+    },
+    "src/project.goose": {
+      "git_blob": "ebae0ee1f6b5fa62bb639dd60a55fb14db37c94c",
+      "sha256": "67573e889ad0945b97f0c2edd4743dee5819d77c37b553d38ab5459e53f82acd"
+    },
+    "src/source.goose": {
+      "git_blob": "445a909157f10c48a2f1343cfcbdc4533abd8180",
+      "sha256": "ffe15c4a90bb0fdec88e30f2e42d435291878c08bcc723cbf0fde6a423566d4f"
+    },
+    "src/tag_catalog.goose": {
+      "git_blob": "6cce61beee0f404185cd9b737700a84e66ef62f5",
+      "sha256": "7c7a284fa94d0a8fd4ea06fbda743b4dfc7d161642626ae271f04d5b8b934090"
+    },
+    "src/tag_select.goose": {
+      "git_blob": "85ce20502f73ef3d586baccbb1e9ff74a06874a4",
+      "sha256": "104b29cf38e4a1ca3bce881083787790d8a446a6b397340ece8a526c34d49f3a"
+    },
+    "src/toolchain.goose": {
+      "git_blob": "b2131b8284bfd45b03384587584710fe77c3ea13",
+      "sha256": "eec16b369eb0a867a78152db73f247091bb3489667f75093a4ba89ba0e859325"
+    },
+    "src/version_policy.goose": {
+      "git_blob": "4d69eaab758c779453f695c05b346947eddf543c",
+      "sha256": "cfffd55622e7dc8fc6d7f5b4655113ec224fec6b2b1628c5b32db1ab946d0ea0"
+    },
+    "vendor/README.md": {
+      "git_blob": "66d02b36938113eeb2792d6be0dbec72dcccd299",
+      "sha256": "f4bbd5896e1ba950df2ad2043b0ad0983d1f4175223e64e20497eeb0906b28f3"
+    },
+    "vendor/goose-argparse/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-argparse/REVISION": {
+      "git_blob": "ed81f8954f545379848fa76d9e07cb8563425f32",
+      "sha256": "a8249f71943600bb9b78ef1601654aead5825af74413accec1eef03d03ac2f43"
+    },
+    "vendor/goose-argparse/argparse.goose": {
+      "git_blob": "2041b0ab9e93dc4a56a30a621028238f032ee296",
+      "sha256": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9"
+    },
+    "vendor/goose-crypto/CMakeLists.txt": {
+      "git_blob": "32738820a0f711247305ff8191e7eb827ebe9310",
+      "sha256": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5"
+    },
+    "vendor/goose-crypto/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-crypto/crypto.build": {
+      "git_blob": "b30d89daf58e72269ae5de1d7e32869551d0e8a9",
+      "sha256": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388"
+    },
+    "vendor/goose-crypto/crypto.goose": {
+      "git_blob": "f0e4599a1a1d9356f049a86040dbcb572544e0df",
+      "sha256": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a"
+    },
+    "vendor/goose-crypto/native/crypto.c": {
+      "git_blob": "442aebb9d6677719a7cd0538fe261ddf1d07e1d0",
+      "sha256": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51"
+    },
+    "vendor/goose-crypto/native/crypto.h": {
+      "git_blob": "830a76e2e40c8d20a261df4250aee736ce47fd30",
+      "sha256": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15"
+    },
+    "vendor/goose-crypto/native/ranges.c": {
+      "git_blob": "cec1b27307633f420914051d6f5e678360da6ff8",
+      "sha256": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24"
+    },
+    "vendor/goose-http/CMakeLists.txt": {
+      "git_blob": "e3f31df4c45011a4cae64c47489d3e241db5b792",
+      "sha256": "8ff69c4076c269757632952678f35f3ede119517d161150857bc09d737610c56"
+    },
+    "vendor/goose-http/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-http/http.build": {
+      "git_blob": "ae18530f75a0b3c4eb022d68a5a671c8f289d5f6",
+      "sha256": "262a70daedf657d993f54278addf7c718da8c2ccf8971640fa436ee1da3f1ec3"
+    },
+    "vendor/goose-http/http.goose": {
+      "git_blob": "cba0e5eee5ed974907f5ac3d8a464797fac9a710",
+      "sha256": "d55f7fcc99718d28a8e8d3b800af8fd46be9772c7456d3f23cc6ac99c0026200"
+    },
+    "vendor/goose-http/native/http.c": {
+      "git_blob": "8eeb1f811d9a1bab4f5e0fc61480fe8736b5b789",
+      "sha256": "5871d9ad107c8087830cae2a6070d306eb5776917212e961acd4086ed42d0334"
+    },
+    "vendor/goose-http/native/http.h": {
+      "git_blob": "9baab6a101692783e130f1aeb99f929d26860486",
+      "sha256": "54b063571a015100056288ac614a81af37c0cb32eca198490f733196552c8078"
+    },
+    "vendor/goose-log/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-log/NOTICE": {
+      "git_blob": "ffa64f7214df895968856a323eead92ff1ec10cc",
+      "sha256": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049"
+    },
+    "vendor/goose-log/logger.goose": {
+      "git_blob": "336fae4a31dc5b5b09ca2c36e3219732b4513e2e",
+      "sha256": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171"
+    },
+    "vendor/goose-process/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-process/native/internal.h": {
+      "git_blob": "1b857c0ed1d1b23a2fddb45a56dcbfe543f7da4c",
+      "sha256": "b2c259a1cca4ad5dabd41fa979a4bfdaa6b143e356944d3b0dc57f824d2f901a"
+    },
+    "vendor/goose-process/native/launch.c": {
+      "git_blob": "36277383a7d2d877febc312a61efaedef375d904",
+      "sha256": "1b893ad4bb688af81d8f2ef1e3dbddaabcadeede23768e4da6d518b86c607c3e"
+    },
+    "vendor/goose-process/native/process.c": {
+      "git_blob": "b49f7c1b4351590cb3c177bd9d44bc0cb8cf70f5",
+      "sha256": "30bc91f9fbefb82e6fd61b0723047a638339dfd736a6777be836965e0fb04819"
+    },
+    "vendor/goose-process/native/process.h": {
+      "git_blob": "f55fbb373962825587998b15c0a7a501b2f28c13",
+      "sha256": "cea1518e8bdf6a37710473f9f96d5e588adeafbace7b7393c1b3f5a39ebe8d38"
+    },
+    "vendor/goose-process/process.build": {
+      "git_blob": "796cf7c557b057e70fc95bc3ae9be78add46e7ed",
+      "sha256": "8ad78d100d5840ac5b96356d2cac08af1189a86ef738878f3457945365671a26"
+    },
+    "vendor/goose-process/process.goose": {
+      "git_blob": "bd512e93bf4ac2ee5b3d71042cba5586bff69b0c",
+      "sha256": "b28d4f10a408d5eaf444550fab8861a80b63a358f4aa0ce49174d59ca34c6327"
+    },
+    "vendor/goose-semver/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-semver/semver.goose": {
+      "git_blob": "1c1283b003fb67632d37f386473d197282bf5262",
+      "sha256": "dde2323c3e132ed7970f97445da5493e9a1417443aa7aed7801c3f8ea2f91018"
+    },
+    "vendor/goose-text/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-text/text.goose": {
+      "git_blob": "88b5eae747767f7719b9bb404354d57d5e12f49d",
+      "sha256": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea"
+    },
+    "vendor/goose-toml-edit/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-toml-edit/toml_edit.goose": {
+      "git_blob": "e5278da5511b5b7d38399dad1ea35f93e893b1e9",
+      "sha256": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791"
+    },
+    "vendor/goose-toml/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-toml/document.goose": {
+      "git_blob": "f4b18994f81fa0962d28a327a319a3a0172c056e",
+      "sha256": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b"
+    },
+    "vendor/goose-toml/source/README.md": {
+      "git_blob": "77dfda9848b39c8d5ec9cce12a0c894c23989c2b",
+      "sha256": "16a6f2f1ea2aad78c6bcaa89b561e13b31b62fe6896cf57dc44718e263acbb77"
+    },
+    "vendor/goose-toml/source/editor.goose": {
+      "git_blob": "2194fa6e6685f311f9a50bbe3813a038e8e85a0f",
+      "sha256": "1fa20fcb1bb3c7ad1751788ae34d6c91dd348397e8871283da6c687c222b59c1"
+    },
+    "vendor/goose-toml/toml.goose": {
+      "git_blob": "01dafc34ba5cd714e7c9a8ef402c74c8992fc4ea",
+      "sha256": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47"
+    },
+    "vendor/goose-toml/vendor/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/goose-toml/vendor/README.md": {
+      "git_blob": "33e1d5f8912de1d4ef382276e36f6d1dda421a3a",
+      "sha256": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8"
+    },
+    "vendor/goose-toml/vendor/text.goose": {
+      "git_blob": "e3cb74a254b65c14e77dcd6adfb3211fe346ec51",
+      "sha256": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d"
+    },
+    "vendor/goose-toml/writer.goose": {
+      "git_blob": "4b1237d42c5cb4c7b488c6f54fc20c029ebe25c4",
+      "sha256": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a"
+    },
+    "vendor/honk-metadata/LICENSE": {
+      "git_blob": "261eeb9e9f8b2b4b0d119366dda99c6fd7d35c64",
+      "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    },
+    "vendor/honk-metadata/honk_metadata.goose": {
+      "git_blob": "606927f7aff4a140cbe360b6c15b77dcd26d6c60",
+      "sha256": "6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150"
+    },
+    "vendor/manifest.json": {
+      "git_blob": "a45d147ba75b64daf5cd2dcb234382e85598bff0",
+      "sha256": "ffe2c40995ebbb3a44f2a02e3005fba58b053439ccca816efe74933904dfbe9f"
+    }
+  },
+  "library_graph": [
+    {
+      "directory": "goose-toml",
+      "repository": "https://github.com/carabistouflette/goose-toml",
+      "revision": "fe849141405009e36e1cce6eb479b395eae18f1a",
+      "license": "Apache-2.0",
+      "files": {
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+        "source/README.md": "16a6f2f1ea2aad78c6bcaa89b561e13b31b62fe6896cf57dc44718e263acbb77",
+        "source/editor.goose": "1fa20fcb1bb3c7ad1751788ae34d6c91dd348397e8871283da6c687c222b59c1",
+        "toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
+        "vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
+        "vendor/text.goose": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d",
+        "writer.goose": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a"
+      }
+    },
+    {
+      "directory": "goose-argparse",
+      "repository": "https://github.com/carabistouflette/goose-argparse",
+      "revision": "d23af7aff17c6720d17a2e8f6b80bd3bf8f14275",
+      "license": "Apache-2.0",
+      "files": {
+        "argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-text",
+      "repository": "https://github.com/carabistouflette/goose-text",
+      "revision": "46059e30be79ece6efd4317eb0adc6d213c808ab",
+      "license": "Apache-2.0",
+      "files": {
+        "text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-toml-edit",
+      "repository": "https://github.com/carabistouflette/goose-toml-edit",
+      "revision": "f8d1b1664a86b768a6f1375636d9b2c3a440aa31",
+      "license": "Apache-2.0",
+      "files": {
+        "toml_edit.goose": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-semver",
+      "repository": "https://github.com/carabistouflette/goose-semver",
+      "revision": "2311ae69a7edacb545f284b02e345be07dd2fb05",
+      "license": "Apache-2.0",
+      "files": {
+        "semver.goose": "dde2323c3e132ed7970f97445da5493e9a1417443aa7aed7801c3f8ea2f91018",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-process",
+      "repository": "https://github.com/carabistouflette/goose-process",
+      "revision": "191a9423197e850e699eff500620a5c7d111aa54",
+      "license": "Apache-2.0",
+      "files": {
+        "process.goose": "b28d4f10a408d5eaf444550fab8861a80b63a358f4aa0ce49174d59ca34c6327",
+        "process.build": "8ad78d100d5840ac5b96356d2cac08af1189a86ef738878f3457945365671a26",
+        "native/internal.h": "b2c259a1cca4ad5dabd41fa979a4bfdaa6b143e356944d3b0dc57f824d2f901a",
+        "native/launch.c": "1b893ad4bb688af81d8f2ef1e3dbddaabcadeede23768e4da6d518b86c607c3e",
+        "native/process.c": "30bc91f9fbefb82e6fd61b0723047a638339dfd736a6777be836965e0fb04819",
+        "native/process.h": "cea1518e8bdf6a37710473f9f96d5e588adeafbace7b7393c1b3f5a39ebe8d38",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-http",
+      "repository": "https://github.com/carabistouflette/goose-http",
+      "revision": "c879c6fec88eaf7229f890a5dd6e3fc313261eab",
+      "license": "Apache-2.0",
+      "files": {
+        "http.goose": "d55f7fcc99718d28a8e8d3b800af8fd46be9772c7456d3f23cc6ac99c0026200",
+        "http.build": "262a70daedf657d993f54278addf7c718da8c2ccf8971640fa436ee1da3f1ec3",
+        "CMakeLists.txt": "8ff69c4076c269757632952678f35f3ede119517d161150857bc09d737610c56",
+        "native/http.c": "5871d9ad107c8087830cae2a6070d306eb5776917212e961acd4086ed42d0334",
+        "native/http.h": "54b063571a015100056288ac614a81af37c0cb32eca198490f733196552c8078",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "honk-metadata",
+      "repository": "https://github.com/carabistouflette/goose-http",
+      "revision": "c879c6fec88eaf7229f890a5dd6e3fc313261eab",
+      "license": "Apache-2.0",
+      "files": {
+        "honk_metadata.goose": "6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    },
+    {
+      "directory": "goose-log",
+      "repository": "https://github.com/carabistouflette/goose-log",
+      "revision": "a3919c5e9135b9812db422d5052bb1ea5d1d202b",
+      "license": "Apache-2.0",
+      "files": {
+        "logger.goose": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049"
+      }
+    },
+    {
+      "directory": "goose-crypto",
+      "repository": "https://github.com/carabistouflette/goose-crypto",
+      "revision": "a4643f62bd5e76b371054c6537a95169a7930101",
+      "license": "Apache-2.0",
+      "files": {
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
+    }
+  ],
+  "crypto_sha256_pin": {
+    "directory": "goose-crypto",
+    "repository": "https://github.com/carabistouflette/goose-crypto",
+    "revision": "a4643f62bd5e76b371054c6537a95169a7930101",
+    "license": "Apache-2.0",
+    "files": {
+      "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+      "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+      "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+      "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+      "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+      "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+      "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+    }
+  },
+  "summaries": {
+    "prototype": {
+      "source_only": {
+        "baseline_plain": {
+          "wall_ms": {
+            "median": 539.178329,
+            "minimum": 505.188592,
+            "maximum": 567.175765
+          },
+          "cpu_ms": {
+            "median": 478.80600000000004,
+            "minimum": 446.5199999999996,
+            "maximum": 496.7240000000004
+          }
+        },
+        "candidate_plain": {
+          "wall_ms": {
+            "median": 537.221034,
+            "minimum": 504.771,
+            "maximum": 741.298236
+          },
+          "cpu_ms": {
+            "median": 475.75699999999887,
+            "minimum": 452.62699999999967,
+            "maximum": 508.0709999999993
+          }
+        },
+        "candidate_cold": {
+          "wall_ms": {
+            "median": 1682.119258,
+            "minimum": 1574.738129,
+            "maximum": 2123.023534
+          },
+          "cpu_ms": {
+            "median": 1524.9340000000009,
+            "minimum": 1441.471000000001,
+            "maximum": 1563.1870000000006
+          }
+        },
+        "candidate_warm": {
+          "wall_ms": {
+            "median": 107.57805,
+            "minimum": 101.45865,
+            "maximum": 150.047124
+          },
+          "cpu_ms": {
+            "median": 71.26500000000036,
+            "minimum": 67.96199999999853,
+            "maximum": 72.70400000000078
+          }
+        }
+      },
+      "conservative_fallback": {
+        "baseline_plain": {
+          "wall_ms": {
+            "median": 527.977764,
+            "minimum": 498.103108,
+            "maximum": 570.794941
+          },
+          "cpu_ms": {
+            "median": 473.3900000000015,
+            "minimum": 451.368,
+            "maximum": 483.4739999999993
+          }
+        },
+        "candidate_plain": {
+          "wall_ms": {
+            "median": 538.453245,
+            "minimum": 501.813511,
+            "maximum": 550.23152
+          },
+          "cpu_ms": {
+            "median": 478.75000000000335,
+            "minimum": 444.29699999999906,
+            "maximum": 486.62299999999846
+          }
+        },
+        "candidate_cold": {
+          "wall_ms": {
+            "median": 585.555797,
+            "minimum": 556.768639,
+            "maximum": 598.421568
+          },
+          "cpu_ms": {
+            "median": 520.7579999999998,
+            "minimum": 503.9599999999993,
+            "maximum": 526.6849999999987
+          }
+        },
+        "candidate_warm": {
+          "wall_ms": {
+            "median": 583.614807,
+            "minimum": 546.580835,
+            "maximum": 591.59149
+          },
+          "cpu_ms": {
+            "median": 523.7079999999994,
+            "minimum": 494.93300000000227,
+            "maximum": 527.2299999999994
+          }
+        }
+      }
+    },
+    "final": {
+      "source_only": {
+        "baseline_plain": {
+          "wall_ms": {
+            "median": 486.321835,
+            "minimum": 469.133684,
+            "maximum": 530.234479
+          },
+          "cpu_ms": {
+            "median": 442.0869999999999,
+            "minimum": 431.8769999999996,
+            "maximum": 471.88500000000124
+          }
+        },
+        "candidate_plain": {
+          "wall_ms": {
+            "median": 479.924504,
+            "minimum": 471.905508,
+            "maximum": 533.773839
+          },
+          "cpu_ms": {
+            "median": 441.1039999999984,
+            "minimum": 433.7880000000005,
+            "maximum": 469.77599999999774
+          }
+        },
+        "candidate_cold": {
+          "wall_ms": {
+            "median": 1500.970655,
+            "minimum": 1480.818059,
+            "maximum": 1652.032962
+          },
+          "cpu_ms": {
+            "median": 1420.4239999999984,
+            "minimum": 1403.098,
+            "maximum": 1515.1040000000028
+          }
+        },
+        "candidate_warm": {
+          "wall_ms": {
+            "median": 98.976577,
+            "minimum": 96.623536,
+            "maximum": 108.475322
+          },
+          "cpu_ms": {
+            "median": 68.22000000000195,
+            "minimum": 67.87299999999985,
+            "maximum": 69.6629999999967
+          }
+        }
+      },
+      "conservative_fallback": {
+        "baseline_plain": {
+          "wall_ms": {
+            "median": 490.328638,
+            "minimum": 470.440914,
+            "maximum": 600.697174
+          },
+          "cpu_ms": {
+            "median": 448.77499999999947,
+            "minimum": 435.8559999999976,
+            "maximum": 502.6480000000002
+          }
+        },
+        "candidate_plain": {
+          "wall_ms": {
+            "median": 485.598007,
+            "minimum": 470.699114,
+            "maximum": 505.811639
+          },
+          "cpu_ms": {
+            "median": 440.57800000000213,
+            "minimum": 434.40999999999883,
+            "maximum": 455.6299999999991
+          }
+        },
+        "candidate_cold": {
+          "wall_ms": {
+            "median": 484.501654,
+            "minimum": 474.247129,
+            "maximum": 532.477116
+          },
+          "cpu_ms": {
+            "median": 443.0979999999991,
+            "minimum": 436.2220000000017,
+            "maximum": 473.3990000000015
+          }
+        },
+        "candidate_warm": {
+          "wall_ms": {
+            "median": 484.951098,
+            "minimum": 475.513189,
+            "maximum": 518.946037
+          },
+          "cpu_ms": {
+            "median": 444.90199999999726,
+            "minimum": 437.87600000000106,
+            "maximum": 463.85200000000015
+          }
+        }
+      }
+    }
+  },
+  "validation": {
+    "normal": "format/check/test/security/bench passed; final nine cache and eight Git cases passed",
+    "sanitizers": "GCC and Clang debuginfo/no-BCE ASan+UBSan nine final cache methods passed; full suites passed on earlier same-native revisions",
+    "portable": "three copy/staging tests and two cache artifact tests passed; native adapter bytes unchanged on final path-join correction",
+    "prepublication_regressions": [
+      "unknown flag on frozen release",
+      "empty PATH component selection",
+      "relative GOOSE_HOME configuration selection",
+      "selected standard-library symlink precedence",
+      "pinned PATH backslash joining",
+      "valid-ELF corruption rejected by independent digest"
+    ],
+    "selfhost": "normal/frozen check/package passed in owned clean clone; same lock and package; all167 tracked exports exact",
+    "ci": "This record covers local validation; exact publication-head CI is recorded separately in the PR and owner handoff."
+  },
+  "raw_sha256": {
+    "prototype.json": "404db3a8895df9fdb36ede40c2c37a2649433c75acdb0e5d0d17ae1509641e42",
+    "final.json": "4021d88557a85eabb13654c1421f0d01ce6d63c3fe5bc0daa5fc1bc0fa4ceec4",
+    "selfhost.json": "bf48e0b4a3c6dc7c5e84ea7a8db2aa699ec6b355937ed43e0cd390911559571d"
+  },
+  "build_provenance": "Candidate was built from working-tree runtime/build/vendor bytes subsequently committed as 9e8c24a; byte identities match those Git objects. Measurement ran from clean 9e8c24a. Supplied binary hashes identify the actual executed images; the benchmark driver alone does not attest their build origin.",
+  "native_extension": {
+    "previous_native_bytes_unchanged_after_removing_new_helpers": true,
+    "base": "62743082fb1ee44b9f47763056b2e595113caf37",
+    "new_helpers_sha256": "ab270afd88a97d310e226fa8a766b1207e73a9c203ab9e86b43fb71670e19165"
+  }
+}

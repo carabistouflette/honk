@@ -71,3 +71,17 @@ path = "vendor/goose-crypto"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "time"
+path = "vendor/goose-time"
+git = ""
+rev = ""
+commit = ""
+
+[[dependency]]
+name = "utc"
+path = "vendor/goose-log/examples/utc"
+git = ""
+rev = ""
+commit = ""

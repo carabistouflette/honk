@@ -12,6 +12,9 @@ import .build;
 import .toolchain;
 import .distribution;
 fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, args: u8[:][:], cache: u8[:]) {
+    if cmd != "clean" && cmd != "add" && cmd != "remove" && cmd != "fetch" && cmd != "update" && cmd != "tree" {
+        platform::require(toolchain::compatible_path(p.root), "project path contains a backslash unsupported by the pinned compiler");
+    }
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create project state directory");
     let lock = platform::lock(str(p.root, "/.honk/lock")); platform::require(lock >= 0, "project is locked by another Honk process");
     if cmd == "clean" {

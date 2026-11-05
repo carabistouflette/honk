@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Exercise real Honk dispatch and its fixed HTTPS endpoint via a test-only shim."""
 import contextlib
+import datetime
 import json
 import os
 from pathlib import Path
@@ -125,15 +126,21 @@ class MetadataCLI(unittest.TestCase):
     def test_explicit_diagnostics_preserve_metadata_and_redact_source_fields(self):
         with fixture.fixture() as (server, env):
             server.reply = fixture.response(fixture.document())
+            baseline = self.request(env)
+            self.assertEqual((baseline.returncode, baseline.stderr), (0, b''))
             log = self.root / 'events.log'
             p = self.call(env, 'toolchain', '--metadata', '--log-file', str(log), stdout=subprocess.PIPE)
-            self.assertEqual(p.returncode, 0, p.stderr)
+            self.assertEqual((p.returncode, p.stdout, p.stderr), (0, baseline.stdout, b''))
             self.assertEqual(json.loads(p.stdout)['subject'], fixture.MESSAGE.split('\n')[0])
             lines = log.read_bytes().splitlines()
             self.assertEqual(len(lines), 2)
-            for line in lines:
-                self.assertRegex(line, rb'^\[INFO\] (started|returned) duration_ns=[0-9]+ outcome=0$')
+            for line, event in zip(lines, [b'started', b'returned']):
+                self.assertRegex(line, rb'^\[INFO\] timestamp="[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\.[0-9]{0,8}[1-9])?Z" ' + event + rb' duration_ns=[0-9]+ outcome=0$')
+                stamp = line.split(b'"', 2)[1].decode('ascii')
+                parsed = datetime.datetime.fromisoformat(stamp[:-1] + '+00:00')
+                self.assertEqual(parsed.utcoffset(), datetime.timedelta(0))
             self.assertNotIn(fixture.REVISION.encode(), log.read_bytes())
             self.assertNotIn(fixture.URL.encode(), log.read_bytes())
+            self.assertNotIn(fixture.SENTINEL.encode(), log.read_bytes())
 
 if __name__ == '__main__': unittest.main()

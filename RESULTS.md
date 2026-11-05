@@ -13,6 +13,7 @@ make check test security
 make sanitize portable
 HONK_SANITIZER_CC=clang make sanitize portable
 make bench
+make diagnostics-bench-smoke
 ```
 
 Use `make GOOSE=/absolute/path/to/matching/goose ...` to select an existing
@@ -33,6 +34,35 @@ CI uses an exact compiler pin, commit-pinned GitHub actions and read-only workfl
 permissions. Its runs are linked from the repository's Actions tab. Publication
 also checks a fresh clone, the README commands, public metadata/default branch,
 license detection and private vulnerability reporting.
+
+## UTC diagnostics integration
+
+The opt-in diagnostic file now receives canonical UTC timestamps through the
+published goose-log v0.1.3 adapter (`e93a71c0ff2f852b2d68f0a2c70f25ded3e8893a`)
+and goose-time v0.1.0 (`343887caeee0a1f4e2e536ff322fcafb454e11bd`). The selected
+source/license bytes are vendored and checked; the logger core remains unchanged.
+Native adapters, compiler pin, monotonic durations and terminal cleanup policy
+are unchanged. The README documents the opt-in record format change.
+
+Validation passed normal formatting/type/contract/CLI/HTTPS/security checks,
+the full GCC and Clang sanitizer and portable-copy suites, standard benchmark
+smokes, and the new paired diagnostics smoke with both compilers. The dedicated
+probe also passes release/debug and standalone optimized/debug sanitizer builds;
+it covers i64 timestamp endpoints, filtering, callback counts, configuration and
+failure latching, borrowing and output ownership. A fresh standalone clone of
+the committed implementation passes `make check build` and all five text/package
+integration tests. Those tests compare the added vendored source/license bytes
+inside the source archive and preserve the lockfile.
+
+Independent implementation and test reviews found no blocking issues; a further
+review checked the paired harness and replayed its verifier controls. The
+[retained measurements](bench/utc/results/README.md) identify clean source
+`e092d63c15e13958d26e3b2982d35a468f03ab7d`, the immutable pre-integration baseline,
+all 84 measured batches and a replayable 24-batch smoke corpus. Instrumentation,
+different record sizes, optimized disabled paths and shared-host noise prevent
+an exact isolated UTC-cost or general speed-ranking claim. These bounded checks
+do not establish cross-platform support or production stability. Existing release
+tags remain unchanged.
 
 ## Independent review
 
@@ -329,3 +359,25 @@ attributes about 474 ms of a 537 ms median selected warm build to the compiler
 invocation; staging is about 12 ms, while publication varies and retains its
 file sync. This is instrumented phase attribution, not a matched speedup.
 No runtime optimization, skipped validation or executable cache was adopted.
+
+## Compiler path compatibility correction
+
+A local two-project regression reproduced a source-selection defect in frozen
+Honk v0.2.0 (`855fb055`): the pinned compiler's backslash package separator
+normalization could select a sibling staged dependency when the project root
+contained a literal backslash. The fixture expected one dependency value and
+observed the sibling's value. No remote target or third-party data is involved.
+
+Compiler-facing commands now reject that root before project state, graph
+resolution or compiler work. Automatic source compiler bootstraps also reject
+backslash cache paths; an explicit trusted `GOOSE` still works with that Honk
+cache. Metadata and filesystem-only commands retain their existing behavior.
+The native adapter, vendored libraries, compiler pin and lockfile are unchanged.
+
+The two new public regressions in `tests/cli.py` verify all compiler command
+rejections, preservation of the sibling source/executable, metadata handling,
+and bootstrap refusal before a toolchain checkout. The project-root regression fails on
+the frozen release; both new cases pass on the corrective source. Local `make check test security`
+passed (71 CLI cases and the existing suites/213 malformed probes), as did both
+new cases under GCC and Clang ASan/UBSan with debug checks and no bounds-check
+elimination. Exact publication-head CI is recorded separately in the PR.

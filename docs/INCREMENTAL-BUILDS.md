@@ -25,7 +25,8 @@ operations make the target ineligible. Eligible cache-populating builds use
 `--standalone` so they do not consume a mutable cached Goose runtime object.
 The actual Goose and selected C compiler must be regular ELF executables on
 the validated Linux platform;
-script wrappers and a configured C compiler fall back in this first version.
+script wrappers, a configured C compiler and a compiler home containing a
+literal backslash fall back in this first version.
 
 A versioned SHA-256 key includes compiler bytes and canonical location, selected
 C compiler bytes/location, complete inherited environment (hashed only, never

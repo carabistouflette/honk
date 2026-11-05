@@ -100,12 +100,25 @@
     {
       "directory": "goose-log",
       "repository": "https://github.com/carabistouflette/goose-log",
-      "revision": "a3919c5e9135b9812db422d5052bb1ea5d1d202b",
+      "revision": "e93a71c0ff2f852b2d68f0a2c70f25ded3e8893a",
       "license": "Apache-2.0",
       "files": {
         "logger.goose": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
-        "NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049"
+        "NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049",
+        "examples/utc/utc.goose": "831865065c7b86c92439de601a5fb65a52d15630b914cd3b5ffd75614fa3d67e"
+      }
+    },
+    {
+      "directory": "goose-time",
+      "repository": "https://github.com/carabistouflette/goose-time",
+      "revision": "343887caeee0a1f4e2e536ff322fcafb454e11bd",
+      "license": "Apache-2.0",
+      "files": {
+        "time.goose": "9a43e3f14b838ab7f40e9968ce35c0972f23cfd663408d773bff67da491cb2b7",
+        "detail.goose": "54e54e81fa2efc3efb00d380f19ca46af5ca728fbc8e9004d562c965357754d6",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "558bfffa1dd0f318bad5df0cab38831b9966429672d6475d9e9ec20466e3bc2a"
       }
     },
     {

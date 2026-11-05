@@ -1,6 +1,6 @@
 [package]
 name = "honk"
-version = "0.2.0"
+version = "0.3.0"
 kind = "bin"
 entry = "honk.goose"
 description = "Goose project and dependency manager"
@@ -20,3 +20,5 @@ http = { path = "vendor/goose-http" }
 honk_metadata = { path = "vendor/honk-metadata" }
 logger = { path = "vendor/goose-log" }
 crypto = { path = "vendor/goose-crypto" }
+time = { path = "vendor/goose-time" }
+utc = { path = "vendor/goose-log/examples/utc" }
