@@ -1,0 +1,299 @@
+{
+  "baseline": "65d4e97d808e97cdcc2c6d1f783f440e89cb2786",
+  "baseline_runtime_source": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+  "baseline_binary_sha256": "78701624fff932ff1aecdfeb9eefb6f793a8300116a9a05d5c1da6d7d356a511",
+  "instrumented_binary_sha256": "4f51a42bc670354760ae123eb940e610d406a80459c0640cd7d8bace71a29aba",
+  "compiler_sha256": "7ffde13da95fbbdaa15b27419494fc9b71f2c91c0b4c4d732f51815e928a4b56",
+  "changes": {
+    "src/commands.goose": {
+      "original_sha256": "c782ec929f87eeed46f6ae4fa079be94d6a0b06c504b482c9c7cec12726c7959",
+      "instrumented_sha256": "a4532a71099fb377a49b98fbb7fe70842cdbbc8682c162be004b4fd83ae94cb3"
+    },
+    "src/build.goose": {
+      "original_sha256": "0114402122ba61a0267675af3da9a3511463cc22ae56c0b6521da2ebec062a16",
+      "instrumented_sha256": "6cdef16a8bc69fa366518f8faa9a1108817737824ddb0aa7e74aa2bed8204988"
+    }
+  },
+  "samples": [
+    {
+      "case": "tree",
+      "index": 0,
+      "wall_ms": 28.797838,
+      "phases_ms": {
+        "resolve_ns": [
+          11.086539,
+          9.263415
+        ]
+      }
+    },
+    {
+      "case": "tree",
+      "index": 1,
+      "wall_ms": 28.162464,
+      "phases_ms": {
+        "resolve_ns": [
+          10.602884,
+          9.196734
+        ]
+      }
+    },
+    {
+      "case": "tree",
+      "index": 2,
+      "wall_ms": 28.608014,
+      "phases_ms": {
+        "resolve_ns": [
+          10.894771,
+          9.873935
+        ]
+      }
+    },
+    {
+      "case": "check",
+      "index": 0,
+      "wall_ms": 122.443683,
+      "phases_ms": {
+        "resolve_ns": [
+          11.796455,
+          10.039458
+        ],
+        "compiler_identity_ns": [
+          4.247929,
+          2.94577
+        ],
+        "prepare_ns": [
+          10.261404,
+          10.179833
+        ],
+        "entry_ns": [
+          0.168223,
+          0.140471
+        ],
+        "check_ns": [
+          39.365918,
+          24.609149
+        ]
+      }
+    },
+    {
+      "case": "check",
+      "index": 1,
+      "wall_ms": 118.80423,
+      "phases_ms": {
+        "resolve_ns": [
+          11.779841,
+          9.773642
+        ],
+        "compiler_identity_ns": [
+          4.312511,
+          2.943121
+        ],
+        "prepare_ns": [
+          11.240412,
+          9.653617
+        ],
+        "entry_ns": [
+          0.158926,
+          0.140159
+        ],
+        "check_ns": [
+          35.532275,
+          24.337112
+        ]
+      }
+    },
+    {
+      "case": "check",
+      "index": 2,
+      "wall_ms": 119.057127,
+      "phases_ms": {
+        "resolve_ns": [
+          10.247316,
+          10.073787
+        ],
+        "compiler_identity_ns": [
+          4.162512,
+          3.104844
+        ],
+        "prepare_ns": [
+          13.187083,
+          9.726886
+        ],
+        "entry_ns": [
+          0.140087,
+          0.131229
+        ],
+        "check_ns": [
+          35.037189,
+          24.119946
+        ]
+      }
+    },
+    {
+      "case": "build",
+      "index": 0,
+      "wall_ms": 626.209981,
+      "phases_ms": {
+        "resolve_ns": [
+          10.55344
+        ],
+        "compiler_identity_ns": [
+          4.399536
+        ],
+        "prepare_ns": [
+          10.933074
+        ],
+        "entry_ns": [
+          0.145392
+        ],
+        "compile_ns": [
+          470.813838
+        ],
+        "publish_ns": [
+          121.085538
+        ]
+      }
+    },
+    {
+      "case": "build",
+      "index": 1,
+      "wall_ms": 537.721426,
+      "phases_ms": {
+        "resolve_ns": [
+          11.081188
+        ],
+        "compiler_identity_ns": [
+          4.30258
+        ],
+        "prepare_ns": [
+          10.967628
+        ],
+        "entry_ns": [
+          0.193896
+        ],
+        "compile_ns": [
+          469.563851
+        ],
+        "publish_ns": [
+          30.301253
+        ]
+      }
+    },
+    {
+      "case": "build",
+      "index": 2,
+      "wall_ms": 668.845903,
+      "phases_ms": {
+        "resolve_ns": [
+          12.431617
+        ],
+        "compiler_identity_ns": [
+          4.372176
+        ],
+        "prepare_ns": [
+          15.765563
+        ],
+        "entry_ns": [
+          0.194378
+        ],
+        "compile_ns": [
+          495.760927
+        ],
+        "publish_ns": [
+          126.09075
+        ]
+      }
+    },
+    {
+      "case": "run",
+      "index": 0,
+      "wall_ms": 533.775759,
+      "phases_ms": {
+        "resolve_ns": [
+          10.02523
+        ],
+        "compiler_identity_ns": [
+          4.336282
+        ],
+        "prepare_ns": [
+          11.067867
+        ],
+        "entry_ns": [
+          0.134906
+        ],
+        "compile_ns": [
+          467.574658
+        ],
+        "publish_ns": [
+          31.190086
+        ],
+        "run_ns": [
+          1.389942
+        ]
+      }
+    },
+    {
+      "case": "run",
+      "index": 1,
+      "wall_ms": 528.133959,
+      "phases_ms": {
+        "resolve_ns": [
+          10.257976
+        ],
+        "compiler_identity_ns": [
+          4.239771
+        ],
+        "prepare_ns": [
+          11.309165
+        ],
+        "entry_ns": [
+          0.129447
+        ],
+        "compile_ns": [
+          462.191834
+        ],
+        "publish_ns": [
+          29.800895
+        ],
+        "run_ns": [
+          1.658834
+        ]
+      }
+    },
+    {
+      "case": "run",
+      "index": 2,
+      "wall_ms": 584.112963,
+      "phases_ms": {
+        "resolve_ns": [
+          10.444059
+        ],
+        "compiler_identity_ns": [
+          4.515896
+        ],
+        "prepare_ns": [
+          12.011535
+        ],
+        "entry_ns": [
+          0.142403
+        ],
+        "compile_ns": [
+          501.183429
+        ],
+        "publish_ns": [
+          41.050753
+        ],
+        "run_ns": [
+          6.357106
+        ]
+      }
+    }
+  ],
+  "scope": "temporary phase instrumented diagnostic; stderr writes and altered build path; no headline latency comparison",
+  "affinity": [
+    0,
+    2
+  ],
+  "controller_sha256": "fd900a90717ac9bff7936937825ec312ca3133cdae390bc69c7046038c367028",
+  "order": "tree/check/build/run groups; three sequential samples each; exploratory controller predates published reproducible driver"
+}

@@ -47,7 +47,7 @@ bound. Every sample and the source transformation hashes are retained.
 The driver writes bounded stdout/stderr to temporary regular files, uses pidfd
 notification, normalizes waitable SIGCHLD, and terminates an owned process group
 before reaping on exceptional exit. Its ignored work directory retains source
-and per-command event records, including after failure. A success report is
+and completed per-command event records if a later operation fails. A success report is
 created only after the input checks; choose a new output path each time.
 
 For syscall attribution, run an additional **untimed** diagnostic against the

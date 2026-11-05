@@ -1,0 +1,216 @@
+{
+  "harness_commit": "bc2cece0b31a6409ef7d9294ae0aa41e4379f987",
+  "scope": "diagnostic only; no runtime optimization or changed release",
+  "runtime_source_identity": {
+    "release": "855fb0552aefd5f0c033826af64f3bdd09ae6482",
+    "measured_snapshot": "65d4e97d808e97cdcc2c6d1f783f440e89cb2786",
+    "files_sha256": {
+      "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+      "Honk.lock": "6f9bc6fb4e64c4c685627ffb7c653b9793a9de70ce9242095d981593c49d1753",
+      "Honk.toml": "fbcc1a64ee85fb15635b2c7b6ce63f57aed510ac16df680e0db6a107e047bdd6",
+      "honk.build": "5dba10ee95ba70ef47666be42858286c9845aaa3a95395ed077bd0baa427c57a",
+      "honk.goose": "9982875bb5999f0dcfad942bc209b2115975e1b94027d653121a1f8417552acd",
+      "native/log_sink.c": "51dabc2881c3032e2dd3e12e535d2d6c2d634cc16506a57ccd783522a4033c5e",
+      "native/platform.c": "a511b3179e9b6fb1acd8bbe6cc2e93f9e6f87f3bea4c501f5c5631485ca22bdc",
+      "src/build.goose": "0114402122ba61a0267675af3da9a3511463cc22ae56c0b6521da2ebec062a16",
+      "src/commands.goose": "c782ec929f87eeed46f6ae4fa079be94d6a0b06c504b482c9c7cec12726c7959",
+      "src/deps.goose": "5713091c347fea5656ff032a911b2133b9094c1bba75b0a3e07b1519d7ea2d93",
+      "src/diagnostics.goose": "0047149ebc9ab0e1c07483485b132d73d12f3c2fd35566c65dff0c05a00fdbea",
+      "src/distribution.goose": "fc4580e5ad5c3ee774f297af0df50e5272eb8f9ee1ee356d40b98ee17c1b4212",
+      "src/manifest.goose": "bc81b8ad3090b7976f1397b78b9ffefac9138a7e5bb031b2f3d00ebf2e470a95",
+      "src/platform.goose": "aa0286e03f8f325edab84bf414305f5eefff1e27e7942b2e2362e5b86acecc65",
+      "src/project.goose": "67573e889ad0945b97f0c2edd4743dee5819d77c37b553d38ab5459e53f82acd",
+      "src/source.goose": "ffe15c4a90bb0fdec88e30f2e42d435291878c08bcc723cbf0fde6a423566d4f",
+      "src/tag_catalog.goose": "7c7a284fa94d0a8fd4ea06fbda743b4dfc7d161642626ae271f04d5b8b934090",
+      "src/tag_select.goose": "104b29cf38e4a1ca3bce881083787790d8a446a6b397340ece8a526c34d49f3a",
+      "src/toolchain.goose": "eec16b369eb0a867a78152db73f247091bb3489667f75093a4ba89ba0e859325",
+      "src/version_policy.goose": "cfffd55622e7dc8fc6d7f5b4655113ec224fec6b2b1628c5b32db1ab946d0ea0",
+      "vendor/README.md": "63798cc1c0db237c17ccab94340ae9f3e3250a2ec094cb1bfb2d8e6c833f1356",
+      "vendor/goose-argparse/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-argparse/REVISION": "a8249f71943600bb9b78ef1601654aead5825af74413accec1eef03d03ac2f43",
+      "vendor/goose-argparse/argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
+      "vendor/goose-http/CMakeLists.txt": "8ff69c4076c269757632952678f35f3ede119517d161150857bc09d737610c56",
+      "vendor/goose-http/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-http/http.build": "262a70daedf657d993f54278addf7c718da8c2ccf8971640fa436ee1da3f1ec3",
+      "vendor/goose-http/http.goose": "d55f7fcc99718d28a8e8d3b800af8fd46be9772c7456d3f23cc6ac99c0026200",
+      "vendor/goose-http/native/http.c": "5871d9ad107c8087830cae2a6070d306eb5776917212e961acd4086ed42d0334",
+      "vendor/goose-http/native/http.h": "54b063571a015100056288ac614a81af37c0cb32eca198490f733196552c8078",
+      "vendor/goose-log/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-log/NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049",
+      "vendor/goose-log/logger.goose": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+      "vendor/goose-process/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-process/native/internal.h": "b2c259a1cca4ad5dabd41fa979a4bfdaa6b143e356944d3b0dc57f824d2f901a",
+      "vendor/goose-process/native/launch.c": "1b893ad4bb688af81d8f2ef1e3dbddaabcadeede23768e4da6d518b86c607c3e",
+      "vendor/goose-process/native/process.c": "30bc91f9fbefb82e6fd61b0723047a638339dfd736a6777be836965e0fb04819",
+      "vendor/goose-process/native/process.h": "cea1518e8bdf6a37710473f9f96d5e588adeafbace7b7393c1b3f5a39ebe8d38",
+      "vendor/goose-process/process.build": "8ad78d100d5840ac5b96356d2cac08af1189a86ef738878f3457945365671a26",
+      "vendor/goose-process/process.goose": "b28d4f10a408d5eaf444550fab8861a80b63a358f4aa0ce49174d59ca34c6327",
+      "vendor/goose-semver/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-semver/semver.goose": "dde2323c3e132ed7970f97445da5493e9a1417443aa7aed7801c3f8ea2f91018",
+      "vendor/goose-text/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-text/text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+      "vendor/goose-toml-edit/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-toml-edit/toml_edit.goose": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791",
+      "vendor/goose-toml/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-toml/document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+      "vendor/goose-toml/source/README.md": "16a6f2f1ea2aad78c6bcaa89b561e13b31b62fe6896cf57dc44718e263acbb77",
+      "vendor/goose-toml/source/editor.goose": "1fa20fcb1bb3c7ad1751788ae34d6c91dd348397e8871283da6c687c222b59c1",
+      "vendor/goose-toml/toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
+      "vendor/goose-toml/vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/goose-toml/vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
+      "vendor/goose-toml/vendor/text.goose": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d",
+      "vendor/goose-toml/writer.goose": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a",
+      "vendor/honk-metadata/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+      "vendor/honk-metadata/honk_metadata.goose": "6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150",
+      "vendor/manifest.json": "232a0196e6241496e912756012670c9e3325ce8bf39ec8229113a9703f565df0"
+    }
+  },
+  "compiler_inspection": {
+    "revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+    "build_h_sha256": "ade52a54cad88832bd83c23a190c50ce19e98e74a3b98ec97c5218a8e6f06275",
+    "build_h_blob": "8f55b6c328d136aadd7c1beec5f5ee393e7f8ac5",
+    "finding": "BuildExecutable always calls Builder::Link; no final executable reuse check. Keeping private output cannot avoid C compilation/linking."
+  },
+  "syscall_diagnostic": {
+    "tool": "strace -- version 7.3",
+    "affinity": [
+      0
+    ],
+    "traced_binary_sha256": "78701624fff932ff1aecdfeb9eefb6f793a8300116a9a05d5c1da6d7d356a511",
+    "workspace_input_identity": "same warmed workspace as shuffled.json",
+    "raw_trace_sha256": "fbee260db739bb4a752a0f78d62ce085eafac00bb166fe963cc70dbb819ca102",
+    "privacy": "raw trace retained locally because exec/read/write arguments contain private absolute paths",
+    "sanitized_excerpt": "fsync(6) = 0 <0.040322>",
+    "published_executable_bytes": 644184,
+    "finding": "one traced publication included a 40.322 ms successful sync; this is an additional instrumented observation, not a timing comparison"
+  },
+  "summary": {
+    "tree": {
+      "wall": {
+        "median_ms": 27.952632,
+        "min_ms": 27.705168,
+        "max_ms": 33.587859
+      },
+      "resolve_ns": {
+        "median_ms": 19.09456,
+        "min_ms": 19.03118,
+        "max_ms": 24.479387
+      }
+    },
+    "check": {
+      "wall": {
+        "median_ms": 120.451194,
+        "min_ms": 115.708392,
+        "max_ms": 120.554668
+      },
+      "resolve_ns": {
+        "median_ms": 20.172188,
+        "min_ms": 19.13529,
+        "max_ms": 21.175498
+      },
+      "compiler_identity_ns": {
+        "median_ms": 7.443593999999999,
+        "min_ms": 6.9727369999999995,
+        "max_ms": 7.498163
+      },
+      "prepare_ns": {
+        "median_ms": 22.033122,
+        "min_ms": 21.648978999999997,
+        "max_ms": 26.190111
+      },
+      "entry_ns": {
+        "median_ms": 0.32794999999999996,
+        "min_ms": 0.308558,
+        "max_ms": 0.6042350000000001
+      },
+      "check_ns": {
+        "median_ms": 58.534814,
+        "min_ms": 56.753887000000006,
+        "max_ms": 60.202157
+      }
+    },
+    "build": {
+      "wall": {
+        "median_ms": 536.721605,
+        "min_ms": 534.110393,
+        "max_ms": 550.212951
+      },
+      "resolve_ns": {
+        "median_ms": 9.916335,
+        "min_ms": 9.897668,
+        "max_ms": 11.138133
+      },
+      "compiler_identity_ns": {
+        "median_ms": 4.405757,
+        "min_ms": 4.269792,
+        "max_ms": 4.461484
+      },
+      "prepare_ns": {
+        "median_ms": 11.742566,
+        "min_ms": 11.586762,
+        "max_ms": 11.835957
+      },
+      "entry_ns": {
+        "median_ms": 0.158108,
+        "min_ms": 0.14791,
+        "max_ms": 0.191892
+      },
+      "compile_ns": {
+        "median_ms": 473.761686,
+        "min_ms": 463.248009,
+        "max_ms": 476.041599
+      },
+      "publish_ns": {
+        "median_ms": 36.531927,
+        "min_ms": 24.821677,
+        "max_ms": 39.090146
+      }
+    },
+    "run": {
+      "wall": {
+        "median_ms": 539.4498,
+        "min_ms": 526.544042,
+        "max_ms": 552.872315
+      },
+      "resolve_ns": {
+        "median_ms": 9.658821,
+        "min_ms": 9.455166,
+        "max_ms": 12.555093
+      },
+      "compiler_identity_ns": {
+        "median_ms": 4.013786,
+        "min_ms": 3.863684,
+        "max_ms": 4.232622
+      },
+      "prepare_ns": {
+        "median_ms": 11.968134,
+        "min_ms": 11.604472,
+        "max_ms": 12.052195
+      },
+      "entry_ns": {
+        "median_ms": 0.160379,
+        "min_ms": 0.151571,
+        "max_ms": 0.16082
+      },
+      "compile_ns": {
+        "median_ms": 469.291285,
+        "min_ms": 462.962378,
+        "max_ms": 484.542894
+      },
+      "publish_ns": {
+        "median_ms": 28.476244,
+        "min_ms": 27.936892,
+        "max_ms": 34.001809
+      },
+      "run_ns": {
+        "median_ms": 1.694923,
+        "min_ms": 1.578938,
+        "max_ms": 1.739327
+      }
+    }
+  },
+  "raw_sha256": {
+    "exploratory.json": "9c2a1630590f4b666f2bc50e4ceefed15059096ffce6006766e979b55977ea20",
+    "shuffled.json": "cd031ac7e656e4405dc280b6ab0d9b40c3953473d4065e8fdfd4e3f3fd41b854"
+  }
+}
