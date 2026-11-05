@@ -1,0 +1,2 @@
+[workspace]
+members = ["gate", "gate/vendor/rules"]

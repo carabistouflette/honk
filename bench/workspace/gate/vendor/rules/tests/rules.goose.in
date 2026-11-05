@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
+import version_rules from "..";
+fn main() {
+    assert(version_rules::decide("^1.2.3", "1.9.0") == version_rules::Decision.Match);
+    assert(version_rules::decide("^1.2.3", "2.0.0") == version_rules::Decision.NoMatch);
+    assert(version_rules::decide("*", "1.0.0-beta.1") == version_rules::Decision.NoMatch);
+    assert(version_rules::decide(">=1.0.0-beta.1,<1.0.0", "1.0.0-beta.2") == version_rules::Decision.Match);
+    assert(version_rules::decide("=1.2.3", "1.2.3+build") == version_rules::Decision.Match);
+    assert(version_rules::decide("1.2", "1.2.3") == version_rules::Decision.InvalidRequirement);
+    assert(version_rules::decide("*", "v1.2.3") == version_rules::Decision.InvalidVersion);
+}

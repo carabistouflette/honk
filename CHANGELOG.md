@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add an opt-in functional Git/path workspace example and a reproducible driver
+  for cold operations, warm CLI samples, locked/offline recovery and packaging.
+
 ## 0.2.0 — 2026-11-05 (experimental prerelease)
 
 Adds bounded Git version requirements and the recovery SIGPIPE correction.

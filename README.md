@@ -82,6 +82,11 @@ This is an evolving Git/path package workflow. Registry publishing, general depe
 
 Large staged files use Linux kernel-assisted copying where supported, with a bounded portable fallback. Temporary staging rewrites are atomic without requesting crash durability; manifest, lockfile, and cache metadata writes retain their durability syncs. Snapshot tests verify byte equality, executable assets, source/copy independence, and rejection above the logical byte limit. Benchmarks record their filesystem and include a 32 MiB asset workload; `AUDIT_TEMP_ROOT` selects the fixture location.
 
+The opt-in [real Git/path workspace exercise](bench/WORKSPACE.md) materializes a
+usable version-gate CLI and records cold operations and shuffled warm samples.
+It checks actual public HTTPS Git, cache/lock recovery and exported packages.
+It runs separately from the default offline fixtures and CI benchmark smoke.
+
 Dependency `add`/`remove` preserves comments and formatting outside edited TOML
 syntax using goose-toml-edit. Removal keeps attached comments as standalone
 comments. Inline dependency assignments, dotted dependency fields and declared

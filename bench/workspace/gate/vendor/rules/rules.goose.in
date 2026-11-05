@@ -1,0 +1,11 @@
+// SPDX-License-Identifier: Apache-2.0
+namespace version_rules;
+import semver;
+enum Decision { Match, NoMatch, InvalidRequirement, InvalidVersion }
+fn decide(requirement: const u8[:], candidate: const u8[:]) -> Decision {
+    let request, request_error = semver::parse_requirement(requirement);
+    if request_error.kind != semver::ErrorKind.None { return Decision.InvalidRequirement; }
+    let version, version_error = semver::parse(candidate);
+    if version_error.kind != semver::ErrorKind.None { return Decision.InvalidVersion; }
+    return if semver::matches(request, version) { Decision.Match } else { Decision.NoMatch };
+}

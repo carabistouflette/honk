@@ -1,0 +1,12 @@
+[package]
+name = "version_gate"
+version = "0.1.0"
+kind = "bin"
+entry = "src/main.goose"
+license = "Apache-2.0"
+
+[toolchain]
+revision = "eadca409f68210893f366e60d0c2f0dc29a339be"
+
+[dependencies]
+version_rules = { path = "vendor/rules" }

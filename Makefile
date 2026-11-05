@@ -6,7 +6,7 @@ format:
 	python3 scripts/process-fixture.py --update
 	$(GOOSE) format honk.goose src tests
 check:
-	python3 -m py_compile scripts/metadata-test-build.py tests/http_metadata.py
+	python3 -m py_compile scripts/metadata-test-build.py tests/http_metadata.py bench/dogfood.py
 	python3 scripts/process-fixture.py
 	python3 scripts/check-vendor.py
 	$(GOOSE) format --check honk.goose src tests
