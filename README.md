@@ -19,7 +19,7 @@ cd hello-honk
 
 The example creates a sibling application and leaves the Honk checkout clean.
 Build/test prerequisites: Linux, Git 2.31+, CMake 3.27+, C/C++20 compilers, Make,
-libc and libcurl development headers (libcurl >=7.85 with TLS, asynchronous DNS and thread-safe initialization), pkg-config, Python 3.11+, GNU tar, gzip and OpenSSL (TLS tests). The tests exercise
+libc, libsodium (>=1.0.18) and libcurl development headers (libcurl >=7.85 with TLS, asynchronous DNS and thread-safe initialization), pkg-config, Python 3.11+, GNU tar, gzip and OpenSSL (TLS tests). The tests exercise
 packaging as well as builds. The sanitizer and portable-copy scripts default to GCC; set
 `HONK_SANITIZER_CC=clang` to validate with Clang instead.
 The release workflow is initially validated on Linux x86-64/glibc; Windows,
@@ -159,3 +159,12 @@ or fetch. Failed resolution preserves lock bytes. Distinct requirements for one
 import identity fail as a conflict; there is no graph backtracking or registry.
 The optional new lock `requirement` key is rejected by older Honk versions.
 This workflow is available from v0.2.0 and absent from the frozen v0.1.0 release.
+
+Opt-in `build --reuse-build` / `run --reuse-build` can reuse a verified local
+executable for bounded source-only targets. Fresh dependency validation/staging
+and atomic output publication still run. Native sidecars, explicit externs,
+embedded inputs and unsupported toolchains compile normally. This first version
+assumes unchanged administrator-controlled compiler support tools/system headers/
+sysroot: run an ordinary build or `clean` after changing those inputs. Reuse is
+off by default and is not a hermetic cache. See [the complete contract and
+limits](docs/INCREMENTAL-BUILDS.md).

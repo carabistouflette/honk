@@ -8,6 +8,7 @@ import .manifest;
 import .project;
 import .source;
 import .deps;
+import .build_cache;
 fn suffix(s: u8[:], ending: u8[:]) -> bool { s.len >= ending.len && s[s.len - ending.len..] == ending }
 fn skip(name: u8[:]) -> bool { name == ".git" || name == "target" || name == ".honk" || name == ".toolchain" || name == ".build" }
 fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
@@ -99,20 +100,39 @@ fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
     }
     out.append(source); if out != source { platform::save_scratch(file, out); } return file;
 }
-fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: bool, root: u8[:]) {
+fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: bool, root: u8[:], graph: deps::Graph&, reuse: bool) {
     let kind = platform::kind(output);
     platform::require(kind == 0 || kind == 1, "binary output must not be a symlink or special file");
     let private_dir = str(stage, "/.honk"); platform::require(platform::mkdir(private_dir), "cannot create private compiler output directory");
     let temporary = str(private_dir, "/program");
+    let directory = build_cache::slot(root, release, reuse);
+    var cc: u8[>..] = [];
+    let key: u8[>..] = if reuse { build_cache::key(compiler, entry, stage, release, root, graph, cc) } else { [] };
+    if build_cache::restore(directory, key, private_dir) {
+        platform::require(platform::install(temporary, output, true), "cannot atomically publish executable");
+        print("built ", output); return;
+    }
+    build_cache::invalidate(directory);
+    // A corrupt entry can leave a private partial copy. Never let a compiler
+    // follow it or publish it as a successful output.
+    if platform::kind(temporary) != 0 { platform::require(platform::unlink_regular(temporary), "cannot clear private compiler output"); }
     var packed: u8[>..] = [];
     let argv: const u8[:][] = [compiler, "build", entry, "--offline", "-o", temporary]; for a in argv { platform::pack(packed, a); }
     if !release { platform::pack(packed, "--debug"); }
+    if key.len > 0 {
+        for option in ["--standalone", "--stdlib", str(private_dir, "/stdlib"), "--cc", cc[..]] { platform::pack(packed, option); }
+    }
     var captured: u8[>..] = []; let code = platform::spawn(packed, root, true, captured);
     if code != 0 { write_stdout(captured); platform::child_exit(code); }
     platform::require(platform::install(temporary, output, true), "cannot atomically publish executable");
+    if key.len > 0 {
+        var current_cc: u8[>..] = [];
+        let current = build_cache::key(compiler, entry, stage, release, root, graph, current_cc);
+        if current == key { build_cache::store(directory, key, temporary); }
+    }
     print("built ", output);
 }
-fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:]) {
+fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool = false) {
     deps::activate(g, cmd == "test" || cmd == "bench");
     let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
     let output = str(p.root, "/target/", profile); platform::require(platform::mkdir(output), "cannot create build output directory");
@@ -123,7 +143,7 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         for path, i in paths {
             let target_dir = str(output, "/.honk/", dir); platform::require(platform::mkdir(target_dir), "cannot create test output directory");
             let entry = root_entry(stage, path, g); let executable = str(target_dir, "/", i);
-            binary(compiler, entry, stage, executable, release, p.root);
+            binary(compiler, entry, stage, executable, release, p.root, g, false);
             var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
             var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }
         }
@@ -140,7 +160,7 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         let argv: const u8[:][] = [compiler, "check", entry, "--offline"]; platform::run(argv, p.root);
         platform::require(cmd != "run", "run requires a binary package"); return;
     }
-    let executable = str(output, "/", p.name); binary(compiler, entry, stage, executable, release, p.root);
+    let executable = str(output, "/", p.name); binary(compiler, entry, stage, executable, release, p.root, g, reuse);
     if cmd == "run" {
         var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
         var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }

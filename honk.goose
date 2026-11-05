@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import crypto from "./vendor/goose-crypto";
 import http from "./vendor/goose-http";
 import honk_metadata from "./vendor/honk-metadata";
 import process from "./vendor/goose-process";
@@ -40,7 +41,7 @@ fn cli_main() {
     if argv.len < 2 || argv[1] == "help" || argv[1] == "--help" || argv[1] == "-h" { usage(); return; }
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.2.0"); return; }
-    let spec = [argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
+    let spec = [argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
                 argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
@@ -152,7 +153,8 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {
     platform::require(arguments == 0 || cmd == "run" || cmd == "test" || cmd == "bench", "only run/test/bench accept arguments after --");
     for entry in options.entries {
         let name = entry.name; var allowed = false;
-        if name == "metadata" { allowed = cmd == "toolchain"; }
+        if name == "reuse-build" { allowed = cmd == "build" || cmd == "run"; }
+        else if name == "metadata" { allowed = cmd == "toolchain"; }
         else if name == "help" || name == "log-file" { allowed = true; }
         else if name == "lib" || name == "name" { allowed = cmd == "new" || cmd == "init"; }
         else if name == "path" || name == "git" || name == "rev" || name == "version" || name == "dev" { allowed = cmd == "add"; }

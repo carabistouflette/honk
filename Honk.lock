@@ -64,3 +64,10 @@ path = "vendor/goose-log"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "crypto"
+path = "vendor/goose-crypto"
+git = ""
+rev = ""
+commit = ""

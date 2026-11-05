@@ -16,6 +16,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     let lock = platform::lock(str(p.root, "/.honk/lock")); platform::require(lock >= 0, "project is locked by another Honk process");
     if cmd == "clean" {
         platform::require(platform::remove_tree(str(p.root, "/target")), "cannot clean target directory");
+        platform::require(platform::remove_tree(str(p.root, "/.honk/reuse")), "cannot clean build reuse state");
         platform::require(platform::remove_tree(str(p.root, "/.honk/stage")), "cannot clean stage directory");
         platform::require(platform::remove_tree(str(p.root, "/.honk/package")), "cannot clean package staging directory");
         platform::require(platform::remove_tree(str(p.root, "/.honk/package-files")), "cannot clean package file list");
@@ -106,7 +107,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         distribution::package(p, graph, compiler);
     } else {
         let release = options.has("release") || cmd == "install";
-        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args);
+        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args, options.has("reuse-build"));
         if cmd == "install" {
             let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
             distribution::install(p, release, destination, options.has("force"));

@@ -10,6 +10,7 @@ release; changing them requires explicit review and validation.
 | [goose-toml](https://github.com/carabistouflette/goose-toml) | `fe849141405009e36e1cce6eb479b395eae18f1a` | `vendor/goose-toml/` canonical parser/writer/source profile | [Apache-2.0](vendor/goose-toml/LICENSE) |
 | [goose-toml-edit](https://github.com/carabistouflette/goose-toml-edit) | `f8d1b1664a86b768a6f1375636d9b2c3a440aa31` | `vendor/goose-toml-edit/toml_edit.goose` thin legacy adapter | [Apache-2.0](vendor/goose-toml-edit/LICENSE) |
 | [goose-argparse](https://github.com/carabistouflette/goose-argparse) | `d23af7aff17c6720d17a2e8f6b80bd3bf8f14275` | `vendor/goose-argparse/argparse.goose` | [Apache-2.0](vendor/goose-argparse/LICENSE) |
+| [goose-crypto](https://github.com/carabistouflette/goose-crypto) | `a4643f62bd5e76b371054c6537a95169a7930101` | `vendor/goose-crypto/` SHA-256/native adapter | [Apache-2.0](vendor/goose-crypto/LICENSE) |
 | [goose-log](https://github.com/carabistouflette/goose-log) | `a3919c5e9135b9812db422d5052bb1ea5d1d202b` | `vendor/goose-log/logger.goose` | [Apache-2.0](vendor/goose-log/LICENSE), [NOTICE](vendor/goose-log/NOTICE) |
 | [goose-text](https://github.com/carabistouflette/goose-text) | `46059e30be79ece6efd4317eb0adc6d213c808ab` | `vendor/goose-text/text.goose` | [Apache-2.0](vendor/goose-text/LICENSE) |
 | [goose-semver](https://github.com/carabistouflette/goose-semver) | `2311ae69a7edacb545f284b02e345be07dd2fb05` | `vendor/goose-semver/semver.goose` | [Apache-2.0](vendor/goose-semver/LICENSE) |
@@ -36,3 +37,8 @@ vendored source packages in this distribution.
 
 The vendored goose-toml-edit editor is Apache-2.0; see vendor/goose-toml-edit/LICENSE and vendor/manifest.json. Its pinned TOML parser includes the original nested vendor notices and licenses.
 The pinned goose-http test helpers in `tests/http_fixture/` are Apache-2.0; their source revision and hashes are recorded in that directory. `scripts/metadata-test-build.py` adapts the upstream test builder under the same license. Test transport redirection/CA overrides are excluded from production builds. System libcurl and its TLS/resolver dependencies are external libraries, not vendored source; distribution of those libraries follows their own licenses.
+
+SHA-256 uses the pinned goose-crypto adapter and system libsodium (>=1.0.18),
+not a Honk cryptographic implementation. System libsodium is external; its
+redistribution follows its own license. No artifact trust or signature policy
+is introduced by build reuse.

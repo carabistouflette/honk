@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import crypto from "../vendor/goose-crypto";
 import toml_edit from "../vendor/goose-toml-edit";
 import logger from "../vendor/goose-log";
 import http from "../vendor/goose-http";

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add explicit `build/run --reuse-build` for bounded source-only targets, using
+  verified independent artifacts and SHA-256 from pinned goose-crypto. Reuse
+  keeps dependency validation/staging and atomic output publication; it is off
+  by default and requires unchanged indirect system-toolchain inputs.
+
 - Add an opt-in functional Git/path workspace example and a reproducible driver
   for cold operations, warm CLI samples, locked/offline recovery and packaging.
 

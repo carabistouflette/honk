@@ -107,6 +107,21 @@
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049"
       }
+    },
+    {
+      "directory": "goose-crypto",
+      "repository": "https://github.com/carabistouflette/goose-crypto",
+      "revision": "a4643f62bd5e76b371054c6537a95169a7930101",
+      "license": "Apache-2.0",
+      "files": {
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
     }
   ]
 }

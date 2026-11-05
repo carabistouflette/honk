@@ -203,6 +203,65 @@ bool honk_read_staged(hs s, gs_rref out) {
   return read_bounded(s, out, HSTAGED_CAP);
 }
 
+// Bounded descriptor operations for Goose-owned content hashing. No hashing or
+// cache policy lives here; the caller closes every successfully opened file.
+int64_t honk_cache_open(hs s, int64_t limit) {
+  char p[HPATH];
+  if (!path(s, p) || limit < 0 || limit > 268435456) return -1;
+  int fd = open(p, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+  if (fd < 0) return -1;
+  struct stat st;
+  if (fstat(fd, &st) < 0 || !S_ISREG(st.st_mode) || st.st_size < 0 ||
+      (uint64_t)st.st_size > (uint64_t)limit) { close(fd); return -1; }
+  return fd;
+}
+int64_t honk_cache_read(int64_t descriptor, hs buffer) {
+  if (descriptor < 0 || descriptor > INT_MAX || buffer.len <= 0 ||
+      buffer.len > 65536 || !buffer.data) return -1;
+  ssize_t count;
+  do { count = read((int)descriptor, (void *)buffer.data, (size_t)buffer.len); }
+  while (count < 0 && errno == EINTR);
+  return count;
+}
+bool honk_cache_close(int64_t descriptor) {
+  return descriptor >= 0 && descriptor <= INT_MAX && close((int)descriptor) == 0;
+}
+bool honk_cache_private(hs s, bool directory) {
+  char p[HPATH]; struct stat st;
+  return path(s, p) && lstat(p, &st) == 0 && st.st_uid == geteuid() &&
+         !(st.st_mode & 077) && (directory ? S_ISDIR(st.st_mode) :
+                                S_ISREG(st.st_mode) && st.st_nlink == 1);
+}
+bool honk_cache_seal(hs s) {
+  char p[HPATH];
+  if (!path(s, p)) return false;
+  int fd = open(p, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK);
+  if (fd < 0) return false;
+  struct stat st;
+  bool ok = fstat(fd, &st) == 0 && S_ISREG(st.st_mode) &&
+            st.st_uid == geteuid() && st.st_nlink == 1 && fchmod(fd, 0600) == 0;
+  if (close(fd) < 0) ok = false;
+  return ok;
+}
+bool honk_cache_executable(hs s) {
+  char p[HPATH]; struct stat st;
+  return path(s, p) && stat(p, &st) == 0 && S_ISREG(st.st_mode) && access(p, X_OK) == 0;
+}
+extern char **environ;
+bool honk_cache_environment(gs_rref out) {
+  size_t bytes = 0, count = 0;
+  if (!environ) return true;
+  for (; environ[count]; ++count) {
+    if (count == 4096) return false;
+    size_t length = strnlen(environ[count], 65537);
+    if (length > 65536 || length + 1 > HCAP - bytes) return false;
+    bytes += length + 1;
+  }
+  for (size_t i = 0; i < count; ++i)
+    gs_bld_append(out, environ[i], (int64_t)strlen(environ[i]) + 1);
+  return true;
+}
+
 static bool write_atomic(hs s, hs data, bool executable, bool exclusive,
                          bool durable) {
   char p[HPATH], t[HPATH];
