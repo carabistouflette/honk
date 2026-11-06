@@ -132,7 +132,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         distribution::package(p, graph, compiler);
     } else {
         let release = options.has("release") || cmd == "install";
-        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args, options.has("reuse-build"));
+        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args, options.has("reuse-build"), options.get("filter"));
         if cmd == "install" {
             let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
             distribution::install(p, release, destination, options.has("force"));

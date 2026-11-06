@@ -20,3 +20,6 @@ the companion remains `f8d1b1664a86b768a6f1375636d9b2c3a440aa31`.
 UTC logging uses the included goose-log adapter and goose-time snapshot.
 HTTP metadata uses the included consumer example. The manifest records exact
 source files for all of them; a newer upstream release is not adopted implicitly.
+
+Target filtering uses only goose-glob v0.1.0-alpha.1 at `4e8d7830e81b8ffd1c4d8ae2716ea93edc7ea8e3`
+(`glob.goose` and LICENSE). The optional filesystem collector is not vendored.

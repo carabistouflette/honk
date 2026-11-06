@@ -135,6 +135,16 @@
         "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
+    },
+    {
+      "directory": "goose-glob",
+      "repository": "https://github.com/carabistouflette/goose-glob",
+      "revision": "4e8d7830e81b8ffd1c4d8ae2716ea93edc7ea8e3",
+      "license": "Apache-2.0",
+      "files": {
+        "glob.goose": "db7a4f4b22ba0b32a980e34c8ae218a71ce42ba3dd09f38edaae37fc11b4c80d",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
     }
   ]
 }

@@ -43,3 +43,7 @@ SHA-256 uses the pinned goose-crypto adapter and system libsodium (>=1.0.18),
 not a Honk cryptographic implementation. System libsodium is external; its
 redistribution follows its own license. No artifact trust or signature policy
 is introduced by build reuse.
+
+Target matching includes [goose-glob](https://github.com/carabistouflette/goose-glob)
+v0.1.0-alpha.1 at `4e8d7830e81b8ffd1c4d8ae2716ea93edc7ea8e3`;
+see [Apache-2.0](vendor/goose-glob/LICENSE) and vendor/manifest.json.

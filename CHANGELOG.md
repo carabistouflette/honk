@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `test/bench --filter PATTERN` using pinned public goose-glob matching,
+  preserving source traversal checks and unfiltered defaults.
+
 ## 0.4.0 — 2026-11-05 (experimental prerelease)
 
 Source-only Linux x86-64/glibc release. CLI, manifest and lockfile formats
