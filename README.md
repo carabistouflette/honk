@@ -72,3 +72,30 @@ Build only projects and tools you trust: Honk is not a sandbox. Private caches
 must not be writable by untrusted users. Builds preserve the last-good executable
 on compilation failure; source packaging requires tracked regular files and
 in-package dependencies. See the reference for resource, signal and HTTP limits.
+
+### Select test and benchmark targets
+
+`honk test --filter 'tests/unit/**/*.goose'` and
+`honk bench --filter 'bench/*_bench.goose'` select standalone `.goose` programs.
+Quote the pattern to prevent shell expansion. Matching is case-sensitive on the
+whole project-relative byte path (including `tests/` or `bench/`), with hidden
+components included. Without `--filter`, all targets run as before. Arguments
+after `--` still go to each selected program. Imported helpers are not filtered.
+
+Patterns support `*` (within one component), `?` (one byte), `**` as an entire
+component (zero or more components), classes `[abc]`, `[a-z]`, `[!abc]`/`[^abc]`,
+and backslash escapes outside classes. Braces, tilde and extglobs have no special
+meaning. Empty/absolute patterns, empty or `.`/`..` components, malformed classes,
+embedded `**` and trailing escapes fail. Patterns are capped at 1024 bytes and
+128 components; matched paths at 4095 bytes and 128 components. Each match uses
+goose-glob's default 1048576 work budget. Invalid paths or exhausted limits fail
+the command before any selected program runs; a filter matching no targets also
+fails (including when the target directory is absent).
+
+Filtering uses the public `glob::matches` API from
+[goose-glob v0.1.0-alpha.1](https://github.com/carabistouflette/goose-glob/releases/tag/v0.1.0-alpha.1).
+Honk retains its own traversal and staging: symlinks and special files are
+rejected, `.git`, `target`, `.honk`, `.toolchain`, `.build` remain excluded, and
+the existing 4096 source/directory caps apply before filtering. This option is
+available only for `test` and `bench`; it does not prune the source tree or change
+manifest selection. The library and this CLI remain experimental.

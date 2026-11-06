@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import glob from "../vendor/goose-glob";
 import crypto from "../vendor/goose-crypto";
 import http from "../vendor/goose-http";
 import honk_metadata from "../vendor/honk-metadata";

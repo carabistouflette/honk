@@ -3,6 +3,7 @@ namespace build;
 import std;
 import os;
 import json;
+import glob;
 import .platform;
 import .manifest;
 import .project;
@@ -33,6 +34,18 @@ fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
             }
         }
     }
+}
+// Filter only after traversal, preserving its safety checks and source limits.
+fn select_targets(paths: u8[][>..]&, pattern: u8[:]) {
+    if pattern.len == 0 { return; }
+    var selected: u8[][>..] = [];
+    for path in paths {
+        let matched, status = glob::matches(pattern, path, glob::Options { hidden: true, .. });
+        platform::require(status.error == glob::Error.None, "--filter glob failed (invalid path or matcher limit)");
+        if matched { selected.push(str(path)); }
+    }
+    platform::require(selected.len > 0, "--filter matched no targets");
+    paths = copy(selected);
 }
 fn rewrite(text: u8[:], g: deps::Graph&, directory: u8[:], original: u8[:], p: manifest::Project&, stage: u8[:]) -> u8[>..] {
     let reqs = source::requirements(text); var out: u8[>..] = []; var start = 0;
@@ -132,14 +145,15 @@ fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: b
     }
     print("built ", output);
 }
-fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool = false) {
+fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool = false, filter: u8[:] = "") {
     deps::activate(g, cmd == "test" || cmd == "bench");
     let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
     let output = str(p.root, "/target/", profile); platform::require(platform::mkdir(output), "cannot create build output directory");
     if cmd == "test" || cmd == "bench" {
         let dir = if cmd == "test" { "tests" } else { "bench" };
-        if !is_dir(str(stage, "/", dir)) { print("No ", dir, " targets"); return; }
+        if !is_dir(str(stage, "/", dir)) { platform::require(filter.len == 0, "--filter matched no targets"); print("No ", dir, " targets"); return; }
         var paths: u8[][>..] = []; files(stage, dir, paths);
+        select_targets(paths, filter);
         for path, i in paths {
             let target_dir = str(output, "/.honk/", dir); platform::require(platform::mkdir(target_dir), "cannot create test output directory");
             let entry = root_entry(stage, path, g); let executable = str(target_dir, "/", i);
