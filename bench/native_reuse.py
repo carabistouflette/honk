@@ -70,7 +70,7 @@ def main():
     if git(ROOT,'status','--porcelain').strip():parser.error('requires clean committed Honk source')
     out=args.output.resolve();out.mkdir(parents=True,exist_ok=False);(out/'tmp').mkdir()
     report=dict(complete=False,head=git(ROOT,'rev-parse','HEAD').decode().strip(),platform=platform.platform(),
-                records=[],mutations=[],profiles={},scope='Correctness qualification, not a performance comparison. Native CMake caches may remain warm.')
+                records=[],mutations=[],profiles={},postconditions={},scope='Correctness qualification, not a performance comparison. Native CMake caches may remain warm.')
     target=out/'raw.json';save(target,report)
     tools={'honk':args.honk,'goose':args.goose}
     harness=[Path(__file__),ROOT/'bench/process_observer.py',ROOT/'bench/qualify_parallel.py',ROOT/'bench/observer_calibration.py']
@@ -155,10 +155,12 @@ def main():
         api=crypto/'tests/api.goose';before=mutate(api,api.read_bytes()+b'\n// derivative qualification fixture\n','native-source-edit')
         run('crypto','edited_source_fallback',['--reuse-build'],expected=native_expected);mutate(api,before,'native-source-restore')
         published=crypto/'target/release/.honk/tests/0';published_hash=digest(published)
+        report['postconditions']['native_publication_before']=published_hash;save(target,report)
         native=crypto/'native/crypto.c';sidecar=crypto/'crypto.build'
         c_before=mutate(native,native.read_bytes()+b'\n#error intentional_qualification_failure\n','native-compile-failure')
         b_before=mutate(sidecar,sidecar.read_bytes()+b'\n// derivative: force native package fingerprint refresh\n','native-build-refresh')
         failed=run('crypto','failed_native_build',['--reuse-build'],work='any',code=1)
+        report['postconditions']['native_publication_after_failure']=digest(published);save(target,report)
         if digest(published)!=published_hash:raise RuntimeError('failed native build replaced published executable')
         if 'intentional_qualification_failure' not in failed['stdout']+failed['stderr']:raise RuntimeError('native compiler failure was not exercised')
         mutate(native,c_before,'native-compile-restore');mutate(sidecar,b_before,'native-build-restore')
@@ -180,18 +182,21 @@ def main():
         program=diff/f'.honk/reuse/release/tests/{bucket}/program'
         data=program.read_bytes();damaged=data[:-1]+bytes([data[-1]^1])
         if damaged[:4]!=b'\x7fELF':raise RuntimeError('corruption must preserve ELF magic')
+        report['postconditions']['corrupt_elf_magic']={'before':data[:4].hex(),'after':damaged[:4].hex()}
         mutate(program,damaged,'corrupt-cached-executable')
         run('diff','corruption_recompiles',['--reuse-build'],expected=expected)
         run('diff','corruption_recovered_hit',['--reuse-build'],work='hit',expected=expected)
         sentinel=out/'external-sentinel';sentinel.write_bytes(b'unchanged external data')
+        report['postconditions']['sentinel_before']=digest(sentinel);save(target,report)
         program.unlink();program.symlink_to(sentinel)
         run('diff','symlink_not_followed',['--reuse-build'],expected=expected)
+        report['postconditions']['sentinel_after']=digest(sentinel);save(target,report)
         if sentinel.read_bytes()!=b'unchanged external data':raise RuntimeError('symlink modified external sentinel')
         program.unlink();run('diff','symlink_repopulate',['--reuse-build'],expected=expected)
         run('diff','symlink_recovered_hit',['--reuse-build'],work='hit',expected=expected)
         alternate=out/'alternate-goose';shutil.copyfile(args.goose,alternate);alternate.chmod(0o755)
         environments['diff']['GOOSE']=str(alternate)
-        run('diff','compiler_location_change',['--reuse-build'],expected=expected)
+        run('diff','compiler_location_environment_change',['--reuse-build'],expected=expected)
         run('diff','alternate_compiler_hit',['--reuse-build'],work='hit',expected=expected)
         mutate(alternate,alternate.read_bytes()+b'\0','compiler-bytes-change')
         run('diff','compiler_bytes_invalidate',['--reuse-build'],expected=expected)
@@ -199,6 +204,8 @@ def main():
         environments['diff']['GOOSE']=str(args.goose)
         run('diff','original_compiler_restore',['--reuse-build'],expected=expected)
         run('diff','final_hit',['--reuse-build'],work='hit',expected=expected)
+        report['restored_files']={name:{path:{'sha256':digest(project/path),'mode':stat.S_IMODE((project/path).stat().st_mode)} for path in report['profiles'][name]['files']} for name,project in projects.items()}
+        save(target,report)
         for name,project in projects.items():
             for path,record in report['profiles'][name]['files'].items():
                 if digest(project/path)!=record['sha256'] or stat.S_IMODE((project/path).stat().st_mode)!=record['mode']:raise RuntimeError('upstream input not restored: '+path)
