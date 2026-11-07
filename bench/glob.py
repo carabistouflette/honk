@@ -128,7 +128,9 @@ def main():
               'compiler': call([goose, 'version']).stdout,
               'cc': call([cc, '--version']).stdout,
               'environment': {key: os.environ.get(key) for key in
-                              ('GOOSE_HOME', 'GOOSE_STDLIB', 'LD_PRELOAD', 'LD_LIBRARY_PATH', 'ASAN_OPTIONS')},
+                              ('GOOSE_HOME', 'GOOSE_STDLIB', 'LD_PRELOAD', 'LD_LIBRARY_PATH', 'ASAN_OPTIONS',
+                               'CC', 'CXX', 'CFLAGS', 'CXXFLAGS', 'CPPFLAGS', 'LDFLAGS',
+                               'CPATH', 'LIBRARY_PATH', 'CMAKE_GENERATOR')},
               'expected_outputs': {case: {'stdout': out, 'stderr': err} for case, (out, err) in expected.items()},
               'samples': samples,
               'scope': 'Sequential randomized warm-cache invocations on one CPU on a shared host. '
