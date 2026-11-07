@@ -33,10 +33,10 @@ Retaining a root fd can defer its IN_DELETE_SELF/IGNORED until the fd closes.
 Therefore each explicit root has a watched parent sentinel and an exact raw
 basename/identity binding. Explicit root/sentinel move, removal or identity
 failure stops the session; discovered directory changes request reconciliation.
-The root-parent sentinels count against the 256 identity limit. An identity
-shared between a sentinel and included directory has both roles; aliasing or
-overlapping explicit roots must have an explicit deduplication/rejection policy
-before the implementation is accepted.
+The data-generation parent sentinels count against the256 identity limit.
+Shared parent-only sentinels are deduplicated; overlapping explicit roots and
+any identity shared between a sentinel and included directory are rejected.
+The independent guard retains at most16 root/parent identities.
 
 ## Generations and coverage
 
@@ -48,7 +48,9 @@ bindings and current included membership, then drain namespace events to true
 idle before promotion. Drain budget exhaustion is distinct from idle: existing
 `changes()==0` cannot establish stability after its 256-record cap.
 
-Each attempt has a combined 4096-record queue budget; namespace changes,
+Each attempt has a4096-record candidate queue budget. Each persistent-root
+guard check has its own4096-record budget and must reach true idle; those checks
+occur between scan steps and at promotion. Candidate namespace changes,
 overflow, unexpected terminal events, verification differences and exhausted
 budgets invalidate the attempt. Reconcile at most eight times, then stop with
 an explicit incomplete-coverage error. Open descriptors prevent identity reuse

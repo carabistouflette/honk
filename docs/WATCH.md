@@ -137,7 +137,8 @@ A separate session-long guard watches explicit roots and their parents across
 all generation replacements. It preserves fatal root-move history, including
 move-away/back, and detects removal even while open anchors delay self-delete
 events. Current configured root paths and retained parent/inode bindings are
-also checked. Explicit-root or sentinel loss stops the session. Root-guard
+also checked. Each guard check has its own4096-record budget and must reach true
+idle. Explicit-root or sentinel loss stops the session. Root-guard
 overflow, End or4096-record drain exhaustion fails conservatively; data-generation
 overflow can be repaired with a full rescan. No silent surviving subset continues.
 

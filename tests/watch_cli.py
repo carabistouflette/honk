@@ -126,6 +126,12 @@ finally:
         self.start(extra=('--watch-recursive',),GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow')
         self.wait(lambda:(self.root/'pid').exists());trigger.touch()
         self.finish(125);self.assertEqual(self.count(),1);self.assertFalse((self.root/'active').exists())
+    def test_recursive_empty_self_attribute_event_is_ignored(self):
+        self.start(runs=2,extra=('--watch-recursive',));self.idle()
+        self.src.chmod(0o750)
+        time.sleep(.1);self.assertEqual(self.count(),1)
+        (self.src/'main.goose').write_text('fn main() {} // edited')
+        self.finish();self.assertEqual(self.count(),2)
     def test_recursive_signal_active_preserves_sigint(self):
         self.start(extra=('--watch-recursive',),GATE_FIRST='1');self.wait(lambda:(self.root/'pid').exists())
         self.proc.send_signal(signal.SIGINT);self.finish(130)
