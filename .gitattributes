@@ -1,0 +1,3 @@
+# Preserve blank-line whitespace in raw Valgrind evidence without normalization.
+bench/results/compiler-diagnostics/*.log whitespace=-blank-at-eol
+bench/results/compiler-diagnostics/failed-default-reserve/*.log whitespace=-blank-at-eol
