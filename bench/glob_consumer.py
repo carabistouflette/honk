@@ -35,8 +35,9 @@ def call(command, **kwargs):
             result = subprocess.CompletedProcess(argv, child.wait())
         except BaseException:
             # The unreaped session leader still reserves its process group.
-            os.killpg(child.pid, signal.SIGKILL)
-            child.wait()
+            if child.returncode is None:
+                os.killpg(child.pid, signal.SIGKILL)
+                child.wait()
             raise
         finally:
             if descriptor is not None:

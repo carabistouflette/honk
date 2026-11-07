@@ -85,7 +85,8 @@ GNU `/usr/bin/time` records maximum resident memory in KiB. For commands spawnin
 compilers/targets this is the largest reported process or descendant high-water
 mark, not simultaneous aggregate memory. A kernel-reported zero is retained as
 unavailable, not claimed as zero memory use. Wall time includes the same GNU time
-wrapper for both versions. Raw samples, compiler/tool/binary/source hashes,
+wrapper for both versions. Linux pidfd readiness avoids the polling granularity
+of Python `wait(timeout)` for short startup controls. Raw samples, compiler/tool/binary/source hashes,
 platform/CPU details, full commands and expected outputs are retained; fixture
 inputs, generated lock and binary/tool hashes are checked before each sample and
 after measurement. Generated stage/output state is excluded from source hashes.
