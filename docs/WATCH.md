@@ -12,8 +12,9 @@ honk watch check --watch-dir "$PWD/src" --watch-runs 2
 Supply 1–256 explicit normalized absolute directories with repeated `--watch-dir`
 options. Each directory is watched nonrecursively. Duplicate text, inode aliases,
 final symlinks and any invalid member reject the complete set before running the
-selected command. A single directory remains a one-element set. It does not automatically watch
-nested directories, other workspace members, dependency trees, manifests or
+selected command. Startup errors identify a zero-based request index (`-1` for
+global errors), without displaying raw paths. A single directory remains a
+one-element set. It does not automatically watch nested directories, other workspace members, dependency trees, manifests or
 lockfiles. `check` or `test` still performs its ordinary full selected command;
 `--filter` selects test targets, not watched filenames. Normal command options
 and test arguments after `--` are forwarded literally, without a shell.
@@ -66,11 +67,15 @@ compiler barriers. It covers initial/finite runs, failure recovery, coalescing,
 ignored traffic, nonrecursion, atomic rename saves, literal args/filter/bin
 forwarding, no idle cache lock, idle/active/group cancellation, directory moves,
 child reaping, changes from either directory, cross-directory coalescing, the
-256-directory limit, invalid sets before launch and invalid options. The full normal and sanitizer suites remain
-required. No comparative performance claim is made.
+256-directory limit, invalid sets before launch and invalid options. The full
+normal and sanitizer suites remain required. No comparative performance claim is made.
 
 `make watch-fault-test` uses a separate linker adapter and compiler-cache key to
 inject event loss and corruption into the real consumer. It checks reopening,
 coalescing, deferred overflow diagnostics, a single termination request and
 waiting for delayed compiler cleanup. The adapter is excluded from production
 packages. `make watch-fault-sanitize` repeats it with ASan/UBSan.
+
+The [WatchSet qualification receipt](watch-set-validation.json) records exact
+source hashes, local checks and limitations. The earlier
+[one-directory receipt](watch-validation.json) is historical alpha.1 evidence.

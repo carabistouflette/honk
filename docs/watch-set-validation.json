@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "checked_at": "2026-11-07T14:52:47.088694+00:00",
+  "source_commit": "172f39e6c8cfb4aa5360b1572bea97c6512fce1f",
+  "sources": {
+    "honk.goose": "b524b4fbe0913800f03828b260719974e34cb1d35504a3c533f02870d23b72d2",
+    "src/watching.goose": "a601dd1f85cd8b88e95723a33d5942af20c685676d428c934bd5a3dded952ec3",
+    "tests/watch_cli.py": "7742b85554280e204c9d4d060f2a00053d51f14cb788cf1e82850d9bf17f5a4f",
+    "tests/watch_fault.c": "cd5e93213ece530373769d165ca7d42bfd30cb82eb6e71ac852e555455542c42",
+    "tests/text_cli.py": "bea4afe54df7fc5dfcc2399a358a73fa44e8af5e77e191ca6538ac416bfb2c60",
+    "scripts/watch-test-build.py": "31cbab6f90635aa7d4be9b1af069ea7bf9967c215dfccabbb70f4bb1b7596b94",
+    "vendor/manifest.json": "027c03bb5365b150d797182fcfa4d36b50274abc33e0d0ddfb0e95b77e7885fc",
+    "Makefile": "c01598e65776fb095bf6da280a94a6c423791162fc986e8e506be5d3af5d0341",
+    "Honk.toml": "20cb072ccebeddd8e759d2ab3fbe6c3de0705a483c952aa275360a3853fc6618",
+    "Honk.lock": "41648cfc20d8f52d6d4a514bca5232a1450f77a8736b3c38b2f34423d6309970"
+  },
+  "watch_pin": "56842ee7fc4c2fd948f663f1c50425bf2b3e8a73",
+  "watch_release": "https://github.com/carabistouflette/goose-watch/releases/tag/v0.1.0-alpha.2",
+  "watch_vendoring": "all seven source/build/license files independently verified byte-for-byte",
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "compiler_binary_sha256": "d6992f984453e28b1e9fc2540236063c0c9db67634a99b57a9a46ea58704c313",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "gcc": "gcc (GCC) 16.2.1 20260810",
+  "clang": "clang version 23.1.4",
+  "checks": {
+    "format_check_test_security": "full suite passed; 213 malformed-import probes and FIFO rejection",
+    "sanitize_gcc": "complete make sanitize passed, including HTTP metadata and watch fault cases",
+    "sanitize_clang": "all 22 watch cases passed under ASan/UBSan in separate standalone clone",
+    "watch": "22 normal cases, three fault-only skips; linked fault adapter runs all 22",
+    "standalone": "fresh clone check and normal watch suite passed",
+    "real_compiler": "initial check and second-directory-triggered full rerun passed",
+    "reviews": "three independent API/CLI, lifecycle and fresh packaging reviews found no blockers; stale vendor note corrected"
+  },
+  "log_sha256": {
+    "watch-set-qualification-gcc.log": "f9531975954de913ac7c33106490d452cbd7eb865b81d4f7f2bbab48d848435e",
+    "watch-set-qualification-clang.log": "dc138e765647540c50d24544dc958ff137f20b9bc2ee6d51309c627d9b4dd33c",
+    "watch-set-standalone.log": "8de1d98fc7aa2468c32abc3c0a643da3802ccc557bec28da60a2ee6f4363d8c0",
+    "watch-set-real-smoke.log": "5fa422246c437446eccabdf53b5f7f53d0fcaff4463b1bd55362d30c0d5547a2"
+  },
+  "binaries_sha256": {
+    "honk": "85b73b000798de958f3dc502cfc1944a582e4a220f724df4b4303e1d5259eacb",
+    "honk-sanitize": "62f3950fbe23cc48fb76f493394889f00cf24c99e05e6d5435e49ba2dcce2a77",
+    "honk-watch-fault": "cbbfcfe8393cae4fdf40db03093f166d66d3021605bd60e2900b39c219acb505",
+    "honk-watch-fault-sanitize": "4d60c06575d576cbb1b84a9fe65a2d2acc809b67e8f5395250e099b230f433f3"
+  },
+  "scope": "1..256 explicit nonrecursive directories. Linux 4.19+ and IN_MASK_CREATE headers, including one-element sets. No automatic discovery, hard child deadline, forced-kill escalation, interactive stdin or process-group supervision. No comparative performance claim. Local qualification only; hosted CI is a separate merge gate."
+}
