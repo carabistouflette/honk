@@ -8,7 +8,9 @@ import os
 from pathlib import Path
 import platform
 import random
+import select
 import shutil
+import signal
 import statistics
 import subprocess
 import sys
@@ -22,8 +24,23 @@ ROOT = Path(__file__).resolve().parents[1]
 def call(command, **kwargs):
     # Keep build/target logs off the Python heap until bounded reads.
     with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
-        result = subprocess.run(list(map(str, command)), stdout=out, stderr=err,
-                                timeout=300, **kwargs)
+        argv = list(map(str, command))
+        child = subprocess.Popen(argv, stdout=out, stderr=err, start_new_session=True, **kwargs)
+        descriptor = None
+        try:
+            descriptor = os.pidfd_open(child.pid)
+            # wait(timeout) polls and rounds short-command latency upward.
+            if not select.select([descriptor], [], [], 300)[0]:
+                raise subprocess.TimeoutExpired(argv, 300)
+            result = subprocess.CompletedProcess(argv, child.wait())
+        except BaseException:
+            # The unreaped session leader still reserves its process group.
+            os.killpg(child.pid, signal.SIGKILL)
+            child.wait()
+            raise
+        finally:
+            if descriptor is not None:
+                os.close(descriptor)
         values = []
         for stream in (out, err):
             stream.seek(0)
