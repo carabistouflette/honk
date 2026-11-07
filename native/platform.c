@@ -29,6 +29,14 @@ typedef struct {
 } hs;
 #define HPATH 4096
 #define HCAP (1024 * 1024)
+/* Checked timing for bounded watch batching; -1 never becomes a deadline. */
+int64_t honk_watch_clock_ms(void) {
+  struct timespec now;
+  if (clock_gettime(CLOCK_MONOTONIC, &now) < 0 || now.tv_sec < 0 ||
+      now.tv_sec > (INT64_MAX - 999) / 1000 || now.tv_nsec < 0 ||
+      now.tv_nsec >= 1000000000) return -1;
+  return (int64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000;
+}
 bool honk_flush_stdout(void) {
   return fflush(stdout) == 0 && !ferror(stdout);
 }

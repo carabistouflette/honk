@@ -1,6 +1,7 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 /* Test-only linker seam. Production builds never include this file. */
 #include <errno.h>
+#include <signal.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,18 +16,79 @@ typedef struct {
 } bytes;
 /* CMake probes link this object without the watch package. Real Honk links it.
  */
+static int clock_sequence;
+static int64_t clock_step;
+static int clock_quiet;
+static int overflow_injected;
+int64_t __real_honk_watch_clock_ms(void) __attribute__((weak));
+int64_t __wrap_honk_watch_clock_ms(void) {
+  if (overflow_injected && getenv("WATCH_FAULT_CLOCK_AFTER_OVERFLOW"))
+    return -1;
+  if (clock_sequence == 2) {
+    clock_sequence = 3;
+    if (clock_step == 1000 && getenv("WATCH_FAULT_CANCEL_AT_CAP"))
+      raise(SIGINT);
+    return clock_step;
+  }
+  if (clock_quiet && clock_sequence == 3) {
+    clock_sequence = 4;
+    return 500;
+  }
+  if (clock_quiet && clock_sequence == 4) {
+    clock_sequence = 5;
+    const char *done = getenv("WATCH_FAULT_CLOCK_DONE");
+    if (done)
+      unlink(done);
+    return 700;
+  }
+  if (clock_sequence >= 3)
+    return -1;
+  const char *mode = getenv("WATCH_FAULT_MODE");
+  const char *trigger = getenv("WATCH_FAULT_TRIGGER");
+  if (mode && strncmp(mode, "clock", 5) == 0 && trigger &&
+      unlink(trigger) == 0) {
+    if (strcmp(mode, "clock-backwards") == 0) {
+      clock_sequence = 2;
+      clock_step = 9;
+      return 10;
+    }
+    if (strcmp(mode, "clock-cap") == 0 || strcmp(mode, "clock-ignored") == 0 ||
+        strcmp(mode, "clock-quiet") == 0) {
+      clock_sequence = 1;
+      clock_quiet = strcmp(mode, "clock-quiet") == 0;
+      clock_step = clock_quiet                      ? 200
+                   : strcmp(mode, "clock-cap") == 0 ? 1000
+                                                    : 500;
+      return 0;
+    }
+    return -1;
+  }
+  return __real_honk_watch_clock_ms ? __real_honk_watch_clock_ms() : -1;
+}
 int64_t __real_gw_set_next(ints, ints, bytes, int64_t, bytes, ints)
     __attribute__((weak));
 int64_t __wrap_gw_set_next(ints state, ints map, bytes buffer, int64_t timeout,
                            bytes name, ints meta) {
   static int ignored_remaining = 0;
-  const char *trigger = getenv("WATCH_FAULT_TRIGGER");
-  if (trigger && meta.len == 8 && meta.data && unlink(trigger) == 0) {
+  if (clock_sequence == 1 && meta.len == 8 && meta.data && name.len >= 9 &&
+      name.data) {
+    clock_sequence = 2;
     memset(meta.data, 0, 8 * sizeof(int64_t));
-    const char *mode = getenv("WATCH_FAULT_MODE");
+    meta.data[2] = 1;
+    meta.data[3] = 8;
+    meta.data[5] = 9;
+    memcpy(name.data, clock_step != 500 ? "cap.goose" : "ignored.o", 9);
+    return 0;
+  }
+  const char *mode = getenv("WATCH_FAULT_MODE");
+  const char *trigger = getenv("WATCH_FAULT_TRIGGER");
+  if ((!mode || strncmp(mode, "clock", 5) != 0) && trigger && meta.len == 8 &&
+      meta.data && unlink(trigger) == 0) {
+    memset(meta.data, 0, 8 * sizeof(int64_t));
     if (mode && strcmp(mode, "overflow") == 0) {
       meta.data[2] = 1;
       meta.data[3] = 16384;
+      overflow_injected = 1;
       meta.data[6] = -1;
       if (state.len != 8 || !state.data)
         return 4;

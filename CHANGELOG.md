@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add optional `--watch-debounce-ms 0..1000` for quiet-period rerun batching,
+  with a fixed one-second batching cap, immediate initial/loss runs and responsive
+  cancellation. Default zero preserves immediate reruns.
+
+
 - Add opt-in `test --jobs 1..8` with serial compilation, bounded deterministic
   cohort execution, configurable direct-child deadlines and explicit cleanup.
 

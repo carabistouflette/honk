@@ -32,6 +32,23 @@ fn changes(owner: watch::WatchSet&, directories: const (const u8[:])[:], timeout
     }
     return if dirty { 1 } else { 0 }; // Retained records remain for the next bounded drain.
 }
+// Called only for a pending rerun with no active child. Loss bypasses batching.
+fn settle(owner: watch::WatchSet&, directories: const (const u8[:])[:], quiet_ms: i64) -> i64 {
+    let started = platform::watch_clock_ms();
+    if started < 0 { return -1; }
+    var last = started; var now = started;
+    loop {
+        if platform::process_guard_take(0) != 0 { return -1; }
+        let wait = max(0, min(100, min(quiet_ms - (now - last), 1000 - (now - started))));
+        let observed = changes(owner, directories, wait);
+        if observed < 0 || observed == 2 { return observed; }
+        let after = platform::watch_clock_ms();
+        if after < now { return -1; }
+        now = after;
+        if observed > 0 { last = now; }
+        if now - started >= 1000 || now - last >= quiet_ms { return 1; }
+    }
+}
 fn compiled_honk() -> bool {
     var out: u8[>..] = []; var err: u8[>..] = [];
     let options = process::Options { timeout_ms: 2000, output_limit: 256, .. };
@@ -75,7 +92,7 @@ fn command(owner: watch::WatchSet&, directories: const (const u8[:])[:], argv: c
     if status.error != process::Error.None || status.signal != 0 || result.code >= 128 { result.stop = true; }
     return result;
 }
-fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit: i64) -> i64 {
+fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit: i64, debounce_ms: i64) -> i64 {
     platform::require(compiled_honk(), "watch requires a compiled Honk executable and /proc/self/exe");
     var owner = watch::WatchSet { .. };
     let opened = watch::open_set(owner, directories);
@@ -84,11 +101,18 @@ fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit:
         return 125;
     }
     if !platform::process_guard_begin() { let closed = watch::close(owner); return 125; }
-    var completed: i64 = 0; var code: i64 = 0; var dirty = true;
+    var completed: i64 = 0; var code: i64 = 0; var dirty = true; var immediate = false;
     write_stderr("honk watch: watching selected directories (nonrecursive)\n");
     loop {
         if platform::process_guard_take(0) != 0 { code = 125; break; }
         if dirty {
+            if completed > 0 && debounce_ms > 0 && !immediate {
+                write_stderr("honk watch: batching pending changes\n");
+                let batched = settle(owner, directories, debounce_ms);
+                if batched < 0 { code = 125; break; }
+                if batched == 2 { write_stderr("honk watch: events lost; reopened watch, scheduling full command\n"); }
+            }
+            immediate = false;
             write_stderr("honk watch: running command\n");
             let outcome = command(owner, directories, argv);
             code = outcome.code; completed++;
@@ -98,13 +122,13 @@ fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit:
             let queued = changes(owner, directories, 0);
             if queued < 0 { code = 125; break; }
             if queued == 2 { write_stderr("honk watch: events lost; reopened watch, scheduling full command\n"); }
-            dirty = outcome.dirty || queued > 0;
+            dirty = outcome.dirty || queued > 0; immediate = outcome.lost || queued == 2;
             write_stderr(if dirty { "honk watch: pending changes; rerunning\n" } else { "honk watch: command finished; waiting for changes\n" });
         } else {
             let observed = changes(owner, directories, 100);
             if observed < 0 { code = 125; break; }
             if observed == 2 { write_stderr("honk watch: events lost; reopened watch, scheduling full command\n"); }
-            dirty = observed > 0;
+            dirty = observed > 0; immediate = observed == 2;
         }
     }
     let closed = watch::close(owner);

@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: Apache-2.0
 """Real watcher/Honk processes with controlled compiler barriers; no shell argv."""
 import json
+import threading
 import os
 from pathlib import Path
 import signal
@@ -107,6 +108,93 @@ finally:
         self.assertEqual(self.count(),2)
         (self.src/'temporary').write_text('fn main() {}'); (self.src/'temporary').rename(self.src/'main.goose')
         self.finish();self.assertEqual(self.count(),3)
+    def test_debounce_coalesces_cross_directory_burst(self):
+        other=self.project/'other';other.mkdir()
+        self.start(runs=2,directories=[self.src,other],extra=('--watch-debounce-ms','500'));self.idle()
+        (self.src/'main.goose').write_text('fn main() {} // first')
+        self.wait(lambda:'batching pending' in (self.root/'stderr').read_text())
+        for i in range(8):
+            (other/'second.goose').write_text('fn main() {} // '+str(i));time.sleep(.02)
+        self.finish();self.assertEqual(self.count(),2)
+        self.assertEqual((self.root/'stderr').read_text().count('batching pending'),1)
+    def test_debounce_continuous_edits_eventually_rerun(self):
+        self.start(runs=2,extra=('--watch-debounce-ms','900'));self.idle()
+        stop=threading.Event()
+        def produce():
+            deadline=time.monotonic()+30; i=0
+            while not stop.is_set() and time.monotonic()<deadline:
+                (self.src/'main.goose').write_text('fn main() {} // '+str(i));i+=1
+                stop.wait(.01)
+        producer=threading.Thread(target=produce);producer.start()
+        try:
+            self.wait(lambda:self.count()==2)
+        finally:stop.set();producer.join(timeout=10)
+        self.finish();self.assertEqual(self.count(),2)
+    def test_debounce_cancellation_has_no_rerun(self):
+        self.start(extra=('--watch-debounce-ms','1000'));self.idle()
+        (self.src/'main.goose').write_text('fn main() {} // edited')
+        self.wait(lambda:'batching pending' in (self.root/'stderr').read_text())
+        self.proc.send_signal(signal.SIGINT);self.finish(130);self.assertEqual(self.count(),1)
+    def test_debounce_directory_move_stops_waiting(self):
+        self.start(extra=('--watch-debounce-ms','1000'));self.idle()
+        (self.src/'main.goose').write_text('fn main() {} // edited')
+        self.wait(lambda:'batching pending' in (self.root/'stderr').read_text())
+        self.src.rename(self.project/'moved');self.finish(125);self.assertEqual(self.count(),1)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_initial_run_never_batches(self):
+        trigger=self.root/'trigger';trigger.touch()
+        self.start(runs=1,extra=('--watch-debounce-ms','500'),WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='clock')
+        self.finish();self.assertTrue(trigger.exists());self.assertEqual(self.count(),1)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_cancellation_at_cap_never_launches_child(self):
+        self.clock_batch('clock-cap',130,WATCH_FAULT_CANCEL_AT_CAP='1')
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_relevant_event_extends_quiet_interval(self):
+        done=self.root/'clock-done';done.touch()
+        self.clock_batch('clock-quiet',0,WATCH_FAULT_CLOCK_DONE=str(done))
+        self.assertFalse(done.exists())
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_clock_failure_stops_pending_run(self):
+        self.clock_batch('clock',125)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_backwards_clock_stops_pending_run(self):
+        self.clock_batch('clock-backwards',125)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_fixed_cap_survives_quiet_reset(self):
+        self.clock_batch('clock-cap',0)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_ignored_event_does_not_reset_quiet(self):
+        self.clock_batch('clock-ignored',0)
+    def clock_batch(self,mode,expected,**env):
+        trigger=self.root/'trigger'
+        self.start(runs=2,extra=('--watch-debounce-ms','500'),WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE=mode,**env)
+        self.idle();trigger.touch();(self.src/'main.goose').write_text('fn main() {} // edited')
+        self.finish(expected);self.assertFalse(trigger.exists());self.assertEqual(self.count(),2 if expected==0 else 1)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_default_debounce_never_reads_clock(self):
+        trigger=self.root/'trigger'
+        self.start(runs=2,WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='clock')
+        self.idle();trigger.touch();(self.src/'main.goose').write_text('fn main() {} // edited')
+        self.finish();self.assertTrue(trigger.exists());self.assertEqual(self.count(),2)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_overflow_bypasses_remaining_quiet(self):
+        trigger=self.root/'trigger'
+        self.start(runs=2,extra=('--watch-debounce-ms','1000'),WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow',WATCH_FAULT_CLOCK_AFTER_OVERFLOW='1')
+        self.idle();(self.src/'main.goose').write_text('fn main() {} // edited')
+        self.wait(lambda:'batching pending' in (self.root/'stderr').read_text())
+        trigger.touch();self.finish();self.assertEqual(self.count(),2)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked clock adapter')
+    def test_debounce_active_overflow_bypasses_next_batch(self):
+        trigger=self.root/'trigger'
+        self.start(runs=2,GATE_FIRST='1',extra=('--watch-debounce-ms','1000'),WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow',WATCH_FAULT_CLOCK_AFTER_OVERFLOW='1')
+        self.wait(lambda:(self.root/'pid').exists());trigger.touch();self.wait(lambda:not trigger.exists())
+        (self.root/'release').touch();self.finish();self.assertEqual(self.count(),2)
+    def test_debounce_option_validation_before_compiler(self):
+        for value in ('-1','1001','no','9223372036854775808'):
+            result=subprocess.run([HONK,'watch','check','--watch-dir',str(self.src),'--watch-debounce-ms',value],cwd=self.project,env=self.env,capture_output=True,timeout=10)
+            self.assertNotEqual(result.returncode,0,value)
+        result=subprocess.run([HONK,'check','--watch-debounce-ms','1'],cwd=self.project,env=self.env,capture_output=True,timeout=10)
+        self.assertNotEqual(result.returncode,0);self.assertEqual(self.count(),0)
     def test_multiple_directories_rerun_from_each(self):
         other=self.project/'other';other.mkdir()
         self.start(runs=3,directories=[self.src,other]);self.idle()
