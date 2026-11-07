@@ -117,3 +117,27 @@ command time; these fixtures do not justify more matcher tuning. The largest
 has 64 candidate test paths and eight selected tests, so this is package/source
 scaling evidence, not saturation of the 4096-target cap. All ranges, inputs,
 binary hashes and the exact executed driver are retained. Runtime/API unchanged.
+
+## Opt-in parallel tests
+
+`make parallel-bench` records a finite real-Goose comparison of legacy default
+execution and explicit jobs1/jobs2/jobs4. Eight targets exercise tiny, waiting,
+CPU and uneven work. Each mode receives one warmup, then three rounds in fixed-
+seed shuffled order. Timings include serial compilation and command startup;
+there is no speed threshold. Cohort scheduling can lose utilization on uneven
+work, and tiny workloads may be slower. All slower samples remain retained.
+
+Use `PARALLEL_BENCH_OUTPUT=.build/another-run.json` to preserve prior evidence.
+The recorder stores complete fixture sources, every raw output/timing/status,
+source/toolchain/compiler/binary hashes, affinity, host model/load and platform.
+It retains partial samples and failure reasons on any error, and verifies
+checksum and discovery-order output agreement across modes. Its private command
+process group is used only to clean up a timed-out benchmark invocation.
+`make parallel-bench-smoke` runs four-target tiny/waiting execution checks for CI;
+smoke timings are not performance evidence. Shared-host synthetic results do
+not establish a general test-suite speedup or hard time/memory guarantee.
+
+The default comparison is the existing sequential path in the same candidate
+binary, not a historical release binary. Run measured comparisons after this
+agent's local compilation/qualification work has finished; retain overlapping
+stress runs separately and exclude them from timing conclusions.

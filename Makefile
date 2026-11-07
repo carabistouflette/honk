@@ -6,7 +6,7 @@ format:
 	python3 scripts/process-fixture.py --update
 	$(GOOSE) format honk.goose src tests bench/utc/driver.goose
 check:
-	python3 -m py_compile scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
+	python3 -m py_compile bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
 	python3 bench/glob_consumer.py --help > /dev/null
 	python3 bench/dogfood.py --self-test
 	python3 scripts/process-fixture.py
@@ -16,6 +16,7 @@ check:
 	$(GOOSE) check tests/presentation_write.goose
 	$(GOOSE) check tests/core.goose
 	$(GOOSE) check tests/graph.goose
+	$(GOOSE) check tests/parallel_probe.goose
 	$(GOOSE) check tests/diagnostics_utc.goose
 	$(GOOSE) check tests/process.goose
 	$(GOOSE) check tests/semver_probe.goose
@@ -60,6 +61,8 @@ test:
 	$(GOOSE) build tests/semver_probe.goose -o .build/semver-probe
 	HONK=$(CURDIR)/.build/honk SEMVER_PROBE=$(CURDIR)/.build/semver-probe GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	$(MAKE) metadata-test
+	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/parallel_cli.py
+	python3 scripts/parallel-test-build.py --goose "$(abspath $(GOOSE))"
 sanitize:
 	$(GOOSE) build tests/graph.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/graph-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/graph-sanitize
@@ -90,6 +93,8 @@ sanitize:
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/manifest_edit_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/version_deps_cli.py
 	$(MAKE) metadata-sanitize
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/parallel_cli.py
+	python3 scripts/parallel-test-build.py --goose "$(abspath $(GOOSE))" --sanitize
 portable:
 	$(GOOSE) build honk.goose --debug --no-bce --cc $(CURDIR)/scripts/portable-cc.sh -o .build/honk-portable
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-portable GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py CLI.test_binary_source_snapshots_are_independent CLI.test_oversized_staging_file_fails_before_copy CLI.test_package_stages_only_tracked_files
@@ -150,3 +155,10 @@ watch-fault-test:
 watch-fault-sanitize:
 	python3 scripts/watch-test-build.py "$(abspath $(GOOSE))" --sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 WATCH_FAULT_TEST=1 HONK=$(CURDIR)/.build/honk-watch-fault-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/watch_cli.py
+
+.PHONY: parallel-bench parallel-bench-smoke
+PARALLEL_BENCH_OUTPUT ?= .build/parallel-benchmark.json
+parallel-bench: build
+	python3 bench/parallel_tests.py --honk "$(CURDIR)/.build/honk" --goose "$(abspath $(GOOSE))" --output "$(PARALLEL_BENCH_OUTPUT)"
+parallel-bench-smoke: build
+	python3 bench/parallel_tests.py --honk "$(CURDIR)/.build/honk" --goose "$(abspath $(GOOSE))" --smoke --output "$(PARALLEL_BENCH_OUTPUT)"

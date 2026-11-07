@@ -125,3 +125,15 @@ rejected, `.git`, `target`, `.honk`, `.toolchain`, `.build` remain excluded, and
 the existing 4096 source/directory caps apply before filtering. This option is
 available only for `test` and `bench`; it does not prune the source tree or change
 manifest selection. The library and this CLI remain experimental.
+
+## Opt-in parallel test execution
+
+`honk test --jobs 1..8` compiles all selected targets sequentially, then executes
+independent tests in bounded cohorts. The default without --jobs retains the
+existing sequential inherited-stream behavior. Explicit --jobs captures up to
+64 KiB per stream per child, uses null stdin, and applies a 30-second direct-child
+deadline; override with `--test-timeout-ms 1..86400000`. Output is replayed in
+target discovery order after each cohort closes. Workspace members stay
+sequential; watch and bench do not accept these options. See
+[contracts and limits](docs/parallel-tests.md), including failure, cancellation
+and the absence of hard wall-time or descendant-cleanup guarantees.

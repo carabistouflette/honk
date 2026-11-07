@@ -7,6 +7,9 @@
   cancellation. Default zero preserves immediate reruns.
 
 
+- Add opt-in `test --jobs 1..8` with serial compilation, bounded deterministic
+  cohort execution, configurable direct-child deadlines and explicit cleanup.
+
 - Accept 1–256 explicit `--watch-dir` options through pinned goose-watch alpha.2;
   recover the complete set on overflow and stop if any selected directory moves.
 

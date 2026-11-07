@@ -132,7 +132,10 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         distribution::package(p, graph, compiler);
     } else {
         let release = options.has("release") || cmd == "install";
-        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args, options.has("reuse-build"), filter, options.get("progress", "never"));
+        let jobs, jobs_valid = parse_int(options.get("jobs", "0"));
+        let test_timeout, timeout_valid = parse_int(options.get("test-timeout-ms", "30000"));
+        platform::require(jobs_valid && timeout_valid, "invalid test execution options");
+        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args, options.has("reuse-build"), filter, options.get("progress", "never"), jobs, test_timeout);
         if cmd == "install" {
             let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
             distribution::install(p, release, destination, options.has("force"));

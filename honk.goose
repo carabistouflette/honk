@@ -30,7 +30,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] (nonrecursive).");
+    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] (nonrecursive).");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -49,7 +49,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.4.0"); return; }
     let spec = [argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("watch-dir"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -199,6 +199,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         let name = entry.name; var allowed = false;
         if name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
+        else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }
         else if name == "filter" { allowed = cmd == "test" || cmd == "bench"; }
         else if name == "reuse-build" { allowed = cmd == "build" || cmd == "run"; }
         else if name == "metadata" { allowed = cmd == "toolchain"; }
@@ -212,6 +213,18 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         else if name == "check" { allowed = cmd == "fmt"; }
         else { allowed = cmd != "new" && cmd != "init" && cmd != "uninstall"; }
         platform::require(allowed, str("--", name, " is not supported by ", cmd));
+    }
+    if options.has("jobs") {
+        let value = options.get("jobs");
+        platform::require(value.len == 1 && value[0] >= '1' && value[0] <= '8', "--jobs must be 1..8");
+    }
+    if options.has("test-timeout-ms") {
+        platform::require(options.has("jobs"), "--test-timeout-ms requires --jobs");
+        let text = options.get("test-timeout-ms");
+        platform::require(text.len > 0 && text.len <= 8, "--test-timeout-ms must be 1..86400000");
+        for c in text { platform::require(c >= '0' && c <= '9', "--test-timeout-ms must be 1..86400000"); }
+        let value, valid = parse_int(text);
+        platform::require(valid && value >= 1 && value <= 86400000, "--test-timeout-ms must be 1..86400000");
     }
     return filter;
 }

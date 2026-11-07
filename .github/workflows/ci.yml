@@ -26,3 +26,4 @@ jobs:
       - run: make sanitize portable
       - run: make bench
       - run: make diagnostics-bench-smoke
+      - run: make parallel-bench-smoke PARALLEL_BENCH_OUTPUT=.build/parallel-benchmark-smoke.json
