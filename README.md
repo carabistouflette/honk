@@ -41,6 +41,7 @@ that trusted compiler, replace setup/build with
 | Command | Purpose |
 | --- | --- |
 | `new PATH [--lib]`, `init [PATH]` | Create a project without overwriting files. |
+| `check --diagnostics text\|json` | Single-package compiler diagnostics; [format and limits](docs/COMPILER_DIAGNOSTICS.md). |
 | `build`, `run -- ARGS`, `check` | Compile, run, or type/lifetime-check. Use `build/run --release` for release builds. |
 | `watch check/test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...]` | Rerun on immediate `.goose` changes; see [watch scope and cleanup](docs/WATCH.md). |
 | `test`, `bench`, `fmt [--check]` | Run test/benchmark programs or format sources. |
