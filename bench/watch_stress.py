@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+"""Disposable pinned real-suite watch qualification with retained partial evidence."""
+import argparse
+import hashlib
+import io
+import json
+import os
+from pathlib import Path
+import platform
+import re
+import signal
+import subprocess
+import tarfile
+import time
+from process_observer import ProcessObserver
+from observer_calibration import calibrate
+
+ROOT = Path(__file__).resolve().parents[1]
+WORKLOADS = {
+    'diff': ('129dc794b62ad987784db0a1d52ef618c85fccf4', 'diff.goose', 'tests/core.goose'),
+    'json': ('fcee7b75658a5708756dc163127b70df656996a4', 'json_codec.goose', 'tests/codec.goose'),
+}
+EVENT = re.compile(rb'\[(INFO|ERROR)\] timestamp="[^"]+" (started|item_completed|returned|failed|child_failed) duration_ns=([0-9]+) outcome=([0-9]+)\n')
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def save(path, value):
+    tmp = path.with_suffix('.tmp')
+    tmp.write_text(json.dumps(value, indent=2)+'\n')
+    tmp.replace(path)
+
+
+def git(repo, *argv):
+    return subprocess.check_output(['git', '-C', str(repo), *argv], timeout=30)
+
+
+def canonical(data):
+    # Build and target-count lines are command presentation, not suite output.
+    return b'\n'.join(line for line in data.splitlines() if line and
+                      not line.startswith((b'built ', b'Passed ')))+b'\n'
+
+
+def terminals(data):
+    """Classify complete serial command intervals; a partial append is not an event."""
+    data = data[:data.rfind(b'\n')+1]
+    matches = list(EVENT.finditer(data))
+    if b''.join(m.group() for m in matches) != data:
+        raise RuntimeError('unrecognized lifecycle bytes')
+    rows, active = [], False
+    for m in matches:
+        kind, code = m[2].decode(), int(m[4])
+        if kind == 'started':
+            if active:
+                raise RuntimeError('overlapping lifecycle intervals')
+            active = True
+        elif kind in ('returned', 'failed', 'child_failed'):
+            if not active:
+                raise RuntimeError('terminal without command start')
+            rows.append(dict(kind=kind, code=code))
+            active = False
+        elif not active:
+            raise RuntimeError('item outside command interval')
+    return rows
+
+
+class Session:
+    def __init__(self, binary, project, env, folder, suite, sampled):
+        folder.mkdir()
+        self.folder, self.project = folder, project
+        self.proc = self.pidfd = self.observer = None
+        self.out = self.err = None
+        self.closed = False
+        self.next_sample = 0
+        self.stdout_offset = 0
+        self.observed_starts = 0
+        self.deadline = time.monotonic()+1800
+        self.record = dict(complete=False, sampled=sampled, actions=[], checkpoints=[], commands=[],
+                           poll_interval_ms=10, started_ns=time.monotonic_ns())
+        try:
+            self.out = (folder/'stdout').open('wb'); self.err = (folder/'stderr').open('wb')
+            argv = [str(binary), 'watch', 'test', '--offline', '--filter', suite, '--watch-recursive',
+                    '--watch-debounce-ms', '50', '--watch-dir', str(project), '--log-file', str(folder/'events.log')]
+            self.record['argv'] = argv
+            self.proc = subprocess.Popen(argv, cwd=project, env=env, stdin=subprocess.DEVNULL,
+                                         stdout=self.out, stderr=self.err, start_new_session=True)
+            self.pidfd = os.pidfd_open(self.proc.pid)
+            self.identity = ProcessObserver.identity(self.proc.pid)
+            if self.identity is None:
+                raise RuntimeError('supervisor disappeared at startup')
+            self.record['identity'] = self.identity
+            if sampled:
+                self.observer = ProcessObserver(self.proc.pid, folder/'processes.jsonl.gz', [project/'target/debug/.honk/tests/0'])
+            self.persist()
+        except BaseException:
+            self.close()
+            raise
+
+    def persist(self):
+        save(self.folder/'session.json', self.record)
+
+    def action(self, kind, **fields):
+        row = dict(kind=kind, at_ns=time.monotonic_ns(), **fields)
+        self.record['actions'].append(row); self.persist()
+        return row
+
+    def outcomes(self):
+        p = self.folder/'events.log'
+        return terminals(p.read_bytes()) if p.exists() else []
+
+    def pump(self):
+        if time.monotonic() > self.deadline:
+            raise RuntimeError('overall session deadline exceeded')
+        starts=(self.folder/'stderr').read_bytes().count(b'running command')
+        while self.observed_starts < starts:
+            self.observed_starts += 1
+            self.record['actions'].append(dict(kind='observed-command-start',index=self.observed_starts,at_ns=time.monotonic_ns()))
+        for name in ('stdout', 'stderr', 'events.log'):
+            p = self.folder/name
+            if p.exists() and p.stat().st_size > 4*1024*1024:
+                raise RuntimeError('log byte budget exceeded')
+        now = time.monotonic_ns()
+        if self.observer and now >= self.next_sample:
+            self.observer.snapshot(); self.next_sample = now+20_000_000
+
+    def wait(self, predicate, timeout=90):
+        end = time.monotonic()+timeout
+        while not predicate():
+            self.pump()
+            if self.proc.poll() is not None:
+                raise RuntimeError(f'early exit {self.proc.returncode}: {self.folder}')
+            if time.monotonic() > end:
+                raise RuntimeError('session handshake deadline exceeded')
+            time.sleep(.01)
+        self.pump()
+        return time.monotonic_ns()
+
+    def idle(self, count, expected, stdout):
+        self.wait(lambda: len(self.outcomes()) >= count and
+                  (self.folder/'stderr').read_bytes().count(b'command finished; waiting') >= count)
+        rows = self.outcomes()
+        if len(rows) != count or rows[-1]['code'] != expected:
+            raise RuntimeError(f'unexpected completions: {rows}')
+        data = (self.folder/'stdout').read_bytes()
+        segment = data[self.stdout_offset:]; self.stdout_offset = len(data)
+        if expected == 0 and canonical(segment) != stdout:
+            raise RuntimeError('per-command canonical suite output mismatch')
+        self.record['commands'].append(dict(index=count, observed_terminal_ns=time.monotonic_ns(),
+                                            outcome=rows[-1], stdout_sha256=hashlib.sha256(segment).hexdigest()))
+        self.persist()
+
+    def checkpoint(self, label):
+        before = ProcessObserver.identity(self.proc.pid)
+        if before is None or before['start'] != self.identity['start']:
+            raise RuntimeError('supervisor identity changed')
+        text = Path(f'/proc/{self.proc.pid}/stat').read_text(); fields = text[text.rfind(')')+2:].split()
+        status = Path(f'/proc/{self.proc.pid}/status').read_text()
+        fds = {p.name: os.readlink(p) for p in Path(f'/proc/{self.proc.pid}/fd').iterdir()}
+        after = ProcessObserver.identity(self.proc.pid)
+        if after is None or after['start'] != before['start']:
+            raise RuntimeError('checkpoint identity changed')
+        row = dict(label=label, at_ns=time.monotonic_ns(), cpu_ticks=int(fields[11])+int(fields[12]),
+                   rss_kib=int(re.search(r'^VmRSS:\s+(\d+)', status, re.M)[1]), fds=fds)
+        self.record['checkpoints'].append(row); self.persist()
+        return row
+
+    def pause(self, seconds):
+        end = time.monotonic()+seconds
+        while time.monotonic() < end:
+            self.pump()
+            if self.proc.poll() is not None:
+                raise RuntimeError('supervisor died during idle interval')
+            time.sleep(.02)
+
+    def finish(self, expected=143, send=True):
+        if send and self.proc.poll() is None:
+            self.action('signal', number=signal.SIGTERM)
+            signal.pidfd_send_signal(self.pidfd, signal.SIGTERM)
+        end = time.monotonic()+30
+        while self.proc.poll() is None and time.monotonic() < end:
+            self.pump(); time.sleep(.01)
+        if self.proc.poll() is None:
+            raise RuntimeError('cooperative cleanup deadline exceeded')
+        if self.proc.returncode != expected:
+            raise RuntimeError(f'exit {self.proc.returncode}, wanted {expected}')
+        members = []
+        for p in Path('/proc').iterdir():
+            if p.name.isdecimal():
+                item = ProcessObserver.identity(int(p.name))
+                if item and item['group'] == self.proc.pid and item['session'] == self.proc.pid:
+                    members.append(item)
+        if members:
+            raise RuntimeError('owned process group remains after leader reaping')
+        self.record.update(complete=True, exit_code=self.proc.returncode, ended_ns=time.monotonic_ns())
+        self.close()
+
+    def close(self):
+        if self.closed:
+            return
+        try:
+            if self.proc and self.proc.poll() is None:
+                if self.pidfd is not None:
+                    signal.pidfd_send_signal(self.pidfd, signal.SIGCONT)
+                    signal.pidfd_send_signal(self.pidfd, signal.SIGTERM)
+                else:
+                    self.proc.terminate()
+                try:
+                    self.proc.wait(timeout=30)
+                except subprocess.TimeoutExpired:
+                    identity = ProcessObserver.identity(self.proc.pid)
+                    if identity and identity['start'] == self.identity['start']:
+                        os.killpg(self.proc.pid, signal.SIGKILL)
+                        self.record['forced_cleanup'] = True
+                    self.proc.wait(timeout=10)
+            if self.observer:
+                self.record['observation'] = self.observer.close()
+            if self.proc:
+                self.record['exit_code'] = self.proc.returncode
+            self.persist()
+        finally:
+            if self.out: self.out.close()
+            if self.err: self.err.close()
+            if self.pidfd is not None: os.close(self.pidfd)
+            self.closed = True
+
+
+def mutation(session, path, data, kind):
+    tmp = path.with_name(path.name+'.watch-temporary'); tmp.write_bytes(data); tmp.replace(path)
+    completed=time.monotonic_ns()
+    return session.action(kind, completed_ns=completed, path=str(path.relative_to(session.project)),
+                          sha256=hashlib.sha256(data).hexdigest(), bytes=len(data))
+
+
+def fd_roles(checkpoint):
+    return sorted(value for value in checkpoint['fds'].values())
+
+
+def main():
+    p = argparse.ArgumentParser(description=__doc__)
+    for name in ('honk', 'goose', 'diff-repo', 'json-repo', 'output'):
+        p.add_argument('--'+name, type=Path, required=True)
+    p.add_argument('--cycles', type=int, default=30); p.add_argument('--idle-seconds', type=float, default=60)
+    p.add_argument('--smoke', action='store_true')
+    a = p.parse_args()
+    if not 1 <= a.cycles <= 100 or not 0 < a.idle_seconds <= 300:
+        p.error('cycles1..100 and idle0..300seconds required')
+    if a.smoke: a.cycles=min(a.cycles, 2); a.idle_seconds=min(a.idle_seconds, 1)
+    a.honk=a.honk.resolve(strict=True); a.goose=a.goose.resolve(strict=True)
+    output=a.output.resolve(); output.mkdir(parents=True, exist_ok=False); (output/'tmp').mkdir()
+    env={**os.environ, 'GOOSE':str(a.goose), 'HONK_HOME':str(output/'cache'), 'TMPDIR':str(output/'tmp')}
+    report=dict(complete=False, mode='smoke' if a.smoke else 'long', cycles=a.cycles, idle_seconds=a.idle_seconds,
+                source_commit=git(ROOT,'rev-parse','HEAD').decode().strip(), platform=platform.platform(),
+                binary_sha256={'honk':sha(a.honk),'goose':sha(a.goose)}, harness_sha256=sha(__file__), projects={},
+                compiler_pin=(ROOT/'GOOSE_REVISION').read_text().strip(),
+                compiler_version=subprocess.check_output([str(a.goose),'--version'],text=True,timeout=10).strip(),
+                source_status=git(ROOT,'status','--porcelain').decode(),
+                helpers={x:sha(ROOT/x) for x in ['bench/process_observer.py','bench/observer_calibration.py']},
+                started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
+                limits='Sampled resource lower bounds; RSS sums double-count shared pages; log-poll times are observations, not kernel latency.')
+    save(output/'report.json',report)
+    original_tools=dict(report['binary_sha256'])
+    try:
+        (output/'calibration').mkdir();report['calibration']=calibrate(output/'calibration')
+        for name,(rev,entry,suite) in WORKLOADS.items():
+            project=output/name;project.mkdir();repo=getattr(a,name+'_repo')
+            archive=git(repo,'archive','--format=tar',rev);(output/(name+'-source.tar')).write_bytes(archive)
+            with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+                members=tar.getmembers()
+                if name == 'json':
+                    # Preserve complete archive evidence while omitting unrelated
+                    # examples/bench imports from Honk's sourced-import discovery.
+                    selected={'json_codec.goose','json_codec.build','protocol.goose','CMakeLists.txt',
+                              'LICENSE','NOTICE','GOOSE_REVISION','tests/codec.goose'}
+                    members=[m for m in members if m.name in selected or m.name == 'native' or m.name.startswith('native/')]
+                tar.extractall(project,members=members,filter='data')
+            original=(project/entry).read_bytes()
+            original_files={str(x.relative_to(project)):sha(x) for x in project.rglob('*') if x.is_file()}
+            modes={str(x.relative_to(project)):x.stat().st_mode & 0o777 for x in project.rglob('*') if x.is_file()}
+            manifest=f'[package]\nname="{name}"\nkind="lib"\nversion="0.1.0"\nentry="{entry}"\n'
+            (project/'Honk.toml').write_text(manifest)
+            info=dict(revision=rev,archive_sha256=hashlib.sha256(archive).hexdigest(),original_files=original_files,
+                      adapter_manifest=manifest,original_file_modes=modes,sessions=[],projection=('selected production/native files and unmodified codec suite;full archive retained' if name=='json' else 'full upstream archive'));report['projects'][name]=info
+            baseline=subprocess.run([str(a.honk),'test','--offline','--filter',suite,'--log-file',str(output/(name+'-baseline.log'))],
+                                    cwd=project,env=env,capture_output=True,timeout=180)
+            (output/(name+'-baseline.stdout')).write_bytes(baseline.stdout);(output/(name+'-baseline.stderr')).write_bytes(baseline.stderr)
+            if baseline.returncode or not canonical(baseline.stdout).strip(): raise RuntimeError(f'{name} baseline failed')
+            if (project/'GOOSE_REVISION').read_text().strip()!=report['compiler_pin']: raise RuntimeError('workload/compiler pin mismatch')
+            expected=canonical(baseline.stdout);info['canonical_stdout']=expected.decode()
+            for sampled in (False,True):
+                session=Session(a.honk,project,env,output/(name+('-resources' if sampled else '-timing')),suite,sampled)
+                info['sessions'].append(str(session.folder.relative_to(output)))
+                try:
+                    count=1;session.idle(count,0,expected)
+                    before=session.checkpoint('idle-before');session.pause(a.idle_seconds);after=session.checkpoint('idle-after')
+                    session.record['idle_cpu']=dict(ticks=after['cpu_ticks']-before['cpu_ticks'],hz=os.sysconf('SC_CLK_TCK'),elapsed_ns=after['at_ns']-before['at_ns'])
+                    base_fds=fd_roles(after)
+                    for i in range(a.cycles):
+                        started=time.monotonic_ns();mutation(session,project/entry,original+f'\n// watch-save-{i}\n'.encode(),'atomic-save')
+                        count+=1;session.idle(count,0,expected);session.action('save-complete',cycle=i,elapsed_ns=time.monotonic_ns()-started)
+                        if fd_roles(session.checkpoint(f'save-{i}'))!=base_fds: raise RuntimeError('idle fd count did not converge')
+                    for cycle in range(a.cycles):
+                        incoming=output/f'{name}-incoming-{cycle}';incoming.mkdir();(incoming/'changed.goose').write_text('// populated\n')
+                        nested=project/'watch-incoming';incoming.rename(nested);session.action('move-populated-subtree');count+=1;session.idle(count,0,expected)
+                        mutation(session,nested/'changed.goose',b'// changed\n','nested-edit');count+=1;session.idle(count,0,expected)
+                        (nested/'changed.goose').unlink();nested.rmdir();session.action('remove-subtree');count+=1;session.idle(count,0,expected)
+                        session.pause(.2)
+                        if fd_roles(session.checkpoint(f'topology-{cycle}'))!=base_fds or len(session.outcomes())!=count:
+                            raise RuntimeError('topology did not return to the same idle descriptor roles/command count')
+                    mutation(session,project/entry,original+b'\nfn deliberate_invalid(\n','invalid-source');count+=1;session.idle(count,1,expected)
+                    mutation(session,project/entry,original,'restore-source');count+=1;session.idle(count,0,expected)
+                    session.pause(.2)
+                    if fd_roles(session.checkpoint('restored'))!=base_fds or len(session.outcomes())!=count:
+                        raise RuntimeError('steady-state fd/command convergence failed')
+                    session.finish()
+                finally: session.close()
+            for path,digest in original_files.items():
+                if sha(project/path)!=digest: raise RuntimeError('upstream source restoration mismatch: '+path)
+            save(output/'report.json',report)
+        if original_tools != {'honk':sha(a.honk),'goose':sha(a.goose)}: raise RuntimeError('measured binaries changed')
+        if sha(__file__) != report['harness_sha256']: raise RuntimeError('harness changed during qualification')
+        report['complete']=True
+    except BaseException as error:
+        report['failure']=f'{type(error).__name__}: {error}';raise
+    finally: save(output/'report.json',report)
+
+
+if __name__=='__main__':
+    main()
