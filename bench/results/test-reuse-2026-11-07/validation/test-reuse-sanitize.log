@@ -1,0 +1,181 @@
+make: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/graph.goose --debug --no-bce --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/graph-sanitize
+built .build/graph-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/graph-sanitize
+dependency graph contracts passed
+make watch-fault-sanitize
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+python3 scripts/watch-test-build.py "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose" --sanitize
+building the package honk's C
+building the package watch's C
+building the package crypto's C with CMake
+building the package http's C with CMake
+building the package process's C
+building the package posix's C
+built /home/arobin/Work/Projects/goose-libs/honk/.build/honk-watch-fault-sanitize
+/home/arobin/Work/Projects/goose-libs/honk/.build/honk-watch-fault-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 WATCH_FAULT_TEST=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-watch-fault-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/watch_cli.py
+.....................................
+----------------------------------------------------------------------
+Ran 37 tests in 15.670s
+
+OK
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+make terminal-write-sanitize
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 tests/presentation_write.py --goose "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose" --sanitize
+building the package posix's C
+built /home/arobin/Work/Projects/goose-libs/honk/.build/presentation-write-b412cd9c32bb0176/probe
+consumer writes: exact partial offsets, EINTR retry, EAGAIN suppression, and 64-attempt cap pass
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+make diagnostics-sanitize
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+mkdir -p .build
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/diagnostics_utc.goose --debug --no-bce --standalone --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/diagnostics-utc-sanitize
+built .build/diagnostics-utc-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/diagnostics-utc-sanitize
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/diagnostics_utc.goose -O2 --standalone --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/diagnostics-utc-sanitize-release
+built .build/diagnostics-utc-sanitize-release
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/diagnostics-utc-sanitize-release
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/tag_catalog.goose --debug --no-bce --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/tag-catalog-sanitize
+built .build/tag-catalog-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/tag-catalog-sanitize
+tag advertisement contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/tag_select.goose --debug --no-bce --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/tag-select-sanitize
+built .build/tag-select-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/tag-select-sanitize
+tag selection contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/process.goose --debug --no-bce --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/process-sanitize
+building the package honk's C
+built .build/process-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize closed
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize overflow
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize signal
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/process-sanitize missing
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/process_fault.goose --debug --no-bce --cc "$(python3 scripts/process-fixture.py --path --sanitize)" -o .build/process-fault-sanitize
+building the package honk's C
+built .build/process-fault-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 PROCESS_PROBE=/home/arobin/Work/Projects/goose-libs/honk/.build/process-sanitize PROCESS_FAULT=/home/arobin/Work/Projects/goose-libs/honk/.build/process-fault-sanitize python3 tests/process_cli.py
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 1.803s
+
+OK
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/semver_probe.goose --debug --no-bce --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/semver-probe-sanitize
+built .build/semver-probe-sanitize
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build honk.goose --debug --no-bce --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/sanitizer-cc.sh -o .build/honk-sanitize
+building the package honk's C
+building the package watch's C
+building the package crypto's C with CMake
+building the package http's C with CMake
+building the package posix's C
+built .build/honk-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/watch_cli.py
+...ssss.s...sss.sss...s........s.....
+----------------------------------------------------------------------
+Ran 37 tests in 9.853s
+
+OK (skipped=13)
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/terminal_cli.py
+........
+----------------------------------------------------------------------
+Ran 8 tests in 3.468s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/cli.py
+.............................................................................
+----------------------------------------------------------------------
+Ran 77 tests in 45.734s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/build_cache_cli.py
+...............
+----------------------------------------------------------------------
+Ran 15 tests in 79.070s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/text_cli.py
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 4.957s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/logging.py
+.........
+----------------------------------------------------------------------
+Ran 9 tests in 5.739s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize SEMVER_PROBE=/home/arobin/Work/Projects/goose-libs/honk/.build/semver-probe-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/semver_cli.py
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 1.777s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/security.py
+Passed 213 malformed-import probes and FIFO rejection
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/manifest_edit_cli.py
+............
+----------------------------------------------------------------------
+Ran 12 tests in 2.165s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/version_deps_cli.py
+........
+----------------------------------------------------------------------
+Ran 8 tests in 16.202s
+
+OK
+make metadata-sanitize
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+python3 scripts/metadata-test-build.py --goose "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose" --cc "gcc" --mode sanitize --output .build/honk-http-sanitize
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build honk.goose --cc /home/arobin/Work/Projects/goose-libs/honk/.build/metadata-gcc-sanitize-8c3c6a558db7be50/cc --standalone -o /home/arobin/Work/Projects/goose-libs/honk/.build/honk-http-sanitize
+building the package honk's C
+building the package watch's C
+building the package crypto's C with CMake
+building the package http's C with CMake
+building the package posix's C
+built /home/arobin/Work/Projects/goose-libs/honk/.build/honk-http-sanitize
+/home/arobin/Work/Projects/goose-libs/honk/.build/honk-http-sanitize
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK_METADATA=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-http-sanitize python3 tests/http_metadata.py
+......
+----------------------------------------------------------------------
+Ran 6 tests in 10.695s
+
+OK
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-sanitize GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/parallel_cli.py
+.................
+----------------------------------------------------------------------
+Ran 17 tests in 19.552s
+
+OK
+python3 scripts/parallel-test-build.py --goose "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose" --sanitize
+building the package honk's C
+building the package posix's C
+built /home/arobin/Work/Projects/goose-libs/honk/.build/parallel-fault-594a5a88f4416e68908a20c2ab5c5212f86daa92fea4ce10ee31983175ebf51d/probe
+parallel fault success: PASS
+parallel fault launch: PASS
+parallel fault close: PASS
+parallel fault transfer: PASS
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build honk.goose --debug --no-bce --cc /home/arobin/Work/Projects/goose-libs/honk/scripts/portable-cc.sh -o .build/honk-portable
+building the package honk's C
+building the package watch's C
+building the package crypto's C with CMake
+building the package http's C with CMake
+building the package posix's C
+built .build/honk-portable
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-portable GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/cli.py CLI.test_binary_source_snapshots_are_independent CLI.test_oversized_staging_file_fails_before_copy CLI.test_package_stages_only_tracked_files
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.535s
+
+OK
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-portable GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/build_cache_cli.py BuildCache.test_verified_hit_republishes_independent_output BuildCache.test_corrupt_missing_and_unsafe_cache_entries
+..
+----------------------------------------------------------------------
+Ran 2 tests in 16.657s
+
+OK
+make: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'

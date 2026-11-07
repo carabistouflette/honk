@@ -1,0 +1,33 @@
+{
+  "source": "10c45728b3fe6280104b6fe9b520ab5c9a136824",
+  "workload": "129dc794b62ad987784db0a1d52ef618c85fccf4",
+  "raw_sha256": "0c4a4c64fa2a69e9e250bd8cdc7a61d704822f94ee19af77195633a8bc9c45b0",
+  "samples": {
+    "ordinary": {
+      "all_ms": [
+        6172.820653,
+        6173.819695,
+        6337.014017
+      ],
+      "median_ms": 6173.819695
+    },
+    "population": {
+      "all_ms": [
+        7590.208646,
+        8040.053013,
+        7539.189028
+      ],
+      "median_ms": 7590.208646
+    },
+    "hit": {
+      "all_ms": [
+        411.534324,
+        689.361439,
+        394.645556
+      ],
+      "median_ms": 411.534324
+    }
+  },
+  "scope": "Uninstrumented full command wall time; release jobs4; warm shared compiler caches; shared host; no time gates",
+  "interpretation": "Explicit verified hits avoid compilation; population includes standalone compilation and can cost more. Default behavior unchanged. Shared-host single-workload evidence; no general speed guarantee."
+}

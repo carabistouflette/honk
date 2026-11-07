@@ -1,0 +1,30 @@
+[
+  {
+    "label": "ordinary",
+    "elapsed_ms": 6387.345391,
+    "code": 0,
+    "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+    "stderr": ""
+  },
+  {
+    "label": "populate",
+    "elapsed_ms": 7739.687035,
+    "code": 0,
+    "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+    "stderr": ""
+  },
+  {
+    "label": "hit",
+    "elapsed_ms": 6215.48428,
+    "code": 0,
+    "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+    "stderr": ""
+  },
+  {
+    "label": "hit_again",
+    "elapsed_ms": 6305.632136,
+    "code": 0,
+    "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/qualification-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+    "stderr": ""
+  }
+]
