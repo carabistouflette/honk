@@ -11,6 +11,7 @@ import .source;
 import .deps;
 import .build_cache;
 import .presentation;
+import .parallel_tests;
 fn suffix(s: u8[:], ending: u8[:]) -> bool { s.len >= ending.len && s[s.len - ending.len..] == ending }
 fn skip(name: u8[:]) -> bool { name == ".git" || name == "target" || name == ".honk" || name == ".toolchain" || name == ".build" }
 fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
@@ -147,7 +148,7 @@ fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: b
     }
     print("built ", output); presentation::summary(display, "Build complete");
 }
-fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool, filter: TargetFilter&, progress_policy: const u8[:] = "never") {
+fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool, filter: TargetFilter&, progress_policy: const u8[:] = "never", jobs: i64 = 0, test_timeout_ms: i64 = 30000) {
     var display = presentation::Output { mode: presentation::mode(progress_policy), .. };
     deps::activate(g, cmd == "test" || cmd == "bench");
     let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
@@ -157,13 +158,24 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         if !is_dir(str(stage, "/", dir)) { platform::require(!filter.enabled, "--filter matched no targets"); print("No ", dir, " targets"); return; }
         var paths: u8[][>..] = []; files(stage, dir, paths);
         select_targets(paths, filter);
+        var executable_storage: u8[][>..] = [];
         for path, i in paths {
             let target_dir = str(output, "/.honk/", dir); platform::require(platform::mkdir(target_dir), "cannot create test output directory");
             let entry = root_entry(stage, path, g); let executable = str(target_dir, "/", i);
             binary(compiler, entry, stage, executable, release, p.root, g, false, display);
+            if jobs > 0 { executable_storage.push(copy(executable)); continue; }
             var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
             var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }
             presentation::progress(display, i + 1, paths.len, cmd);
+        }
+        if jobs > 0 {
+            var executables: (const u8[:])[>..] = []; for path in executable_storage { executables.push(path); }
+            var forwarded:   (const u8[:])[>..] = []; for arg in args { forwarded.push(arg); }
+            let status = parallel_tests::run(executables, forwarded, p.root, jobs, test_timeout_ms, display);
+            if status.code != 0 {
+                parallel_tests::report(status);
+                platform::child_exit(status.code);
+            }
         }
         print("Passed ", paths.len, " ", cmd, " targets"); presentation::summary(display, "All targets passed"); return;
     }

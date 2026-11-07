@@ -23,7 +23,7 @@ Compilation output precedes captured output.
 Ordinary failures finish the admitted cohort and prevent later cohorts. Return
 the lowest-ID failing task's exit/signal code. Infrastructure/output/cleanup
 failure returns125 and closes all children before diagnostics/exit. Parent
-SIGINT/SIGTERM stops admission, closes all direct children, restores the guard,
+SIGINT/SIGTERM stops admission, closes/kills all direct children without a graceful forwarding phase, restores the guard,
 and returns128+signal. Cancellation outranks supervision errors, which outrank
 ordinary child failure. No output occurs while children remain owned.
 
@@ -39,3 +39,9 @@ filters/workspaces/watch, early prevalidation and packaged imports. Preserve
 default-path tests. Benchmark explicit jobs1 against jobs2/jobs4 and the legacy
 default using real Goose targets, preserving raw source/toolchain/platform
 identities. No performance claim before measurements.
+
+Infrastructure diagnostics distinguish launch, deadline, output-limit, captured-
+output-write and supervision/cleanup failures, with zero-based target IDs. An
+ordinary test exit125 remains a child outcome and is not mislabeled as a
+supervision failure. Exact stdout/stderr caps are accepted; excess terminates
+the cohort and is reported as failure, never silent truncation.
