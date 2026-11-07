@@ -106,3 +106,14 @@ uses the published alpha.4 snapshot, terminal-aware before/after binaries and
 `--include-progress`. All 84 samples, ranges, identities and slower cases remain.
 Whole-command and maximum-RSS observations are mixed; this record does not project
 library microbenchmark ratios onto full workflows.
+
+## Workspace glob profile
+
+[Retained workspace measurements](results/glob-workspaces-2026-11-07/README.md)
+scale the fixed real Honk snapshot `17f83c0` into generated 1/4/8-package
+workspaces. Thirty full commands and private phase timers separate staging,
+discovery and filter-loop work. Filtering is about 0.00025% of instrumented
+command time; these fixtures do not justify more matcher tuning. The largest
+has 64 candidate test paths and eight selected tests, so this is package/source
+scaling evidence, not saturation of the 4096-target cap. All ranges, inputs,
+binary hashes and the exact executed driver are retained. Runtime/API unchanged.
