@@ -6,7 +6,8 @@ format:
 	python3 scripts/process-fixture.py --update
 	$(GOOSE) format honk.goose src tests bench/utc/driver.goose
 check:
-	python3 -m py_compile scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py
+	python3 -m py_compile scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
+	python3 bench/glob_consumer.py --help > /dev/null
 	python3 bench/dogfood.py --self-test
 	python3 scripts/process-fixture.py
 	python3 scripts/check-vendor.py

@@ -54,6 +54,24 @@ class CLI(unittest.TestCase):
         self.assertIn('SPEED', output)
         self.assertIn('Passed 1 bench targets', output)
 
+    def test_target_filter_reuses_pattern_across_workspace_packages(self):
+        for name in ['alpha', 'beta']:
+            p = self.new(name)
+            (p/'tests/deep').mkdir(parents=True)
+            (p/'tests/deep/check_a.goose').write_text(f'fn main() {{ print("{name.upper()}"); }}')
+            (p/'tests/other.goose').write_text('invalid source')
+        (self.root/'Honk.toml').write_text('[workspace]\nmembers=["alpha", "beta"]')
+        for progress in ([], ['--progress', 'always']):
+            with self.subTest(progress=progress):
+                result = self.run_honk('test', '--workspace', '--filter', 'tests/**/ch*ck_[a-z].goose', *progress)
+                self.assertIn('ALPHA', result.stdout)
+                self.assertIn('BETA', result.stdout)
+                self.assertEqual(result.stdout.count('Passed 1 test targets'), 2)
+                if progress:
+                    self.assertEqual(result.stderr.count('1/1 test'), 2)
+        result = self.run_honk('test', '--filter', '[', cwd=self.root/'alpha/src', ok=False)
+        self.assertIn('invalid --filter glob', result.stderr)
+
     def test_target_filter_errors(self):
         p = self.new()
         for pattern in ['', '[', 'tests/a**', '../tests/*', '/tests/*', 'x'*1025]:

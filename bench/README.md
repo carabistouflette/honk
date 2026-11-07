@@ -58,3 +58,37 @@ create new published performance claims.
 The v0.4.0 [functional receipt](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.json)
 checks actual workspace behavior. It contains no timing result and must not be
 used as latency, throughput, uptime or memory evidence.
+
+## Prepared glob consumer comparison
+
+`glob_consumer.py` builds exact before/after Git snapshots with the same Goose compiler,
+C compiler and `-O2`. It materializes the before revision as the fixed real Honk
+project for both binaries, prepares its local lock outside timing, and checks
+identical output for every command before measuring. No network is timed.
+
+```sh
+python3 bench/glob_consumer.py --goose /absolute/pinned/goose \
+  --before 7583ebe4ccb19cca530ccd295359dd808d8de3c9 --after FULL_AFTER_SHA \
+  --rounds 7 --cpu 2 --output .build/glob-comparison
+```
+
+Cases include `version` and `metadata` startup controls, literal and recursive
+filters selecting the real core test, and a recursive filter selecting the real
+process benchmark with its `tiny` argument. Every invocation includes startup;
+test/bench also include staging, target compilation and execution. Both versions
+compile the same fixture sources. This compares the consumer's filter machinery,
+not a target rebuilt against the new library. Each binary/case receives one
+untimed correctness/warmup run. Order is randomized per round and timings run
+sequentially on one available CPU. There is no timing threshold.
+
+GNU `/usr/bin/time` records maximum resident memory in KiB. For commands spawning
+compilers/targets this is the largest reported process or descendant high-water
+mark, not simultaneous aggregate memory. A kernel-reported zero is retained as
+unavailable, not claimed as zero memory use. Wall time includes the same GNU time
+wrapper for both versions. Linux pidfd readiness avoids the polling granularity
+of Python `wait(timeout)` for short startup controls. Raw samples, compiler/tool/binary/source hashes,
+platform/CPU details, full commands and expected outputs are retained; fixture
+inputs, generated lock and binary/tool hashes are checked before each sample and
+after measurement. Generated stage/output state is excluded from source hashes.
+Use a new output directory for each experiment. Shared-host warm-cache results
+cannot establish cold-start or general package-manager rankings.

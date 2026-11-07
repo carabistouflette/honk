@@ -12,7 +12,7 @@ import .deps;
 import .build;
 import .toolchain;
 import .distribution;
-fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, args: u8[:][:], cache: u8[:]) {
+fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, args: u8[:][:], cache: u8[:], filter: build::TargetFilter&) {
     if cmd != "clean" && cmd != "add" && cmd != "remove" && cmd != "fetch" && cmd != "update" && cmd != "tree" {
         platform::require(toolchain::compatible_path(p.root), "project path contains a backslash unsupported by the pinned compiler");
     }
@@ -132,7 +132,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         distribution::package(p, graph, compiler);
     } else {
         let release = options.has("release") || cmd == "install";
-        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args, options.has("reuse-build"), options.get("filter"), options.get("progress", "never"));
+        build::compile(p, graph, compiler, if cmd == "install" { "build" } else { cmd }, release, args, options.has("reuse-build"), filter, options.get("progress", "never"));
         if cmd == "install" {
             let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
             distribution::install(p, release, destination, options.has("force"));

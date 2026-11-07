@@ -49,7 +49,8 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
     var exported = manifest::Project { .. }; manifest::load(str(verify, "/", label), exported);
     var resolved = deps::Graph { cache: str(g.cache), locked: true, offline: true, .. }; deps::resolve(exported, resolved);
     let no_args: u8[:][0] = [];
-    build::compile(exported, resolved, compiler, "check", false, no_args);
+    let filter = build::TargetFilter { .. };
+    build::compile(exported, resolved, compiler, "check", false, no_args, false, filter);
     platform::require(rename_file(temp, archive), "cannot commit package archive"); platform::require(platform::remove_tree(stage), "cannot clear packaged sources"); print(archive);
 }
 fn install(p: manifest::Project&, release: bool, destination: u8[:], force: bool) {
