@@ -39,8 +39,9 @@ before the implementation is accepted.
 
 ## Generations and coverage
 
-Use two named WatchSet owners and two named scanner owners, never copied or
-aggregated. Keep the active generation while scanning and installing a complete
+Use two named candidate/data WatchSet owners and two named scanner owners,
+plus one session-long explicit-root/parent WatchSet and anchor owner. Never copy
+or aggregate these root owners. Keep the active generation while scanning and installing a complete
 candidate. Watch exact opened descriptors, verify all parent/name/identity
 bindings and current included membership, then drain namespace events to true
 idle before promotion. Drain budget exhaustion is distinct from idle: existing
@@ -51,8 +52,13 @@ overflow, unexpected terminal events, verification differences and exhausted
 budgets invalidate the attempt. Reconcile at most eight times, then stop with
 an explicit incomplete-coverage error. Open descriptors prevent identity reuse
 while retained. Close a retired WatchSet before closing its directory anchors.
-Both generations together can hold up to 512 directory anchors and two inotify
-instances; transient traversal descriptors must also have a measured bound.
+Both generations together can hold up to 512 directory anchors and up to16 root-guard anchors, plus three inotify instances. At most two
+additional descriptors are used transiently by traversal/path validation. Thus
+library-owned peak is528 anchors+3 watcher fds+2 transient descriptors, excluding
+preexisting runtime and child descriptors. Three bounded allocations hold at
+most384KiB total native tree storage, excluding Goose/event buffers. Root guard
+loss, End or4096-record drain exhaustion fails the session conservatively; data
+watch overflow can trigger full reconciliation.
 
 A successful reconciliation always requests a full selected command. This repairs
 current-state command coverage, not notification history or an atomic snapshot.

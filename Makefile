@@ -28,6 +28,7 @@ check:
 build:
 	$(GOOSE) build honk.goose -o .build/honk
 test:
+	$(MAKE) watch-tree-native
 	$(MAKE) watch-test watch-fault-test
 	$(MAKE) terminal-test terminal-write-test
 	$(MAKE) diagnostics-test
@@ -162,3 +163,11 @@ parallel-bench: build
 	python3 bench/parallel_tests.py --honk "$(CURDIR)/.build/honk" --goose "$(abspath $(GOOSE))" --output "$(PARALLEL_BENCH_OUTPUT)"
 parallel-bench-smoke: build
 	python3 bench/parallel_tests.py --honk "$(CURDIR)/.build/honk" --goose "$(abspath $(GOOSE))" --smoke --output "$(PARALLEL_BENCH_OUTPUT)"
+
+.PHONY: watch-tree-native
+watch-tree-native:
+	mkdir -p .build
+	$(or $(HONK_SANITIZER_CC),gcc) -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_native.c -o .build/watch-tree-native
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-native
+	$(or $(HONK_SANITIZER_CC),gcc) -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_guard.c -o .build/watch-tree-guard
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-guard
