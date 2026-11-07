@@ -127,6 +127,16 @@ int64_t honk_tree_root(tree_words words, tree_bytes path) {
   char text[4096];
   memcpy(text, path.data, (size_t)path.len);
   text[path.len] = 0;
+  /* Pruning must not change the explicit-root overlap contract. */
+  for (int i = 0; i < t->roots; ++i) {
+    size_t previous = strlen(t->root_paths[i]);
+    size_t length = (size_t)path.len;
+    size_t common = previous < length ? previous : length;
+    if (!memcmp(text, t->root_paths[i], common) &&
+        (previous == length ||
+         (length < previous ? t->root_paths[i][common] == '/' : text[common] == '/')))
+      return -1;
+  }
   int fd = open("/", O_RDONLY | O_DIRECTORY | O_CLOEXEC);
   if (fd < 0)
     return -1;

@@ -222,10 +222,10 @@ finally:
         (self.src/'main.goose').write_text('fn main() {} // included')
         self.finish();self.assertEqual(self.count(),2)
     def test_ignore_file_patterns_are_relative_to_each_explicit_root(self):
-        other=self.root/'other';other.mkdir()
-        self.start(runs=2,directories=[self.src,other],extra=('--watch-ignore','skip.goose','--watch-ignore','skip_?.goose'))
+        first=self.root/'outside';first.mkdir();other=self.root/'outside-two';other.mkdir()
+        self.start(runs=2,directories=[first,other],extra=('--watch-ignore','skip.goose','--watch-ignore','skip_?.goose'))
         self.idle()
-        for root in (self.src,other):(root/'skip.goose').write_text('fn main() {}')
+        for root in (first,other):(root/'skip.goose').write_text('fn main() {}')
         fd=os.open(os.fsencode(other)+b'/skip_\xff.goose',os.O_CREAT|os.O_WRONLY,0o600);os.close(fd)
         time.sleep(.2);self.assertEqual(self.count(),1)
         (other/'included.goose').write_text('fn main() {}')
@@ -244,6 +244,19 @@ finally:
         time.sleep(.2);self.assertEqual(self.count(),1)
         (nested/'included.goose').write_text('fn main() {}')
         self.finish();self.assertEqual(self.count(),2)
+    def test_ignore_does_not_allow_overlapping_explicit_roots(self):
+        generated=self.src/'generated';generated.mkdir();nested=generated/'nested';nested.mkdir()
+        self.start(runs=1,directories=[self.src,nested],extra=('--watch-recursive','--watch-ignore','generated'))
+        self.finish(125);self.assertEqual(self.count(),0)
+    def test_ignore_allows_recursive_siblings_with_shared_name_prefix(self):
+        first=self.root/'outside';first.mkdir();second=self.root/'outside-two';second.mkdir()
+        self.start(runs=2,directories=[first,second],extra=('--watch-recursive','--watch-ignore','never'));self.idle()
+        (second/'included.goose').write_text('fn main() {}')
+        self.finish();self.assertEqual(self.count(),2)
+    def test_ignore_does_not_allow_parent_after_nested_root(self):
+        generated=self.src/'generated';generated.mkdir();nested=generated/'nested';nested.mkdir()
+        self.start(runs=1,directories=[nested,self.src],extra=('--watch-recursive','--watch-ignore','generated'))
+        self.finish(125);self.assertEqual(self.count(),0)
     def test_ignore_cannot_hide_explicit_root_loss(self):
         self.start(extra=('--watch-recursive','--watch-ignore','**'));self.idle()
         moved=self.src.with_name('moved');self.src.rename(moved);moved.rename(self.src)
