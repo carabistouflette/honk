@@ -12,14 +12,27 @@ import shutil
 import statistics
 import subprocess
 import tarfile
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
 
 
 def call(command, **kwargs):
-    return subprocess.run(list(map(str, command)), check=True, capture_output=True,
-                          text=True, timeout=300, **kwargs)
+    # Keep build/target logs off the Python heap until bounded reads.
+    with tempfile.TemporaryFile() as out, tempfile.TemporaryFile() as err:
+        result = subprocess.run(list(map(str, command)), stdout=out, stderr=err,
+                                timeout=300, **kwargs)
+        values = []
+        for stream in (out, err):
+            stream.seek(0)
+            data = stream.read(1048577)
+            if len(data) > 1048576:
+                raise SystemExit('Benchmark subprocess output exceeded 1 MiB')
+            values.append(data.decode('utf-8'))
+        result.stdout, result.stderr = values
+        result.check_returncode()
+        return result
 
 
 def digest(path):
@@ -50,6 +63,8 @@ def main():
     parser.add_argument('--cpu', type=int, default=2)
     parser.add_argument('--output', type=Path, default=ROOT/'.build/glob-comparison')
     args = parser.parse_args()
+    driver = Path(__file__).resolve()
+    driver_hash = digest(driver)
     if args.rounds < 1 or args.cpu not in os.sched_getaffinity(0):
         parser.error('positive rounds and an available CPU required')
     goose = Path(args.goose).resolve(strict=True)
@@ -75,6 +90,7 @@ def main():
     # compiler outputs are excluded; the generated lock is explicitly frozen.
     fixture_hashes = fixture_inputs(fixture)
     inputs = fixture_hashes.copy()
+    inputs[str(driver)] = driver_hash
     stdlib = Path(os.environ['GOOSE_STDLIB']).resolve() if os.environ.get('GOOSE_STDLIB') else next(
         p for p in (goose.parent/'stdlib', goose.parent.parent/'stdlib',
                     goose.parent.parent.parent/'stdlib') if p.is_dir())
@@ -104,7 +120,8 @@ def main():
             raise SystemExit('Benchmark inputs changed')
     verify()
     samples = []
-    report = {'revisions': revisions, 'args': {**vars(args), 'output': str(output)},
+    report = {'revisions': revisions, 'driver_sha256': driver_hash,
+              'args': {**vars(args), 'output': str(output)},
               'recorded_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
               'commands': cases, 'inputs_sha256': inputs, 'platform': platform.platform(),
               'cpuinfo': Path('/proc/cpuinfo').read_text(),
