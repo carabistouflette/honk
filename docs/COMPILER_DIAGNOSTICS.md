@@ -41,3 +41,19 @@ text. Parsing text headers using goose-regex would lose structure, and bounded
 capture could stop a compiler and change its result. This integration therefore
 adds no regex dependency or regex API change. The released goose-regex alpha
 remains unchanged; a separate real consumer must justify future changes there.
+
+## Reproduce the consumer measurement
+
+```sh
+python3 bench/compiler_diagnostics.py --goose /absolute/path/to/pinned/goose \
+  --allocations --output .build/compiler-diagnostics-evidence/report.json
+```
+
+The runner builds both the recorded baseline revision and current candidate with
+`--standalone -O2 --cc cc`, validates success/error outcomes, alternates four modes,
+and retains seven raw end-to-end samples per case. Compiler work and staging are
+included. Separate Valgrind runs count parent Honk allocations; they exclude the
+exec'd compiler. Requested bytes are cumulative, not peak memory or RSS. Raw logs,
+binary/source hashes, build commands, tool versions and limitations accompany the
+results. The two tiny fixtures on a shared host do not establish a general speed
+claim. Omit `--allocations` if Valgrind is unavailable.

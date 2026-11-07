@@ -91,7 +91,16 @@ class CompilerDiagnostics(unittest.TestCase):
             self.assertEqual(result.stdout, b'')
             self.assertIn(b'single package', result.stderr)
             self.assertFalse((self.project/'.honk').exists())
-        result = self.call('check', '-p', 'demo', '--diagnostics', 'json', cwd=self.root)
+        for selection in [[], ['--workspace']]:
+            result = self.call('check', '-p', 'demo', '--diagnostics', 'json', *selection, cwd=self.root)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual(json.loads(result.stdout), [])
+
+    def test_binary_target_selection(self):
+        (self.project/'src/bin').mkdir()
+        (self.project/'src/bin/other.goose').write_text('fn main() {}\n')
+        self.invalid()
+        result = self.call('check', '--bin', 'other', '--diagnostics', 'json')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout), [])
 
