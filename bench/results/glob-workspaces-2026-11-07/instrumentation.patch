@@ -1,0 +1,38 @@
+--- a/src/build.goose
++++ b/src/build.goose
+@@ -40,6 +40,7 @@
+ // Filter only after traversal, preserving its safety checks and source limits.
+ fn select_targets(paths: u8[][>..]&, filter: TargetFilter&) {
+     if !filter.enabled { return; }
++    let profile_start = clock_ns(); let profile_count = paths.len;
+     var selected: u8[][>..] = [];
+     for path in paths {
+         let matched, status = glob::matches(filter.pattern, path, glob::Options { hidden: true, .. });
+@@ -48,6 +49,8 @@
+     }
+     platform::require(selected.len > 0, "--filter matched no targets");
+     paths = copy(selected);
++    let profile_elapsed = clock_ns() - profile_start;
++    print("HONK_PROFILE\tfilter\t", profile_count, "\t", paths.len, "\t", profile_elapsed);
+ }
+ fn rewrite(text: u8[:], g: deps::Graph&, directory: u8[:], original: u8[:], p: manifest::Project&, stage: u8[:]) -> u8[>..] {
+     let reqs = source::requirements(text); var out: u8[>..] = []; var start = 0;
+@@ -150,12 +153,17 @@
+ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool, filter: TargetFilter&, progress_policy: const u8[:] = "never") {
+     var display = presentation::Output { mode: presentation::mode(progress_policy), .. };
+     deps::activate(g, cmd == "test" || cmd == "bench");
+-    let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
++    let profile_prepare_start = clock_ns();
++    let stage = prepare(p, g);
++    print("HONK_PROFILE\tprepare\t0\t0\t", clock_ns() - profile_prepare_start);
++    let profile = if release { "release" } else { "debug" };
+     let output = str(p.root, "/target/", profile); platform::require(platform::mkdir(output), "cannot create build output directory");
+     if cmd == "test" || cmd == "bench" {
+         let dir = if cmd == "test" { "tests" } else { "bench" };
+         if !is_dir(str(stage, "/", dir)) { platform::require(!filter.enabled, "--filter matched no targets"); print("No ", dir, " targets"); return; }
++        let profile_discover_start = clock_ns();
+         var paths: u8[][>..] = []; files(stage, dir, paths);
++        print("HONK_PROFILE\tdiscover\t", paths.len, "\t0\t", clock_ns() - profile_discover_start);
+         select_targets(paths, filter);
+         for path, i in paths {
+             let target_dir = str(output, "/.honk/", dir); platform::require(platform::mkdir(target_dir), "cannot create test output directory");
