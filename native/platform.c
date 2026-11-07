@@ -390,6 +390,7 @@ mask_failure:
   sigprocmask(SIG_SETMASK, &process_guard.mask, NULL);
   return false;
 }
+int honk_watch_cancelled(void) { return interrupted != 0; }
 int64_t honk_process_guard_take(int64_t child) {
   sigset_t previous;
   if (!process_guard.active ||

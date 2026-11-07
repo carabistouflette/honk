@@ -24,6 +24,10 @@ typedef struct {
     int64_t *data;
     int64_t len;
 } gw_ints;
+typedef struct {
+    const int64_t *data;
+    int64_t len;
+} gw_const_ints;
 enum { GW_OK, GW_INPUT, GW_STATE, GW_INTERRUPTED, GW_SYSTEM, GW_END, GW_CORRUPT };
 enum { GW_BUFFER = 65536, GW_NAME = 256, GW_PATH = 4095 };
 #ifndef GW_INIT

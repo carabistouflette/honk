@@ -143,6 +143,17 @@ def generate_driver(source, target, variant):
     target.write_text(imports + template)
 
 
+def match_native_manifest(baseline, candidate):
+    """Allow only the reviewed additive scanner; flags/exclusions stay matched."""
+    if candidate == baseline:
+        return 'identical'
+    old = b'c_sources = ["native/platform.c", "native/log_sink.c"];'
+    new = b'c_sources = ["native/platform.c", "native/log_sink.c", "native/watch_tree.c"];'
+    if baseline.count(old) == 1 and candidate == baseline.replace(old, new, 1):
+        return 'additive-watch-tree'
+    raise ValueError('baseline differs in required matched input: honk.build')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--goose', default=os.environ.get('GOOSE', str(ROOT/'.toolchain/goose/build/goose')))
@@ -196,9 +207,20 @@ def main():
     archive = subprocess.check_output(['git','archive',baseline],cwd=ROOT,timeout=60)
     with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
         tar.extractall(export, filter='data')
-    for name in ('GOOSE_REVISION','honk.build','native/log_sink.c','vendor/goose-log/logger.goose'):
+    for name in ('GOOSE_REVISION','native/log_sink.c','vendor/goose-log/logger.goose'):
         if (ROOT/name).read_bytes() != (export/name).read_bytes():
             parser.error(f'baseline differs in required matched input: {name}')
+    try:
+        manifest_basis = match_native_manifest((export/'honk.build').read_bytes(), (ROOT/'honk.build').read_bytes())
+    except ValueError as error:
+        parser.error(str(error))
+    native_manifest = dict(basis=manifest_basis,
+        baseline_sha256=digest((export/'honk.build').read_bytes()),
+        candidate_sha256=digest((ROOT/'honk.build').read_bytes()),
+        additional_sources=({'native/watch_tree.c': digest((ROOT/'native/watch_tree.c').read_bytes())}
+                            if manifest_basis == 'additive-watch-tree' else {}),
+        scope=('The additive scanner is linked only in the candidate and is not invoked by diagnostics stages; this is not a matched whole-binary comparison.'
+               if manifest_basis == 'additive-watch-tree' else 'Native manifests are byte-identical.'))
     before = source_hashes(ROOT)
     compiler_before = compiler_hashes(goose)
     env = os.environ.copy()
@@ -230,6 +252,7 @@ def main():
     metadata = dict(schema=1, created_utc=dt.datetime.now(dt.timezone.utc).isoformat(),
         source_commit=source, source_dirty=bool(dirty), source_status=dirty, source_hashes=before,
         baseline_commit=baseline, baseline_tree=command(['git','rev-parse',baseline+'^{tree}']),
+        native_manifest_match=native_manifest,
         baseline_archive_sha256=digest(archive), baseline_source_hashes=source_hashes(export),
         compiler_revision=pin, compiler_version=version, compiler_hashes=compiler_before,
         cc=args.cc, cc_version=command([args.cc,'--version']), platform=platform.platform(),

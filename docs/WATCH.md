@@ -12,17 +12,15 @@ honk watch check --watch-dir "$PWD/src" --watch-runs 2 --watch-debounce-ms 100
 Supply 1–256 explicit normalized absolute directories with repeated `--watch-dir`
 options. Each directory is watched nonrecursively. Duplicate text, inode aliases,
 final symlinks and any invalid member reject the complete set before running the
-selected command. Startup errors identify a zero-based request index (`-1` for
-global errors), without displaying raw paths. A single directory remains a
-one-element set. It does not automatically watch nested directories, other workspace members, dependency trees, manifests or
-lockfiles. `check` or `test` still performs its ordinary full selected command;
+selected command. Startup coverage errors stop the command without displaying raw paths. A single directory remains a
+one-element set. Without `--watch-recursive`, nested directories are excluded. Other workspace
+members, dependencies, manifests and lockfiles are never discovered automatically. `check` or `test` still performs its ordinary full selected command;
 `--filter` selects test targets, not watched filenames. Normal command options
 and test arguments after `--` are forwarded literally, without a shell.
 
 The complete set is installed before the initial run. Close-write, moved-from/to and
 delete events on immediate `.goose` names request another run; create alone is
-ignored to avoid checking files still being written. Directory events and other
-extensions are ignored. Changes observed during a command coalesce into one
+ignored to avoid checking files still being written. In nonrecursive mode, directory events and other extensions are ignored. Changes observed during a command coalesce into one
 pending rerun. By default there is no quiet-period debounce. Changes arriving in
 a later batch may cause another run; exactly-once operation counts are not promised. Each drain is capped at
 256 records so busy directories cannot starve child/signal handling.
@@ -72,12 +70,12 @@ uses the running executable image rather than a PATH lookup. The probe alone has
 a hard deadline; active commands do not, to avoid killing Honk before its nested
 compiler/test process can clean up.
 
-The consumer vendors unmodified goose-watch alpha.2 at
-`56842ee7fc4c2fd948f663f1c50425bf2b3e8a73`. It uses one WatchSet with fixed
-membership and one kernel fd. Linux 4.19+ and IN_MASK_CREATE headers are required.
+The consumer vendors unmodified goose-watch alpha.3 at
+`db39c02739bc6e5301e1deedad0caba0e2f11188`. Nonrecursive mode uses one WatchSet with fixed membership and one kernel fd;
+recursive mode adds bounded generations and a persistent root guard. Linux 4.19+ and IN_MASK_CREATE headers are required.
 The entire set is reopened after loss; no surviving subset continues silently.
 Intermediate symlinks may still be followed; this is not filesystem confinement.
-Recursive discovery remains outside this command.
+Recursive mode is opt-in; its additional contract is described below.
 
 Validation: `make watch-test` runs real Honk/watcher subprocesses with controlled
 compiler barriers. It covers initial/finite runs, failure recovery, coalescing,
@@ -107,3 +105,53 @@ and after an active child.
 The [debounce qualification receipt](debounce-validation.json) identifies the
 reviewed feature source, unchanged implementation across the parallel-test merge,
 combined CLI/watch checks, and the separate hosted CI gate.
+
+## Opt-in recursive roots
+
+`honk watch test --watch-dir "$PWD/src" --watch-dir "$PWD/tests" --watch-recursive`
+watches included subdirectories using no-follow, descriptor-relative discovery.
+Default behavior remains explicit and nonrecursive. Recursive mode accepts at
+most8 normalized explicit roots (root `/` is unsupported), depth32 relative to
+each root,256 directory identities per data generation including parent
+sentinels, and8192 examined entries per scan/verification pass. All entries count,
+including files and excluded names. Overlapping/aliased roots or topology aliases
+are rejected. Shared parent sentinels are deduplicated. Unsupported aliases or
+exhausted limits stop with code125 before claiming partial coverage.
+
+Discovered directory basenames `.git`, `.honk`, `target`, `.build`, `.toolchain`
+are excluded; explicitly selected roots override basename exclusions. Symlinks
+are not traversed, including intermediate components of configured roots.
+Names remain raw bytes and are never printed. The library's borrowed-fd API binds
+watches to exact opened identities; genuine `/proc/self/fd` is required.
+
+Nested directory creation, deletion and moves request a complete coverage repair
+and full selected command. New populated subtrees are rescanned. Repair waits for
+any active child to finish cleanup; changes coalesce while it runs. Candidate
+coverage is registered, verified and drained to true idle before replacing the
+previous generation. Up to8 attempts and4096 candidate records per attempt are
+allowed. A full command runs after successful repair, without debounce delay,
+even if transient changes left no surviving notification. This repairs current
+state, not notification history or a filesystem snapshot.
+
+A separate session-long guard watches explicit roots and their parents across
+all generation replacements. It preserves fatal root-move history, including
+move-away/back, and detects removal even while open anchors delay self-delete
+events. Current configured root paths and retained parent/inode bindings are
+also checked. Each guard check has its own4096-record budget and must reach true
+idle. Explicit-root or sentinel loss stops the session. Root-guard
+overflow, End or4096-record drain exhaustion fails conservatively; data-generation
+overflow can be repaired with a full rescan. No silent surviving subset continues.
+
+Peak library-owned storage is up to528 retained directory descriptors, three
+inotify descriptors and two transient traversal descriptors, plus at most384KiB
+native tree allocation and the existing Goose/watch buffers. These bounds exclude
+preexisting application/runtime and child descriptors/memory. Counts bound work,
+not filesystem syscall wall-clock time. Cancellation is checked between phases
+and during enumeration; active-child signal consumption remains in supervision.
+Inotify does not detect a mount placed over a watched path. Concurrent renames,
+mount changes and external writers prevent any confinement, atomic-snapshot or
+universally complete change-history guarantee.
+
+The [recursive qualification receipt](recursive-validation.json) records source
+checkpoints,57 final case definitions,earlier54/56 runs,native hardening checks
+and the separate final-source hosted CI gate.
