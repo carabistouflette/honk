@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add opt-in `test --reuse-build` with bounded path-derived test slots, verified
+  executable restoration, conservative source eligibility and unchanged default
+  compilation. Every invocation still executes the selected tests.
+
 - Add optional `--watch-debounce-ms 0..1000` for quiet-period rerun batching,
   with a fixed one-second batching cap, immediate initial/loss runs and responsive
   cancellation. Default zero preserves immediate reruns.
