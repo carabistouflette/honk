@@ -51,3 +51,21 @@ python3 render.py raw.json summary.json report.html
 
 See [the reuse guide](../../../docs/INCREMENTAL-BUILDS.md) for reproduction,
 eligibility, bounded storage, invalidation, and the indirect-toolchain limitation.
+
+## Recursive-watch integration
+
+`integration-recursive/` records merging main601b4bc and the separately reviewed
+bench-isolation correction at source2e87ca5 (full identities in receipt.json).
+Both changelog entries are retained and duplicate sanitizer invocation removed.
+The combined branch passes full format/check/test, including all17 cache methods
+and recursive watch integration/fault/native-sanitizer coverage. Ordinary bench
+runs remain on their original cache path; a deliberate hash-collision regression
+checks they cannot invalidate a test bucket.
+
+A clean six-invocation real-project smoke passes matching suite output and
+unchanged backend-log checks for hits. This is correctness evidence, excluded
+from the original three-round timing summary. No new timing comparison or
+full-Honk sanitizer/portability claim is made for the integrated source; hosted
+CI repeats those gates. The interrupted first attempt is retained explicitly:
+a concurrent rebuild replaced the executable during CLI tests; the final
+sequential run supersedes it.

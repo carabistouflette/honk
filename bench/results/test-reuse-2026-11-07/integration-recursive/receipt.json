@@ -1,0 +1,15 @@
+{
+  "source": "2e87ca515f7de358767864757dc12368e5f157fb",
+  "merged_main": "601b4bc298437a2b8845931a9cd49cc2f026f134",
+  "smoke_calls": 6,
+  "verified_hits": true,
+  "scope": "Integration correctness smoke only; original three-round timing summary remains tied to10c4572.",
+  "validation": "make format check test; 17 cache regressions; normal/fault recursive watch coverage and native watch sanitizer helpers",
+  "sha256": {
+    "normal.log": "504056f238b89c6e6f59c994e4fe285272f8844c858fee4c30e48af7f2deb826",
+    "interrupted.log": "50cdf6349cc6002d3d77fda9c64ef96667723a23fd68912a812e4bf7ecd34b12",
+    "smoke.json": "3a2841cc2d44a87c679592fac504b7f00a743507b43fa8a5659dd2c13113ac2a",
+    "smoke.log": "c1095ac4e5321338189fa36fefb4784d5119155e31e407b6b164e596d252f07c"
+  },
+  "excluded": "interrupted.log: rebuilt .build/honk while CLI tests used it; superseded by complete sequential normal.log"
+}
