@@ -53,3 +53,8 @@ https://github.com/carabistouflette/goose-terminal at `b17449c957c5137538d8a1949
 Target matching includes [goose-glob](https://github.com/carabistouflette/goose-glob)
 v0.1.0-alpha.4 at `2022a04e1847490c9c76af91e1e5c01a3c6e3cc0`;
 see [Apache-2.0](vendor/goose-glob/LICENSE) and vendor/manifest.json.
+
+Directory notifications use [goose-watch](https://github.com/carabistouflette/goose-watch)
+v0.1.0-alpha.1 at `7bbd7ef8c9a4d6323ef9d065d1461bae9ba9fe58`; source/build/native files,
+[LICENSE](vendor/goose-watch/LICENSE) and [NOTICE](vendor/goose-watch/NOTICE)
+are retained unmodified.

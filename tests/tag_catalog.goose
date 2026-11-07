@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import watch from "../vendor/goose-watch";
 import glob from "../vendor/goose-glob";
 import crypto from "../vendor/goose-crypto";
 import http from "../vendor/goose-http";

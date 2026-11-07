@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Root imports are rebound to an immutable export by the measurement runner.
+import watch from "../../vendor/goose-watch";
 import glob from "../../vendor/goose-glob";
 import crypto from "../../vendor/goose-crypto";
 import http from "../../vendor/goose-http";
