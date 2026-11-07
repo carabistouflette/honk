@@ -73,7 +73,7 @@ def terminals(data):
 
 
 class Session:
-    def __init__(self, binary, project, env, folder, suite, sampled, extra_roots=()):
+    def __init__(self, binary, project, env, folder, suite, sampled, extra_roots=(), trace_bytes=64*1024*1024):
         folder.mkdir()
         self.folder, self.project = folder, project
         self.proc = self.pidfd = self.observer = self.identity = None
@@ -99,7 +99,7 @@ class Session:
             self.pidfd = os.pidfd_open(self.proc.pid)
             self.record['identity'] = self.identity
             if sampled:
-                self.observer = ProcessObserver(self.proc.pid, folder/'processes.jsonl.gz', [project/'target/debug/.honk/tests/0'])
+                self.observer = ProcessObserver(self.proc.pid, folder/'processes.jsonl.gz', [project/'target/debug/.honk/tests/0'], max_bytes=trace_bytes)
             self.persist()
         except BaseException:
             self.close()
@@ -350,6 +350,9 @@ def main():
         p.add_argument('--'+name, type=Path, required=True)
     p.add_argument('--cycles', type=int, default=30); p.add_argument('--idle-seconds', type=float, default=60)
     p.add_argument('--smoke', action='store_true')
+    p.add_argument('--project',choices=tuple(WORKLOADS),action='append',help='selected projects; default both')
+    p.add_argument('--mode',choices=('timing','resources'),action='append',help='selected measurement modes; default both')
+    p.add_argument('--trace-mib',type=int,choices=(32,64,128),default=64,help='finite logical trace cap per sampled session')
     p.add_argument('--overflow-probe',type=Path)
     p.add_argument('--deadline-seconds',type=int,default=1800)
     a = p.parse_args()
@@ -362,6 +365,7 @@ def main():
     env={**os.environ, 'GOOSE':str(a.goose), 'HONK_HOME':str(output/'cache'), 'TMPDIR':str(output/'tmp')}
     report=dict(complete=False, mode='smoke' if a.smoke else 'long', cycles=a.cycles, idle_seconds=a.idle_seconds,
                 source_commit=git(ROOT,'rev-parse','HEAD').decode().strip(), platform=platform.platform(),
+                selected_projects=a.project or list(WORKLOADS),selected_modes=a.mode or ['timing','resources'],trace_mib=a.trace_mib,
                 binary_sha256={'honk':sha(a.honk),'goose':sha(a.goose)}, harness_sha256=sha(__file__), projects={},
                 compiler_pin=(ROOT/'GOOSE_REVISION').read_text().strip(),
                 compiler_version=subprocess.check_output([str(a.goose),'--version'],text=True,timeout=10).strip(),
@@ -388,6 +392,7 @@ def main():
         if report['source_status']: raise RuntimeError('qualification requires a clean source checkout')
         (output/'calibration').mkdir();report['calibration']=calibrate(output/'calibration')
         for name,(rev,entry,suite) in WORKLOADS.items():
+            if name not in report['selected_projects']: continue
             project=output/name;project.mkdir();repo=getattr(a,name+'_repo')
             archive=git(repo,'archive','--format=tar',rev);(output/(name+'-source.tar')).write_bytes(archive)
             with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
@@ -417,8 +422,9 @@ def main():
             if (project/'GOOSE_REVISION').read_text().strip()!=report['compiler_pin']: raise RuntimeError('workload/compiler pin mismatch')
             expected=canonical(baseline_stdout,project);info['canonical_stdout']=expected.decode()
             for sampled in (False,True):
+                if ('resources' if sampled else 'timing') not in report['selected_modes']: continue
                 if time.monotonic()>deadline:raise RuntimeError('campaign deadline exceeded')
-                session=Session(a.honk,project,env,output/(name+('-resources' if sampled else '-timing')),suite,sampled)
+                session=Session(a.honk,project,env,output/(name+('-resources' if sampled else '-timing')),suite,sampled,trace_bytes=a.trace_mib*1024*1024)
                 session.deadline=deadline
                 info['sessions'].append(str(session.folder.relative_to(output)))
                 try:
