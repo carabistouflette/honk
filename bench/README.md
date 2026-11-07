@@ -100,3 +100,9 @@ forced progress to the five default cases. The report then retains 84 samples
 for seven rounds, including both default presentation and forced progress.
 The target project stays frozen at the before revision; only the CLI binary
 changes, so target compilation/execution use identical inputs across versions.
+
+The [retained alpha.4 combined-consumer report](results/glob-alpha4-2026-11-07/README.md)
+uses the published alpha.4 snapshot, terminal-aware before/after binaries and
+`--include-progress`. All 84 samples, ranges, identities and slower cases remain.
+Whole-command and maximum-RSS observations are mixed; this record does not project
+library microbenchmark ratios onto full workflows.
