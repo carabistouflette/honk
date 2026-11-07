@@ -200,3 +200,7 @@ With ignores enabled the earlier recursive peak estimate therefore allows
 528 anchors, three watchers and up to three transient descriptors; runtime and
 compiler/test-child resources remain outside that estimate. Without ignores the
 existing native traversal path and its descriptor limits remain unchanged.
+
+[Local ignore qualification](watch-ignore-validation.json) retains the exact
+producer, regression/sanitizer logs and real-compiler trigger checks. Hosted CI
+remains a separate merge gate; the published v0.5.0-rc.1 tag is unchanged.
