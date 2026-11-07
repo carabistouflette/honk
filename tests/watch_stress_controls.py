@@ -7,6 +7,7 @@ import os
 import tempfile
 import time
 import unittest
+from unittest import mock
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'bench'))
 import watch_stress as w
@@ -57,6 +58,25 @@ class Controls(unittest.TestCase):
             finally: session.close()
             self.assertTrue(session.record.get('forced_cleanup'))
             end=time.monotonic()+2
+            while time.monotonic()<end:
+                identity=w.ProcessObserver.identity(child)
+                if identity is None or identity['state']=='Z': break
+                time.sleep(.01)
+            self.assertTrue(identity is None or identity['state']=='Z',identity)
+    def test_pidfd_setup_failure_kills_spawned_child(self):
+        with tempfile.TemporaryDirectory(prefix='watch-pidfd-') as raw:
+            root=Path(raw);script=root/'leader';childfile=root/'child'
+            script.write_text('#!'+sys.executable+'\nimport subprocess,time\np=subprocess.Popen(["/bin/sleep","30"])\nopen('+repr(str(childfile))+',"w").write(str(p.pid))\ntime.sleep(30)\n')
+            script.chmod(0o755)
+            def fail_after_child(pid):
+                end=time.monotonic()+5
+                while not childfile.exists() and time.monotonic()<end: time.sleep(.01)
+                self.assertTrue(childfile.exists())
+                raise OSError('injected pidfd failure')
+            with mock.patch.object(w.os,'pidfd_open',side_effect=fail_after_child):
+                with self.assertRaisesRegex(OSError,'injected pidfd'):
+                    w.Session(script,root,os.environ.copy(),root/'session','unused',False)
+            child=int(childfile.read_text());end=time.monotonic()+2
             while time.monotonic()<end:
                 identity=w.ProcessObserver.identity(child)
                 if identity is None or identity['state']=='Z': break

@@ -93,10 +93,10 @@ class Session:
             self.record['argv'] = argv
             self.proc = subprocess.Popen(argv, cwd=project, env=env, stdin=subprocess.DEVNULL,
                                          stdout=self.out, stderr=self.err, start_new_session=True)
-            self.pidfd = os.pidfd_open(self.proc.pid)
             self.identity = ProcessObserver.identity(self.proc.pid)
             if self.identity is None:
                 raise RuntimeError('supervisor disappeared at startup')
+            self.pidfd = os.pidfd_open(self.proc.pid)
             self.record['identity'] = self.identity
             if sampled:
                 self.observer = ProcessObserver(self.proc.pid, folder/'processes.jsonl.gz', [project/'target/debug/.honk/tests/0'])
@@ -244,9 +244,12 @@ class Session:
                     if not self.exited() or self.group_members():
                         os.killpg(self.proc.pid, signal.SIGKILL)
                         self.record['forced_cleanup'] = True
-                elif not self.exited():
-                    # Popen still owns this unreaped child even if /proc failed.
-                    self.proc.kill()
+                else:
+                    # start_new_session plus the unreaped Popen child reserves
+                    # this group even if /proc identity acquisition failed.
+                    if os.getpgid(self.proc.pid)!=self.proc.pid or os.getsid(self.proc.pid)!=self.proc.pid:
+                        raise RuntimeError('startup private group identity mismatch')
+                    os.killpg(self.proc.pid, signal.SIGKILL)
                     self.record['forced_cleanup'] = True
                 self.proc.wait(timeout=10)
             if self.observer:
