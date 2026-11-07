@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+import watch from "./vendor/goose-watch";
+import .src.watching;
 import glob from "./vendor/goose-glob";
 import crypto from "./vendor/goose-crypto";
 import http from "./vendor/goose-http";
@@ -27,7 +29,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.");
+    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-runs N] (nonrecursive).");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -46,13 +48,34 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.4.0"); return; }
     let spec = [argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("watch-dir"), argparse::option("watch-runs"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
     let program_args = argv[if separator < argv.len { separator + 1 } else { separator }..];
     if options.error != argparse::Error.None { platform::die(options.message); }
     if options.has("help") { usage(); return; }
+    if cmd == "watch" {
+        platform::require(options.positionals.len == 1 && (options.positionals[0] == "check" || options.positionals[0] == "test"), "watch needs check or test");
+        platform::require(options.has("watch-dir") && options.get("watch-dir").len > 0, "watch requires --watch-dir (one nonrecursive directory)");
+        let selected = options.positionals[0];
+        let filter = validate_options(selected, options, program_args.len, true);
+        let limit, valid = parse_int(options.get("watch-runs", "0"));
+        platform::require(valid && limit >= 0 && limit <= 10000, "--watch-runs must be 0..10000 (0 waits indefinitely)");
+        let directory = options.get("watch-dir");
+        platform::require(directory.len <= 4095 && directory[0] == '/', "--watch-dir must be an absolute directory path");
+        var words: u8[][>..] = []; words.push(str("/proc/self/exe")); words.push(str(selected));
+        for entry in options.entries {
+            if entry.name == "watch-dir" || entry.name == "watch-runs" { continue; }
+            words.push(str("--", entry.name));
+            for option in spec { if option.name == entry.name && option.value_name.len > 0 { words.push(str(entry.value)); } }
+        }
+        if program_args.len > 0 { words.push(str("--")); for arg in program_args { words.push(str(arg)); } }
+        var child: (const u8[:])[>..] = []; for word in words { child.push(word); }
+        let code = watching::run(directory, child[..], limit);
+        if code != 0 { exit(code); }
+        return;
+    }
     let filter = validate_options(cmd, options, program_args.len);
     if options.has("log-file") {
         platform::require(diagnostics::configure(options.get("log-file")), "invalid diagnostic configuration");
@@ -152,7 +175,7 @@ fn selected_member(p: manifest::Project&, selector: u8[:]) -> u8[>..] {
     platform::require(selected.len > 0, "no workspace package matched"); return selected;
 }
 
-fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) -> build::TargetFilter {
+fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watching: bool = false) -> build::TargetFilter {
     platform::require(!options.has("root") || options.get("root").len > 0, "installation root must not be empty");
     let filter = if options.has("filter") {
         let pattern, status = glob::compile(options.get("filter"));
@@ -166,7 +189,8 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) -> b
     }
     for entry in options.entries {
         let name = entry.name; var allowed = false;
-        if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
+        if name == "watch-dir" || name == "watch-runs" { allowed = watching; }
+        else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "filter" { allowed = cmd == "test" || cmd == "bench"; }
         else if name == "reuse-build" { allowed = cmd == "build" || cmd == "run"; }
         else if name == "metadata" { allowed = cmd == "toolchain"; }
