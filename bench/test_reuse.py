@@ -45,7 +45,8 @@ def main():
         after={str(p):p.stat().st_mtime_ns for p in (output/'goose/build/prog').rglob('cc.log')}
         result['backend_logs_before']=before;result['backend_logs_after']=after
         result['label']=label;report['records'].append(result);save(path,report)
-        if not result['complete'] or result['exit_code']!=0 or result['stderr']:
+        cold_notice = label=='warmup_ordinary' and len(result['stderr'].splitlines())==1 and result['stderr'].startswith('compiling the runtime for ')
+        if not result['complete'] or result['exit_code']!=0 or (result['stderr'] and not cold_notice):
             raise RuntimeError('failed invocation; raw record retained')
         if (label.startswith('hit_') or label=='warmup_hit') and before!=after:
             raise RuntimeError('expected verified hit invoked compiler backend')
