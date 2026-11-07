@@ -11,6 +11,11 @@ unreleased features, including watch and `check --diagnostics`; v0.4.0 includes 
 yet guaranteed. Registry publishing, general dependency solving, cross
 compilation and Cargo feature/stability parity are outside this release.
 
+This branch prepares **v0.5.0-rc.1**; the candidate has not been published.
+It collects watch, parallel tests, test reuse, diagnostics, filtering and optional
+progress. [Candidate scope and publication gates](docs/RELEASE-CANDIDATE.md)
+separate prepared source from verified published artifacts.
+
 ## Quickstart
 
 Build on Linux x86-64 with kernel 5.3+ and glibc 2.34+. Install Git 2.31+,
