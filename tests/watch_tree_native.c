@@ -54,6 +54,8 @@ int main(void) {
     assert(scan(owner));
     assert(honk_tree_count(owner) == 3);
     assert(verify(owner));
+    assert(honk_tree_event(owner, 1, (tree_bytes){NULL, 0}, 4) == 0);
+    assert(honk_tree_event(owner, 0, (tree_bytes){NULL, 0}, 4) == 2);
     int64_t fds[256];
     assert(honk_tree_fds(owner, (tree_words){fds, 256}) == 3);
     for (int j = 0; j < 3; ++j)

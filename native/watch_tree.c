@@ -390,7 +390,8 @@ int64_t honk_tree_event(tree_words words, int64_t index, tree_bytes name,
   if (!(e->roles & 1))
     return 2; // Sentinel-only records never become source changes.
   char basename[256];
-  memcpy(basename, name.data, (size_t)name.len);
+  if (name.len > 0)
+    memcpy(basename, name.data, (size_t)name.len);
   basename[name.len] = 0;
   if (excluded(basename))
     return 2;
