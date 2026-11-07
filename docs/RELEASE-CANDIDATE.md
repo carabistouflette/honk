@@ -41,3 +41,12 @@ of the candidate executable. See RESULTS.md and the linked raw receipts.
 
 Publication receipts and candidate CI links follow these gates. The prepared
 branch deliberately does not advertise a release URL that does not yet exist.
+
+## Local preparation evidence
+
+[Local receipt](results/release-candidate-0.5.0-rc.1-local.json) and its hashed
+log archive retain full format/check/test/security results, exact producer source
+and binary/compiler hashes, two independent release reviews and a two-run real
+recursive-watch test with the pinned compiler. Production differences from the
+qualified base are restricted to the three advertised-version locations.
+Required hosted CI and public artifact verification remain pending gates.
