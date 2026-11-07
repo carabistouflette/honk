@@ -74,13 +74,15 @@ class CompilerDiagnostics(unittest.TestCase):
         cases = [('build', '--diagnostics', 'json'), ('run', '--diagnostics', 'json'),
                  ('test', '--diagnostics', 'json'), ('bench', '--diagnostics', 'json'),
                  ('watch', 'check', '--watch-dir', str(self.project), '--diagnostics', 'json'),
+                 ('watch', 'check', '--watch-dir', str(self.project), '--watch-recursive', '--diagnostics', 'json'),
+                 ('check', '--watch-recursive', '--diagnostics', 'json'),
                  ('check', '--diagnostics', 'yaml'), ('check', '--diagnostics', '')]
         for args in cases:
             with self.subTest(args=args):
                 result = self.call(*args, extra={'GOOSE': '/does/not/exist'})
                 self.assertNotEqual(result.returncode, 0)
                 self.assertEqual(result.stdout, b'')
-                self.assertIn(b'--diagnostics', result.stderr)
+                self.assertTrue(b'--diagnostics' in result.stderr or b'--watch-recursive' in result.stderr)
                 self.assertFalse((self.project/'.honk').exists())
 
     def test_workspace_requires_single_selected_member(self):

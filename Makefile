@@ -31,6 +31,7 @@ build:
 	$(GOOSE) build honk.goose -o .build/honk
 test: build
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/compiler_diagnostics.py
+	$(MAKE) watch-tree-native
 	$(MAKE) qualification-test
 	$(MAKE) watch-test watch-fault-test
 	$(MAKE) terminal-test terminal-write-test
@@ -168,6 +169,13 @@ parallel-bench: build
 parallel-bench-smoke: build
 	python3 bench/parallel_tests.py --honk "$(CURDIR)/.build/honk" --goose "$(abspath $(GOOSE))" --smoke --output "$(PARALLEL_BENCH_OUTPUT)"
 
+.PHONY: watch-tree-native
+watch-tree-native:
+	mkdir -p .build
+	$(or $(HONK_SANITIZER_CC),gcc) -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_native.c -o .build/watch-tree-native
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-native
+	$(or $(HONK_SANITIZER_CC),gcc) -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_guard.c -o .build/watch-tree-guard
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-guard
 .PHONY: qualification-test parallel-qualify
 qualification-test:
 	python3 tests/qualification_observer.py

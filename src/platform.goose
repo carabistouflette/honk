@@ -26,6 +26,7 @@ extern fn write(path: const u8[:], data: const u8[:], executable: bool, exclusiv
 extern fn write_scratch(path: const u8[:], data: const u8[:]) -> bool = "honk_write_scratch";
 extern fn lock(path: const u8[:]) -> i64 = "honk_lock";
 extern fn unlock(fd: i64) = "honk_unlock";
+extern fn watch_cancelled() -> i32 = "honk_watch_cancelled";
 extern fn watch_clock_ms() -> i64 = "honk_watch_clock_ms";
 extern fn process_guard_begin() -> bool = "honk_process_guard_begin";
 extern fn process_guard_take(child: i64) -> i64 = "honk_process_guard_take";

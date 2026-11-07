@@ -2,9 +2,12 @@
 /* Test-only linker seam. Production builds never include this file. */
 #include <errno.h>
 #include <signal.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <unistd.h>
 typedef struct {
   int64_t *data;
@@ -70,6 +73,12 @@ int64_t __real_gw_set_next(ints, ints, bytes, int64_t, bytes, ints)
 int64_t __wrap_gw_set_next(ints state, ints map, bytes buffer, int64_t timeout,
                            bytes name, ints meta) {
   static int ignored_remaining = 0;
+  static int64_t *first_owner;
+  if (!first_owner)
+    first_owner = state.data;
+  const char *target = getenv("WATCH_FAULT_TARGET");
+  bool selected_owner =
+      !target || strcmp(target, "data") != 0 || state.data != first_owner;
   if (clock_sequence == 1 && meta.len == 8 && meta.data && name.len >= 9 &&
       name.data) {
     clock_sequence = 2;
@@ -82,8 +91,9 @@ int64_t __wrap_gw_set_next(ints state, ints map, bytes buffer, int64_t timeout,
   }
   const char *mode = getenv("WATCH_FAULT_MODE");
   const char *trigger = getenv("WATCH_FAULT_TRIGGER");
-  if ((!mode || strncmp(mode, "clock", 5) != 0) && trigger && meta.len == 8 &&
-      meta.data && unlink(trigger) == 0) {
+  if ((!mode ||
+       (strncmp(mode, "clock", 5) != 0 && strncmp(mode, "tree", 4) != 0)) &&
+      selected_owner && trigger && meta.len == 8 && meta.data && unlink(trigger) == 0) {
     memset(meta.data, 0, 8 * sizeof(int64_t));
     if (mode && strcmp(mode, "overflow") == 0) {
       meta.data[2] = 1;
@@ -118,4 +128,46 @@ int64_t __wrap_gw_set_next(ints state, ints map, bytes buffer, int64_t timeout,
   if (!__real_gw_set_next)
     return 4;
   return __real_gw_set_next(state, map, buffer, timeout, name, meta);
+}
+
+int64_t __real_honk_tree_scan_step(ints) __attribute__((weak));
+int64_t __real_honk_tree_verify_step(ints) __attribute__((weak));
+static void tree_hook(const char *phase) {
+  const char *mode = getenv("WATCH_FAULT_MODE");
+  const char *trigger = getenv("WATCH_FAULT_TRIGGER");
+  const char *root = getenv("WATCH_TREE_ROOT");
+  if (!mode || strncmp(mode, "tree", 4) || !trigger || !root)
+    return;
+  if (!strcmp(mode, "tree-retry") && !strcmp(phase, "verify") &&
+      access(trigger, F_OK) == 0) {
+    char path[4096];
+    int n = snprintf(path, sizeof path, "%s/churn", root);
+    if (n > 0 && (size_t)n < sizeof path) {
+      if (mkdir(path, 0700) == 0)
+        rmdir(path);
+    }
+    return;
+  }
+  bool selected =
+      (!strcmp(mode, "tree-aba") && !strcmp(phase, "scan")) ||
+      (!strcmp(mode, "tree-verify-aba") && !strcmp(phase, "verify")) ||
+      (!strcmp(mode, "tree-cancel") && !strcmp(phase, "scan"));
+  if (!selected || unlink(trigger) != 0)
+    return;
+  if (!strcmp(mode, "tree-cancel")) {
+    raise(SIGINT);
+    return;
+  }
+  char moved[4096];
+  int n = snprintf(moved, sizeof moved, "%s-moved", root);
+  if (n > 0 && (size_t)n < sizeof moved && rename(root, moved) == 0)
+    rename(moved, root);
+}
+int64_t __wrap_honk_tree_scan_step(ints tree) {
+  tree_hook("scan");
+  return __real_honk_tree_scan_step ? __real_honk_tree_scan_step(tree) : -1;
+}
+int64_t __wrap_honk_tree_verify_step(ints tree) {
+  tree_hook("verify");
+  return __real_honk_tree_verify_step ? __real_honk_tree_verify_step(tree) : -1;
 }

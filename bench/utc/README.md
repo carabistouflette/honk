@@ -146,3 +146,12 @@ Exploratory GCC/Clang smoke corpora are preserved under ignored
 Those tests established byte/counter agreement, real native-file delivery and
 rejection of 138 deliberate result corruptions per corpus; new performance
 evidence must identify the actual committed harness and implementation.
+
+The native build-manifest guard accepts byte-identical manifests or the exact
+reviewed addition of `native/watch_tree.c` to the original two-source list.
+Flags, exclusions, source removals and every other addition remain matched or
+rejected. Reports retain both manifest hashes, the match basis and the extra
+scanner source hash. The scanner links only into the candidate and is never
+invoked by the diagnostics stages; this benchmark does not claim to compare
+otherwise identical whole binaries. Other matched logger/sink/compiler inputs
+and independent complete output verification remain unchanged.

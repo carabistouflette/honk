@@ -1,8 +1,10 @@
 # Single-package compiler diagnostics evidence
 
 `report.json` records measured source `486f27b` and the immutable baseline
-`a39216aba524dc4bffe2e0d038f86ccecf4d013d`. Runtime/interface sources match the
-reviewed feature commit; later documentation changes do not alter those sources.
+`a39216aba524dc4bffe2e0d038f86ccecf4d013d`. These measurements describe the pre-recursive-watch feature checkpoint. Merging
+recursive-watch main changes the program and native inputs; these historical
+samples are not measurements of the integrated tree. The diagnostics forwarding
+implementation itself is preserved.
 The runner built both revisions and recorded exact commands and executable hashes.
 The working source was clean. All 56 end-to-end samples and eight raw allocation
 logs are retained; log SHA-256 values are in the report. No slower sample is

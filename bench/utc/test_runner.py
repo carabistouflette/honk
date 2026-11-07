@@ -22,7 +22,27 @@ def reject(function, reason):
     raise SystemExit('verifier accepted '+reason)
 
 
+def manifest_controls():
+    baseline = (b'c_sources = ["native/platform.c", "native/log_sink.c"];\n'
+                b'c_flags_cc = ["-std=c11", "-Werror"];\n'
+                b'exclude = ["tests", "bench"];\n')
+    candidate = baseline.replace(b'"native/log_sink.c"]',
+                                 b'"native/log_sink.c", "native/watch_tree.c"]')
+    if measure.match_native_manifest(baseline, baseline) != 'identical':
+        raise SystemExit('identical manifest rejected')
+    if measure.match_native_manifest(baseline, candidate) != 'additive-watch-tree':
+        raise SystemExit('reviewed scanner addition rejected')
+    for bad in (candidate.replace(b'-Werror', b'-O3'),
+                candidate.replace(b'"bench"', b'"vendor"'),
+                candidate.replace(b'watch_tree.c', b'unreviewed.c'),
+                candidate.replace(b'"native/platform.c", ', b''),
+                candidate + b'c_sources = ["native/extra.c"];\n'):
+        reject(lambda: measure.match_native_manifest(baseline, bad), 'unmatched native manifest')
+    print('native manifest: identical/reviewed addition accepted; five mismatches rejected')
+
+
 def main():
+    manifest_controls()
     root=Path(sys.argv[1]) if len(sys.argv)>1 else HERE/'results/smoke'
     metadata=json.loads((root/'metadata.json').read_text())
     raw=(root/'fixture.bin').read_bytes()

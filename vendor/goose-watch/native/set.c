@@ -1,5 +1,10 @@
 /* SPDX-License-Identifier: Apache-2.0 */
 #include "common.h"
+#include <stdio.h>
+#include <sys/stat.h>
+#ifndef GW_FSTAT
+#define GW_FSTAT fstat
+#endif
 /* state: fd+1,count,cursor,used,ended,poisoned,reserved*2.
  * map: sorted pairs (wd,request index). meta: legacy6,directory,failed_directory. */
 enum { GW_SET_MAX = 256, GW_SET_MAP = 512, GW_SET_PACKED = 1048576 };
@@ -28,6 +33,48 @@ static inline int gs_rollback(int fd, int error, gw_ints meta) {
         meta.data[1] = errno;
     return gw_failure(error, (gw_ints){meta.data, 6});
 }
+static int gs_install(gw_ints state, gw_ints map, const char *const *paths, int64_t count,
+                      uint32_t extra_mask, gw_ints meta) {
+#if defined(IN_MASK_CREATE) && !defined(GW_SET_NO_MASK_CREATE)
+    int fd = GW_INIT(IN_NONBLOCK | IN_CLOEXEC);
+    if (fd < 0)
+        return gw_failure(errno, (gw_ints){meta.data, 6});
+    int64_t pending[GW_SET_MAP] = {0};
+    uint32_t mask = IN_CREATE | IN_MODIFY | IN_CLOSE_WRITE | IN_ATTRIB | IN_DELETE | IN_MOVED_FROM |
+                    IN_MOVED_TO | IN_DELETE_SELF | IN_MOVE_SELF | IN_ONLYDIR | extra_mask |
+                    IN_MASK_CREATE;
+    for (int64_t i = 0; i < count; ++i) {
+        meta.data[7] = i;
+        int wd = GW_ADD(fd, paths[i], mask);
+        if (wd < 0)
+            return gs_rollback(fd, errno, meta);
+        int64_t pos = i;
+        while (pos > 0 && pending[(pos - 1) * 2] > wd) {
+            pending[pos * 2] = pending[(pos - 1) * 2];
+            pending[pos * 2 + 1] = pending[(pos - 1) * 2 + 1];
+            --pos;
+        }
+        if ((pos > 0 && pending[(pos - 1) * 2] == wd) || (pos < i && pending[pos * 2] == wd))
+            return gs_rollback(fd, EEXIST, meta);
+        pending[pos * 2] = wd;
+        pending[pos * 2 + 1] = i;
+    }
+    memcpy(map.data, pending, sizeof pending);
+    memset(state.data, 0, 8 * sizeof(int64_t));
+    state.data[0] = (int64_t)fd + 1;
+    state.data[1] = count;
+    meta.data[7] = -1;
+    return GW_OK;
+#else
+    (void)state;
+    (void)map;
+    (void)paths;
+    (void)count;
+    (void)extra_mask;
+    meta.data[0] = ENOTSUP;
+    return GW_SYSTEM;
+#endif
+}
 int64_t gw_set_open(gw_ints state, gw_ints map, gw_const_bytes packed, gw_ints offsets,
                     gw_ints meta) {
     if (!gs_args(state, map, meta))
@@ -54,41 +101,52 @@ int64_t gw_set_open(gw_ints state, gw_ints map, gw_const_bytes packed, gw_ints o
     meta.data[7] = -1;
     if (end != packed.len)
         return GW_INPUT;
-#if defined(IN_MASK_CREATE) && !defined(GW_SET_NO_MASK_CREATE)
-    int fd = GW_INIT(IN_NONBLOCK | IN_CLOEXEC);
-    if (fd < 0)
-        return gw_failure(errno, (gw_ints){meta.data, 6});
-    int64_t pending[GW_SET_MAP] = {0};
-    uint32_t mask = IN_CREATE | IN_MODIFY | IN_CLOSE_WRITE | IN_ATTRIB | IN_DELETE | IN_MOVED_FROM |
-                    IN_MOVED_TO | IN_DELETE_SELF | IN_MOVE_SELF | IN_ONLYDIR | IN_DONT_FOLLOW |
-                    IN_MASK_CREATE;
-    for (int64_t i = 0; i < count; ++i) {
+    const char *paths[GW_SET_MAX];
+    for (int64_t i = 0; i < count; ++i)
+        paths[i] = (const char *)packed.data + offsets.data[i * 2];
+    return gs_install(state, map, paths, count, IN_DONT_FOLLOW, meta);
+}
+int64_t gw_set_open_fds(gw_ints state, gw_ints map, gw_const_ints directories, gw_ints meta) {
+    if (!gs_args(state, map, meta))
+        return GW_INPUT;
+    if (state.data[0])
+        return GW_STATE;
+    if (!directories.data || directories.len < 1 || directories.len > GW_SET_MAX)
+        return GW_INPUT;
+    for (int64_t i = 0; i < directories.len; ++i) {
         meta.data[7] = i;
-        int wd = GW_ADD(fd, (const char *)packed.data + offsets.data[i * 2], mask);
-        if (wd < 0)
-            return gs_rollback(fd, errno, meta);
-        int64_t pos = i;
-        while (pos > 0 && pending[(pos - 1) * 2] > wd) {
-            pending[pos * 2] = pending[(pos - 1) * 2];
-            pending[pos * 2 + 1] = pending[(pos - 1) * 2 + 1];
-            --pos;
-        }
-        if ((pos > 0 && pending[(pos - 1) * 2] == wd) || (pos < i && pending[pos * 2] == wd))
-            return gs_rollback(fd, EEXIST, meta);
-        pending[pos * 2] = wd;
-        pending[pos * 2 + 1] = i;
+        if (directories.data[i] < 0 || directories.data[i] > INT_MAX)
+            return GW_INPUT;
+        for (int64_t j = 0; j < i; ++j)
+            if (directories.data[j] == directories.data[i])
+                return GW_INPUT;
     }
-    memcpy(map.data, pending, sizeof pending);
-    memset(state.data, 0, 8 * sizeof(int64_t));
-    state.data[0] = (int64_t)fd + 1;
-    state.data[1] = count;
     meta.data[7] = -1;
-    return GW_OK;
+#if defined(IN_MASK_CREATE) && !defined(GW_SET_NO_MASK_CREATE)
+    char storage[GW_SET_MAX][32];
+    const char *paths[GW_SET_MAX];
+    for (int64_t i = 0; i < directories.len; ++i) {
+        meta.data[7] = i;
+        int fd = (int)directories.data[i];
+        struct stat info;
+        if (GW_FSTAT(fd, &info) < 0)
+            return gw_failure(errno, (gw_ints){meta.data, 6});
+        if (!S_ISDIR(info.st_mode))
+            return gw_failure(ENOTDIR, (gw_ints){meta.data, 6});
+        int used = snprintf(storage[i], sizeof storage[i], "/proc/self/fd/%d", fd);
+        if (used < 0 || (size_t)used >= sizeof storage[i])
+            return GW_INPUT;
+        paths[i] = storage[i];
+    }
+    meta.data[7] = -1;
+    // Follow only our controlled procfd aliases, never caller-supplied path text.
+    return gs_install(state, map, paths, directories.len, 0, meta);
 #else
     meta.data[0] = ENOTSUP;
     return GW_SYSTEM;
 #endif
 }
+
 static int gs_decode(const uint8_t *data, size_t size, gw_ints map, int64_t count, gw_bytes name,
                      gw_ints meta, size_t *consumed) {
     struct inotify_event header;

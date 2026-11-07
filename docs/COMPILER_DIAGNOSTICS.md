@@ -64,3 +64,9 @@ regions. Requested bytes are cumulative, not peak memory or RSS. Raw logs,
 binary/source hashes, build commands, tool versions and limitations accompany the
 results. The two tiny fixtures on a shared host do not establish a general speed
 claim. Omit `--allocations` if Valgrind is unavailable.
+
+The retained report is a pre-recursive-watch checkpoint at `486f27b`; check out
+that source to replay its recipe. For a comparison of this integrated source,
+pass `--baseline-ref 601b4bc` (the recursive-watch main snapshot). Comparing against
+the runner's older historical default also includes the recursive-watch changes
+and must not be attributed solely to diagnostic output mode.
