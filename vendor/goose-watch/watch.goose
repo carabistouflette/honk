@@ -88,6 +88,13 @@ fn open_set(owner: WatchSet&, paths: const (const u8[:])[:]) -> OpenSet {
     let code = detail_set_open(owner._state, owner._map, packed, offsets, meta);
     return OpenSet { status: detail_status(code, meta), failed_directory: meta[7] };
 }
+// Borrow directory descriptors through this call; never close or transfer them.
+extern fn detail_set_open_fds(state: i64[:], map: i64[:], directories: const i64[:], meta: i64[:]) -> i64 = "gw_set_open_fds";
+fn open_set_fds(owner: WatchSet&, directories: const i64[:]) -> OpenSet {
+    var meta: i64[8] = [0; 8];
+    let code = detail_set_open_fds(owner._state, owner._map, directories, meta);
+    return OpenSet { status: detail_status(code, meta), failed_directory: meta[7] };
+}
 fn next(owner: WatchSet&, timeout_ms: i64, out: SetEvent&) -> Status {
     var name: u8[256] = [0; 256]; var meta: i64[8] = [0; 8];
     let code = detail_set_next(owner._state, owner._map, owner._buffer, timeout_ms, name, meta);

@@ -90,6 +90,107 @@ finally:
         return output
     def idle(self):
         self.wait(lambda:'command finished; waiting' in (self.root/'stderr').read_text())
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked tree adapter')
+    def test_recursive_root_aba_during_candidate_scan(self):
+        self.tree_fault('tree-aba',125)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked tree adapter')
+    def test_recursive_root_aba_during_candidate_verification(self):
+        self.tree_fault('tree-verify-aba',125)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked tree adapter')
+    def test_recursive_cancel_during_discovery(self):
+        self.tree_fault('tree-cancel',130)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked tree adapter')
+    def test_recursive_unstable_reconciliation_fails_boundedly(self):
+        self.tree_fault('tree-retry',125)
+    def tree_fault(self,mode,code):
+        trigger=self.root/'trigger';trigger.touch()
+        self.start(runs=1,extra=('--watch-recursive',),WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE=mode,WATCH_TREE_ROOT=str(self.src))
+        self.finish(code);self.assertEqual(self.count(),0)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked tree adapter')
+    def test_recursive_root_aba_during_repair_stops(self):
+        trigger=self.root/'trigger'
+        self.start(extra=('--watch-recursive',),WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='tree-aba',WATCH_TREE_ROOT=str(self.src))
+        self.idle();trigger.touch();(self.src/'added').mkdir()
+        self.finish(125);self.assertEqual(self.count(),1)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked watch adapter')
+    def test_recursive_data_overflow_recovers_complete_tree(self):
+        nested=self.src/'nested';nested.mkdir();trigger=self.root/'trigger'
+        self.start(runs=3,extra=('--watch-recursive',),GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow',WATCH_FAULT_TARGET='data')
+        self.wait(lambda:(self.root/'pid').exists());trigger.touch();self.wait(lambda:not trigger.exists())
+        (self.root/'release').touch()
+        self.wait(lambda:self.count()==2 and 'command finished; waiting' in (self.root/'stderr').read_text())
+        (nested/'unit.goose').write_text('fn main() {}');self.finish();self.assertEqual(self.count(),3)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked watch adapter')
+    def test_recursive_root_guard_overflow_stops_after_child_cleanup(self):
+        trigger=self.root/'trigger'
+        self.start(extra=('--watch-recursive',),GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow')
+        self.wait(lambda:(self.root/'pid').exists());trigger.touch()
+        self.finish(125);self.assertEqual(self.count(),1);self.assertFalse((self.root/'active').exists())
+    def test_recursive_empty_self_attribute_event_is_ignored(self):
+        self.start(runs=2,extra=('--watch-recursive',));self.idle()
+        self.src.chmod(0o750)
+        time.sleep(.1);self.assertEqual(self.count(),1)
+        (self.src/'main.goose').write_text('fn main() {} // edited')
+        self.finish();self.assertEqual(self.count(),2)
+    def test_recursive_signal_active_preserves_sigint(self):
+        self.start(extra=('--watch-recursive',),GATE_FIRST='1');self.wait(lambda:(self.root/'pid').exists())
+        self.proc.send_signal(signal.SIGINT);self.finish(130)
+        self.assertEqual(self.count(),1);self.assertFalse((self.root/'active').exists())
+    def test_recursive_depth_limit_fails_before_compiler(self):
+        nested=self.src
+        for _ in range(33):nested=nested/'d';nested.mkdir()
+        self.start(runs=1,extra=('--watch-recursive',));self.finish(125);self.assertEqual(self.count(),0)
+    def test_recursive_root_limit_and_overlaps_reject(self):
+        roots=[self.src]
+        for i in range(8):path=self.project/f'root{i}';path.mkdir();roots.append(path)
+        self.start(runs=1,directories=roots,extra=('--watch-recursive',));self.finish(125);self.assertEqual(self.count(),0)
+    def test_recursive_nested_roots_reject(self):
+        nested=self.src/'nested';nested.mkdir()
+        self.start(runs=1,directories=[self.src,nested],extra=('--watch-recursive',));self.finish(125);self.assertEqual(self.count(),0)
+    def test_recursive_existing_nested_edit(self):
+        nested=self.src/'nested';nested.mkdir();file=nested/'unit.goose';file.write_text('fn main() {}')
+        self.start(runs=2,extra=('--watch-recursive',));self.idle()
+        file.write_text('fn main() {} // edit');self.finish();self.assertEqual(self.count(),2)
+    def test_recursive_new_populated_subtree_and_later_edit(self):
+        staged=self.project/'staged';staged.mkdir();file=staged/'unit.goose';file.write_text('fn main() {}')
+        self.start(runs=3,extra=('--watch-recursive',));self.idle()
+        staged.rename(self.src/'added')
+        self.wait(lambda:self.count()==2 and (self.root/'stderr').read_text().count('command finished; waiting')==2)
+        (self.src/'added/unit.goose').write_text('fn main() {} // edit')
+        self.finish();self.assertEqual(self.count(),3)
+    def test_recursive_nested_removal_recovers(self):
+        nested=self.src/'nested';nested.mkdir()
+        self.start(runs=2,extra=('--watch-recursive',));self.idle()
+        nested.rmdir();self.finish();self.assertEqual(self.count(),2)
+    def test_recursive_ignored_paths_and_parent_sibling(self):
+        outside=self.project/'outside';outside.mkdir();(outside/'test.goose').write_text('fn main() {}')
+        self.start(runs=2,extra=('--watch-recursive',));self.idle()
+        (self.src/'link').symlink_to(outside,target_is_directory=True)
+        (self.project/'outside.goose').write_text('fn main() {}')
+        (outside/'test.goose').write_text('fn main() {} // ignored')
+        for name in ('target','.git','.honk','.build','.toolchain'):
+            path=self.src/name;path.mkdir();(path/'ignored.goose').write_text('ignored');(path/'ignored.goose').unlink();path.rmdir()
+        # Parent sentinel and excluded names must not become source changes.
+        time.sleep(.2);self.assertEqual(self.count(),1)
+        (self.src/'link').unlink()
+        (self.src/'main.goose').write_text('fn main() {} // valid')
+        self.finish();self.assertEqual(self.count(),2)
+    def test_recursive_root_delete_with_held_anchor_stops(self):
+        empty=self.project/'empty';empty.mkdir()
+        self.start(directory=empty,extra=('--watch-recursive',));self.idle()
+        empty.rmdir();self.finish(125);self.assertEqual(self.count(),1)
+    def test_recursive_root_aba_during_active_child_stops(self):
+        self.start(extra=('--watch-recursive',),GATE_FIRST='1');self.wait(lambda:(self.root/'pid').exists())
+        moved=self.project/'moved';self.src.rename(moved);moved.rename(self.src)
+        self.finish(125);self.assertEqual(self.count(),1);self.assertFalse((self.root/'active').exists())
+    def test_recursive_repair_waits_for_active_child(self):
+        self.start(runs=2,extra=('--watch-recursive',),GATE_FIRST='1');self.wait(lambda:(self.root/'pid').exists())
+        nested=self.src/'new';nested.mkdir();(nested/'unit.goose').write_text('fn main() {}')
+        time.sleep(.1);self.assertEqual(self.count(),1)
+        (self.root/'release').touch();self.finish();self.assertEqual(self.count(),2)
+    def test_recursive_limits_fail_before_compiler(self):
+        for i in range(255):(self.src/f'd{i}').mkdir()
+        self.start(runs=1,extra=('--watch-recursive',));self.finish(125);self.assertEqual(self.count(),0)
     def test_initial_run_and_finite_exit(self):
         self.start(runs=1);self.finish();self.assertEqual(self.count(),1)
     def test_changes_coalesce_during_child_and_failure_can_retry(self):

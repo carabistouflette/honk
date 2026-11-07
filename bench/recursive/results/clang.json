@@ -1,0 +1,207 @@
+{
+  "commit": "21fd79d33322cc60443fceb476f71b5f41d5b358",
+  "status": "",
+  "sources": {
+    "native/watch_tree.c": "d73a6a5ec54c36140c0de29b2ba373404daa0931b4c3f65a771f8f63ecb8dcf7",
+    "bench/recursive/driver.c": "067138ad07d4f72c8d32bcf93fc2c520f5ae75506289e26d4b8a20142f173580",
+    "bench/recursive/measure.py": "da8e99e0265d6bddb930a196ff294a2cdf0e8bc9c41f988866bcb184f1a5c7f5"
+  },
+  "compiler": "clang version 23.1.4\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/bin",
+  "binary_sha256": "30e8a0855798611cdda663d96158166bb71ea8f463d370d3d6a130650f63f2ea",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "flags": "-O2",
+  "stable_inputs": true,
+  "samples": [
+    {
+      "round": 0,
+      "identities": 2,
+      "roots": 1,
+      "scan_open_ns": 247448,
+      "verify_ns": 16769,
+      "root_checks_ns": 34896591,
+      "root_checks": 1000
+    },
+    {
+      "round": 0,
+      "identities": 16,
+      "roots": 1,
+      "scan_open_ns": 560271,
+      "verify_ns": 137193,
+      "root_checks_ns": 25944458,
+      "root_checks": 1000
+    },
+    {
+      "round": 0,
+      "identities": 64,
+      "roots": 1,
+      "scan_open_ns": 1204381,
+      "verify_ns": 480640,
+      "root_checks_ns": 23637803,
+      "root_checks": 1000
+    },
+    {
+      "round": 0,
+      "identities": 256,
+      "roots": 1,
+      "scan_open_ns": 3858470,
+      "verify_ns": 2466185,
+      "root_checks_ns": 29787509,
+      "root_checks": 1000
+    },
+    {
+      "round": 1,
+      "identities": 2,
+      "roots": 1,
+      "scan_open_ns": 266704,
+      "verify_ns": 12100,
+      "root_checks_ns": 28892684,
+      "root_checks": 1000
+    },
+    {
+      "round": 1,
+      "identities": 16,
+      "roots": 1,
+      "scan_open_ns": 458339,
+      "verify_ns": 122305,
+      "root_checks_ns": 25643085,
+      "root_checks": 1000
+    },
+    {
+      "round": 1,
+      "identities": 64,
+      "roots": 1,
+      "scan_open_ns": 1450257,
+      "verify_ns": 706440,
+      "root_checks_ns": 34515282,
+      "root_checks": 1000
+    },
+    {
+      "round": 1,
+      "identities": 256,
+      "roots": 1,
+      "scan_open_ns": 4287618,
+      "verify_ns": 2957733,
+      "root_checks_ns": 31647789,
+      "root_checks": 1000
+    },
+    {
+      "round": 2,
+      "identities": 2,
+      "roots": 1,
+      "scan_open_ns": 244665,
+      "verify_ns": 15516,
+      "root_checks_ns": 28099437,
+      "root_checks": 1000
+    },
+    {
+      "round": 2,
+      "identities": 16,
+      "roots": 1,
+      "scan_open_ns": 423230,
+      "verify_ns": 126406,
+      "root_checks_ns": 28663146,
+      "root_checks": 1000
+    },
+    {
+      "round": 2,
+      "identities": 64,
+      "roots": 1,
+      "scan_open_ns": 1265629,
+      "verify_ns": 521615,
+      "root_checks_ns": 28341543,
+      "root_checks": 1000
+    },
+    {
+      "round": 2,
+      "identities": 256,
+      "roots": 1,
+      "scan_open_ns": 3909169,
+      "verify_ns": 2467926,
+      "root_checks_ns": 28761086,
+      "root_checks": 1000
+    },
+    {
+      "round": 3,
+      "identities": 2,
+      "roots": 1,
+      "scan_open_ns": 303653,
+      "verify_ns": 15180,
+      "root_checks_ns": 28005462,
+      "root_checks": 1000
+    },
+    {
+      "round": 3,
+      "identities": 16,
+      "roots": 1,
+      "scan_open_ns": 670167,
+      "verify_ns": 151763,
+      "root_checks_ns": 25524593,
+      "root_checks": 1000
+    },
+    {
+      "round": 3,
+      "identities": 64,
+      "roots": 1,
+      "scan_open_ns": 1319272,
+      "verify_ns": 526877,
+      "root_checks_ns": 27629917,
+      "root_checks": 1000
+    },
+    {
+      "round": 3,
+      "identities": 256,
+      "roots": 1,
+      "scan_open_ns": 3312409,
+      "verify_ns": 2214232,
+      "root_checks_ns": 23857504,
+      "root_checks": 1000
+    },
+    {
+      "round": 4,
+      "identities": 2,
+      "roots": 1,
+      "scan_open_ns": 281340,
+      "verify_ns": 14812,
+      "root_checks_ns": 30287758,
+      "root_checks": 1000
+    },
+    {
+      "round": 4,
+      "identities": 16,
+      "roots": 1,
+      "scan_open_ns": 420837,
+      "verify_ns": 135288,
+      "root_checks_ns": 25531634,
+      "root_checks": 1000
+    },
+    {
+      "round": 4,
+      "identities": 64,
+      "roots": 1,
+      "scan_open_ns": 1118479,
+      "verify_ns": 548020,
+      "root_checks_ns": 27416584,
+      "root_checks": 1000
+    },
+    {
+      "round": 4,
+      "identities": 256,
+      "roots": 1,
+      "scan_open_ns": 3588198,
+      "verify_ns": 2166842,
+      "root_checks_ns": 24088036,
+      "root_checks": 1000
+    }
+  ],
+  "limits": "Shared-host shallow local trees; scanner/native validation only, no kernel watch registration, Goose/event dispatch or child time. No competitor or percentile claim. Root checks validate one short configured path1000times. Counts include root-parent sentinels."
+}
