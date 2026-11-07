@@ -6,6 +6,7 @@ const MAX_PATTERN_BYTES = 1024;
 const MAX_PATH_BYTES = 4095;
 const MAX_COMPONENTS = 128;
 const MAX_WORK = 16777216;
+const PATH_SEARCH_THRESHOLD = 32;
 enum Error { None, InvalidPattern, InvalidPath, InvalidOptions, LimitExceeded, Filesystem }
 struct Status { error: Error = Error.None, os_error: i64 = 0 }
 struct Options { hidden: bool = false, work_limit: i64 = 1048576 }
@@ -20,15 +21,34 @@ fn spend(budget: Budget&) -> bool {
     budget.remaining--; return true;
 }
 let PATH_END = byte_set("/\0");
+let PATH_SLASH = byte_set("/");
+let PATH_NUL = byte_set("\0");
 let PATTERN_META = byte_set("/\0\\[?*");
 inline fn valid_component_span(path: const u8[:], start: i64, end: i64) -> bool {
     let size = end - start;
     return size > 0 && !(size == 1 && path[start] == '.') &&
            !(size == 2 && path[start] == '.' && path[start + 1] == '.');
 }
+// The byte-search setup pays off on longer paths. Retain spans only when
+// matching needs them; rejected prefixes still validate every component.
+fn scan_components(path: const u8[:], out: Span[>..]&, retain: bool) -> i64 {
+    if path.len == 0 || path.len > MAX_PATH_BYTES || find_any(path, PATH_NUL) >= 0 { return 0; }
+    var start = 0; var count = 0;
+    while start < path.len {
+        let offset = find_any(path[start..], PATH_SLASH);
+        let end = if offset < 0 { path.len } else { start + offset };
+        if !valid_component_span(path, start, end) || count == MAX_COMPONENTS { return 0; }
+        count++;
+        if retain { out.push(Span { start: start, end: end }); }
+        if offset < 0 { return count; }
+        start = end + 1;
+    }
+    return 0;
+}
 fn split(path: const u8[:], out: Span[>..]&) -> bool {
     out.clear();
     if path.len == 0 || path.len > MAX_PATH_BYTES { return false; }
+    if path.len >= PATH_SEARCH_THRESHOLD { return scan_components(path, out, true) > 0; }
     var start = 0;
     for c, i in path {
         if c == 0 { return false; }
@@ -277,10 +297,9 @@ fn count_globstars(parts: Part[:]) -> i64 {
     for part in parts { if part.kind == ComponentKind.Globstar { count++; } }
     return count;
 }
-// Internal traversal entry point shares one work budget across all paths.
-fn match_with_budget(pattern: Pattern&, path: const u8[:], hidden: bool, budget: Budget&) -> bool {
-    var names: Span[>..] = [];
-    if !split(path, names) { return false; }
+// Internal traversal entry point reuses the collector's validated spans and
+// shares one work budget across all paths.
+fn match_with_budget(pattern: Pattern&, path: const u8[:], names: Span[:], hidden: bool, budget: Budget&) -> bool {
     return match_parts(pattern.source, path, pattern.parts, names, pattern.globstars, hidden, budget);
 }
 fn valid_options(options: Options) -> bool { options.work_limit >= 1 && options.work_limit <= MAX_WORK }
@@ -321,5 +340,16 @@ inline fn matches(pattern: const u8[:], path: const u8[:], options: Options = Op
 inline fn matches(pattern: Pattern&, path: const u8[:], options: Options = Options { .. }) -> bool, Status {
     if !valid_options(options) { return false, Status { error: Error.InvalidOptions }; }
     if pattern.parts.len == 0 { return false, Status { error: Error.InvalidPattern }; }
+    // A literal prefix miss cannot exhaust this per-call budget. Long rejected
+    // candidates can be fully validated without building unused span storage.
+    if path.len >= PATH_SEARCH_THRESHOLD && pattern.parts.len > 1 && pattern.globstars <= 1 && pattern.parts[0].kind == ComponentKind.Literal {
+        let first = pattern.parts[0]; let prefix = pattern.source[first.start..first.end];
+        if options.work_limit >= prefix.len + 1 &&
+           (path.len < prefix.len || path[..prefix.len] != prefix || (path.len > prefix.len && path[prefix.len] != '/')) {
+            var checked: Span[>..] = [];
+            if scan_components(path, checked, false) == 0 { return false, Status { error: Error.InvalidPath }; }
+            return false, Status { .. };
+        }
+    }
     return match_result(pattern.source, pattern.parts, pattern.globstars, path, options);
 }

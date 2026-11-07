@@ -113,7 +113,7 @@ fails (including when the target directory is absent).
 
 Filtering compiles the pattern once with `glob::compile` and reuses the owned
 pattern through the public `glob::matches` API across all workspace packages from
-[goose-glob v0.1.0-alpha.3](https://github.com/carabistouflette/goose-glob/releases/tag/v0.1.0-alpha.3).
+[goose-glob v0.1.0-alpha.4](https://github.com/carabistouflette/goose-glob/releases/tag/v0.1.0-alpha.4).
 A [complete-command measurement](bench/results/glob-2026-11-07/README.md) retains
 startup, test/bench wall-time and maximum-RSS observations for the upgrade.
 Those pre-terminal-merge samples show no clear whole-command speedup on the fixed
