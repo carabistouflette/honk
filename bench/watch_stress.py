@@ -462,6 +462,8 @@ def main():
                     session.pause(.2)
                     if fd_roles(session.checkpoint('restored'))!=base_fds or len(session.outcomes())!=count:
                         raise RuntimeError('steady-state fd/command convergence failed')
+                    points=session.record['checkpoints']
+                    session.record['steady_rss_observations_kib']=dict(initial=after['rss_kib'],final=points[-1]['rss_kib'],minimum=min(x['rss_kib'] for x in points),maximum=max(x['rss_kib'] for x in points),delta=points[-1]['rss_kib']-after['rss_kib'])
                     session.finish()
                 finally: session.close()
             info['stopping_cases']=[]
