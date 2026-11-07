@@ -1,5 +1,8 @@
 # Compiler diagnostics
 
+Development-source feature; the published v0.4.0 release does not include this
+option. Build the reviewed current source to use it.
+
 Use `honk check --diagnostics json` for a single package to forward the pinned
 Goose compiler's structured diagnostic array directly to stdout. A successful
 check normally emits `[]`. Compiler errors retain the compiler's exit status.
@@ -24,7 +27,8 @@ and explicit `-p` member selection. Workspace-wide checks and `watch` are reject
 in JSON mode to avoid concatenating arrays from multiple compiler invocations.
 A workspace root must select one member with `-p`. Explicit `-p` takes precedence
 when `--workspace` is also supplied, matching Honk's existing selection rules.
-Other commands reject the option. Text mode retains existing workspace behavior.
+Other execution commands reject the option; help/version retain their existing
+shortcuts. Text mode retains existing workspace behavior.
 
 Honk preflight failures (manifest, dependency, compiler selection), launch errors
 and unexpected compiler-driver failures can still report stderr without any JSON.
@@ -55,7 +59,8 @@ and retains seven raw end-to-end samples per case. Compiler work and staging are
 included. Separate Valgrind runs use profiling executables with 16 MiB stack reservations
 because Valgrind cannot map the default sparse reservations. They count parent
 Honk allocations; they exclude the
-exec'd compiler. Requested bytes are cumulative, not peak memory or RSS. Raw logs,
+exec'd compiler. The counters describe malloc-family heap events, not Goose's mmap-backed data
+regions. Requested bytes are cumulative, not peak memory or RSS. Raw logs,
 binary/source hashes, build commands, tool versions and limitations accompany the
 results. The two tiny fixtures on a shared host do not establish a general speed
 claim. Omit `--allocations` if Valgrind is unavailable.

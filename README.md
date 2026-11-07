@@ -7,7 +7,7 @@ It is Apache-2.0 licensed.
 
 The latest experimental release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0),
 source `f9f35e20e4407df56b2ad45310266c9238403144`. Current development source also contains
-unreleased features, including watch; v0.4.0 does not include the watch command. CLI, manifest and lockfile compatibility are not
+unreleased features, including watch and `check --diagnostics`; v0.4.0 includes neither feature. CLI, manifest and lockfile compatibility are not
 yet guaranteed. Registry publishing, general dependency solving, cross
 compilation and Cargo feature/stability parity are outside this release.
 
