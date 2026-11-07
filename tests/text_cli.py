@@ -89,6 +89,7 @@ class TextCLI(unittest.TestCase):
         subprocess.run(["git", "add", "."], cwd=project, check=True, capture_output=True)
         lock = (project / "Honk.lock").read_bytes()
         manifest = tomllib.loads((project / "Honk.toml").read_text())
+        self.assertEqual(manifest["dependencies"]["glob"], {"path": "vendor/goose-glob"})
         self.assertEqual(manifest["dependencies"]["text"], {"path": "vendor/goose-text"})
         self.assertEqual(manifest["dependencies"]["toml_edit"], {"path": "vendor/goose-toml-edit"})
         self.assertEqual(manifest["dependencies"]["time"], {"path": "vendor/goose-time"})
@@ -105,7 +106,7 @@ class TextCLI(unittest.TestCase):
             for name in ("toml_edit.goose", "LICENSE"):
                 expected = (project / "vendor" / "goose-toml-edit" / name).read_bytes()
                 self.assertEqual(package.extractfile(label + "/vendor/goose-toml-edit/" + name).read(), expected)
-            for path in ("goose-time/time.goose", "goose-time/detail.goose", "goose-time/LICENSE",
+            for path in ("goose-glob/glob.goose", "goose-glob/LICENSE", "goose-time/time.goose", "goose-time/detail.goose", "goose-time/LICENSE",
                          "goose-time/THIRD_PARTY_NOTICES.md", "goose-log/examples/utc/utc.goose",
                          "goose-log/LICENSE", "goose-log/NOTICE", "goose-terminal/terminal.goose",
                          "goose-terminal/posix.goose", "goose-terminal/posix.build",

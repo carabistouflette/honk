@@ -151,6 +151,16 @@
         "native/posix.c": "9434c0510fbbb65ed78acee3044c2cc43b99599c4609746cdb52987181620aca",
         "native/README.md": "a164c630db72c0b6ae783ff1a4028855c29ecc592132e7599a18cd3138c37e03"
       }
+    },
+    {
+      "directory": "goose-glob",
+      "repository": "https://github.com/carabistouflette/goose-glob",
+      "revision": "4e8d7830e81b8ffd1c4d8ae2716ea93edc7ea8e3",
+      "license": "Apache-2.0",
+      "files": {
+        "glob.goose": "db7a4f4b22ba0b32a980e34c8ae218a71ce42ba3dd09f38edaae37fc11b4c80d",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+      }
     }
   ]
 }

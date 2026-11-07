@@ -103,6 +103,18 @@ if not os.environ.get("QUIET"): print("compiler diagnostic", file=sys.stderr, en
         self.assertEqual(default.stderr,auto.stderr)
         self.assertEqual(always.stderr,b'compiler diagnostic\n\nCheck complete\n')
         self.assertNotIn(b'\x1b',always.stderr); self.assertNotIn(b'\r',always.stderr)
+    def test_filtered_progress_counts_only_selected_targets(self):
+        self.targets()
+        (self.project/'tests/three.goose').write_text('fn main() {}\n')
+        baseline = self.run_honk('test','--filter','tests/t*.goose')
+        shown = self.run_honk('test','--filter','tests/t*.goose','--progress','always')
+        self.assertEqual(baseline.returncode,0,baseline.stderr)
+        self.assertEqual(shown.returncode,0,shown.stderr)
+        self.assertEqual(shown.stdout,baseline.stdout)
+        self.assertIn(b'Passed 2 test targets\n',shown.stdout)
+        self.assertIn(b'1/2 test\n',shown.stderr); self.assertIn(b'2/2 test\n',shown.stderr)
+        self.assertNotIn(b'/3 test',shown.stderr)
+        self.assertNotIn(b'\x1b',shown.stderr); self.assertNotIn(b'\r',shown.stderr)
     def test_pty_color_policy_and_narrow_fallback(self):
         self.targets()
         for extra,colored in (({},True),({'TERM':'dumb'},False),({'NO_COLOR':'1'},False),({'TERM':''},False)):

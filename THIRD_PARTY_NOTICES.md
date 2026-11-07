@@ -49,3 +49,7 @@ is introduced by build reuse.
 https://github.com/carabistouflette/goose-terminal at `b17449c957c5137538d8a1949af35d9bfad187ce`
 (Apache-2.0). Source and optional POSIX adapter are vendored in
 `vendor/goose-terminal`; see its LICENSE and NOTICE.
+
+Target matching includes [goose-glob](https://github.com/carabistouflette/goose-glob)
+v0.1.0-alpha.1 at `4e8d7830e81b8ffd1c4d8ae2716ea93edc7ea8e3`;
+see [Apache-2.0](vendor/goose-glob/LICENSE) and vendor/manifest.json.

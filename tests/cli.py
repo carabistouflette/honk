@@ -29,6 +29,90 @@ class CLI(unittest.TestCase):
     def new(self, name='hello', *args):
         self.run_honk('new', name, *args)
         return self.root / name
+    def test_target_filter_patterns_and_default(self):
+        p = self.new()
+        for path, marker in [('tests/unit/a.goose', 'UNIT'),
+                             ('tests/root.goose', 'ROOT'),
+                             ('tests/.hidden.goose', 'HIDDEN'),
+                             ('bench/speed.goose', 'SPEED')]:
+            target = p/path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(f'import os; fn main() {{ print("{marker}"); for arg in args() {{ print(arg); }} }}')
+        for pattern, expected in [('tests/unit/?.goose', ['UNIT']),
+                                  ('tests/[r]oot.goose', ['ROOT']),
+                                  ('tests/*.goose', ['ROOT', 'HIDDEN']),
+                                  ('tests/**/*.goose', ['UNIT', 'ROOT', 'HIDDEN'])]:
+            with self.subTest(pattern=pattern):
+                output = self.run_honk('test', '--filter', pattern, '--', 'forwarded', cwd=p).stdout
+                for marker in ['UNIT', 'ROOT', 'HIDDEN']:
+                    self.assertEqual(marker in output, marker in expected)
+                self.assertIn('forwarded', output)
+                self.assertIn(f'Passed {len(expected)} test targets', output)
+        output = self.run_honk('test', cwd=p).stdout
+        self.assertIn('Passed 3 test targets', output)
+        output = self.run_honk('bench', '--filter', 'bench/**/speed.goose', cwd=p).stdout
+        self.assertIn('SPEED', output)
+        self.assertIn('Passed 1 bench targets', output)
+
+    def test_target_filter_errors(self):
+        p = self.new()
+        for pattern in ['', '[', 'tests/a**', '../tests/*', '/tests/*', 'x'*1025]:
+            with self.subTest(pattern=pattern):
+                result = self.run_honk('test', '--filter', pattern, cwd=p, ok=False)
+                self.assertIn('invalid --filter glob', result.stderr)
+        self.assertIn('--filter is not supported by build', self.run_honk(
+            'build', '--filter', '**', cwd=p, ok=False).stderr)
+        self.assertIn('--filter matched no targets', self.run_honk(
+            'test', '--filter', '**', cwd=p, ok=False).stderr)
+        (p/'tests').mkdir()
+        (p/'tests/one.goose').write_text('fn main() { print("SHOULD NOT RUN"); }')
+        result = self.run_honk('test', '--filter', 'tests/missing.goose', cwd=p, ok=False)
+        self.assertIn('--filter matched no targets', result.stderr)
+        self.assertNotIn('SHOULD NOT RUN', result.stdout)
+
+    def test_target_filter_does_not_bypass_source_or_directory_caps(self):
+        for kind in ['file', 'directory']:
+            with self.subTest(kind=kind):
+                p = self.new(kind)
+                (p/'tests').mkdir()
+                # prepare() traverses the app root, src and tests too.
+                count = 4095 if kind == 'file' else 4093
+                for i in range(count):
+                    path = p/'tests'/f'item{i}.goose'
+                    if kind == 'file':
+                        path.write_text('fn main() {}')
+                    else:
+                        path.mkdir()
+                result = self.run_honk('test', '--filter', 'tests/missing.goose', cwd=p, ok=False)
+                self.assertIn('--filter matched no targets', result.stderr)
+                extra = p/'tests/extra.goose'
+                if kind == 'file':
+                    extra.write_text('fn main() {}')
+                else:
+                    extra.mkdir()
+                result = self.run_honk('test', '--filter', 'tests/missing.goose', cwd=p, ok=False)
+                self.assertIn(f'source {kind} limit is 4096', result.stderr)
+
+    def test_target_filter_preserves_traversal_safety_and_exclusions(self):
+        p = self.new()
+        (p/'tests').mkdir()
+        (p/'tests/one.goose').write_text('fn main() {}')
+        for name in ['.git', 'target', '.honk', '.toolchain', '.build']:
+            directory = p/'tests'/name
+            directory.mkdir()
+            (directory/'bad.goose').write_text('invalid source')
+        self.assertIn('Passed 1 test targets', self.run_honk(
+            'test', '--filter', '**', cwd=p).stdout)
+        bad = p/'tests/unselected'
+        for kind in ['symlink', 'fifo']:
+            with self.subTest(kind=kind):
+                if kind == 'symlink':
+                    bad.symlink_to('one.goose')
+                else:
+                    os.mkfifo(bad)
+                self.run_honk('test', '--filter', 'tests/one.goose', cwd=p, ok=False)
+                bad.unlink()
+
     def test_new_metadata_and_discovery(self):
         p = self.new('hello world', '--name', 'hello')
         meta = json.loads(self.run_honk('metadata', cwd=p/'src').stdout)
