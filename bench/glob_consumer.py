@@ -81,6 +81,7 @@ def main():
     parser.add_argument('--rounds', type=int, default=7)
     parser.add_argument('--cpu', type=int, default=2)
     parser.add_argument('--output', type=Path, default=ROOT/'.build/glob-comparison')
+    parser.add_argument('--include-progress', action='store_true', help='also measure forced progress; both revisions must support it')
     args = parser.parse_args()
     driver = Path(__file__).resolve()
     driver_hash = digest(driver)
@@ -124,6 +125,8 @@ def main():
              'test_literal': ['test', '--frozen', '--filter', 'tests/core.goose'],
              'test_recursive': ['test', '--frozen', '--filter', 'tests/**/core*.goose'],
              'bench_recursive': ['bench', '--frozen', '--filter', 'bench/**/process.goose', '--', 'tiny']}
+    if args.include_progress:
+        cases['test_progress'] = ['test', '--frozen', '--filter', 'tests/**/core*.goose', '--progress', 'always']
     expected = {}
     os.sched_setaffinity(0, {args.cpu})
     for name, binary in binaries.items():

@@ -1,0 +1,1150 @@
+{
+  "revisions": {
+    "before": "bb36d57e7148413f62531354119a8b396924daf3",
+    "after": "00442fb552e800889fc50858459bb8b8317fc383"
+  },
+  "driver_sha256": "dd0efa1009f026d48b919f326988b89649061635da047d71e3b606420b0bf65a",
+  "args": {
+    "before": "bb36d57e7148413f62531354119a8b396924daf3",
+    "after": "00442fb552e800889fc50858459bb8b8317fc383",
+    "goose": "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/build/goose",
+    "cc": "gcc",
+    "rounds": 7,
+    "cpu": 2,
+    "output": "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07",
+    "include_progress": true
+  },
+  "recorded_at": "2026-11-07T02:00:33Z",
+  "commands": {
+    "version": [
+      "version"
+    ],
+    "metadata": [
+      "metadata"
+    ],
+    "test_literal": [
+      "test",
+      "--frozen",
+      "--filter",
+      "tests/core.goose"
+    ],
+    "test_recursive": [
+      "test",
+      "--frozen",
+      "--filter",
+      "tests/**/core*.goose"
+    ],
+    "bench_recursive": [
+      "bench",
+      "--frozen",
+      "--filter",
+      "bench/**/process.goose",
+      "--",
+      "tiny"
+    ],
+    "test_progress": [
+      "test",
+      "--frozen",
+      "--filter",
+      "tests/**/core*.goose",
+      "--progress",
+      "always"
+    ]
+  },
+  "inputs_sha256": {
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/.gitignore": "106abb04d2682cafd4815744719eea606b2a7848deef539ea4df4421aacea9db",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/CHANGELOG.md": "c890185ff8732bc65e93b3a260d479aae73a70e712e67bc3c7c1fcb92fc99692",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/CONTRIBUTING.md": "3e2ac4211adcdd95fb43e1d4c5e819d449f6c4e908e4136132f5ed7f3dfe1e33",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/Honk.lock": "a6cdd80706a73fe860f0d6acab7dd0bd03e52155a1a2344eabaf48eb5196ec79",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/Honk.toml": "d7b3f2e31785da743e3474d61000e52d23941599b530cc26af4eb2ad729d2a96",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/Makefile": "143e68428e83ce6bac56991743fd7850780d7b3ec90ea725f0ccb164f58469ee",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/NOTICE": "7a1359d71ce894afaf05aa0d4c6cec2e0e1a548925ab1723e99be5136089407f",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/README.md": "6ba61f8daeae23c261b0e749291889c8980496d4ac246b1b3fca9d85fe8b3dd7",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/RESULTS.md": "b73664d91db841b29b748a3576bd5aad63dad48e0d613f53dddc730be33bf800",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/SECURITY.md": "ca915071fbfce4a1df9511cc259231d0f6d36c709b7129cc12a234c72af8c590",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/THIRD_PARTY_NOTICES.md": "12e3ccb65cfce04dcf89715988a7e5feca7cbc777c5aaf4c7a0eeaa25511d9e5",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/honk.build": "5dba10ee95ba70ef47666be42858286c9845aaa3a95395ed077bd0baa427c57a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/honk.goose": "45f38b6a2c1c81625def2f5f42ac3afc73a3b8f5106d1da724874f400036d4d9",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/PHASES.md": "d56b953d26438e11924d351f0830db56ef6ce20d3cd7043e796f1e918cc5e1e9",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/README.md": "729acedf6b5fcc25014c50f295eea8608d61cfc31eda98f4b9192e86feb721ca",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/WORKSPACE.md": "f0e02423f930df2da567b69b6ea2e79004093651ccc91c25498ea20a682a5367",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/dogfood.py": "b77241018a73e122ff411a7b11d1f86c1c4ec1fb25bb86c6ef1b516fe9076315",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/glob_consumer.py": "828e85d91ea6a5023255bc84ab1a81cb291c4c4a620b326cbdd144685f86fdd9",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/phases.py": "2581a2cdc5ea9109da49891b178fab95d4e538f22a9016c48a9494edce91ac18",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/process.goose": "ad5b2b47ccc3db0f9359863d962b06880ce4ee6da629e301d45fe523bbccfad0",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/process_profile.py": "ca6640bf7c934e9dad7c6c2f8a2144e9b5c565365a8d54fa6201c6ee19705f88",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/reuse.py": "d7d538fee3cd3cc7b51d7c04db8b1d63284a54937c346e8e7757e3d02b74111b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/ARCHITECTURE.md": "3818619bbfc97ebfdb87c0ff83c30cf383f3229843f1fcc7fb005fbc63f5b432",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/AUDIT-2026-11-04.md": "33750ad0a28bb2ac443c11678f34cbd29698d3f5fcd6d5655836dada7a446e01",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/CACHE-RECOVERY-AUDIT-2026-11-04.md": "e8a6cc80bf293224f21814d42c1a1063e9de099824946ae95ac1c603f0aea645",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/DIAGNOSTICS-2026-11-04.md": "2f04043c255cdc7ba14925ef7b3314ae3dc87df6059465fd3dac05f06d608487",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/GIT-TAG-SELECTION.md": "4950b8e6e45867f2d64a82435b641987dbc4973525b734f25efba07794146cb4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/GIT-VERSION-DESIGN.md": "e23a6c3411c9631d4bda4bad856378cd9f17bae53f5e953357b429e9cad48757",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/HTTP-METADATA-2026-11-04.md": "180028c3b8741f66b75085c791738c80048fa42288c0eba1c7ab646cc55cbe34",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/INCREMENTAL-BUILDS.md": "981806cb683d51f18eb4f62175026b5a564764fc39cc00ab3858a865fecf12a0",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/PERFORMANCE.md": "befaeb07adb27e07f3d90be920d4191695a8dd55f4835d39713e5b0b047cb2e3",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/PROCESS-CONSUMER-2026-11-04.md": "b10f55f4dcaca23c3fd441c7a2a99837bb8f6ce97563bd6e0fbb5045a139ca64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/REFERENCE.md": "667f5045b5d950bd704567e35837b4235b9e69d12f71935ad61c4028201456a2",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/SOURCE-SIGNAL-AUDIT-2026-11-04.md": "f5c6010fdc1925bf6558eb6ae62677aac873bba64644ebaf8ea58bdcac40ccee",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/native/log_sink.c": "51dabc2881c3032e2dd3e12e535d2d6c2d634cc16506a57ccd783522a4033c5e",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/native/platform.c": "a8b19bd3d3e7a4aaa501175b6f8ead793b230e50b51a7c1c77e74a894647cece",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/scripts/check-vendor.py": "2242335ff54c7f383c84dcf790af72cfafaa36c6411b1e5b4d59e1e1a6f33bdc",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/scripts/metadata-test-build.py": "6b9f896fa19e3f4f31c964629d203f435398e1963e6869e05d4cf70be68144e7",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/scripts/portable-cc.sh": "ab180b50aba6f19f8a7d673673cfbb98224e127e7d934ed1f06dd5820d300da8",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/scripts/process-fault-cc.sh": "fad6045a989dce725dc35cb123242a912fb70d5a9900d31d058c296c71ba1eff",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/scripts/process-fixture.py": "97920a4a7d59c87fecb231f075401831acc789ae3d4a35d8c905e97e36d597e8",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/scripts/sanitizer-cc.sh": "5e2587f55f6ef0d5355de9c375fe8eb6d57b7858fab9e4d3abb8b95b2dfff428",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/scripts/setup-goose.sh": "20f512f9040ddb90866005688790eda294a00d5f156f5df6849e771f6efd8960",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/build.goose": "c15ea5270d810124c4595b4f583c1ddaf4f9e8ecc8bb9000d211537e01799e7d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/build_cache.goose": "1df7857ab7795233e729af812c96c3d8ab12dd120e959d98a5bc59c9a27d2072",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/commands.goose": "13dd4333ca5c0c065ebaaf652b79432d792447831a96a9e8f6a941b38c987576",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/deps.goose": "5713091c347fea5656ff032a911b2133b9094c1bba75b0a3e07b1519d7ea2d93",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/diagnostics.goose": "d98a33a3584492abf464e1d07d7091d8e3eac07299573e7b0a132963270b68f7",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/distribution.goose": "d280ebf2712e1d5e60e3b04706e075236e82d2379039054d2ee2143164c0f62b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/manifest.goose": "bc81b8ad3090b7976f1397b78b9ffefac9138a7e5bb031b2f3d00ebf2e470a95",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/platform.goose": "7a67be6471b5318c6f5c1aaeac2ced527a4ce11f6356d8ee814bad54716fa80c",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/presentation.goose": "c5573d2693e3cbccea26a6ea3a9c7c7129ab01dd4c978ba0e429229c11b611bc",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/project.goose": "67573e889ad0945b97f0c2edd4743dee5819d77c37b553d38ab5459e53f82acd",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/source.goose": "ffe15c4a90bb0fdec88e30f2e42d435291878c08bcc723cbf0fde6a423566d4f",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/tag_catalog.goose": "7c7a284fa94d0a8fd4ea06fbda743b4dfc7d161642626ae271f04d5b8b934090",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/tag_select.goose": "104b29cf38e4a1ca3bce881083787790d8a446a6b397340ece8a526c34d49f3a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/toolchain.goose": "efc777ee772a5448900d0b3f34ef38642b756b450c9e289be7265b2ffb708ece",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/src/version_policy.goose": "cfffd55622e7dc8fc6d7f5b4655113ec224fec6b2b1628c5b32db1ab946d0ea0",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/audit_perf.py": "e09e6bba320c5467d54ce27f325c08ffb78a52fb74d20b27cb4accd2f4eb9657",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/bench.py": "ec18942e55bb70716431ab980b51039991087e07b0df43f5c7c7789e23a46758",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/build_cache_cli.py": "511ea5433d430e0822b90946a43a3ca50c7d9324a8c6f5c9f1b84d658ad9c564",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/cli.py": "f5f9d417b5aa37040c39879b201e18a648539e75d1172cb1c91946c62c7039b4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/core.goose": "282204fecdea67f7b67a69357820a54c33b1f815fd5f8e6177bc0461d523ca73",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/diagnostics_utc.goose": "1b437fb180193afe65e325b782f14c32a43d791b051d07b0707327deec7964db",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/http_metadata.py": "75f8fcc54753d34e599f7550bbb483e9642f81f831ce2c8a367a878abebf11fd",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/logging.py": "b7481ca4207548ab63b24ab7b0b9825c1bb67e74c2f6c39d65b8e4396ad568b3",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/manifest_edit_cli.py": "2d0c891ed943e4476f3e7918fff016f1b392e444835423798a32a2dd53a2e982",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/native_import.py": "bff92f052c3aefcf2ec383ef12c9d5318644d42c66326ff6f484943ad54787d6",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/presentation_write.goose": "316d0ef1204b120bfe44d953aa19cde4603cd402d0b45dbe72b70f324d5c412b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/presentation_write.py": "2640487a15e02b30804d36c3d3c4e3e98d2f8b1718026c4615807ae805f834a3",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/process.goose": "6580300fdc904c89c7f2da6f9f17cf7c75f25f94ee7c251c1dfc91ad5bd81094",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/process_cli.py": "01adf8194d9d7779b77ec9c1571877b277e2a77708715eb6e421be298ab472b5",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/process_fault.c": "6118aad7be1d1f194b5bcda621fc6f601067769109bba929bcae2027967f459a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/process_fault.goose": "2faa81e3c078c437f105864394ab75a81b5a96c6ed9e0a3a8e8b651ebe3ea972",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/security.py": "ea856eb2991d2a073b8577ad8c9aa2ace3114c8b08804fe56ce443f98887f01b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/semver_cli.py": "3b96df19cc5eefdaaf6610411e00f940883dd9e736996b805f99e5508a20ed82",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/semver_probe.goose": "7da67692d10c1e203b9c2363a8d33beae7d92a8cd1b195c262a03e513a56b1c8",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/tag_catalog.goose": "c59d16d3da4795ad67481f884e3972183980fb157901afdce696408c16ca660b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/tag_select.goose": "beb00d7156ba33e7e7f747a07a283a689813c4a554f4f97b4f057ffe5a6b2bb3",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/terminal_cli.py": "8f8a448cd85ec173408517480c56176e01437d6712ce37d2e8cc7002ec64ea6c",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/text_cli.py": "dfb01524be248fa83d1a8a19d57dab57bd1acd81b56192f81eeff057b1782b07",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/version_deps_cli.py": "b32e3b0b526f64ec3f04e28693a05c4cd3536db3c69d92be193a0256e9434665",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/README.md": "f36301e7fd3c9af9ed4df97b6cf943a3f289233df9b8836c92f2a6c84b0d43cb",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/manifest.json": "ce3e3291eb1b8eefa770b915338b0463f7de6b2baf6c4921527c9e22526d2ac5",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-argparse/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-argparse/REVISION": "a8249f71943600bb9b78ef1601654aead5825af74413accec1eef03d03ac2f43",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-argparse/argparse.goose": "0d347cf8b2631f4064d42df85658010dc0dd13b226fc30ea3b425316d4d836b9",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-crypto/CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-crypto/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-crypto/crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-crypto/crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-glob/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-glob/glob.goose": "ac96ce4e45b6a21678540f75a42d6e5330566df403fa3d7604f279023092dfd8",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-http/CMakeLists.txt": "8ff69c4076c269757632952678f35f3ede119517d161150857bc09d737610c56",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-http/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-http/http.build": "262a70daedf657d993f54278addf7c718da8c2ccf8971640fa436ee1da3f1ec3",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-http/http.goose": "d55f7fcc99718d28a8e8d3b800af8fd46be9772c7456d3f23cc6ac99c0026200",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-log/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-log/NOTICE": "54455bc60f86378e25f1bf215038542be202d077ec9c21797e952d7b7672c049",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-log/logger.goose": "9b13b2ff7af3e683df6a0f2c218102023274fe13c0eb57c2c880fc177b6a9171",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-process/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-process/process.build": "8ad78d100d5840ac5b96356d2cac08af1189a86ef738878f3457945365671a26",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-process/process.goose": "b28d4f10a408d5eaf444550fab8861a80b63a358f4aa0ce49174d59ca34c6327",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-semver/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-semver/semver.goose": "dde2323c3e132ed7970f97445da5493e9a1417443aa7aed7801c3f8ea2f91018",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/NOTICE": "06cdaf9723d7fcb547686eaae9dcb1a6d2f83bf4c605df8d81511ade64357796",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/README.md": "29c0c5f0413ef2b1c30d76b9b7be3bdaf0e3705bbb56ca35da21c011ee049204",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/posix.build": "3746698b273cb1ba960a178398c195e485f4c8342a4014848e1e325029bd644f",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/posix.goose": "dff6ed018014cc2f5c8aa3118cfd347504b4bdbde123061465e645e673b5d2fe",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/terminal.goose": "8e4859bb6bd063496e25eaf3b3d8aea3cb5f272bfa9655cbcfb53eef2382fba3",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-text/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-text/text.goose": "5e35ca269c168ca9bc951c774ba43ccc2b642206ab69e1662312ca8351a28aea",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-time/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-time/THIRD_PARTY_NOTICES.md": "558bfffa1dd0f318bad5df0cab38831b9966429672d6475d9e9ec20466e3bc2a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-time/detail.goose": "54e54e81fa2efc3efb00d380f19ca46af5ca728fbc8e9004d562c965357754d6",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-time/time.goose": "9a43e3f14b838ab7f40e9968ce35c0972f23cfd663408d773bff67da491cb2b7",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml-edit/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml-edit/toml_edit.goose": "4516ff7e266f4fa5e6d0c4ee3db0bd3089b8c9be4cfdc932d2d6c3385bf04791",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/document.goose": "b0c766e29e572dd6398e203ef3c5091d02d09d2e49c015d7028e5068883aad5b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/toml.goose": "806fd1ea11d48da77b62dfdba6f6e33d1a6e720c448cfddd486b7d4096a15b47",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/writer.goose": "8f5f1e2862caa4fa557c5f31d5a42ed5731ab7bd72a683d6a96518597a111d2a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/honk-metadata/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/honk-metadata/honk_metadata.goose": "6ffbbaabe73db968c0f8286d0f3cf035986c4ad562ceec850c7b134c0f759150",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/source/README.md": "ea35941965f451d56394607388a3e093595473ccb8394cb33affadfbfa8071f7",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/source/editor.goose": "63bcce775165d33a63acb160799262bf1b4e400d34a2d6b49fcf48f4098d21f6",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/vendor/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/vendor/README.md": "782a7738d022eb0ab0bdef10373c2c3728422a648737c58d5f00eec8dca179b8",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-toml/vendor/text.goose": "9d26025ab31b8c9590029e6fe8a38e3df097164c76a080a2e10c96ddb48a141d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/native/README.md": "a164c630db72c0b6ae783ff1a4028855c29ecc592132e7599a18cd3138c37e03",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-terminal/native/posix.c": "9434c0510fbbb65ed78acee3044c2cc43b99599c4609746cdb52987181620aca",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-process/native/internal.h": "b2c259a1cca4ad5dabd41fa979a4bfdaa6b143e356944d3b0dc57f824d2f901a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-process/native/launch.c": "1b893ad4bb688af81d8f2ef1e3dbddaabcadeede23768e4da6d518b86c607c3e",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-process/native/process.c": "30bc91f9fbefb82e6fd61b0723047a638339dfd736a6777be836965e0fb04819",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-process/native/process.h": "cea1518e8bdf6a37710473f9f96d5e588adeafbace7b7393c1b3f5a39ebe8d38",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-log/examples/utc/utc.goose": "831865065c7b86c92439de601a5fb65a52d15630b914cd3b5ffd75614fa3d67e",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-http/native/http.c": "5871d9ad107c8087830cae2a6070d306eb5776917212e961acd4086ed42d0334",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-http/native/http.h": "54b063571a015100056288ac614a81af37c0cb32eca198490f733196552c8078",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-crypto/native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-crypto/native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/vendor/goose-crypto/native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/http_fixture/README.md": "7c3daf38215c1c4225436eec22ec41eb955d0a79b335b2d917375478c10cb57f",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/http_fixture/integration.py": "a98ccae28223f037dcde7ca5f6b3bc65849efcc2568c904c1ff03be01153b839",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/http_fixture/metadata.py": "2b337cec0b0b8d9ef5699758a662bbe05299838d46b224defc37de19cdb0e6ea",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/http_fixture/metadata_transport.c": "19d347b71d232033c5d82225663f8510b7e57d7d8a47e9a439e35d9a0bfe3b8e",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/tests/terminal_fixture/write.c": "e7ed19fd432e62218c085105875621cd587e31cd1df24d4e5ec5c293f0b6e56b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/history/RESULTS.md": "b892f252436e537bfa53906a8f29c1881840d521431bd1a25c6b2ce2ffb3c8f4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/results/atomic-remove.json": "45db0a1c0a6fbeb0fd6a24899901b538c44032cfacfbfba44eb783d6d6c70d24",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/results/canonical-editor-acceptance.json": "85ce9abe0465d424d794a369cbe84d7ebbc567ba6071631ca5ba5e8d1f65f051",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/results/docs-currentness.json": "86acdf5e68c7205c403268829c82f0393ccdb36c07b12173bfd72df1d2424af0",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/docs/results/docs-examples.json": "7b711673ee5e428eb2e6053be83047cedd2b50fdcc6c10565b907c243ad1ec65",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/cache-audit-btrfs.json": "1335c6af3846ff24a512c2f000d087818391c90adbc2f7b37b6bb44d68b465b5",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/cache-audit-cli.json": "f790a93a0a161df1e8b16dbcf2a0e4abeeb9ea21338ca6515aa416139d572be9",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/cache-audit-tmpfs.json": "8e3b87e081dc23b043b3dce8c2acc31fc109fde3f99d6638bd1c7419c49afb0c",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/cli.json": "2e5edd4d8545b5c16ea8071e17ef61a201b7c4dd01447f13780aaf2ab4caa0f1",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/deep-audit-btrfs.json": "15b6b137bb91c84d7677318a6005c6035d1a4316fb529e56a4656169bac2c727",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/deep-audit-cli.json": "bf951b534f9ee0e01674505b33b5603f52fbfe0adc48e25f97763d4bec2cc16b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/deep-audit-tmpfs.json": "98eca9a807111249ce02a982c400f38c4ec85ca8426b500c974eb8025d614b20",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/integration-cli.json": "1ee8809c904a9c1b533f95f6a5270e69dd0fe75ca26047a45082fa99a4c25d07",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/integration-workloads.json": "7af8f75f52a86547bdd6ba8755ce787bed745da24013f013a21ac582d9e89c36",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/paired-btrfs.json": "e7975be582a60f96e192b05f55aeedf862bf1568888b02a9d3678c625704def7",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/paired-tmpfs.json": "cdf270752432aa5d5c0756d1931b1332e8bdc114f5c9fb7ceb9c90335b7a0baa",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/process-consumer.json": "bd646d90abf0f33b4cf38db5ca235c6de292cef8c483a8a37d34c77f4ee4cda4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/source-signal-btrfs.json": "2e520112aac38d21358a5a92ba1392cf932ff777eb15e0e19b597bbf9e790241",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/source-signal-cli.json": "3346f6b0db2580affa3f3385d2e09b8e4fc489c1b81f05795a6e89b20d4ddc94",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/source-signal-tmpfs.json": "850fc4942891775577ca4f5d17e2bfa181d5f7b0e111cd210d44b3224956f5b9",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/README.md": "1dd2e91b0cfe048ebc6d839bbbd6b4557c68866ec556b629ce643583234c4207",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/capture.c": "c02d7b152cd5069889d49e6d19bb5b5e6990b33867dcc194e6ae26c08c5ff9cf",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/driver.goose": "d0e33bfc543a1668ae79df443af6944b4c7822456dbce22ede29be3844ba2d7c",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/run.py": "6a47c55b7991665164a0de9a155e91b91fc551370688a92a8b98eb653a5a5117",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/test_runner.py": "72c437bc0d92ba96c9ee641961ee100cd84ecf6d06772782e367261a00dff2d2",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/.gitignore": "eb4e33480eaf67166c3e26d7870a90f16b486e8ec9515988f6acd12526f2edab",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/Honk.toml": "f455f33cb843284df819751785915408734ee0d47ce460c70ddeb0d2b7817f9d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/README.md": "5eed03cc06bb8cdc4c407f833e5578ecf8599997cd2ed352aec3098c14d96977",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/Honk.lock": "ce66d63610a2adf6cf7b636f1c51c3f2ee07084a6d0e3868e2ead77be6494b9e",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/Honk.toml": "25c67a91241d95ae040550b0c4c229ebf78beecebdb21479e6cb79c01fd3ddda",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/THIRD_PARTY_NOTICES.md": "294203f3249e4ea68dd47292a2016659f44a95538a37fb710e3e94cc1d6fd6d9",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/src/main.goose.in": "9f622750887d36036e91e6192e9767b4b2b3895e4b20e104cf01ba9ddda63cae",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/vendor/rules/Honk.lock": "23e9611609865e3b77f31015181c97d1966c4443c471e8c14f16e9417a336c4e",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/vendor/rules/Honk.toml": "563c55cdd3f8be4eb3d7feb779e06494ae7e1a0fb3b13ba3039b6eeb75e8254a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/vendor/rules/LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/vendor/rules/rules.goose.in": "165eabd22cf535a55ef2c191a696bd45d68f787e9dc07bef4288e163abe7add2",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/workspace/gate/vendor/rules/tests/rules.goose.in": "544491833fe4d70655f9391404ba2a0b546b4f671d483b88fcae7961f5201508",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/README.md": "b576974feccdc954f19eb81bfb0a848774dfbcf1662fe5fc2c95133d2d44fd62",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/full/fixture.bin": "4ddfb4d0cc459eac24321bf12c3728f8f02bd990a6a784b9f7e90d1a044f8c66",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/full/metadata.json": "ef7dfe0ae8388fea13cb9d1aa8189e965df371c57abda548ca1ff3a0d904a378",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/full/rounds.jsonl": "cf3c4966e4ccd5065ecbaf484cf35221bd0707cda6fc1bc46477ab6e27abbf50",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/full/summary.json": "51850e7b9dd21f83c1f55647ba46e1d17e8db7119ba8b6a6bc339f453bdfe274",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/fixture.bin": "4ddfb4d0cc459eac24321bf12c3728f8f02bd990a6a784b9f7e90d1a044f8c66",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/metadata.json": "f653d6915025492a76d30a5f51e871e6608fc0de0cd39d18a0920df393e6cae5",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/rounds.jsonl": "7438f403ebe6f139a42decf7ac5d5982e233e81b9e4b1e4c5413b42815f5d2bd",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/summary.json": "7e2a2d004627b9e6df00bd94ecd266368e937d7a8a5f307624d881d30ffc365f",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-accepted_fixed-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-accepted_fixed-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-accepted_os-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-accepted_os-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-file-capture.gz": "a6e0d69dd3ffde07046066c1fdd7cb39c691c6f3bd6a9342a8a05501d203fb1d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-file-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-baseline-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-accepted_fixed-capture.gz": "f6128ee6245c41c4ee685f3ba3e283df62a5a93ce67932b54a0e95da6cf69cd2",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-accepted_fixed-clock.gz": "92b76e6ef01395d0336c86f2d7edfcdc52845a926c7e408db276d34d3ce1d05a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-accepted_os-capture.gz": "c0213a82b85c4820c381e710e57bea1857e5d059f8c4d9d4b895597866857b2e",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-accepted_os-clock.gz": "bde2080e0bb23871d3c9c792e8ad244ed626edbcbcad7df1fdf9e89f4610f762",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-file-capture.gz": "a63e5da2304f4b28256eb3ccd7723b8835324840087fd610090644a8fb2a2ae1",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-file-clock.gz": "699775155d6a83767a8f05dac460ef2af55bcd7bac7d07f4fbca58680aea35e5",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/0-candidate-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-accepted_fixed-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-accepted_fixed-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-accepted_os-capture.gz": "a30ebeb50bf6d8f5417e7f8dec4069bbd03e098cbdb5f3d800926cb96fe25b7a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-accepted_os-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-file-capture.gz": "a6e0d69dd3ffde07046066c1fdd7cb39c691c6f3bd6a9342a8a05501d203fb1d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-file-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-baseline-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-accepted_fixed-capture.gz": "f6128ee6245c41c4ee685f3ba3e283df62a5a93ce67932b54a0e95da6cf69cd2",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-accepted_fixed-clock.gz": "92b76e6ef01395d0336c86f2d7edfcdc52845a926c7e408db276d34d3ce1d05a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-accepted_os-capture.gz": "7728687a4042d60ac46ed13c13704bf822fcd9505fe133a64a01d13d212b014c",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-accepted_os-clock.gz": "6679c7be441796cd999858e08588c81c0adc4980e4ffe48e38b84a880d262d07",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-file-capture.gz": "128d473dd6b59de1be80fb89e94e99cedaeccde608390031ef2ae5e60496b43f",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-file-clock.gz": "57482b78859cb44e6011c1d84107da216ed889292080714bd2b1239cee8175c1",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-filtered-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-filtered-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-no_log-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-no_log-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-off-capture.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/utc/results/smoke/traces/1-candidate-off-clock.gz": "9ceffb7310338057cfe71a4ae1e2c98d2c485d81cdef906532a801f457a38d64",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/announcement-v040/README.md": "797f605a56ca433938665e5c1ad29373e5b87f8adf69988e8a7aeaff820db766",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/announcement-v040/events.jsonl": "1c66f4360d4d2f4c001642957e77e4aedecaa1309e319f124aa18c99299eb151",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/announcement-v040/invocation.json": "2a2eca3b8714c84adc3d0218f77507c807185d02190ec419f89d2f0ae55fd2ee",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/announcement-v040/run.log": "7918fe0c3969c8a294297ebc833cc2a0340a944fb5ddc39b06016c66433b2720",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/announcement-v040/samples.json": "9fc594a60c66f54054d2f3d12645a953df1adb28f1ecd914255f2f915f319334",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/announcement-v040/verification.json": "f778db526a85f01e441dae38dd82140abeb3ebd64511ca2a81c911d8ec0dac43",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/build-reuse/README.md": "13cc2c56677d66165b898da5986f7850f711717ecf082c660a92cacd77313eae",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/build-reuse/final.json": "4021d88557a85eabb13654c1421f0d01ce6d63c3fe5bc0daa5fc1bc0fa4ceec4",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/build-reuse/post-merge-selfhost.json": "c9e25ef9ebf8f8b4dec92fbdcf9babaef4b7edabf45b2430da9b52f9ba35c949",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/build-reuse/prototype.json": "404db3a8895df9fdb36ede40c2c37a2649433c75acdb0e5d0d17ae1509641e42",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/build-reuse/selfhost.json": "bf48e0b4a3c6dc7c5e84ea7a8db2aa699ec6b355937ed43e0cd390911559571d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/build-reuse/verification.json": "f717de1fe56a3ca3816979676d4bb991f066e8318ff631c6a67b4f9f96fd7aae",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/glob-2026-11-07/README.md": "05ddec2298d3c26c15e068c7f2c69dcc3860fa3ad02e11640d3b631f3d7cea7f",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/glob-2026-11-07/comparison.png": "e41f96c1728ff90f5fec9b5c86b29db3aa5ed3dd238d6ab99ca80562da5d1e88",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/glob-2026-11-07/comparison.svg": "b0d0c5974fb6cd978a40f657adc32f466953df36157927ba82fe84bfb604ea46",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/glob-2026-11-07/raw.json": "c87dfca8c100fc771fa41aa8d524695f81d5c31b5958bdbd29b302c5969f2e6b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/warm-phases/README.md": "d1651c909798cb547420209c21d8badd0bfedccf2f9f71de6ed486ff9b4631be",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/warm-phases/exploratory.json": "9c2a1630590f4b666f2bc50e4ceefed15059096ffce6006766e979b55977ea20",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/warm-phases/phases.html": "a3c3d64c94494b84bddceacba26db283bb3580683be8067b42b62932504dfb9a",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/warm-phases/shuffled.json": "cd031ac7e656e4405dc280b6ab0d9b40c3953473d4065e8fdfd4e3f3fd41b854",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/warm-phases/verification.json": "597be1baeadc60f6d2536ac4bf28c9fc3a5416aa1389a7abd092b4124ea2291b",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/workspace-v020/README.md": "79fa357bf499289fbcf7e5633e1ceaa9554548b8a59a2989f3fb3165f6be9709",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/workspace-v020/direct-git-git.jsonl": "6462a097e60d617556663148a0588cae4255e0583b5f71d31b66e506f0aacbbe",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/workspace-v020/direct-git.json": "57cb49a9b5fb50f2856321d88152edaab895e7de81403a6db0c638339c0a8b08",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/workspace-v020/instrumented-control-git.jsonl": "f1b414fe709259fd7d156c28eff633bb1212eb9a9ab958da9983e8cdfd14d636",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/workspace-v020/instrumented-control.json": "6b539c28fc3458c736b0f11bf1435ae53019a2676743c7f7f186367597fa155d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/workspace-v020/verification.json": "e223b54eaa152d1e45afe7f48ca9cb0ceedaaf29a1c5a35f19523888be774828",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/bench/results/workspace-v020/warm.html": "ca49812bc3a1e10d0322d2a95beec6bae769ebece9920e015706f8dae3cba546",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/.github/workflows/ci.yml": "a134890c841cfe19ef7fd95cbe57b4f08050f5f4d35b9300561d02c107296bf0",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/bench/glob_consumer.py": "dd0efa1009f026d48b919f326988b89649061635da047d71e3b606420b0bf65a",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/base64.goose": "fa1111ce46e9534311f825880dbd2988953430aeb3f1f52d8f0eaecbbc298a61",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/binary.goose": "24f3f09192738f42dfc0cb08b7447bbdc38009f7fec2567cae932b3022455631",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/csv.goose": "a49b0647f4a2f8ca36170e5a184ab6c6e505492434d0a10a5e05127e96da61ba",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/dictionary.goose": "fb39f896731faf3799e81727f7261849a62bdfbdc92d5fdbc36405a85830f322",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/exception.goose": "093863eda5433176750182b597aa6760a93808d86b0c9b713681443d2fb29160",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/ffi.goose": "e092b245fbe13ee2fdc71599b7b8eb44198e5261cad9600b7681e13ad75a6c2e",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/json.goose": "81595baa298b9b0deb271297c971166fd084c13b128bba2a7f7486191ea0de4e",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/math.goose": "b20bd3f78cd1ca291fdbc65df85d9aeaa77054cdf601b5adecfdd4f9db9f0d6e",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/os.goose": "2193f394d44469daffd993ed204a91b068084fd8db13e261e11156b40c66e934",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/regex.goose": "1ea3fc0a38402f29193777478b793b4a74a3074da0e3baf96f0b54eea1a84a95",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/slice_pool.goose": "e15aa757be8edea4b367ac0b2cb8cce48df9f4f249f5002a9393475cc89404f0",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/slice_pool_internal.goose": "488048c4e67754c878aa24ae25a941833a4a1a36ba679a2444b13806e7d42e15",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/slot_pool.goose": "e83b975bfff2806df0401afc3e37e147618c5673a9c98690007e6beb3bd51745",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/std.goose": "2bff7f6748300396e4c048bbf072f798566fadfe6b05d4256052d32c93e6d5d2",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/stdlib/vec.goose": "2cac168c72047834433bfb419734c38455c9429ea045b1273898031c53faa82e",
+    "/home/arobin/Work/Projects/goose-libs/.build/goose-time-public/.toolchain/goose/build/goose": "5e5bd97c13d8f4902855e6bbd2df1be510b81f13fe92a2482c9ac5e208bdb7a9",
+    "/usr/bin/gcc": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287",
+    "/usr/bin/time": "ccc576561484fe2c3f83bbceabfeba78408e59ac9c9a8161ad2a017b1037663d",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/honk-before": "3ae2ba590cc17cada2fafbae7c493e6c1c42f3fd9ef8b0c9b813a59efd52cca1",
+    "/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/honk-after": "1c24176300262d958e3e1b23ae61a9d4444a850376b60c869c81134ece4657ce",
+    "/usr/bin/cmake": "9cb6fe1977c7f184c054af4ee478728440bc90430572110ef82f5635e42741a0",
+    "/usr/bin/g++": "f04191f6a7b2cd7d9a62e1745872b8a6088791e5af6955488c69c9b2c4668bc9",
+    "/usr/bin/ld": "4d83828f709f0eade25bcae2f4a2508c47db2f01b58daaca5c1c4cefce897847",
+    "/usr/bin/as": "3dfdf6007545ea36176c350eef201d1ece55c347a182697bb5f9bac815a1f34b"
+  },
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "python": "3.14.9 (main, Oct 25 2026, 14:52:47) [GCC 16.2.1 20260810]",
+  "cpuinfo": "processor\t: 0\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 1259.681\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 0\ncpu cores\t: 8\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 1077.437\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 4\ncpu cores\t: 8\napicid\t\t: 8\ninitial apicid\t: 8\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 2\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 1202.108\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 8\ncpu cores\t: 8\napicid\t\t: 16\ninitial apicid\t: 16\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 3\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 859.233\ncache size\t: 12288 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 12\ncpu cores\t: 8\napicid\t\t: 24\ninitial apicid\t: 24\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 4\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 1499.232\ncache size\t: 4096 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 32\ncpu cores\t: 8\napicid\t\t: 64\ninitial apicid\t: 64\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 5\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 1498.339\ncache size\t: 4096 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 33\ncpu cores\t: 8\napicid\t\t: 66\ninitial apicid\t: 66\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 6\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 1497.735\ncache size\t: 4096 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 34\ncpu cores\t: 8\napicid\t\t: 68\ninitial apicid\t: 68\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 7\nvendor_id\t: GenuineIntel\ncpu family\t: 6\nmodel\t\t: 189\nmodel name\t: Intel(R) Core(TM) Ultra 7 258V\nstepping\t: 1\nmicrocode\t: 0x128\ncpu MHz\t\t: 1501.494\ncache size\t: 4096 KB\nphysical id\t: 0\nsiblings\t: 8\ncore id\t\t: 35\ncpu cores\t: 8\napicid\t\t: 70\ninitial apicid\t: 70\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 35\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush dts acpi mmx fxsr sse sse2 ss ht tm pbe syscall nx pdpe1gb rdtscp lm constant_tsc art arch_perfmon pebs bts rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq dtes64 monitor ds_cpl vmx smx est tm2 ssse3 sdbg fma cx16 xtpr pdcm pcid sse4_1 sse4_2 x2apic movbe popcnt tsc_deadline_timer aes xsave avx f16c rdrand lahf_lm abm 3dnowprefetch cpuid_fault epb ssbd ibrs ibpb stibp ibrs_enhanced tpr_shadow flexpriority ept vpid ept_ad fsgsbase tsc_adjust bmi1 avx2 smep bmi2 erms invpcid rdt_a rdseed adx smap clflushopt clwb intel_pt sha_ni xsaveopt xsavec xgetbv1 xsaves split_lock_detect user_shstk avx_vnni lass lam wbnoinvd dtherm ida arat pln pts hwp hwp_notify hwp_act_window hwp_epp hwp_pkg_req hfi vnmi umip pku ospke waitpkg gfni vaes vpclmulqdq rdpid bus_lock_detect movdiri movdir64b fsrm md_clear serialize pconfig arch_lbr ibt flush_l1d arch_capabilities\nvmx flags\t: vnmi preemption_timer posted_intr invvpid ept_x_only ept_ad ept_1gb flexpriority apicv tsc_offset vtpr mtf vapic ept vpid unrestricted_guest vapic_reg vid ple shadow_vmcs pml ept_violation_ve ept_mode_based_exec tsc_scaling usr_wait_pause notify_vm_exiting ipi_virt\nbugs\t\t: monitor spectre_v1 spectre_v2 spec_store_bypass swapgs bhi spectre_v2_user vmscape\nbogomips\t: 6604.80\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 42 bits physical, 48 bits virtual\npower management:\n\n",
+  "compiler": "goose eadca40 (runtime 3025e5810379)\n",
+  "cc": "gcc (GCC) 16.2.1 20260810\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+  "environment": {
+    "GOOSE_HOME": null,
+    "GOOSE_STDLIB": null,
+    "LD_PRELOAD": null,
+    "LD_LIBRARY_PATH": "/tmp/.mount_T3-CodNMEeKj/usr/lib:/tmp/.mount_T3-CodiNOEie/usr/lib",
+    "ASAN_OPTIONS": null,
+    "CC": null,
+    "CXX": null,
+    "CFLAGS": null,
+    "CXXFLAGS": null,
+    "CPPFLAGS": null,
+    "LDFLAGS": null,
+    "CPATH": null,
+    "LIBRARY_PATH": null,
+    "CMAKE_GENERATOR": null
+  },
+  "expected_outputs": {
+    "version": {
+      "stdout": "honk 0.4.0\n",
+      "stderr": ""
+    },
+    "metadata": {
+      "stdout": "{\"name\":\"honk\",\"version\":\"0.4.0\",\"root\":\"/home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture\",\"kind\":\"bin\",\"entry\":\"honk.goose\",\"dependencies\":[{\"name\":\"toml_edit\",\"path\":\"vendor/goose-toml-edit\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"toml\",\"path\":\"vendor/goose-toml\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"argparse\",\"path\":\"vendor/goose-argparse\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"text\",\"path\":\"vendor/goose-text\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"semver\",\"path\":\"vendor/goose-semver\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"process\",\"path\":\"vendor/goose-process\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"http\",\"path\":\"vendor/goose-http\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"honk_metadata\",\"path\":\"vendor/honk-metadata\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"logger\",\"path\":\"vendor/goose-log\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"crypto\",\"path\":\"vendor/goose-crypto\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"time\",\"path\":\"vendor/goose-time\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"utc\",\"path\":\"vendor/goose-log/examples/utc\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"posix\",\"path\":\"vendor/goose-terminal\",\"git\":\"\",\"rev\":\"\",\"dev\":false},{\"name\":\"glob\",\"path\":\"vendor/goose-glob\",\"git\":\"\",\"rev\":\"\",\"dev\":false}],\"members\":[]}\n",
+      "stderr": ""
+    },
+    "test_literal": {
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/target/debug/.honk/tests/0\ncore contracts passed\nPassed 1 test targets\n",
+      "stderr": "building the package honk's C\n"
+    },
+    "test_recursive": {
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/target/debug/.honk/tests/0\ncore contracts passed\nPassed 1 test targets\n",
+      "stderr": "building the package honk's C\n"
+    },
+    "bench_recursive": {
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/target/debug/.honk/bench/0\nPassed 1 bench targets\n",
+      "stderr": "building the package honk's C\nbuilding the package process's C\n"
+    },
+    "test_progress": {
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/.build/honk-glob-alpha3/.build/glob-alpha4-combined-2026-11-07/fixture/target/debug/.honk/tests/0\ncore contracts passed\nPassed 1 test targets\n",
+      "stderr": "building the package honk's C\n\nBuild complete\n\n[############] 1/1 test\n\nAll targets passed\n"
+    }
+  },
+  "samples": [
+    {
+      "round": 0,
+      "engine": "after",
+      "case": "test_progress",
+      "elapsed_ns": 1791581353,
+      "max_rss_kib": 69660
+    },
+    {
+      "round": 0,
+      "engine": "before",
+      "case": "test_recursive",
+      "elapsed_ns": 1639259412,
+      "max_rss_kib": 70704
+    },
+    {
+      "round": 0,
+      "engine": "after",
+      "case": "test_literal",
+      "elapsed_ns": 1634148626,
+      "max_rss_kib": 69436
+    },
+    {
+      "round": 0,
+      "engine": "before",
+      "case": "test_literal",
+      "elapsed_ns": 1751097376,
+      "max_rss_kib": 69740
+    },
+    {
+      "round": 0,
+      "engine": "before",
+      "case": "bench_recursive",
+      "elapsed_ns": 3135200134,
+      "max_rss_kib": 73308
+    },
+    {
+      "round": 0,
+      "engine": "before",
+      "case": "test_progress",
+      "elapsed_ns": 1631184698,
+      "max_rss_kib": 69696
+    },
+    {
+      "round": 0,
+      "engine": "before",
+      "case": "metadata",
+      "elapsed_ns": 10033671,
+      "max_rss_kib": 7280
+    },
+    {
+      "round": 0,
+      "engine": "before",
+      "case": "version",
+      "elapsed_ns": 9273935,
+      "max_rss_kib": 7092
+    },
+    {
+      "round": 0,
+      "engine": "after",
+      "case": "metadata",
+      "elapsed_ns": 10437662,
+      "max_rss_kib": 7016
+    },
+    {
+      "round": 0,
+      "engine": "after",
+      "case": "version",
+      "elapsed_ns": 10059129,
+      "max_rss_kib": 6876
+    },
+    {
+      "round": 0,
+      "engine": "after",
+      "case": "bench_recursive",
+      "elapsed_ns": 2901081452,
+      "max_rss_kib": 73020
+    },
+    {
+      "round": 0,
+      "engine": "after",
+      "case": "test_recursive",
+      "elapsed_ns": 1639517351,
+      "max_rss_kib": 69512
+    },
+    {
+      "round": 1,
+      "engine": "before",
+      "case": "test_literal",
+      "elapsed_ns": 1766866324,
+      "max_rss_kib": 69660
+    },
+    {
+      "round": 1,
+      "engine": "after",
+      "case": "test_recursive",
+      "elapsed_ns": 1808454271,
+      "max_rss_kib": 69620
+    },
+    {
+      "round": 1,
+      "engine": "before",
+      "case": "test_progress",
+      "elapsed_ns": 1667225320,
+      "max_rss_kib": 69516
+    },
+    {
+      "round": 1,
+      "engine": "before",
+      "case": "version",
+      "elapsed_ns": 9050569,
+      "max_rss_kib": 7088
+    },
+    {
+      "round": 1,
+      "engine": "before",
+      "case": "test_recursive",
+      "elapsed_ns": 1638111729,
+      "max_rss_kib": 69732
+    },
+    {
+      "round": 1,
+      "engine": "after",
+      "case": "version",
+      "elapsed_ns": 9268810,
+      "max_rss_kib": 6856
+    },
+    {
+      "round": 1,
+      "engine": "after",
+      "case": "metadata",
+      "elapsed_ns": 10518006,
+      "max_rss_kib": 7164
+    },
+    {
+      "round": 1,
+      "engine": "after",
+      "case": "bench_recursive",
+      "elapsed_ns": 2896019574,
+      "max_rss_kib": 73328
+    },
+    {
+      "round": 1,
+      "engine": "before",
+      "case": "bench_recursive",
+      "elapsed_ns": 2887230876,
+      "max_rss_kib": 73036
+    },
+    {
+      "round": 1,
+      "engine": "after",
+      "case": "test_literal",
+      "elapsed_ns": 1639596644,
+      "max_rss_kib": 69504
+    },
+    {
+      "round": 1,
+      "engine": "before",
+      "case": "metadata",
+      "elapsed_ns": 10350470,
+      "max_rss_kib": 6888
+    },
+    {
+      "round": 1,
+      "engine": "after",
+      "case": "test_progress",
+      "elapsed_ns": 1806271018,
+      "max_rss_kib": 69704
+    },
+    {
+      "round": 2,
+      "engine": "after",
+      "case": "version",
+      "elapsed_ns": 9334130,
+      "max_rss_kib": 7032
+    },
+    {
+      "round": 2,
+      "engine": "after",
+      "case": "bench_recursive",
+      "elapsed_ns": 3108533730,
+      "max_rss_kib": 73064
+    },
+    {
+      "round": 2,
+      "engine": "after",
+      "case": "metadata",
+      "elapsed_ns": 9731858,
+      "max_rss_kib": 7116
+    },
+    {
+      "round": 2,
+      "engine": "before",
+      "case": "version",
+      "elapsed_ns": 9658158,
+      "max_rss_kib": 6952
+    },
+    {
+      "round": 2,
+      "engine": "after",
+      "case": "test_recursive",
+      "elapsed_ns": 1668810755,
+      "max_rss_kib": 69784
+    },
+    {
+      "round": 2,
+      "engine": "before",
+      "case": "metadata",
+      "elapsed_ns": 9550890,
+      "max_rss_kib": 7036
+    },
+    {
+      "round": 2,
+      "engine": "after",
+      "case": "test_progress",
+      "elapsed_ns": 1663898827,
+      "max_rss_kib": 69764
+    },
+    {
+      "round": 2,
+      "engine": "before",
+      "case": "bench_recursive",
+      "elapsed_ns": 3166673586,
+      "max_rss_kib": 73424
+    },
+    {
+      "round": 2,
+      "engine": "before",
+      "case": "test_recursive",
+      "elapsed_ns": 1647092392,
+      "max_rss_kib": 69660
+    },
+    {
+      "round": 2,
+      "engine": "after",
+      "case": "test_literal",
+      "elapsed_ns": 1706587273,
+      "max_rss_kib": 69528
+    },
+    {
+      "round": 2,
+      "engine": "before",
+      "case": "test_literal",
+      "elapsed_ns": 1839232183,
+      "max_rss_kib": 69700
+    },
+    {
+      "round": 2,
+      "engine": "before",
+      "case": "test_progress",
+      "elapsed_ns": 1659816661,
+      "max_rss_kib": 69560
+    },
+    {
+      "round": 3,
+      "engine": "after",
+      "case": "test_literal",
+      "elapsed_ns": 1677616957,
+      "max_rss_kib": 69720
+    },
+    {
+      "round": 3,
+      "engine": "before",
+      "case": "test_literal",
+      "elapsed_ns": 1678386800,
+      "max_rss_kib": 69444
+    },
+    {
+      "round": 3,
+      "engine": "after",
+      "case": "metadata",
+      "elapsed_ns": 10621998,
+      "max_rss_kib": 6924
+    },
+    {
+      "round": 3,
+      "engine": "before",
+      "case": "test_progress",
+      "elapsed_ns": 1860062310,
+      "max_rss_kib": 69708
+    },
+    {
+      "round": 3,
+      "engine": "before",
+      "case": "metadata",
+      "elapsed_ns": 9703139,
+      "max_rss_kib": 6952
+    },
+    {
+      "round": 3,
+      "engine": "before",
+      "case": "bench_recursive",
+      "elapsed_ns": 2905748914,
+      "max_rss_kib": 73216
+    },
+    {
+      "round": 3,
+      "engine": "after",
+      "case": "test_progress",
+      "elapsed_ns": 1682023378,
+      "max_rss_kib": 69516
+    },
+    {
+      "round": 3,
+      "engine": "after",
+      "case": "bench_recursive",
+      "elapsed_ns": 3172531112,
+      "max_rss_kib": 73188
+    },
+    {
+      "round": 3,
+      "engine": "after",
+      "case": "version",
+      "elapsed_ns": 9277083,
+      "max_rss_kib": 6684
+    },
+    {
+      "round": 3,
+      "engine": "after",
+      "case": "test_recursive",
+      "elapsed_ns": 1640997906,
+      "max_rss_kib": 69764
+    },
+    {
+      "round": 3,
+      "engine": "before",
+      "case": "version",
+      "elapsed_ns": 8873828,
+      "max_rss_kib": 6820
+    },
+    {
+      "round": 3,
+      "engine": "before",
+      "case": "test_recursive",
+      "elapsed_ns": 1645399259,
+      "max_rss_kib": 69720
+    },
+    {
+      "round": 4,
+      "engine": "after",
+      "case": "test_progress",
+      "elapsed_ns": 1686207823,
+      "max_rss_kib": 69796
+    },
+    {
+      "round": 4,
+      "engine": "before",
+      "case": "test_literal",
+      "elapsed_ns": 1839625314,
+      "max_rss_kib": 69472
+    },
+    {
+      "round": 4,
+      "engine": "before",
+      "case": "version",
+      "elapsed_ns": 9007242,
+      "max_rss_kib": 6664
+    },
+    {
+      "round": 4,
+      "engine": "before",
+      "case": "test_progress",
+      "elapsed_ns": 1641990184,
+      "max_rss_kib": 69896
+    },
+    {
+      "round": 4,
+      "engine": "before",
+      "case": "bench_recursive",
+      "elapsed_ns": 2917743527,
+      "max_rss_kib": 73240
+    },
+    {
+      "round": 4,
+      "engine": "before",
+      "case": "test_recursive",
+      "elapsed_ns": 1696693766,
+      "max_rss_kib": 69552
+    },
+    {
+      "round": 4,
+      "engine": "after",
+      "case": "test_recursive",
+      "elapsed_ns": 1871991638,
+      "max_rss_kib": 69564
+    },
+    {
+      "round": 4,
+      "engine": "before",
+      "case": "metadata",
+      "elapsed_ns": 9809925,
+      "max_rss_kib": 6992
+    },
+    {
+      "round": 4,
+      "engine": "after",
+      "case": "test_literal",
+      "elapsed_ns": 1646955441,
+      "max_rss_kib": 69832
+    },
+    {
+      "round": 4,
+      "engine": "after",
+      "case": "version",
+      "elapsed_ns": 9509827,
+      "max_rss_kib": 6648
+    },
+    {
+      "round": 4,
+      "engine": "after",
+      "case": "bench_recursive",
+      "elapsed_ns": 2905698642,
+      "max_rss_kib": 73032
+    },
+    {
+      "round": 4,
+      "engine": "after",
+      "case": "metadata",
+      "elapsed_ns": 9705578,
+      "max_rss_kib": 6828
+    },
+    {
+      "round": 5,
+      "engine": "after",
+      "case": "version",
+      "elapsed_ns": 9496845,
+      "max_rss_kib": 6688
+    },
+    {
+      "round": 5,
+      "engine": "after",
+      "case": "bench_recursive",
+      "elapsed_ns": 3140436456,
+      "max_rss_kib": 72948
+    },
+    {
+      "round": 5,
+      "engine": "after",
+      "case": "test_literal",
+      "elapsed_ns": 1643876457,
+      "max_rss_kib": 69668
+    },
+    {
+      "round": 5,
+      "engine": "before",
+      "case": "bench_recursive",
+      "elapsed_ns": 2911422566,
+      "max_rss_kib": 73396
+    },
+    {
+      "round": 5,
+      "engine": "before",
+      "case": "test_progress",
+      "elapsed_ns": 1644969004,
+      "max_rss_kib": 69648
+    },
+    {
+      "round": 5,
+      "engine": "before",
+      "case": "test_literal",
+      "elapsed_ns": 1702461153,
+      "max_rss_kib": 69528
+    },
+    {
+      "round": 5,
+      "engine": "before",
+      "case": "version",
+      "elapsed_ns": 9093463,
+      "max_rss_kib": 6872
+    },
+    {
+      "round": 5,
+      "engine": "after",
+      "case": "test_progress",
+      "elapsed_ns": 1783848444,
+      "max_rss_kib": 69644
+    },
+    {
+      "round": 5,
+      "engine": "before",
+      "case": "test_recursive",
+      "elapsed_ns": 1644721937,
+      "max_rss_kib": 69612
+    },
+    {
+      "round": 5,
+      "engine": "after",
+      "case": "metadata",
+      "elapsed_ns": 9317683,
+      "max_rss_kib": 7032
+    },
+    {
+      "round": 5,
+      "engine": "after",
+      "case": "test_recursive",
+      "elapsed_ns": 1639390526,
+      "max_rss_kib": 69664
+    },
+    {
+      "round": 5,
+      "engine": "before",
+      "case": "metadata",
+      "elapsed_ns": 9481963,
+      "max_rss_kib": 7076
+    },
+    {
+      "round": 6,
+      "engine": "before",
+      "case": "metadata",
+      "elapsed_ns": 9252920,
+      "max_rss_kib": 7000
+    },
+    {
+      "round": 6,
+      "engine": "before",
+      "case": "test_progress",
+      "elapsed_ns": 1649699296,
+      "max_rss_kib": 69516
+    },
+    {
+      "round": 6,
+      "engine": "before",
+      "case": "test_recursive",
+      "elapsed_ns": 1749411500,
+      "max_rss_kib": 69784
+    },
+    {
+      "round": 6,
+      "engine": "after",
+      "case": "bench_recursive",
+      "elapsed_ns": 3027916862,
+      "max_rss_kib": 73408
+    },
+    {
+      "round": 6,
+      "engine": "after",
+      "case": "test_literal",
+      "elapsed_ns": 1637697188,
+      "max_rss_kib": 69816
+    },
+    {
+      "round": 6,
+      "engine": "after",
+      "case": "version",
+      "elapsed_ns": 10256171,
+      "max_rss_kib": 7056
+    },
+    {
+      "round": 6,
+      "engine": "before",
+      "case": "test_literal",
+      "elapsed_ns": 1649556481,
+      "max_rss_kib": 69736
+    },
+    {
+      "round": 6,
+      "engine": "before",
+      "case": "bench_recursive",
+      "elapsed_ns": 3168481914,
+      "max_rss_kib": 72996
+    },
+    {
+      "round": 6,
+      "engine": "before",
+      "case": "version",
+      "elapsed_ns": 8894159,
+      "max_rss_kib": 6880
+    },
+    {
+      "round": 6,
+      "engine": "after",
+      "case": "metadata",
+      "elapsed_ns": 9958980,
+      "max_rss_kib": 7108
+    },
+    {
+      "round": 6,
+      "engine": "after",
+      "case": "test_recursive",
+      "elapsed_ns": 1638459842,
+      "max_rss_kib": 69620
+    },
+    {
+      "round": 6,
+      "engine": "after",
+      "case": "test_progress",
+      "elapsed_ns": 1645497752,
+      "max_rss_kib": 69692
+    }
+  ],
+  "scope": "Sequential randomized warm-cache invocations on one CPU on a shared host. Includes process startup, validation, staging, compilation and target execution as applicable. One untimed invocation of every binary/case checks exact output before timing. GNU time max RSS is the largest reported process/descendant high-water mark, not simultaneous aggregate memory. No cold-storage or network timing.",
+  "summary": {
+    "version": {
+      "before": {
+        "elapsed_ns": {
+          "median": 9050569,
+          "min": 8873828,
+          "max": 9658158
+        },
+        "max_rss_kib": {
+          "median": 6880,
+          "min": 6664,
+          "max": 7092
+        }
+      },
+      "after": {
+        "elapsed_ns": {
+          "median": 9496845,
+          "min": 9268810,
+          "max": 10256171
+        },
+        "max_rss_kib": {
+          "median": 6856,
+          "min": 6648,
+          "max": 7056
+        }
+      }
+    },
+    "metadata": {
+      "before": {
+        "elapsed_ns": {
+          "median": 9703139,
+          "min": 9252920,
+          "max": 10350470
+        },
+        "max_rss_kib": {
+          "median": 7000,
+          "min": 6888,
+          "max": 7280
+        }
+      },
+      "after": {
+        "elapsed_ns": {
+          "median": 9958980,
+          "min": 9317683,
+          "max": 10621998
+        },
+        "max_rss_kib": {
+          "median": 7032,
+          "min": 6828,
+          "max": 7164
+        }
+      }
+    },
+    "test_literal": {
+      "before": {
+        "elapsed_ns": {
+          "median": 1751097376,
+          "min": 1649556481,
+          "max": 1839625314
+        },
+        "max_rss_kib": {
+          "median": 69660,
+          "min": 69444,
+          "max": 69740
+        }
+      },
+      "after": {
+        "elapsed_ns": {
+          "median": 1643876457,
+          "min": 1634148626,
+          "max": 1706587273
+        },
+        "max_rss_kib": {
+          "median": 69668,
+          "min": 69436,
+          "max": 69832
+        }
+      }
+    },
+    "test_recursive": {
+      "before": {
+        "elapsed_ns": {
+          "median": 1645399259,
+          "min": 1638111729,
+          "max": 1749411500
+        },
+        "max_rss_kib": {
+          "median": 69720,
+          "min": 69552,
+          "max": 70704
+        }
+      },
+      "after": {
+        "elapsed_ns": {
+          "median": 1640997906,
+          "min": 1638459842,
+          "max": 1871991638
+        },
+        "max_rss_kib": {
+          "median": 69620,
+          "min": 69512,
+          "max": 69784
+        }
+      }
+    },
+    "bench_recursive": {
+      "before": {
+        "elapsed_ns": {
+          "median": 2917743527,
+          "min": 2887230876,
+          "max": 3168481914
+        },
+        "max_rss_kib": {
+          "median": 73240,
+          "min": 72996,
+          "max": 73424
+        }
+      },
+      "after": {
+        "elapsed_ns": {
+          "median": 3027916862,
+          "min": 2896019574,
+          "max": 3172531112
+        },
+        "max_rss_kib": {
+          "median": 73064,
+          "min": 72948,
+          "max": 73408
+        }
+      }
+    },
+    "test_progress": {
+      "before": {
+        "elapsed_ns": {
+          "median": 1649699296,
+          "min": 1631184698,
+          "max": 1860062310
+        },
+        "max_rss_kib": {
+          "median": 69648,
+          "min": 69516,
+          "max": 69896
+        }
+      },
+      "after": {
+        "elapsed_ns": {
+          "median": 1686207823,
+          "min": 1645497752,
+          "max": 1806271018
+        },
+        "max_rss_kib": {
+          "median": 69692,
+          "min": 69516,
+          "max": 69796
+        }
+      }
+    }
+  }
+}

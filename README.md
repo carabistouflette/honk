@@ -113,11 +113,12 @@ fails (including when the target directory is absent).
 
 Filtering compiles the pattern once with `glob::compile` and reuses the owned
 pattern through the public `glob::matches` API across all workspace packages from
-[goose-glob v0.1.0-alpha.3](https://github.com/carabistouflette/goose-glob/releases/tag/v0.1.0-alpha.3).
-A [complete-command measurement](bench/results/glob-2026-11-07/README.md) retains
-startup, test/bench wall-time and maximum-RSS observations for the upgrade.
-Those pre-terminal-merge samples show no clear whole-command speedup on the fixed
-Honk project; they do not measure the combined terminal/filter build.
+[goose-glob v0.1.0-alpha.4](https://github.com/carabistouflette/goose-glob/releases/tag/v0.1.0-alpha.4).
+The [combined alpha.4 consumer measurement](bench/results/glob-alpha4-2026-11-07/README.md)
+retains 84 startup, test/bench, default/forced-progress and maximum-RSS samples.
+Its whole-command observations are mixed, with no consistent speed or memory gain.
+The [earlier pre-terminal comparison](bench/results/glob-2026-11-07/README.md)
+remains a separate historical record.
 Honk retains its own traversal and staging: symlinks and special files are
 rejected, `.git`, `target`, `.honk`, `.toolchain`, `.build` remain excluded, and
 the existing 4096 source/directory caps apply before filtering. This option is

@@ -24,5 +24,5 @@ source files for all of them; a newer upstream release is not adopted implicitly
 Optional CLI presentation uses goose-terminal and its POSIX adapter; the manifest
 records the exact source/license snapshot. Renderer output stays application-owned.
 
-Target filtering uses only goose-glob v0.1.0-alpha.3 at `379515420be040bc603f0ea87b4e823d2e4e5c3a`
+Target filtering uses only goose-glob v0.1.0-alpha.4 at `2022a04e1847490c9c76af91e1e5c01a3c6e3cc0`
 (`glob.goose` and LICENSE). The optional filesystem collector is not vendored.
