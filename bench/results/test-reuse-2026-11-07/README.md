@@ -69,3 +69,16 @@ full-Honk sanitizer/portability claim is made for the integrated source; hosted
 CI repeats those gates. The interrupted first attempt is retained explicitly:
 a concurrent rebuild replaced the executable during CLI tests; the final
 sequential run supersedes it.
+
+## Compiler-diagnostics integration
+
+`integration-diagnostics/` qualifies the next main merge at source35a5c85,
+with full source and main identities in receipt.json. The Makefile conflict
+retains both features' syntax checks and gives the reuse recorder its own
+command. Independent merge review found no unintended changes: diagnostics
+remains check-only; cache logic, bench isolation and watch rejection are intact.
+
+Checks/rebuild, eight compiler-diagnostic methods, seventeen cache methods and
+seventeen parallel CLI methods pass on the combined branch. This targeted
+integration evidence does not replace the original source-qualified timing or
+full sanitizer/portability records; hosted CI repeats the full gates.

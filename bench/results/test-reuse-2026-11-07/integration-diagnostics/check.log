@@ -1,0 +1,28 @@
+make: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+python3 -m py_compile bench/compiler_diagnostics.py bench/process_observer.py bench/observer_calibration.py bench/qualify_parallel.py tests/qualification_observer.py tests/qualification_driver.py bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py tests/compiler_diagnostics.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
+python3 -m py_compile bench/test_reuse.py
+python3 bench/glob_consumer.py --help > /dev/null
+python3 bench/dogfood.py --self-test
+controller_success PASS
+controller_exit PASS
+{"controller_self_test": "PASS", "fd_before": 4, "fd_after": 4, "success_exit_status": true, "timeout_cleanup": true, "unwaited_children": false}
+python3 scripts/process-fixture.py
+python3 scripts/check-vendor.py
+Vendored source and license hashes match the recorded pins
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose format --check honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check honk.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/presentation_write.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/core.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/graph.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/parallel_probe.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check bench/qualification_driver.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check bench/qualification_pressure.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/diagnostics_utc.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/process.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/semver_probe.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/process_fault.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/tag_select.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/tag_catalog.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check bench/utc/driver.goose
+git diff --check
+make: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
