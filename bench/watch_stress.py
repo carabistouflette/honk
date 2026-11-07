@@ -14,7 +14,7 @@ import struct
 import subprocess
 import tarfile
 import time
-from process_observer import ProcessObserver
+from process_observer import ProcessObserver, execute
 from observer_calibration import calibrate
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -39,10 +39,14 @@ def git(repo, *argv):
     return subprocess.check_output(['git', '-C', str(repo), *argv], timeout=30)
 
 
-def canonical(data):
-    # Build and target-count lines are command presentation, not suite output.
-    return b'\n'.join(line for line in data.splitlines() if line and
-                      not line.startswith((b'built ', b'Passed ')))+b'\n'
+def canonical(data, project):
+    # Strip only the single selected target's boundary presentation lines.
+    built = b'built '+os.fsencode(project/'target/debug/.honk/tests/0')+b'\n'
+    if data.startswith(built): data = data[len(built):]
+    passed = b'Passed 1 test targets\n'
+    if not data.endswith(passed):
+        raise RuntimeError('missing exact successful-target summary')
+    return data[:-len(passed)]
 
 
 def terminals(data):
@@ -72,7 +76,7 @@ class Session:
     def __init__(self, binary, project, env, folder, suite, sampled, extra_roots=()):
         folder.mkdir()
         self.folder, self.project = folder, project
-        self.proc = self.pidfd = self.observer = None
+        self.proc = self.pidfd = self.observer = self.identity = None
         self.out = self.err = None
         self.closed = False
         self.next_sample = 0
@@ -132,7 +136,7 @@ class Session:
         end = time.monotonic()+timeout
         while not predicate():
             self.pump()
-            if self.proc.poll() is not None:
+            if self.exited():
                 raise RuntimeError(f'early exit {self.proc.returncode}: {self.folder}')
             if time.monotonic() > end:
                 raise RuntimeError('session handshake deadline exceeded')
@@ -148,7 +152,7 @@ class Session:
             raise RuntimeError(f'unexpected completions: {rows}')
         data = (self.folder/'stdout').read_bytes()
         segment = data[self.stdout_offset:]; self.stdout_offset = len(data)
-        if expected == 0 and canonical(segment) != stdout:
+        if expected == 0 and canonical(segment,self.project) != stdout:
             raise RuntimeError('per-command canonical suite output mismatch')
         self.record['commands'].append(dict(index=count, observed_terminal_ns=time.monotonic_ns(),
                                             outcome=rows[-1], stdout_sha256=hashlib.sha256(segment).hexdigest()))
@@ -182,29 +186,42 @@ class Session:
         end = time.monotonic()+seconds
         while time.monotonic() < end:
             self.pump()
-            if self.proc.poll() is not None:
+            if self.exited():
                 raise RuntimeError('supervisor died during idle interval')
             time.sleep(.02)
 
+    def exited(self):
+        # Keep the leader unreaped so its PID still anchors our private group.
+        if self.proc.returncode is not None:
+            return True
+        return os.waitid(os.P_PID, self.proc.pid, os.WEXITED | os.WNOHANG | os.WNOWAIT) is not None
+
+    def group_members(self):
+        anchor = ProcessObserver.identity(self.proc.pid)
+        if not anchor or not self.identity or anchor['start'] != self.identity['start']:
+            raise RuntimeError('private process group lost its identity anchor')
+        members = []
+        for path in Path('/proc').iterdir():
+            if path.name.isdecimal() and int(path.name) != self.proc.pid:
+                item = ProcessObserver.identity(int(path.name))
+                if item and item['group'] == self.proc.pid and item['session'] == self.proc.pid:
+                    members.append(item)
+        return members
+
     def finish(self, expected=143, send=True):
-        if send and self.proc.poll() is None:
+        if send and not self.exited():
             self.action('signal', number=signal.SIGTERM)
             signal.pidfd_send_signal(self.pidfd, signal.SIGTERM)
         end = time.monotonic()+30
-        while self.proc.poll() is None and time.monotonic() < end:
+        while not self.exited() and time.monotonic() < end:
             self.pump(); time.sleep(.01)
-        if self.proc.poll() is None:
+        if not self.exited():
             raise RuntimeError('cooperative cleanup deadline exceeded')
+        if self.group_members():
+            raise RuntimeError('owned process group remains after supervisor exit')
+        self.proc.wait(timeout=1)
         if self.proc.returncode != expected:
             raise RuntimeError(f'exit {self.proc.returncode}, wanted {expected}')
-        members = []
-        for p in Path('/proc').iterdir():
-            if p.name.isdecimal():
-                item = ProcessObserver.identity(int(p.name))
-                if item and item['group'] == self.proc.pid and item['session'] == self.proc.pid:
-                    members.append(item)
-        if members:
-            raise RuntimeError('owned process group remains after leader reaping')
         self.record.update(complete=True, exit_code=self.proc.returncode, ended_ns=time.monotonic_ns())
         self.close()
 
@@ -212,20 +229,26 @@ class Session:
         if self.closed:
             return
         try:
-            if self.proc and self.proc.poll() is None:
-                if self.pidfd is not None:
-                    signal.pidfd_send_signal(self.pidfd, signal.SIGCONT)
-                    signal.pidfd_send_signal(self.pidfd, signal.SIGTERM)
-                else:
-                    self.proc.terminate()
-                try:
-                    self.proc.wait(timeout=30)
-                except subprocess.TimeoutExpired:
-                    identity = ProcessObserver.identity(self.proc.pid)
-                    if identity and identity['start'] == self.identity['start']:
+            if self.proc and self.proc.returncode is None:
+                if not self.exited():
+                    if self.pidfd is not None:
+                        signal.pidfd_send_signal(self.pidfd, signal.SIGCONT)
+                        signal.pidfd_send_signal(self.pidfd, signal.SIGTERM)
+                    else:
+                        self.proc.terminate()
+                    end = time.monotonic()+30
+                    while not self.exited() and time.monotonic() < end:
+                        time.sleep(.02)
+                anchor = ProcessObserver.identity(self.proc.pid)
+                if anchor and self.identity and anchor['start'] == self.identity['start']:
+                    if not self.exited() or self.group_members():
                         os.killpg(self.proc.pid, signal.SIGKILL)
                         self.record['forced_cleanup'] = True
-                    self.proc.wait(timeout=10)
+                elif not self.exited():
+                    # Popen still owns this unreaped child even if /proc failed.
+                    self.proc.kill()
+                    self.record['forced_cleanup'] = True
+                self.proc.wait(timeout=10)
             if self.observer:
                 self.record['observation'] = self.observer.close()
             if self.proc:
@@ -331,6 +354,7 @@ def main():
         p.error('cycles1..100 and idle0..300seconds required')
     if a.smoke: a.cycles=min(a.cycles, 2); a.idle_seconds=min(a.idle_seconds, 1)
     a.honk=a.honk.resolve(strict=True); a.goose=a.goose.resolve(strict=True)
+    if a.overflow_probe: a.overflow_probe=a.overflow_probe.resolve(strict=True)
     output=a.output.resolve(); output.mkdir(parents=True, exist_ok=False); (output/'tmp').mkdir()
     env={**os.environ, 'GOOSE':str(a.goose), 'HONK_HOME':str(output/'cache'), 'TMPDIR':str(output/'tmp')}
     report=dict(complete=False, mode='smoke' if a.smoke else 'long', cycles=a.cycles, idle_seconds=a.idle_seconds,
@@ -339,14 +363,26 @@ def main():
                 compiler_pin=(ROOT/'GOOSE_REVISION').read_text().strip(),
                 compiler_version=subprocess.check_output([str(a.goose),'--version'],text=True,timeout=10).strip(),
                 source_status=git(ROOT,'status','--porcelain').decode(),
-                helpers={x:sha(ROOT/x) for x in ['bench/process_observer.py','bench/observer_calibration.py']},
+                helpers={x:sha(ROOT/x) for x in ['bench/process_observer.py','bench/observer_calibration.py','bench/watch_overflow.c','scripts/watch-overflow-build.py']},
                 started_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),
                 limits='Sampled resource lower bounds; RSS sums double-count shared pages; log-poll times are observations, not kernel latency.')
+    if a.overflow_probe: report['binary_sha256']['overflow_observer']=sha(a.overflow_probe)
     save(output/'report.json',report)
+    if a.overflow_probe:
+        provenance=a.overflow_probe.with_suffix('.json')
+        report['overflow_build']=json.loads(provenance.read_text())
+        report['overflow_build_manifest_sha256']=sha(provenance)
+        build=report['overflow_build']
+        if (build['binary_sha256']!=sha(a.overflow_probe) or build['goose_sha256']!=sha(a.goose) or
+            build['observer_source_sha256']!=sha(ROOT/'bench/watch_overflow.c') or
+            build['builder_sha256']!=sha(ROOT/'scripts/watch-overflow-build.py') or
+            any(sha(ROOT/path)!=digest for path,digest in build['production_sources'].items())):
+            raise RuntimeError('overflow observer build provenance mismatch')
     original_tools=dict(report['binary_sha256'])
     deadline=time.monotonic()+a.deadline_seconds
     source_commit=report['source_commit']
     try:
+        if report['source_status']: raise RuntimeError('qualification requires a clean source checkout')
         (output/'calibration').mkdir();report['calibration']=calibrate(output/'calibration')
         for name,(rev,entry,suite) in WORKLOADS.items():
             project=output/name;project.mkdir();repo=getattr(a,name+'_repo')
@@ -367,12 +403,16 @@ def main():
             (project/'Honk.toml').write_text(manifest)
             info=dict(revision=rev,archive_sha256=hashlib.sha256(archive).hexdigest(),original_files=original_files,
                       adapter_manifest=manifest,original_file_modes=modes,sessions=[],projection=('selected production/native files and unmodified codec suite;full archive retained' if name=='json' else 'full upstream archive'));report['projects'][name]=info
-            baseline=subprocess.run([str(a.honk),'test','--offline','--filter',suite,'--log-file',str(output/(name+'-baseline.log'))],
-                                    cwd=project,env=env,capture_output=True,timeout=180)
-            (output/(name+'-baseline.stdout')).write_bytes(baseline.stdout);(output/(name+'-baseline.stderr')).write_bytes(baseline.stderr)
-            if baseline.returncode or not canonical(baseline.stdout).strip(): raise RuntimeError(f'{name} baseline failed')
+            baseline=execute([str(a.honk),'test','--offline','--filter',suite,'--log-file',str(output/(name+'-baseline.log'))],
+                             project,env,timeout=180,cap=4*1024*1024)
+            save(output/(name+'-baseline.json'),baseline)
+            baseline_stdout=baseline['stdout'].encode()
+            (output/(name+'-baseline.stdout')).write_bytes(baseline_stdout)
+            (output/(name+'-baseline.stderr')).write_text(baseline['stderr'])
+            if not baseline['complete'] or baseline['exit_code'] or not canonical(baseline_stdout,project).strip():
+                raise RuntimeError(f'{name} baseline failed')
             if (project/'GOOSE_REVISION').read_text().strip()!=report['compiler_pin']: raise RuntimeError('workload/compiler pin mismatch')
-            expected=canonical(baseline.stdout);info['canonical_stdout']=expected.decode()
+            expected=canonical(baseline_stdout,project);info['canonical_stdout']=expected.decode()
             for sampled in (False,True):
                 if time.monotonic()>deadline:raise RuntimeError('campaign deadline exceeded')
                 session=Session(a.honk,project,env,output/(name+('-resources' if sampled else '-timing')),suite,sampled)
@@ -387,6 +427,17 @@ def main():
                         started=time.monotonic_ns();mutation(session,project/entry,original+f'\n// watch-save-{i}\n'.encode(),'atomic-save')
                         count+=1;session.idle(count,0,expected);session.action('save-complete',cycle=i,elapsed_ns=time.monotonic_ns()-started)
                         if fd_roles(session.checkpoint(f'save-{i}'))!=base_fds: raise RuntimeError('idle fd count did not converge')
+                    # SIGSTOP makes the rapid-save burst deterministic: all edits
+                    # precede consumption, and cleanup always resumes the owner.
+                    signal.pidfd_send_signal(session.pidfd,signal.SIGSTOP)
+                    try:
+                        session.wait(lambda: ProcessObserver.identity(session.proc.pid)['state'] in ('T','t'),timeout=5)
+                        for i in range(20):
+                            mutation(session,project/entry,original+f'\n// burst-{i}\n'.encode(),'rapid-save')
+                    finally: signal.pidfd_send_signal(session.pidfd,signal.SIGCONT)
+                    count+=1;session.idle(count,0,expected)
+                    session.pause(.2)
+                    if len(session.outcomes())!=count: raise RuntimeError('rapid saves failed to coalesce')
                     for cycle in range(a.cycles):
                         incoming=output/f'{name}-incoming-{cycle}';incoming.mkdir();(incoming/'changed.goose').write_text('// populated\n')
                         nested=project/'watch-incoming';incoming.rename(nested);session.action('move-populated-subtree');count+=1;session.idle(count,0,expected)
@@ -414,7 +465,12 @@ def main():
             for path,digest in original_files.items():
                 if sha(project/path)!=digest or (project/path).stat().st_mode & 0o777 != modes[path]: raise RuntimeError('upstream source restoration mismatch: '+path)
             save(output/'report.json',report)
-        if original_tools != {'honk':sha(a.honk),'goose':sha(a.goose)}: raise RuntimeError('measured binaries changed')
+        final_tools={'honk':sha(a.honk),'goose':sha(a.goose)}
+        if a.overflow_probe: final_tools['overflow_observer']=sha(a.overflow_probe)
+        if a.overflow_probe and sha(provenance)!=report['overflow_build_manifest_sha256']: raise RuntimeError('observer build manifest changed')
+        if original_tools != final_tools: raise RuntimeError('measured binaries changed')
+        if any(sha(ROOT/path)!=digest for path,digest in report['helpers'].items()): raise RuntimeError('helper source changed')
+        if git(ROOT,'status','--porcelain').decode(): raise RuntimeError('source checkout changed during qualification')
         if sha(__file__) != report['harness_sha256']: raise RuntimeError('harness changed during qualification')
         if git(ROOT,'rev-parse','HEAD').decode().strip()!=source_commit:raise RuntimeError('source commit changed during qualification')
         report['complete']=True

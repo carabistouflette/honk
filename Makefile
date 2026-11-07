@@ -5,7 +5,7 @@ setup:
 format:
 	python3 scripts/process-fixture.py --update
 	$(GOOSE) format honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
-check:
+check: watch-stress-controls
 	python3 -m py_compile bench/compiler_diagnostics.py bench/process_observer.py bench/observer_calibration.py bench/qualify_parallel.py tests/qualification_observer.py tests/qualification_driver.py bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py tests/compiler_diagnostics.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
 	python3 -m py_compile bench/test_reuse.py
 	python3 bench/glob_consumer.py --help > /dev/null
@@ -188,3 +188,9 @@ qualification-test:
 PARALLEL_QUALIFY_OUTPUT ?= .build/parallel-qualification
 parallel-qualify: build qualification-test
 	python3 bench/qualify_parallel.py --source-repo "$(DIFF_SOURCE_REPO)" --honk .build/honk --goose "$(abspath $(GOOSE))" --driver .build/qualification-driver --pressure .build/qualification-pressure --output "$(PARALLEL_QUALIFY_OUTPUT)"
+
+.PHONY: watch-stress-controls
+watch-stress-controls:
+	python3 tests/watch_stress_controls.py
+	python3 -O tests/watch_stress_controls.py
+	python3 -m py_compile bench/watch_stress.py scripts/watch-overflow-build.py
