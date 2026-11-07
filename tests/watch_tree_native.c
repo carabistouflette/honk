@@ -56,6 +56,11 @@ int main(void) {
     assert(verify(owner));
     assert(honk_tree_event(owner, 1, (tree_bytes){NULL, 0}, 4) == 0);
     assert(honk_tree_event(owner, 0, (tree_bytes){NULL, 0}, 4) == 2);
+    assert(honk_tree_event(owner, 1, (tree_bytes){(const uint8_t *)"target", 6},
+                           0x40000100) == 2);
+    assert(honk_tree_event(owner, 0,
+                           (tree_bytes){(const uint8_t *)"outside.goose", 13},
+                           8) == 2);
     int64_t fds[256];
     assert(honk_tree_fds(owner, (tree_words){fds, 256}) == 3);
     for (int j = 0; j < 3; ++j)
