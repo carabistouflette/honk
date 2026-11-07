@@ -55,7 +55,7 @@ v0.1.0 at `5543007cc02e324c0fce51919291b40ffb2af922`;
 see [Apache-2.0](vendor/goose-glob/LICENSE) and vendor/manifest.json.
 
 Directory notifications use [goose-watch](https://github.com/carabistouflette/goose-watch)
-v0.1.0-alpha.2 at `56842ee7fc4c2fd948f663f1c50425bf2b3e8a73`; source/build/native files,
+v0.1.0-alpha.3 at `db39c02739bc6e5301e1deedad0caba0e2f11188`; source/build/native files,
 [LICENSE](vendor/goose-watch/LICENSE) and [NOTICE](vendor/goose-watch/NOTICE)
 are retained unmodified.
 

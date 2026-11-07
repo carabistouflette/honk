@@ -165,16 +165,16 @@
     {
       "directory": "goose-watch",
       "repository": "https://github.com/carabistouflette/goose-watch",
-      "revision": "56842ee7fc4c2fd948f663f1c50425bf2b3e8a73",
+      "revision": "db39c02739bc6e5301e1deedad0caba0e2f11188",
       "license": "Apache-2.0",
       "files": {
-        "watch.goose": "fd4f84e24aa841d99aa3b351d4c8ed32836894db0bba1a9604deb6f4cd860950",
-        "watch.build": "9c127d397814ee5168ea211c1194dd10758b58b5db2fa8da852eeb91c73f8be0",
+        "watch.goose": "1f39e371119d3a88dba0cbf385f531662c6feeef89007b7ceebbd64f218341d5",
+        "watch.build": "40c23219af42c662f07d7750ef020cf0f67222f24c23292e556dfff235cb855e",
         "native/watch.c": "f66d3ed77a523b50e502104deb2b6e87519eaa4ed32f664e1d69556ce1f5759c",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "NOTICE": "1a96b8fb0529586e381432b83bd274a175107c6f77e7e9059e6fb3884905f72c",
-        "native/common.h": "16eb4d25a884e4fcbeeafb13e9c0be1b66ee874b18889a0544110982d2deaadb",
-        "native/set.c": "8b6dc5753eb3cdb35da646fc898698106b74d2a74d759a94312917d26ff86638"
+        "native/common.h": "9a10fa6e61727a3926f910c6918249c221fd1980f149c239594ff5be91f07eba",
+        "native/set.c": "fce8b4d519476e2e69e05c7df2e15e144d145ac942c6873b89d6351bae32cafe"
       }
     },
     {
