@@ -238,7 +238,34 @@ class CLI(unittest.TestCase):
         self.run_honk('add', 'beta', '--path', '../beta', cwd=a)
         self.run_honk('add', 'alpha', '--path', '../alpha', cwd=b)
         self.run_honk('add', 'alpha', '--path', '../alpha', cwd=p)
-        self.assertIn('cycle', self.run_honk('fetch', cwd=p, ok=False).stderr)
+        self.assertIn('dependency cycle detected', self.run_honk('fetch', cwd=p, ok=False).stderr)
+        self.assertFalse((p/'Honk.lock').exists())
+        original = b'# existing lock must survive cycle rejection\nversion = 1\n'
+        (p/'Honk.lock').write_bytes(original)
+        self.assertIn('dependency cycle detected', self.run_honk('fetch', cwd=p, ok=False).stderr)
+        self.assertEqual((p/'Honk.lock').read_bytes(), original)
+    def test_graph_duplicates_preserve_discovery_and_lock_order(self):
+        p = self.new()
+        for name in ('alpha', 'beta', 'gamma'):
+            lib = self.root/name
+            lib.mkdir()
+            manifest = f'[package]\nname="{name}"\nkind="lib"\nentry="{name}.goose"\n'
+            source = f'namespace {name}; fn answer() -> i64 {{ 42 }}'
+            if name == 'alpha':
+                manifest += '[dependencies]\nbeta={path="../beta"}\n'
+                source = 'import beta from "../beta"; ' + source
+            (lib/'Honk.toml').write_text(manifest)
+            (lib/f'{name}.goose').write_text(source)
+        manifest = '[package]\nname="hello"\nversion="0.1.0"\nentry="src/main.goose"\n[dependencies]\n'
+        manifest += ''.join(f'{name}={{path="../{name}"}}\n' for name in ('alpha', 'beta', 'gamma'))
+        (p/'Honk.toml').write_text(manifest)
+        self.run_honk('fetch', cwd=p)
+        original = (p/'Honk.lock').read_bytes()
+        # FIFO planning would emit alpha,gamma,beta. Lock order remains discovery.
+        positions = [original.index(f'name = "{name}"'.encode()) for name in ('alpha', 'beta', 'gamma')]
+        self.assertEqual(positions, sorted(positions))
+        self.run_honk('fetch', '--frozen', cwd=p)
+        self.assertEqual((p/'Honk.lock').read_bytes(), original)
     def test_lockfile_and_offline_rules(self):
         p = self.new()
         self.run_honk('build', '--locked', cwd=p, ok=False)

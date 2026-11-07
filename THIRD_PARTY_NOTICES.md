@@ -58,3 +58,8 @@ Directory notifications use [goose-watch](https://github.com/carabistouflette/go
 v0.1.0-alpha.1 at `7bbd7ef8c9a4d6323ef9d065d1461bae9ba9fe58`; source/build/native files,
 [LICENSE](vendor/goose-watch/LICENSE) and [NOTICE](vendor/goose-watch/NOTICE)
 are retained unmodified.
+
+Dependency-cycle validation uses [goose-task](https://github.com/carabistouflette/goose-task)
+at `166b684ca96403fea94072cc8e0c630321fb832d`; unmodified `task.goose` and
+[Apache-2.0](vendor/goose-task/LICENSE) are retained with exact hashes in
+`vendor/manifest.json`. The scheduler is not used by Honk.

@@ -15,6 +15,7 @@ check:
 	$(GOOSE) check honk.goose
 	$(GOOSE) check tests/presentation_write.goose
 	$(GOOSE) check tests/core.goose
+	$(GOOSE) check tests/graph.goose
 	$(GOOSE) check tests/diagnostics_utc.goose
 	$(GOOSE) check tests/process.goose
 	$(GOOSE) check tests/semver_probe.goose
@@ -30,6 +31,9 @@ test:
 	$(MAKE) terminal-test terminal-write-test
 	$(MAKE) diagnostics-test
 	GOOSE=$(abspath $(GOOSE)) python3 tests/native_import.py
+	$(GOOSE) run tests/graph.goose
+	$(GOOSE) build tests/graph.goose -o .build/graph
+	./.build/graph
 	$(GOOSE) run tests/core.goose
 	$(GOOSE) build tests/core.goose -o .build/core
 	./.build/core
@@ -57,6 +61,8 @@ test:
 	HONK=$(CURDIR)/.build/honk SEMVER_PROBE=$(CURDIR)/.build/semver-probe GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	$(MAKE) metadata-test
 sanitize:
+	$(GOOSE) build tests/graph.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/graph-sanitize
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/graph-sanitize
 	$(MAKE) watch-fault-sanitize
 	$(MAKE) terminal-write-sanitize
 	$(MAKE) diagnostics-sanitize

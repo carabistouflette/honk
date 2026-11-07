@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import task from "./vendor/goose-task";
 import watch from "./vendor/goose-watch";
 import .src.watching;
 import glob from "./vendor/goose-glob";

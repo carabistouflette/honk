@@ -4,6 +4,7 @@ import std;
 import os;
 import toml;
 import semver;
+import task;
 import .version_policy;
 import .tag_select;
 import .tag_catalog;
@@ -181,18 +182,26 @@ fn expand(g: Graph&, id: i64) {
     }
     n.visiting = false;
 }
+// Each expanded node can add 256 manifest edges plus 256 source-import
+// edges, including duplicates. Root declarations do not add edges.
+const MAX_GRAPH_EDGES = 256 * (256 + 256);
+fn graph_error(g: Graph&) -> task::Error {
+    var limits = task::Limits { tasks: 256, edges: MAX_GRAPH_EDGES };
+    if g.nodes.len > limits.tasks { return task::Error { kind: task::ErrorKind.TaskLimit, .. }; }
+    if g.edges.len > limits.edges { return task::Error { kind: task::ErrorKind.EdgeLimit, .. }; }
+    var edges: task::Edge[>..] = [];
+    // This is cycle validation only. Honk's parent is the dependent package;
+    // reversing all edges would preserve cycles, but no task execution order
+    // should be inferred from this adapter's parent -> child convention.
+    for edge in g.edges { edges.push(task::Edge { before: edge.parent, after: edge.child }); }
+    let order, error = task::plan(g.nodes.len, edges, limits);
+    // Keep g.nodes and its discovery/lockfile order unchanged.
+    return error;
+}
 fn acyclic(g: Graph&) {
-    var degrees: i64[256] = [0; 256]; var done: bool[256] = [false; 256];
-    for edge in g.edges { degrees[edge.child]++; }
-    var count = 0;
-    for round in g.nodes.len {
-        var found = -1;
-        for i in g.nodes.len { if !done[i] && degrees[i] == 0 { found = i; break; } }
-        if found < 0 { break; }
-        done[found] = true; count++;
-        for edge in g.edges { if edge.parent == found { degrees[edge.child]--; } }
-    }
-    platform::require(count == g.nodes.len, "dependency cycle detected");
+    let error = graph_error(g);
+    platform::require(error.kind != task::ErrorKind.Cycle, "dependency cycle detected");
+    platform::require(error.kind == task::ErrorKind.None, "invalid dependency graph");
 }
 
 fn resolve(p: manifest::Project&, g: Graph&) {

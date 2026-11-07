@@ -25,3 +25,4 @@ utc = { path = "vendor/goose-log/examples/utc" }
 posix = { path = "vendor/goose-terminal" }
 glob = { path = "vendor/goose-glob" }
 watch = { path = "vendor/goose-watch" }
+task = { path = "vendor/goose-task" }

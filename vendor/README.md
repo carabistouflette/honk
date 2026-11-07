@@ -29,3 +29,7 @@ Target filtering uses only goose-glob v0.1.0-alpha.4 at `2022a04e1847490c9c76af9
 
 Directory notifications use the source/build/native files from goose-watch alpha.1
 at `7bbd7ef8c9a4d6323ef9d065d1461bae9ba9fe58`, with its LICENSE and NOTICE.
+
+Dependency-cycle validation uses goose-task at `166b684ca96403fea94072cc8e0c630321fb832d`
+(`task.goose` and LICENSE only). The returned topological plan is discarded;
+Honk retains its existing resolver, lockfile and build ordering.

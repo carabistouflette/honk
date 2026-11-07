@@ -106,3 +106,10 @@ path = "vendor/goose-watch"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "task"
+path = "vendor/goose-task"
+git = ""
+rev = ""
+commit = ""
