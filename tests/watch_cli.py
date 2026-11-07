@@ -118,12 +118,15 @@ finally:
         self.finish();self.assertEqual(self.count(),2)
         self.assertEqual((self.root/'stderr').read_text().count('batching pending'),1)
     def test_debounce_continuous_edits_eventually_rerun(self):
-        self.start(runs=2,extra=('--watch-debounce-ms','900'));self.idle()
+        # Keep source staging stable: this test targets admission under a
+        # continuous event stream, not concurrent source snapshot mutation.
+        events=self.root/'events';events.mkdir()
+        self.start(runs=2,directories=[self.src,events],extra=('--watch-debounce-ms','900'));self.idle()
         stop=threading.Event()
         def produce():
             deadline=time.monotonic()+30; i=0
             while not stop.is_set() and time.monotonic()<deadline:
-                (self.src/'main.goose').write_text('fn main() {} // '+str(i));i+=1
+                (events/'changed.goose').write_text('fn main() {} // '+str(i));i+=1
                 stop.wait(.01)
         producer=threading.Thread(target=produce);producer.start()
         try:
