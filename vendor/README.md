@@ -24,8 +24,10 @@ source files for all of them; a newer upstream release is not adopted implicitly
 Optional CLI presentation uses goose-terminal and its POSIX adapter; the manifest
 records the exact source/license snapshot. Renderer output stays application-owned.
 
-Target filtering uses only goose-glob v0.1.0-alpha.4 at `2022a04e1847490c9c76af91e1e5c01a3c6e3cc0`
-(`glob.goose` and LICENSE). The optional filesystem collector is not vendored.
+Target filtering uses only goose-glob v0.1.0 at `5543007cc02e324c0fce51919291b40ffb2af922`
+(`glob.goose` and LICENSE). Its [supported 0.1.x API](https://github.com/carabistouflette/goose-glob/blob/5543007cc02e324c0fce51919291b40ffb2af922/docs/COMPATIBILITY.md)
+is qualified on the pinned Goose/Linux environment. Honk continues to share one
+prepared pattern across workspace members. The optional filesystem collector is not vendored.
 
 Directory notifications use the source/build/native files from goose-watch alpha.1
 at `7bbd7ef8c9a4d6323ef9d065d1461bae9ba9fe58`, with its LICENSE and NOTICE.
