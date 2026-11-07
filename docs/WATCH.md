@@ -103,3 +103,7 @@ clock failure/backwards movement. Test-only clock sequences distinguish fixed-ca
 expiry after a relevant reset from quiet expiry under ignored traffic. Overflow
 cases poison future clock calls to verify immediate recovery both during a batch
 and after an active child.
+
+The [debounce qualification receipt](debounce-validation.json) identifies the
+reviewed feature source, unchanged implementation across the parallel-test merge,
+combined CLI/watch checks, and the separate hosted CI gate.

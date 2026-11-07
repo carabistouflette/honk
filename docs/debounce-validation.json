@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "checked_at": "2026-11-07T15:50:57.654555+00:00",
+  "source_commit": "511906a4070b939dedc63b83b70957f26c2f0128",
+  "qualified_feature_commit": "d6337050245ff1782730a5d8c49f4c5f4a1ed5e7",
+  "integrated_main": "585c870221d4e1dc828f31ed6603c15f19c19fd1",
+  "sources": {
+    "honk.goose": "eeaa884c0d3406e933b6762f1f98d32ae3af419d2a9795e485b9ffa342a65a19",
+    "native/platform.c": "3911e460d2829629b12a93baf898632d2b152c8a6c3ce8489aa211068a845ad1",
+    "src/platform.goose": "257e4c38bf64cd5dbcc7a25d71226d6cfed4a86677e34e4408349dfd7e3da1b1",
+    "src/watching.goose": "aed99e45cbe34ba678516f4bfe1ba80dbfd9d2d39c51c70013090e182a2270a2",
+    "tests/watch_cli.py": "e6f6a5f3b427e0cac35ff05185f089d17dbd9e468d727a74db7f543ed0a8f394",
+    "tests/watch_fault.c": "a079e6fa356b1d9fa1da0716bfd8b8f7d2149f2fbf59d34f203f7e264a4d9944",
+    "scripts/watch-test-build.py": "bdc5ae9e608566a8b555a8baddf6b6196eaf4fd6e009d79568ce52f7608a7d16",
+    "Makefile": "4f4d47244ffe9a42065ad0da7701f6348b70da65918fdf7d7a4e7049a25f69bb",
+    "Honk.toml": "20cb072ccebeddd8e759d2ab3fbe6c3de0705a483c952aa275360a3853fc6618",
+    "Honk.lock": "41648cfc20d8f52d6d4a514bca5232a1450f77a8736b3c38b2f34423d6309970",
+    "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15"
+  },
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "compiler_binary_sha256": "d6992f984453e28b1e9fc2540236063c0c9db67634a99b57a9a46ea58704c313",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "checks": {
+    "feature_d633705": "make format check test security sanitize passed completely with GCC;213 malformed-import probes and FIFO rejection included",
+    "standalone_d633705": "fresh clone check/normal watch and all37 linkedfaultcases passed underClang ASan/UBSan",
+    "combined_511906a": "check,normal/fault37 watchcases and parallel-option prevalidation passed;all37 linkedfaultcases passed underClang ASan/UBSan",
+    "real_compiler_d633705": "initialcheck and debouncedsecond-directory-triggeredfullrerun passed",
+    "reviews": "three independent design/lifecycle/freshreviews clear;finalmerge-preservation review clear"
+  },
+  "qualification_bridge": {
+    "unchanged_files": [
+      "native/platform.c",
+      "src/platform.goose",
+      "src/watching.goose",
+      "tests/watch_cli.py",
+      "tests/watch_fault.c",
+      "scripts/watch-test-build.py"
+    ],
+    "description": "All debounce timing/native implementation and watch test/builder bytes match qualified feature commit. Only CLI/help/changelog overlap with the parallel-test integration; both features preserved and combined watch/prevalidation rechecked. Full hosted CI of combined source remains a separate merge gate."
+  },
+  "watch_cases": {
+    "total": 37,
+    "normal_fault_only_skips": 13,
+    "linked_adapter_skips": 0,
+    "covers": [
+      "quiet extension after relevant event",
+      "fixed batching cap despite quiet reset",
+      "ignored events do not reset quiet",
+      "initial enabled and default-zero clock bypass",
+      "checked clock failure/backwards movement",
+      "cancellation at expiry before child launch",
+      "continuous edits and cross-directory burst",
+      "removal during batching",
+      "overflow bypass during batch and after active child"
+    ]
+  },
+  "log_sha256": {
+    "debounce-qualification-gcc.log": "0aeae9ba83a8d13e452119ee504a42193d7081ff8707de1974707c11507479f7",
+    "debounce-qualification-clang.log": "6726da125bfc9e29afeac2c36908252c5f8711d7a207b16eabaa8c2011f10a09",
+    "debounce-integrated-watch.log": "0e5782f0d92da98aa06c47f8c3841ddf6def1c05e544e6acdece043f65955055",
+    "debounce-integrated-cli.log": "da95254272f850a5cdaf83a794a33a1e48d6dc09fc3e90642d49753cc63ce5e4",
+    "debounce-integrated-clang.log": "19b607c2ab5518efe4ad99805879316d5f1401ca1add696e4c94ee66446ed3e2",
+    "debounce-real-smoke.log": "de08c20ba68d6a8b9a0b05317cea4cfc69496ed3abe43834c21766e906f50c72"
+  },
+  "binaries": [
+    {
+      "path": ".build/honk",
+      "source": "511906a4070b939dedc63b83b70957f26c2f0128",
+      "sha256": "17782893ac35c3f571d166f1087e9ad85a7f73899d89c348cee11e28a40b3dd0"
+    },
+    {
+      "path": ".build/honk-sanitize",
+      "source": "d633705",
+      "sha256": "c276e24271d8fb58cc3eca30d1bd9992ce8823275c12ef1c9beed1036b645c91"
+    },
+    {
+      "path": ".build/standalone-debounce/.build/honk-watch-fault-sanitize",
+      "source": "511906a4070b939dedc63b83b70957f26c2f0128",
+      "sha256": "56315315d98df95289cb0033512301224500069919a3f42aa6d9e84b46826787"
+    }
+  ],
+  "limits": [
+    "Local qualification; hosted GCC/Clang CI required for combined source",
+    "Linux x86-64/glibc; retained Honk Linux5.3+/glibc2.34+ baseline",
+    "0..1000ms option defaults0;1000ms cap bounds requested batching/poll waits,not hard wall-clock launch time",
+    "Batch clock begins after priorchild reaping;active-command duration excluded",
+    "No child deadline,forced-kill escalation,recursive discovery or process-group supervision added",
+    "No comparative performance claim"
+  ]
+}
