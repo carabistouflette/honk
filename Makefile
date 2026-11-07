@@ -4,19 +4,21 @@ setup:
 	./scripts/setup-goose.sh
 format:
 	python3 scripts/process-fixture.py --update
-	$(GOOSE) format honk.goose src tests bench/utc/driver.goose
+	$(GOOSE) format honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
 check:
-	python3 -m py_compile bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
+	python3 -m py_compile bench/process_observer.py bench/observer_calibration.py bench/qualify_parallel.py tests/qualification_observer.py tests/qualification_driver.py bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
 	python3 bench/glob_consumer.py --help > /dev/null
 	python3 bench/dogfood.py --self-test
 	python3 scripts/process-fixture.py
 	python3 scripts/check-vendor.py
-	$(GOOSE) format --check honk.goose src tests bench/utc/driver.goose
+	$(GOOSE) format --check honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
 	$(GOOSE) check honk.goose
 	$(GOOSE) check tests/presentation_write.goose
 	$(GOOSE) check tests/core.goose
 	$(GOOSE) check tests/graph.goose
 	$(GOOSE) check tests/parallel_probe.goose
+	$(GOOSE) check bench/qualification_driver.goose
+	$(GOOSE) check bench/qualification_pressure.goose
 	$(GOOSE) check tests/diagnostics_utc.goose
 	$(GOOSE) check tests/process.goose
 	$(GOOSE) check tests/semver_probe.goose
@@ -28,6 +30,7 @@ check:
 build:
 	$(GOOSE) build honk.goose -o .build/honk
 test:
+	$(MAKE) qualification-test
 	$(MAKE) watch-test watch-fault-test
 	$(MAKE) terminal-test terminal-write-test
 	$(MAKE) diagnostics-test
@@ -162,3 +165,15 @@ parallel-bench: build
 	python3 bench/parallel_tests.py --honk "$(CURDIR)/.build/honk" --goose "$(abspath $(GOOSE))" --output "$(PARALLEL_BENCH_OUTPUT)"
 parallel-bench-smoke: build
 	python3 bench/parallel_tests.py --honk "$(CURDIR)/.build/honk" --goose "$(abspath $(GOOSE))" --smoke --output "$(PARALLEL_BENCH_OUTPUT)"
+
+.PHONY: qualification-test parallel-qualify
+qualification-test:
+	python3 tests/qualification_observer.py
+	$(GOOSE) build bench/qualification_driver.goose -o .build/qualification-driver
+	$(GOOSE) build bench/qualification_pressure.goose -o .build/qualification-pressure
+	QUALIFICATION_DRIVER=$(CURDIR)/.build/qualification-driver QUALIFICATION_PRESSURE=$(CURDIR)/.build/qualification-pressure python3 tests/qualification_driver.py
+
+# Supply a local repository containing the exact public goose-diff v0.1.0 tag.
+PARALLEL_QUALIFY_OUTPUT ?= .build/parallel-qualification
+parallel-qualify: build qualification-test
+	python3 bench/qualify_parallel.py --source-repo "$(DIFF_SOURCE_REPO)" --honk .build/honk --goose "$(abspath $(GOOSE))" --driver .build/qualification-driver --pressure .build/qualification-pressure --output "$(PARALLEL_QUALIFY_OUTPUT)"

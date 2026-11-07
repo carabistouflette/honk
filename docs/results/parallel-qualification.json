@@ -1,0 +1,255 @@
+{
+  "source_revision": "86be5a70143e3349bc0c53fc497574f048d0bf30",
+  "workload_revision": "129dc794b62ad987784db0a1d52ef618c85fccf4",
+  "raw_sha256": "16557340ba854bb1d4aef482f4c4801532d17671f20d5a0d4ba3037fc8261c8d",
+  "record_count": 43,
+  "timing": {
+    "default": {
+      "samples_ms": [
+        6351.240675,
+        6162.431092,
+        6283.613588
+      ],
+      "median_ms": 6283.613588
+    },
+    "jobs1": {
+      "samples_ms": [
+        6343.701945,
+        6242.596609,
+        6103.126017
+      ],
+      "median_ms": 6242.596609
+    },
+    "jobs2": {
+      "samples_ms": [
+        6108.121774,
+        6172.002413,
+        6432.949562
+      ],
+      "median_ms": 6172.002413
+    },
+    "jobs4": {
+      "samples_ms": [
+        6242.263839,
+        5968.043768,
+        6283.783744
+      ],
+      "median_ms": 6242.263839
+    }
+  },
+  "resources": {
+    "default": {
+      "samples": 887,
+      "read_races": 9,
+      "actual_gaps_ns": {
+        "min": 5421250,
+        "max": 19897160,
+        "mean": 6925144
+      },
+      "observed_maxima": {
+        "root_rss_kib": 8816,
+        "root_observed_hwm_kib": 8816,
+        "descendant_rss_sum_kib": 125932,
+        "tree_rss_sum_kib": 134748,
+        "root_fds": 7,
+        "descendant_fd_sum": 37,
+        "tree_fd_sum": 44,
+        "descendants": 4
+      }
+    },
+    "jobs1": {
+      "samples": 931,
+      "read_races": 9,
+      "actual_gaps_ns": {
+        "min": 5485662,
+        "max": 16439962,
+        "mean": 6575473
+      },
+      "observed_maxima": {
+        "root_rss_kib": 9068,
+        "root_observed_hwm_kib": 9068,
+        "descendant_rss_sum_kib": 125944,
+        "tree_rss_sum_kib": 134872,
+        "root_fds": 8,
+        "descendant_fd_sum": 37,
+        "tree_fd_sum": 44,
+        "descendants": 4
+      }
+    },
+    "jobs2": {
+      "samples": 892,
+      "read_races": 11,
+      "actual_gaps_ns": {
+        "min": 5551482,
+        "max": 20738575,
+        "mean": 6852923
+      },
+      "observed_maxima": {
+        "root_rss_kib": 9308,
+        "root_observed_hwm_kib": 9308,
+        "descendant_rss_sum_kib": 126072,
+        "tree_rss_sum_kib": 135180,
+        "root_fds": 11,
+        "descendant_fd_sum": 37,
+        "tree_fd_sum": 44,
+        "descendants": 4
+      }
+    },
+    "jobs4": {
+      "samples": 874,
+      "read_races": 8,
+      "actual_gaps_ns": {
+        "min": 5447068,
+        "max": 19291620,
+        "mean": 6794960
+      },
+      "observed_maxima": {
+        "root_rss_kib": 9356,
+        "root_observed_hwm_kib": 9356,
+        "descendant_rss_sum_kib": 126084,
+        "tree_rss_sum_kib": 134992,
+        "root_fds": 14,
+        "descendant_fd_sum": 37,
+        "tree_fd_sum": 44,
+        "descendants": 4
+      }
+    }
+  },
+  "controls": {
+    "control_endurance": {
+      "checkpoints": 9,
+      "baseline_fds": {
+        "0": "pipe:[204249177]",
+        "1": "pipe:[204249178]",
+        "2": "pipe:[204249179]"
+      },
+      "root_rss_kib": [
+        2460,
+        3176,
+        3176,
+        3176,
+        3176,
+        3176,
+        3176,
+        3176,
+        3176
+      ],
+      "root_hwm_kib": [
+        2460,
+        3176,
+        3176,
+        3176,
+        3176,
+        3176,
+        3264,
+        3264,
+        3264
+      ],
+      "no_children": true,
+      "descriptors_restored": true
+    },
+    "control_failure": {
+      "checkpoints": 2,
+      "baseline_fds": {
+        "0": "pipe:[204251760]",
+        "1": "pipe:[204251761]",
+        "2": "pipe:[204251762]"
+      },
+      "root_rss_kib": [
+        2364,
+        3064
+      ],
+      "root_hwm_kib": [
+        2364,
+        3064
+      ],
+      "no_children": true,
+      "descriptors_restored": true
+    },
+    "control_timeout": {
+      "checkpoints": 2,
+      "baseline_fds": {
+        "0": "pipe:[204251812]",
+        "1": "pipe:[204251813]",
+        "2": "pipe:[204251814]"
+      },
+      "root_rss_kib": [
+        2440,
+        2880
+      ],
+      "root_hwm_kib": [
+        2440,
+        2880
+      ],
+      "no_children": true,
+      "descriptors_restored": true
+    },
+    "control_cancel": {
+      "checkpoints": 2,
+      "baseline_fds": {
+        "0": "pipe:[204252455]",
+        "1": "pipe:[204252456]",
+        "2": "pipe:[204252457]"
+      },
+      "root_rss_kib": [
+        2344,
+        2804
+      ],
+      "root_hwm_kib": [
+        2344,
+        2804
+      ],
+      "no_children": true,
+      "descriptors_restored": true
+    },
+    "control_pressure": {
+      "checkpoints": 2,
+      "baseline_fds": {
+        "0": "pipe:[204256362]",
+        "1": "pipe:[204256363]",
+        "2": "pipe:[204256364]"
+      },
+      "root_rss_kib": [
+        2456,
+        2900
+      ],
+      "root_hwm_kib": [
+        2456,
+        2900
+      ],
+      "no_children": true,
+      "descriptors_restored": true
+    },
+    "control_overflow": {
+      "checkpoints": 2,
+      "baseline_fds": {
+        "0": "pipe:[204251833]",
+        "1": "pipe:[204251834]",
+        "2": "pipe:[204251835]"
+      },
+      "root_rss_kib": [
+        2436,
+        2912
+      ],
+      "root_hwm_kib": [
+        2436,
+        2912
+      ],
+      "no_children": true,
+      "descriptors_restored": true
+    }
+  },
+  "direct_suite_medians_ms": {
+    "context": 2.677779,
+    "core": 12.879915,
+    "sparse": 115.737014,
+    "unified": 2.582652
+  },
+  "caveats": [
+    "Three rounds on a shared host; no general speed or significance claim.",
+    "Timing includes serial compilation; sampled runs excluded from timing.",
+    "Observed resource maxima are lower bounds; RSS sums double-count shared pages.",
+    "Exact paused FD/child checks establish these checkpoints; RSS is not proof of leak freedom."
+  ],
+  "decision": "Retain fixed cohorts: four natural suites form one jobs4 cohort; rolling admission offers no within-cohort benefit. Investigate rebuild cost before more scheduler complexity."
+}
