@@ -32,7 +32,15 @@ def backend(home):
 
 
 def cache_records(project):
-    return {str(p.relative_to(project)):digest(p) for p in sorted((project/'.honk/reuse').rglob('record')) if p.is_file() and not p.is_symlink()}
+    result={}
+    for path in sorted((project/'.honk/reuse').rglob('record')):
+        if not path.is_file() or path.is_symlink():continue
+        record=dict(sha256=digest(path))
+        if path.stat().st_size==130:
+            text=path.read_text()
+            record.update(key=text[:64],artifact_sha256=text[65:129])
+        result[str(path.relative_to(project))]=record
+    return result
 
 
 def native_tools(home):
@@ -180,10 +188,12 @@ def main():
             run('diff','filtered_'+suite,['--reuse-build','--filter','tests/'+suite+'.goose'],work='hit',expected=lines[index])
         bucket=int.from_bytes(hashlib.sha256(b'tests/core.goose').digest(),'big')%16
         program=diff/f'.honk/reuse/release/tests/{bucket}/program'
+        report['postconditions']['corruption_record_before']=cache_records(diff)[str((program.parent/'record').relative_to(diff))]
         data=program.read_bytes();damaged=data[:-1]+bytes([data[-1]^1])
         if damaged[:4]!=b'\x7fELF':raise RuntimeError('corruption must preserve ELF magic')
         report['postconditions']['corrupt_elf_magic']={'before':data[:4].hex(),'after':damaged[:4].hex()}
         mutate(program,damaged,'corrupt-cached-executable')
+        report['postconditions']['corruption_record_after_edit']=cache_records(diff)[str((program.parent/'record').relative_to(diff))];save(target,report)
         run('diff','corruption_recompiles',['--reuse-build'],expected=expected)
         run('diff','corruption_recovered_hit',['--reuse-build'],work='hit',expected=expected)
         sentinel=out/'external-sentinel';sentinel.write_bytes(b'unchanged external data')
@@ -195,10 +205,12 @@ def main():
         program.unlink();run('diff','symlink_repopulate',['--reuse-build'],expected=expected)
         run('diff','symlink_recovered_hit',['--reuse-build'],work='hit',expected=expected)
         alternate=out/'alternate-goose';shutil.copyfile(args.goose,alternate);alternate.chmod(0o755)
+        report['postconditions']['alternate_compiler_version_before']=version([str(alternate),'version'])
         environments['diff']['GOOSE']=str(alternate)
         run('diff','compiler_location_environment_change',['--reuse-build'],expected=expected)
         run('diff','alternate_compiler_hit',['--reuse-build'],work='hit',expected=expected)
         mutate(alternate,alternate.read_bytes()+b'\0','compiler-bytes-change')
+        report['postconditions']['alternate_compiler_version_after']=version([str(alternate),'version']);save(target,report)
         run('diff','compiler_bytes_invalidate',['--reuse-build'],expected=expected)
         run('diff','changed_compiler_hit',['--reuse-build'],work='hit',expected=expected)
         environments['diff']['GOOSE']=str(args.goose)
