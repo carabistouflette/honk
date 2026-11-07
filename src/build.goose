@@ -168,8 +168,8 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
             let entry = if reuse { str(stage, "/", path) } else { root_entry(stage, path, g) }; let executable = str(target_dir, "/", i);
             // Preserve ordinary test invalidation of build/run state, while
             // keeping opt-in test slots separate from that single binary slot.
-            if !reuse { build_cache::invalidate(build_cache::slot(p.root, release, false)); }
-            binary(compiler, entry, stage, executable, release, p.root, g, reuse, display, path);
+            if cmd == "test" && !reuse { build_cache::invalidate(build_cache::slot(p.root, release, false)); }
+            binary(compiler, entry, stage, executable, release, p.root, g, reuse, display, if cmd == "test" { path } else { "" });
             if jobs > 0 { executable_storage.push(copy(executable)); continue; }
             var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
             var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }

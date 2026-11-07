@@ -340,6 +340,22 @@ class BuildCache(unittest.TestCase):
         self.call('test','--reuse-build','--filter','tests/b.goose',cwd=self.project)
         self.assert_logs(logs,True)
 
+    def test_bench_does_not_invalidate_test_buckets(self):
+        tests=self.project/'tests';tests.mkdir()
+        bench=self.project/'bench';bench.mkdir()
+        (tests/'a.goose').write_text('import std; fn main() { print("TEST"); }')
+        # Deliberate SHA-256 modulo16 collision with tests/a.goose.
+        self.assertEqual(hashlib.sha256(b'tests/a.goose').digest()[-1]%16,hashlib.sha256(b'bench/probe2.goose').digest()[-1]%16)
+        (bench/'probe2.goose').write_text('import std; fn main() { print("BENCH"); }')
+        self.call('test','--reuse-build',cwd=self.project)
+        records={p:p.read_bytes() for p in (self.slot/'tests').glob('*/record')}
+        self.assertEqual(len(records),1)
+        self.call('bench',cwd=self.project)
+        self.assertEqual({p:p.read_bytes() for p in records},records)
+        logs=self.mark_compiler_logs()
+        self.call('test','--reuse-build',cwd=self.project)
+        self.assert_logs(logs,True)
+
     def test_test_reuse_native_fallback_and_watch_rejection(self):
         tests=self.project/'tests';tests.mkdir()
         (tests/'native.goose').write_text('import std; import os; fn main() { print("native"); }')
