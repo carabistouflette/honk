@@ -59,7 +59,7 @@ own lock/output; updates are atomic per manifest, not across a whole workspace.
 `build/run/test --reuse-build` is optional and off by default. A verified hit can
 skip compilation while retaining dependency validation, staging and atomic
 publication. Unsupported inputs compile normally. Indirect system toolchain
-files must stay unchanged; run an ordinary build or `clean` after changing them.
+files must stay unchanged; use `clean` after changing them.
 [Eligibility and limits](docs/INCREMENTAL-BUILDS.md) explain the tradeoffs.
 
 ## Documentation

@@ -45,8 +45,9 @@ excessive inputs disable reuse rather than relaxing ordinary build validation.
 inputs must remain unchanged for reuse: support programs, headers, specifications,
 linker scripts, loaded libraries/plugins and sysroot, including files selected
 through environment paths. Their complete transitive filesystem inputs are not
-tracked by this first version. After changing them, perform an ordinary build or `clean` before
-requesting reuse. Changing the selected compiler executable, source, std file,
+tracked by this first version. After changing them, use `clean` before
+requesting test reuse. An ordinary binary build refreshes only the build/run
+slot; an ordinary test refreshes only the selected test buckets. Changing the selected compiler executable, source, std file,
 profile or environment invalidates automatically. This limitation is why reuse
 is explicit and off by default; the feature makes no complete-toolchain or
 cross-machine reproducibility claim.
