@@ -50,7 +50,7 @@ Use local trusted repositories containing the exact public tags and a new output
 directory. No checkout changes are made in them. The report retains source
 archives/member modes/hashes, tool/environment/harness fingerprints, resolved
 runtime libraries, actual CMake compiler selections, invocation output, backend
-and cache-record snapshots, mutation hashes and restoration checks. Binary
+and cache-record snapshots, mutation hashes and restoration checks against the extracted fixture baseline. Binary
 mutation files are temporary controls and must not be committed as build output.
 A failed campaign remains `complete: false`; preserve it and choose another
 output directory after fixing its cause. Indirect system-toolchain assumptions

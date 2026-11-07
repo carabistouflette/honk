@@ -19,6 +19,14 @@ class Observation(unittest.TestCase):
             after=backend(root);self.assertNotEqual(before,after)
             self.assertEqual(next(iter(before.values()))['mtime_ns'],next(iter(after.values()))['mtime_ns'])
 
+    def test_cache_record_certificate_fields(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root=Path(raw);path=root/'.honk/reuse/release/tests/1/record';path.parent.mkdir(parents=True)
+            path.write_text('a'*64+'\n'+'b'*64+'\n')
+            record=next(iter(cache_records(root).values()))
+            self.assertEqual(record['key'],'a'*64)
+            self.assertEqual(record['artifact_sha256'],'b'*64)
+
     def test_cache_records_ignore_external_symlinks(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw);directory=root/'.honk/reuse/release/tests/1';directory.mkdir(parents=True)
