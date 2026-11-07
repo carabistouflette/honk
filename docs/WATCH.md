@@ -193,8 +193,9 @@ pruned subtree. Cancellation is checked between matches and native steps.
 
 Filtering retains at most one pending directory candidate and one enumeration
 stream in the candidate generation, adding at most one live descriptor during
-discovery/verification. The native allocation still fits 128 KiB per tree;
-Goose pattern storage/matching scratch is additional bounded caller-owned memory.
+discovery/verification. Native Tree storage still fits 128 KiB per tree;
+libc directory-stream storage and Goose pattern/matching scratch are outside
+that Tree-storage figure.
 With ignores enabled the earlier recursive peak estimate therefore allows
 528 anchors, three watchers and up to three transient descriptors; runtime and
 compiler/test-child resources remain outside that estimate. Without ignores the
