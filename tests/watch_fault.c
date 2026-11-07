@@ -73,6 +73,12 @@ int64_t __real_gw_set_next(ints, ints, bytes, int64_t, bytes, ints)
 int64_t __wrap_gw_set_next(ints state, ints map, bytes buffer, int64_t timeout,
                            bytes name, ints meta) {
   static int ignored_remaining = 0;
+  static int64_t *first_owner;
+  if (!first_owner)
+    first_owner = state.data;
+  const char *target = getenv("WATCH_FAULT_TARGET");
+  bool selected_owner =
+      !target || strcmp(target, "data") != 0 || state.data != first_owner;
   if (clock_sequence == 1 && meta.len == 8 && meta.data && name.len >= 9 &&
       name.data) {
     clock_sequence = 2;
@@ -87,7 +93,7 @@ int64_t __wrap_gw_set_next(ints state, ints map, bytes buffer, int64_t timeout,
   const char *trigger = getenv("WATCH_FAULT_TRIGGER");
   if ((!mode ||
        (strncmp(mode, "clock", 5) != 0 && strncmp(mode, "tree", 4) != 0)) &&
-      trigger && meta.len == 8 && meta.data && unlink(trigger) == 0) {
+      selected_owner && trigger && meta.len == 8 && meta.data && unlink(trigger) == 0) {
     memset(meta.data, 0, 8 * sizeof(int64_t));
     if (mode && strcmp(mode, "overflow") == 0) {
       meta.data[2] = 1;

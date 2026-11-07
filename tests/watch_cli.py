@@ -112,6 +112,20 @@ finally:
         self.start(extra=('--watch-recursive',),WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='tree-aba',WATCH_TREE_ROOT=str(self.src))
         self.idle();trigger.touch();(self.src/'added').mkdir()
         self.finish(125);self.assertEqual(self.count(),1)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked watch adapter')
+    def test_recursive_data_overflow_recovers_complete_tree(self):
+        nested=self.src/'nested';nested.mkdir();trigger=self.root/'trigger'
+        self.start(runs=3,extra=('--watch-recursive',),GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow',WATCH_FAULT_TARGET='data')
+        self.wait(lambda:(self.root/'pid').exists());trigger.touch();self.wait(lambda:not trigger.exists())
+        (self.root/'release').touch()
+        self.wait(lambda:self.count()==2 and 'command finished; waiting' in (self.root/'stderr').read_text())
+        (nested/'unit.goose').write_text('fn main() {}');self.finish();self.assertEqual(self.count(),3)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires linked watch adapter')
+    def test_recursive_root_guard_overflow_stops_after_child_cleanup(self):
+        trigger=self.root/'trigger'
+        self.start(extra=('--watch-recursive',),GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow')
+        self.wait(lambda:(self.root/'pid').exists());trigger.touch()
+        self.finish(125);self.assertEqual(self.count(),1);self.assertFalse((self.root/'active').exists())
     def test_recursive_signal_active_preserves_sigint(self):
         self.start(extra=('--watch-recursive',),GATE_FIRST='1');self.wait(lambda:(self.root/'pid').exists())
         self.proc.send_signal(signal.SIGINT);self.finish(130)
