@@ -7,7 +7,6 @@ import os
 import tempfile
 import time
 import unittest
-from unittest import mock
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT/'bench'))
 import watch_stress as w
@@ -73,9 +72,12 @@ class Controls(unittest.TestCase):
                 while not childfile.exists() and time.monotonic()<end: time.sleep(.01)
                 self.assertTrue(childfile.exists())
                 raise OSError('injected pidfd failure')
-            with mock.patch.object(w.os,'pidfd_open',side_effect=fail_after_child):
+            original=w.os.pidfd_open
+            w.os.pidfd_open=fail_after_child
+            try:
                 with self.assertRaisesRegex(OSError,'injected pidfd'):
                     w.Session(script,root,os.environ.copy(),root/'session','unused',False)
+            finally: w.os.pidfd_open=original
             child=int(childfile.read_text());end=time.monotonic()+2
             while time.monotonic()<end:
                 identity=w.ProcessObserver.identity(child)
