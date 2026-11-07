@@ -99,5 +99,53 @@
     "No mount-over detection,confinement,snapshot or complete notification history guarantee",
     "Resource bounds exclude existing runtime/application/child descriptors and Goose buffers",
     "Native discovery benchmark excludes inotify registration,Goose dispatch and child execution;no speed comparison or percentile claim"
-  ]
+  ],
+  "ci_followup": {
+    "failed_head": "cdf2b8da980e6a4397be00e7b6e32207a75044db",
+    "failed_runs": [
+      "https://github.com/carabistouflette/honk/actions/runs/42400197261",
+      "https://github.com/carabistouflette/honk/actions/runs/42400201275"
+    ],
+    "cause": "Historical UTC smoke required byte-identical honk.build;new additive native/watch_tree.c triggered the guard after functional/sanitizer/portable/benchmark gates passed.",
+    "correction": "Accept only identical bytes or exact scanner source-list addition,with all remaining manifest bytes matched. Other compiler/logger/sink guards unchanged;record bothmanifesthashes/scannerhash and scope.",
+    "controls": "2positive/5negative manifest controls pass under normal Python and python-O",
+    "reviews": "Two independent reviews found no blocker;identical-case report scope corrected.",
+    "smokes": {
+      "gcc": {
+        "sample_count": 24,
+        "manifest": {
+          "additional_sources": {
+            "native/watch_tree.c": "19ffefa7300c705ed0e408ee2feba03c4af6285693d1413976540a8e961619e3"
+          },
+          "baseline_sha256": "5dba10ee95ba70ef47666be42858286c9845aaa3a95395ed077bd0baa427c57a",
+          "basis": "additive-watch-tree",
+          "candidate_sha256": "6afae36b1c68de265fecc16048248ca5b2c015b68fb9f1228267ad262ff756fa",
+          "scope": "The additive scanner is linked only in the candidate and is not invoked by diagnostics stages; this is not a matched whole-binary comparison."
+        },
+        "metadata_sha256": "d8175170b3f723ffd677f7e5ebb9c43f3657ec3ad4db6d0d29a5fbd9eaedcd8b",
+        "rounds_sha256": "068ec765859bbdb39fb10b14fce46a29c3115145eb48ef3113f5ff7e3c77e384",
+        "log_sha256": "b1acde535052c6fff65ae82d802a48cf2604d7831a73d36e21fd6da9d35f95cc",
+        "source_dirty": true,
+        "scope": "Functional smoke validation,not retained clean-source performance evidence;normal and optimized-Python replay each reject138 corruptions."
+      },
+      "clang": {
+        "sample_count": 24,
+        "manifest": {
+          "additional_sources": {
+            "native/watch_tree.c": "19ffefa7300c705ed0e408ee2feba03c4af6285693d1413976540a8e961619e3"
+          },
+          "baseline_sha256": "5dba10ee95ba70ef47666be42858286c9845aaa3a95395ed077bd0baa427c57a",
+          "basis": "additive-watch-tree",
+          "candidate_sha256": "6afae36b1c68de265fecc16048248ca5b2c015b68fb9f1228267ad262ff756fa",
+          "scope": "The additive scanner is linked only in the candidate and is not invoked by diagnostics stages; this is not a matched whole-binary comparison."
+        },
+        "metadata_sha256": "66635355ab3839469368bc176c5f3f0e612b2ce14c4f2516ee7be067b0df63a0",
+        "rounds_sha256": "d5f68106a88672da58a27122cd5372344aa7d1427340660e7423b50645f0657b",
+        "log_sha256": "fd55b2cc2ae1651c0004b20b75bd455a2aa5f31f358b3647527ce1ba9302d193",
+        "source_dirty": true,
+        "scope": "Functional smoke validation,not retained clean-source performance evidence;normal and optimized-Python replay each reject138 corruptions."
+      }
+    },
+    "remaining_gate": "Full hosted GCC/Clang CI for updated candidate"
+  }
 }
