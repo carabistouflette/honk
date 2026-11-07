@@ -10,6 +10,19 @@ files whose bytes and executable bits match Git.
 - [Verification clarification](https://github.com/carabistouflette/honk/releases/download/v0.4.0/release-verification-clarification-v0.4.0.json): GitHub reported `immutable: false`. Matching hashes and preserved Git objects do not imply hosted immutability or permanent availability.
 - [Functional workspace report](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.json) and [controller](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.py): one controlled two-application workspace, 18 checked commands, reuse/invalidation/fallback, multi-remove, explicit lock refresh and frozen packages. This is functional evidence, not timing or a broad stability claim. Exact-image replay needs the recorded binaries; rebuilds need not be bit-identical.
 
+## Prepared 0.5.0-rc.1 candidate
+
+Candidate preparation is not a published release or an exact-candidate CI claim.
+[Publication gates](docs/RELEASE-CANDIDATE.md) apply before tagging/publication.
+The [real-project watch receipt](bench/results/watch-stress-2026-11-07/README.md)
+checks 514 intervals across two explicitly scoped frozen harness runs, including
+real kernel loss, source failure/restoration, root changes and cancellation.
+Its production source is development 8f2bb40; the candidate changes advertised
+version strings and the compiled-watch version probe. Resource observations,
+sampling errors and historical timing scope remain attached to that source.
+[Native fallback/cache recovery](docs/NATIVE-REUSE-QUALIFICATION.md) separately
+qualifies the unchanged conservative reuse policy.
+
 ## Watch integration qualification
 
 Development source `34a25f46eb281f57746cc917c1fb67e6adcc50e7` adds the explicit,

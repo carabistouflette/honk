@@ -63,7 +63,7 @@ fn compiled_honk() -> bool {
     let options = process::Options { timeout_ms: 2000, output_limit: 256, .. };
     let status = process::run(["/proc/self/exe", "--version"], options, out, err);
     platform::recover_status(status);
-    return status.error == process::Error.None && status.exit_code == 0 && out == "honk 0.4.0\n";
+    return status.error == process::Error.None && status.exit_code == 0 && out == "honk 0.5.0-rc.1\n";
 }
 fn command(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, walk_enabled: bool, directories: const (const u8[:])[:], argv: const (const u8[:])[:]) -> Run {
     var result = Run { .. };

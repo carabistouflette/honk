@@ -2,38 +2,29 @@
 
 ## Unreleased
 
-- Add opt-in `test --reuse-build` with bounded path-derived test slots, verified
-  executable restoration, conservative source eligibility and unchanged default
-  compilation. Every invocation still executes the selected tests.
-- Add opt-in `watch check/test --watch-recursive` with bounded no-follow discovery,
-  exact opened-directory watch identities, session-long root guards and full
-  reconciliation after nested topology changes. Existing explicit mode stays default.
+## 0.5.0-rc.1 — release candidate (not yet published)
 
+Prepared source-only candidate for Linux x86-64/glibc. CLI, manifest and lockfile
+formats remain experimental. This heading does not announce a published tag.
 
-- Add optional `--watch-debounce-ms 0..1000` for quiet-period rerun batching,
-  with a fixed one-second batching cap, immediate initial/loss runs and responsive
-  cancellation. Default zero preserves immediate reruns.
-
-
-- Add opt-in `test --jobs 1..8` with serial compilation, bounded deterministic
-  cohort execution, configurable direct-child deadlines and explicit cleanup.
-
-- Accept 1–256 explicit `--watch-dir` options through pinned goose-watch alpha.2;
-  recover the complete set on overflow and stop if any selected directory moves.
-
-
-- Add experimental `watch check/test --watch-dir ABS_DIR`, with nonrecursive
-  source filtering, coalesced reruns, explicit event-loss recovery and cooperative
-  cancellation. See docs/WATCH.md for scope and cleanup limits.
-
-
-## Unreleased
-
-- Add opt-in goose-terminal command summaries and completed-target progress on
-  stderr, preserving existing stdout and child output.
-
-- Add `test/bench --filter PATTERN` using pinned public goose-glob matching,
-  preserving source traversal checks and unfiltered defaults.
+- Add experimental `watch check/test` with explicit directory sets, optional
+  bounded recursive discovery, root identity guards, full event-loss recovery,
+  cooperative cancellation and optional `--watch-debounce-ms 0..1000` batching.
+  Nonrecursive mode and zero debounce remain defaults. Goose-watch alpha.3 binds
+  recursive watches to opened directory identities. See docs/WATCH.md for limits.
+- Add `test --jobs 1..8` with serial compilation, deterministic bounded cohort
+  output, configurable direct-child deadlines and explicit cleanup.
+- Add opt-in `test --reuse-build` with bounded path-derived slots, verified
+  executable restoration and conservative source eligibility. Every invocation
+  still executes selected tests; native/unsupported inputs compile normally.
+- Add `check --diagnostics text|json` for single-package compiler diagnostics.
+- Add optional command summaries and completed-target progress on stderr,
+  preserving existing stdout and child output.
+- Add `test/bench --filter PATTERN` through pinned goose-glob matching.
+- Retain reviewed real-project watch, native-fallback/cache-recovery, diagnostics
+  and parallel execution qualification. Historical measurements retain their
+  exact source identities and limitations; they do not qualify every candidate
+  binary or establish general speed or memory guarantees.
 
 ## 0.4.0 — 2026-11-05 (experimental prerelease)
 
