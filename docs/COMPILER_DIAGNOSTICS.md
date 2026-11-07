@@ -52,7 +52,9 @@ python3 bench/compiler_diagnostics.py --goose /absolute/path/to/pinned/goose \
 The runner builds both the recorded baseline revision and current candidate with
 `--standalone -O2 --cc cc`, validates success/error outcomes, alternates four modes,
 and retains seven raw end-to-end samples per case. Compiler work and staging are
-included. Separate Valgrind runs count parent Honk allocations; they exclude the
+included. Separate Valgrind runs use profiling executables with 16 MiB stack reservations
+because Valgrind cannot map the default sparse reservations. They count parent
+Honk allocations; they exclude the
 exec'd compiler. Requested bytes are cumulative, not peak memory or RSS. Raw logs,
 binary/source hashes, build commands, tool versions and limitations accompany the
 results. The two tiny fixtures on a shared host do not establish a general speed

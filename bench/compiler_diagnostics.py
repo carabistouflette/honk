@@ -44,9 +44,15 @@ def main():
         binary, baseline = str(root/'honk-candidate'), str(root/'honk-baseline')
         commands = [[goose, 'build', str(ROOT/'honk.goose'), '--standalone', '-O2', '--cc', 'cc', '-o', binary],
                     [goose, 'build', str(baseline_source/'honk.goose'), '--standalone', '-O2', '--cc', 'cc', '-o', baseline]]
+        profile_candidate, profile_baseline = str(root/'honk-profile-candidate'), str(root/'honk-profile-baseline')
+        if args.allocations:
+            commands.extend([commands[0][:-2]+['--stack-reserve', '16M', '-o', profile_candidate],
+                             commands[1][:-2]+['--stack-reserve', '16M', '-o', profile_baseline]])
         for command in commands:
             subprocess.run(command, cwd=ROOT, check=True)
         binary_hashes = {'candidate': sha(binary), 'baseline': sha(baseline), 'goose': sha(goose)}
+        if args.allocations:
+            binary_hashes.update(profile_candidate=sha(profile_candidate), profile_baseline=sha(profile_baseline))
         env = {**os.environ, 'GOOSE': goose, 'HONK_HOME': str(root/'home'), 'NO_COLOR': '1'}
         subprocess.run([binary, 'new', 'demo'], cwd=root, env=env, check=True, stdout=subprocess.DEVNULL)
         project = root/'demo'
@@ -57,6 +63,8 @@ def main():
             expected = 0 if fixture == 'success' else 1
             def run(mode, prefix=()):
                 executable, options = cases[mode]
+                if prefix:
+                    executable = profile_baseline if mode == 'baseline' else profile_candidate
                 start = time.perf_counter_ns()
                 result = subprocess.run([*prefix, executable, 'check', *options], cwd=project,
                                         env=env, capture_output=True, timeout=120)
@@ -106,7 +114,8 @@ def main():
               'limits': ['End-to-end check includes project staging, compiler validation and child compiler execution.',
                          'No universal speed claim; two tiny fixtures on a shared host; startup/scheduling noise included.',
                          'Valgrind counts parent Honk allocations, including loaded libraries; exec child compiler allocations excluded.',
-                         'Requested byte totals are cumulative, not peak live memory or RSS; profiling is separate from timing.']}
+                         'Requested byte totals are cumulative, not peak live memory or RSS; profiling is separate from timing.',
+                         'Allocation profiling uses separate 16 MiB stack-reservation executables; timings use default reservations.']}
     destination.write_text(json.dumps(report, indent=2)+'\n')
     print(destination)
 
