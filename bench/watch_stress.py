@@ -10,6 +10,7 @@ from pathlib import Path
 import platform
 import re
 import signal
+import struct
 import subprocess
 import tarfile
 import time
@@ -68,7 +69,7 @@ def terminals(data):
 
 
 class Session:
-    def __init__(self, binary, project, env, folder, suite, sampled):
+    def __init__(self, binary, project, env, folder, suite, sampled, extra_roots=()):
         folder.mkdir()
         self.folder, self.project = folder, project
         self.proc = self.pidfd = self.observer = None
@@ -84,6 +85,7 @@ class Session:
             self.out = (folder/'stdout').open('wb'); self.err = (folder/'stderr').open('wb')
             argv = [str(binary), 'watch', 'test', '--offline', '--filter', suite, '--watch-recursive',
                     '--watch-debounce-ms', '50', '--watch-dir', str(project), '--log-file', str(folder/'events.log')]
+            for extra in extra_roots: argv += ['--watch-dir', str(extra)]
             self.record['argv'] = argv
             self.proc = subprocess.Popen(argv, cwd=project, env=env, stdin=subprocess.DEVNULL,
                                          stdout=self.out, stderr=self.err, start_new_session=True)
@@ -159,11 +161,20 @@ class Session:
         text = Path(f'/proc/{self.proc.pid}/stat').read_text(); fields = text[text.rfind(')')+2:].split()
         status = Path(f'/proc/{self.proc.pid}/status').read_text()
         fds = {p.name: os.readlink(p) for p in Path(f'/proc/{self.proc.pid}/fd').iterdir()}
+        anchors=[]
+        for number,target in fds.items():
+            stat=Path(f'/proc/{self.proc.pid}/fd/{number}').stat()
+            watches=[]
+            for line in Path(f'/proc/{self.proc.pid}/fdinfo/{number}').read_text().splitlines():
+                if line.startswith('inotify '):
+                    parts=dict(x.split(':',1) for x in line.split()[1:] if ':' in x)
+                    watches.append([parts.get(x) for x in ('ino','sdev','mask')])
+            anchors.append(dict(target=target,dev=stat.st_dev,inode=stat.st_ino,mode=stat.st_mode,watches=sorted(watches)))
         after = ProcessObserver.identity(self.proc.pid)
         if after is None or after['start'] != before['start']:
             raise RuntimeError('checkpoint identity changed')
         row = dict(label=label, at_ns=time.monotonic_ns(), cpu_ticks=int(fields[11])+int(fields[12]),
-                   rss_kib=int(re.search(r'^VmRSS:\s+(\d+)', status, re.M)[1]), fds=fds)
+                   rss_kib=int(re.search(r'^VmRSS:\s+(\d+)', status, re.M)[1]), fds=fds, fd_anchors=anchors)
         self.record['checkpoints'].append(row); self.persist()
         return row
 
@@ -228,13 +239,82 @@ class Session:
 
 
 def mutation(session, path, data, kind):
-    tmp = path.with_name(path.name+'.watch-temporary'); tmp.write_bytes(data); tmp.replace(path)
+    tmp = path.with_name(path.name+'.watch-temporary'); tmp.write_bytes(data); tmp.chmod(path.stat().st_mode & 0o777); tmp.replace(path)
     completed=time.monotonic_ns()
     return session.action(kind, completed_ns=completed, path=str(path.relative_to(session.project)),
                           sha256=hashlib.sha256(data).hexdigest(), bytes=len(data))
 
 
+def stop_case(binary, project, env, folder, suite, expected, kind, active=False):
+    extra=folder.with_name(folder.name+'-empty')
+    if kind=='delete':extra.mkdir()
+    session=Session(binary,project,env,folder,suite,False,extra_roots=[extra] if kind=='delete' else ())
+    moved=project.with_name(project.name+'-moved')
+    try:
+        session.idle(1,0,expected)
+        if active:
+            entry=next(project.glob('*.goose'))
+            original=entry.read_bytes();mutation(session,entry,original+b'\n// active-stop\n','active-stop-edit')
+            session.wait(lambda:len(session.record['actions'])>0 and
+                         (session.folder/'stderr').read_bytes().count(b'running command')>=2 and
+                         bool(Path(f'/proc/{session.proc.pid}/task/{session.proc.pid}/children').read_text().strip()))
+            session.action('active-command-observed')
+        if kind=='aba':project.rename(moved);moved.rename(project);session.action('root-aba')
+        elif kind=='delete':extra.rmdir();session.action('root-delete')
+        elif kind=='sigint':signal.pidfd_send_signal(session.pidfd,signal.SIGINT);session.action('sigint')
+        session.finish(130 if kind=='sigint' else 125,send=False)
+    finally:
+        session.close()
+        if moved.exists() and not project.exists():moved.rename(project)
+        if active and 'original' in locals():entry.write_bytes(original)
+        if extra.exists():extra.rmdir()
+
+
+def overflow_case(binary, project, env, folder, suite, expected):
+    queue=int(Path('/proc/sys/fs/inotify/max_queued_events').read_text())
+    if queue>32768:return dict(result='inconclusive',reason='queue exceeds capped stimulus',queue_limit=queue)
+    nested=project/'watch-overflow';nested.mkdir()
+    for i in range(4):(nested/f'event{i}.o').write_bytes(b'0')
+    record=folder.with_suffix('.overflow')
+    session=Session(binary,project,{**env,'WATCH_OVERFLOW_RECORD':str(record)},folder,suite,False)
+    try:
+        session.idle(1,0,expected)
+        if Path(f'/proc/{session.proc.pid}/task/{session.proc.pid}/children').read_text().strip():
+            raise RuntimeError('overflow injection requires child-free idle supervisor')
+        signal.pidfd_send_signal(session.pidfd,signal.SIGSTOP)
+        try:
+            session.wait(lambda: ProcessObserver.identity(session.proc.pid)['state'] in ('T','t'),timeout=5)
+            began=time.monotonic();done=0
+            for i in range(queue*2+32):
+                if time.monotonic()-began>10:break
+                (nested/f'event{i%4}.o').write_bytes(bytes([i%251]));done+=1
+            session.action('real-kernel-overflow-attempt',operations=done,queue_limit=queue,files=4,bytes_per_file=1)
+        finally:signal.pidfd_send_signal(session.pidfd,signal.SIGCONT)
+        # Only the observer's actual IN_Q_OVERFLOW record establishes delivery.
+        deadline=time.monotonic()+10
+        while not record.exists() and time.monotonic()<deadline:
+            session.pause(.05)
+        if not record.exists():
+            session.finish();return dict(result='inconclusive',reason='no direct overflow record',queue_limit=queue)
+        data=record.read_bytes()
+        if not data or len(data)%32:raise RuntimeError('incomplete native overflow record')
+        records=list(struct.iter_unpack('=qqqq',data))
+        if any(mask!=16384 or origin!=-1 for _,_,mask,origin in records):raise RuntimeError('invalid recorded overflow')
+        session.idle(2,0,expected)
+        mutation(session,nested/'event0.o',b'x','ignored-after-recovery')
+        probe=nested/'changed.goose';probe.write_text('// coverage after loss\n')
+        session.action('source-after-overflow');session.idle(3,0,expected)
+        session.finish()
+        return dict(result='observed-recovery',queue_limit=queue,native_records=records,record_sha256=sha(record))
+    finally:
+        session.close()
+        for path in nested.iterdir():path.unlink()
+        nested.rmdir()
+
+
 def fd_roles(checkpoint):
+    if 'fd_anchors' in checkpoint:
+        return sorted(json.dumps(x,sort_keys=True) for x in checkpoint['fd_anchors'])
     return sorted(value for value in checkpoint['fds'].values())
 
 
@@ -244,8 +324,10 @@ def main():
         p.add_argument('--'+name, type=Path, required=True)
     p.add_argument('--cycles', type=int, default=30); p.add_argument('--idle-seconds', type=float, default=60)
     p.add_argument('--smoke', action='store_true')
+    p.add_argument('--overflow-probe',type=Path)
+    p.add_argument('--deadline-seconds',type=int,default=1800)
     a = p.parse_args()
-    if not 1 <= a.cycles <= 100 or not 0 < a.idle_seconds <= 300:
+    if not 1 <= a.cycles <= 100 or not 0 < a.idle_seconds <= 300 or not 60 <= a.deadline_seconds <= 7200:
         p.error('cycles1..100 and idle0..300seconds required')
     if a.smoke: a.cycles=min(a.cycles, 2); a.idle_seconds=min(a.idle_seconds, 1)
     a.honk=a.honk.resolve(strict=True); a.goose=a.goose.resolve(strict=True)
@@ -262,6 +344,8 @@ def main():
                 limits='Sampled resource lower bounds; RSS sums double-count shared pages; log-poll times are observations, not kernel latency.')
     save(output/'report.json',report)
     original_tools=dict(report['binary_sha256'])
+    deadline=time.monotonic()+a.deadline_seconds
+    source_commit=report['source_commit']
     try:
         (output/'calibration').mkdir();report['calibration']=calibrate(output/'calibration')
         for name,(rev,entry,suite) in WORKLOADS.items():
@@ -290,7 +374,9 @@ def main():
             if (project/'GOOSE_REVISION').read_text().strip()!=report['compiler_pin']: raise RuntimeError('workload/compiler pin mismatch')
             expected=canonical(baseline.stdout);info['canonical_stdout']=expected.decode()
             for sampled in (False,True):
+                if time.monotonic()>deadline:raise RuntimeError('campaign deadline exceeded')
                 session=Session(a.honk,project,env,output/(name+('-resources' if sampled else '-timing')),suite,sampled)
+                session.deadline=deadline
                 info['sessions'].append(str(session.folder.relative_to(output)))
                 try:
                     count=1;session.idle(count,0,expected)
@@ -316,11 +402,21 @@ def main():
                         raise RuntimeError('steady-state fd/command convergence failed')
                     session.finish()
                 finally: session.close()
+            info['stopping_cases']=[]
+            for kind in ('aba','delete','sigint'):
+                for active in (False,True):
+                    if time.monotonic()>deadline:raise RuntimeError('campaign deadline exceeded')
+                    stop_case(a.honk,project,env,output/f'{name}-{kind}-{active}',suite,expected,kind,active)
+                    info['stopping_cases'].append(dict(kind=kind,active=active,folder=f'{name}-{kind}-{active}'))
+            if a.overflow_probe:
+                info['real_kernel_overflow']=overflow_case(a.overflow_probe.resolve(strict=True),project,env,output/f'{name}-overflow',suite,expected)
+            info['restored_source_hashes']={path:sha(project/path) for path in original_files}
             for path,digest in original_files.items():
-                if sha(project/path)!=digest: raise RuntimeError('upstream source restoration mismatch: '+path)
+                if sha(project/path)!=digest or (project/path).stat().st_mode & 0o777 != modes[path]: raise RuntimeError('upstream source restoration mismatch: '+path)
             save(output/'report.json',report)
         if original_tools != {'honk':sha(a.honk),'goose':sha(a.goose)}: raise RuntimeError('measured binaries changed')
         if sha(__file__) != report['harness_sha256']: raise RuntimeError('harness changed during qualification')
+        if git(ROOT,'rev-parse','HEAD').decode().strip()!=source_commit:raise RuntimeError('source commit changed during qualification')
         report['complete']=True
     except BaseException as error:
         report['failure']=f'{type(error).__name__}: {error}';raise
