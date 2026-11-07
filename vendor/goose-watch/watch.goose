@@ -64,3 +64,40 @@ fn close(watcher: Watcher&) -> Status {
     return detail_status(code, meta);
 }
 fn has(event: const Event&, mask: i64) -> bool { return (event.mask & mask) != 0; }
+
+// Immutable bounded set. All fields are private API.
+const MAX_DIRECTORIES = 256;
+root struct WatchSet {
+    _state:  i64[8]    = [0; 8],
+    _map:    i64[512]  = [0; 512],
+    _buffer: u8[65536] = [0; 65536],
+}
+struct SetEvent { directory: i64 = -1, event: Event = Event { .. } }
+struct OpenSet { status: Status, failed_directory: i64 = -1 }
+extern fn detail_set_open(state: i64[:], map: i64[:], packed: const u8[:], offsets: i64[:], meta: i64[:]) -> i64 = "gw_set_open";
+extern fn detail_set_next(state: i64[:], map: i64[:], buffer: u8[:], timeout_ms: i64, name: u8[:], meta: i64[:]) -> i64 = "gw_set_next";
+extern fn detail_set_close(state: i64[:], map: i64[:], meta: i64[:]) -> i64 = "gw_set_close";
+fn open_set(owner: WatchSet&, paths: const (const u8[:])[:]) -> OpenSet {
+    // Preserve a live owner even when the replacement request is invalid.
+    if owner._state[0] != 0 { return OpenSet { status: Status { error: Error.InvalidState } }; }
+    if paths.len < 1 || paths.len > MAX_DIRECTORIES { return OpenSet { status: Status { error: Error.InvalidInput } }; }
+    for path, i in paths { if path.len > MAX_PATH_BYTES { return OpenSet { status: Status { error: Error.InvalidInput }, failed_directory: i }; } }
+    var packed: u8[>..] = []; var offsets: i64[>..] = [];
+    for path in paths { offsets.push(packed.len); offsets.push(path.len); packed.append(path); packed.push(0); }
+    var meta: i64[8] = [0; 8];
+    let code = detail_set_open(owner._state, owner._map, packed, offsets, meta);
+    return OpenSet { status: detail_status(code, meta), failed_directory: meta[7] };
+}
+fn next(owner: WatchSet&, timeout_ms: i64, out: SetEvent&) -> Status {
+    var name: u8[256] = [0; 256]; var meta: i64[8] = [0; 8];
+    let code = detail_set_next(owner._state, owner._map, owner._buffer, timeout_ms, name, meta);
+    out.directory = -1; out.event.mask = 0; out.event.cookie = 0; out.event.name.clear();
+    if code == 0 && meta[2] != 0 {
+        out.directory = meta[6]; out.event.mask = meta[3]; out.event.cookie = meta[4]; out.event.name.append(name[..meta[5]]);
+    }
+    return detail_status(code, meta);
+}
+fn close(owner: WatchSet&) -> Status {
+    var meta: i64[8] = [0; 8]; let code = detail_set_close(owner._state, owner._map, meta);
+    return detail_status(code, meta);
+}

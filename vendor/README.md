@@ -29,8 +29,8 @@ Target filtering uses only goose-glob v0.1.0 at `5543007cc02e324c0fce51919291b40
 is qualified on the pinned Goose/Linux environment. Honk continues to share one
 prepared pattern across workspace members. The optional filesystem collector is not vendored.
 
-Directory notifications use the source/build/native files from goose-watch alpha.1
-at `7bbd7ef8c9a4d6323ef9d065d1461bae9ba9fe58`, with its LICENSE and NOTICE.
+Directory notifications use the source/build/native files from goose-watch alpha.2
+at `56842ee7fc4c2fd948f663f1c50425bf2b3e8a73`, with its LICENSE and NOTICE.
 
 Dependency-cycle validation uses goose-task at `166b684ca96403fea94072cc8e0c630321fb832d`
 (`task.goose` and LICENSE only). The returned topological plan is discarded;
