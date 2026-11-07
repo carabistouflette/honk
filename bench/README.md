@@ -61,13 +61,13 @@ used as latency, throughput, uptime or memory evidence.
 
 ## Prepared glob consumer comparison
 
-`glob.py` builds exact before/after Git snapshots with the same Goose compiler,
+`glob_consumer.py` builds exact before/after Git snapshots with the same Goose compiler,
 C compiler and `-O2`. It materializes the before revision as the fixed real Honk
 project for both binaries, prepares its local lock outside timing, and checks
 identical output for every command before measuring. No network is timed.
 
 ```sh
-python3 bench/glob.py --goose /absolute/pinned/goose \
+python3 bench/glob_consumer.py --goose /absolute/pinned/goose \
   --before 7583ebe4ccb19cca530ccd295359dd808d8de3c9 --after FULL_AFTER_SHA \
   --rounds 7 --cpu 2 --output .build/glob-comparison
 ```

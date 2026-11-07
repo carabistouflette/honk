@@ -11,6 +11,7 @@ import random
 import shutil
 import statistics
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -123,7 +124,7 @@ def main():
     report = {'revisions': revisions, 'driver_sha256': driver_hash,
               'args': {**vars(args), 'output': str(output)},
               'recorded_at': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()),
-              'commands': cases, 'inputs_sha256': inputs, 'platform': platform.platform(),
+              'commands': cases, 'inputs_sha256': inputs, 'platform': platform.platform(), 'python': sys.version,
               'cpuinfo': Path('/proc/cpuinfo').read_text(),
               'compiler': call([goose, 'version']).stdout,
               'cc': call([cc, '--version']).stdout,
