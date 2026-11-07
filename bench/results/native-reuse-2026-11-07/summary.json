@@ -1,0 +1,171 @@
+{
+  "source": "98934b54e07cb4c4b886695fb32d6f4a79489949",
+  "raw_sha256": "4e17478b38c2f6e2740f4d3bb5507d74624f9d68e2804bf0d297cf3c13b4e14d",
+  "expected_outcomes": 26,
+  "native_outcomes": 8,
+  "pure_outcomes": 18,
+  "expected_native_compiler_failures": 1,
+  "verified_hits": 9,
+  "restored_extracted_source_bytes_and_modes": true,
+  "preserved_native_executable": true,
+  "external_sentinel_unchanged": true,
+  "controls": [
+    {
+      "profile": "crypto",
+      "label": "ordinary",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "crypto",
+      "label": "fallback_0",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "crypto",
+      "label": "fallback_1",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "crypto",
+      "label": "fallback_2",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "crypto",
+      "label": "filtered_fallback",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "crypto",
+      "label": "edited_source_fallback",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "crypto",
+      "label": "failed_native_build",
+      "result": "expected failure",
+      "expected_work": "any"
+    },
+    {
+      "profile": "crypto",
+      "label": "restored_fallback",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "population",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "verified_hit",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "source_invalidates",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "edited_hit",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "restore_repopulates",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "filtered_unified",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "filtered_core",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "corruption_recompiles",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "corruption_recovered_hit",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "symlink_not_followed",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "symlink_repopulate",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "symlink_recovered_hit",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "compiler_location_environment_change",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "alternate_compiler_hit",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "compiler_bytes_invalidate",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "changed_compiler_hit",
+      "result": "pass",
+      "expected_work": "hit"
+    },
+    {
+      "profile": "diff",
+      "label": "original_compiler_restore",
+      "result": "pass",
+      "expected_work": "compile"
+    },
+    {
+      "profile": "diff",
+      "label": "final_hit",
+      "result": "pass",
+      "expected_work": "hit"
+    }
+  ],
+  "scope": "Correctness only. Native fallback cannot prove cache invalidation. Native CMake caches may remain warm. No production caching support or performance guarantee added."
+}
