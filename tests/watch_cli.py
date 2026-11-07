@@ -175,6 +175,17 @@ finally:
         (self.src/'link').unlink()
         (self.src/'main.goose').write_text('fn main() {} // valid')
         self.finish();self.assertEqual(self.count(),2)
+    def test_recursive_explicit_roots_override_excluded_basenames(self):
+        parent=self.root/'selected';parent.mkdir();roots=[]
+        for name in ('.git','.honk','target','.build','.toolchain'):
+            directory=parent/name;directory.mkdir();(directory/'main.goose').write_text('// initial')
+            roots.append(directory)
+        self.start(runs=6,directories=roots,extra=('--watch-recursive',));self.idle()
+        for index,directory in enumerate(roots):
+            (directory/'main.goose').write_text('// changed')
+            if index<4:
+                self.wait(lambda:self.count()==index+2 and (self.root/'stderr').read_text().count('command finished; waiting')==index+2)
+        self.finish();self.assertEqual(self.count(),6)
     def test_recursive_root_delete_with_held_anchor_stops(self):
         empty=self.project/'empty';empty.mkdir()
         self.start(directory=empty,extra=('--watch-recursive',));self.idle()
