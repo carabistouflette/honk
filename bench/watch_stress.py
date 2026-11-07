@@ -427,6 +427,17 @@ def main():
                         started=time.monotonic_ns();mutation(session,project/entry,original+f'\n// watch-save-{i}\n'.encode(),'atomic-save')
                         count+=1;session.idle(count,0,expected);session.action('save-complete',cycle=i,elapsed_ns=time.monotonic_ns()-started)
                         if fd_roles(session.checkpoint(f'save-{i}'))!=base_fds: raise RuntimeError('idle fd count did not converge')
+                    for excluded in ('.git','.honk','target','.build','.toolchain'):
+                        directory=project/excluded;created=not directory.exists()
+                        directory.mkdir(exist_ok=True)
+                        probe=directory/'watch-ignored-probe.goose'
+                        if probe.exists(): raise RuntimeError('excluded probe collision')
+                        probe.write_text('invalid excluded source');probe.unlink()
+                        if created: directory.rmdir()
+                        session.action('excluded-subtree-edit',name=excluded)
+                    sibling=output/(name+'-sibling.goose');sibling.write_text('invalid sibling source');sibling.unlink()
+                    session.action('sibling-edit');session.pause(.3)
+                    if len(session.outcomes())!=count: raise RuntimeError('excluded/sibling edits scheduled a command')
                     # SIGSTOP makes the rapid-save burst deterministic: all edits
                     # precede consumption, and cleanup always resumes the owner.
                     signal.pidfd_send_signal(session.pidfd,signal.SIGSTOP)
