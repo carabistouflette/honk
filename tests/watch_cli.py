@@ -175,6 +175,91 @@ finally:
         (self.src/'link').unlink()
         (self.src/'main.goose').write_text('fn main() {} // valid')
         self.finish();self.assertEqual(self.count(),2)
+    def test_ignore_invalid_patterns_fail_before_compiler(self):
+        for patterns in (['['],[''],['x'*1025],['x']*17):
+            with self.subTest(patterns=patterns):
+                args=[word for pattern in patterns for word in ('--watch-ignore',pattern)]
+                result=subprocess.run([HONK,'watch','check','--watch-dir',str(self.src),*args],cwd=self.project,env=self.env,capture_output=True,timeout=10)
+                self.assertNotEqual(result.returncode,0);self.assertEqual(self.count(),0)
+        result=subprocess.run([HONK,'check','--watch-ignore','x'],cwd=self.project,env=self.env,capture_output=True,timeout=10)
+        self.assertNotEqual(result.returncode,0);self.assertEqual(self.count(),0)
+    def test_ignore_single_match_work_exhaustion_fails_closed(self):
+        (self.src/'aaaaaaaa').mkdir()
+        pattern='*['+'a'*900+']z*'
+        self.start(runs=1,extra=('--watch-recursive','--watch-ignore',pattern))
+        self.finish(125);self.assertEqual(self.count(),0)
+        self.assertIn('--watch-ignore path or matcher work limit',(self.root/'stderr').read_text())
+    def test_ignore_scan_work_exhaustion_fails_before_child(self):
+        for i in range(4097):(self.src/f'ignored{i}').mkdir()
+        self.start(runs=1,extra=('--watch-recursive','--watch-ignore','*'))
+        self.finish(125);self.assertEqual(self.count(),0)
+        self.assertIn('--watch-ignore path or matcher work limit', (self.root/'stderr').read_text())
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'),'requires linked watch adapter')
+    def test_ignore_exhaustion_cannot_be_retried_into_success(self):
+        for i in range(4097):(self.src/f'ignored{i}').mkdir()
+        counter=self.root/'filter-count'
+        self.start(runs=1,extra=('--watch-recursive','--watch-ignore','*'),WATCH_FAULT_MODE='ignore-retry',WATCH_FAULT_FILTER_COUNT=str(counter))
+        self.finish(125);self.assertEqual(self.count(),0)
+        self.assertEqual(counter.read_text(),'1')
+    def test_ignore_relative_path_overflow_fails_before_child(self):
+        deep=self.root/'deep';deep.mkdir();fd=os.open(deep,os.O_RDONLY|os.O_DIRECTORY)
+        try:
+            for _ in range(17):
+                os.mkdir('d'*250,dir_fd=fd)
+                child=os.open('d'*250,os.O_RDONLY|os.O_DIRECTORY,dir_fd=fd)
+                os.close(fd);fd=child
+        finally:os.close(fd)
+        self.start(directory=deep,runs=1,extra=('--watch-recursive','--watch-ignore','never'))
+        self.finish(125);self.assertEqual(self.count(),0)
+        self.assertIn('--watch-ignore path or matcher work limit',(self.root/'stderr').read_text())
+    def test_ignore_prunes_before_directory_limit_and_filters_topology(self):
+        generated=self.src/'generated';generated.mkdir()
+        for i in range(300):(generated/str(i)).mkdir()
+        self.start(runs=2,extra=('--watch-recursive','--watch-ignore','generated'));self.idle()
+        (generated/'0/unit.goose').write_text('fn main() {}')
+        (generated/'added').mkdir()
+        time.sleep(.2);self.assertEqual(self.count(),1)
+        (self.src/'main.goose').write_text('fn main() {} // included')
+        self.finish();self.assertEqual(self.count(),2)
+    def test_ignore_file_patterns_are_relative_to_each_explicit_root(self):
+        other=self.root/'other';other.mkdir()
+        self.start(runs=2,directories=[self.src,other],extra=('--watch-ignore','skip.goose','--watch-ignore','skip_?.goose'))
+        self.idle()
+        for root in (self.src,other):(root/'skip.goose').write_text('fn main() {}')
+        fd=os.open(os.fsencode(other)+b'/skip_\xff.goose',os.O_CREAT|os.O_WRONLY,0o600);os.close(fd)
+        time.sleep(.2);self.assertEqual(self.count(),1)
+        (other/'included.goose').write_text('fn main() {}')
+        self.finish();self.assertEqual(self.count(),2)
+    def test_ignore_rename_into_included_tree_restores_nested_coverage(self):
+        generated=self.src/'generated';generated.mkdir();(generated/'unit.goose').write_text('fn main() {}')
+        self.start(runs=3,extra=('--watch-recursive','--watch-ignore','generated'));self.idle()
+        generated.rename(self.src/'included')
+        self.wait(lambda:self.count()==2 and (self.root/'stderr').read_text().count('command finished; waiting')==2)
+        (self.src/'included/unit.goose').write_text('fn main() {} // covered')
+        self.finish();self.assertEqual(self.count(),3)
+    def test_ignore_matches_hidden_recursive_file_paths(self):
+        nested=self.src/'.hidden';nested.mkdir()
+        self.start(runs=2,extra=('--watch-recursive','--watch-ignore','**/skip.goose'));self.idle()
+        (nested/'skip.goose').write_text('fn main() {}')
+        time.sleep(.2);self.assertEqual(self.count(),1)
+        (nested/'included.goose').write_text('fn main() {}')
+        self.finish();self.assertEqual(self.count(),2)
+    def test_ignore_cannot_hide_explicit_root_loss(self):
+        self.start(extra=('--watch-recursive','--watch-ignore','**'));self.idle()
+        moved=self.src.with_name('moved');self.src.rename(moved);moved.rename(self.src)
+        self.finish(125);self.assertEqual(self.count(),1)
+    @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'),'requires linked watch adapter')
+    def test_ignore_survives_data_overflow_reconciliation(self):
+        generated=self.src/'generated';generated.mkdir()
+        for i in range(260):(generated/str(i)).mkdir()
+        trigger=self.root/'trigger'
+        self.start(runs=3,extra=('--watch-recursive','--watch-ignore','generated'),GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow',WATCH_FAULT_TARGET='data')
+        self.wait(lambda:(self.root/'pid').exists());trigger.touch();(self.root/'release').touch()
+        self.wait(lambda:self.count()==2 and (self.root/'stderr').read_text().count('command finished; waiting')>=1)
+        (generated/'0/unit.goose').write_text('fn main() {}')
+        time.sleep(.2);self.assertEqual(self.count(),2)
+        (self.src/'main.goose').write_text('fn main() {} // covered after loss')
+        self.finish();self.assertEqual(self.count(),3)
     def test_recursive_explicit_roots_override_excluded_basenames(self):
         parent=self.root/'selected';parent.mkdir();roots=[]
         for name in ('.git','.honk','target','.build','.toolchain'):

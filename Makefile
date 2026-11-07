@@ -178,6 +178,8 @@ watch-tree-native:
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-native
 	$(or $(HONK_SANITIZER_CC),gcc) -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_guard.c -o .build/watch-tree-guard
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-guard
+	$(or $(HONK_SANITIZER_CC),gcc) -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_filter.c -o .build/watch-tree-filter
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-filter
 .PHONY: qualification-test parallel-qualify
 qualification-test:
 	python3 tests/qualification_observer.py

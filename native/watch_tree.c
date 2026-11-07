@@ -31,6 +31,12 @@ typedef struct {
   uint64_t magic;
   int count, roots, visited, cursor;
   tree_entry entries[TREE_CAP];
+  bool filtering, pending, verifying;
+  DIR *directory;
+  int scan_index, scan_fd;
+  bool seen[TREE_CAP];
+  char candidate[256];
+  struct stat candidate_info;
   int root_indices[8];
   char root_paths[8][4096];
 } tree;
@@ -86,6 +92,7 @@ int64_t honk_tree_close(tree_words words) {
   if (!t)
     return -1;
   bool ok = true;
+  if (t->directory && closedir(t->directory) < 0) ok = false;
   for (int i = 0; i < t->count; ++i) {
     int fd = t->entries[i].fd;
     t->entries[i].fd = -1;
@@ -162,11 +169,157 @@ int64_t honk_tree_root(tree_words words, tree_bytes path) {
     part = slash + 1;
   }
 }
+/* Optional filtering keeps one cursor and one undecided directory candidate. */
+int64_t honk_tree_filter(tree_words words) {
+  tree *t = owned(words);
+  if (!t || t->cursor || t->directory)
+    return -1;
+  t->filtering = true;
+  return 0;
+}
+int64_t honk_tree_path(tree_words words, int64_t index, tree_bytes name,
+                       tree_bytes output) {
+  tree *t = owned(words);
+  if (!t || !output.data || output.len != 4096)
+    return -1;
+  if (index == -1) {
+    if (!t->pending)
+      return -1;
+    index = t->scan_index;
+    name.data = (const uint8_t *)t->candidate;
+    name.len = (int64_t)strlen(t->candidate);
+  }
+  if (index < 0 || index >= t->count || !(t->entries[index].roles & 1) ||
+      name.len <= 0 || name.len > 255 || !name.data ||
+      memchr(name.data, 0, (size_t)name.len) ||
+      memchr(name.data, '/', (size_t)name.len))
+    return -1;
+  uint8_t *out = (uint8_t *)output.data;
+  size_t at = 4095;
+  at -= (size_t)name.len;
+  memcpy(out + at, name.data, (size_t)name.len);
+  int depth = 0;
+  while (!(t->entries[index].roles & 4)) {
+    tree_entry *e = &t->entries[index];
+    size_t n = strlen(e->name);
+    if (++depth > TREE_DEPTH || e->parent < 0 || at < n + 1)
+      return -1;
+    out[--at] = '/';
+    at -= n;
+    memcpy(out + at, e->name, n);
+    index = e->parent;
+  }
+  size_t length = 4095 - at;
+  memmove(out, out + at, length);
+  return (int64_t)length;
+}
+int64_t honk_tree_decide(tree_words words, int64_t include) {
+  tree *t = owned(words);
+  if (!t || !t->pending || !t->directory || (include != 0 && include != 1))
+    return -1;
+  t->pending = false;
+  if (!include)
+    return 0;
+  int fd = t->scan_fd;
+  struct stat info;
+  if (fstatat(fd, t->candidate, &info, AT_SYMLINK_NOFOLLOW) < 0 ||
+      !S_ISDIR(info.st_mode) || info.st_dev != t->candidate_info.st_dev ||
+      info.st_ino != t->candidate_info.st_ino)
+    return -1;
+  if (t->verifying) {
+    for (int j = 0; j < t->count; ++j)
+      if (t->entries[j].parent == t->scan_index &&
+          !strcmp(t->entries[j].name, t->candidate) &&
+          identity(&info, &t->entries[j])) {
+        t->seen[j] = true;
+        return 0;
+      }
+    return -1;
+  }
+  int child =
+      openat(fd, t->candidate, O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+  if (child < 0)
+    return -1;
+  struct stat actual;
+  if (fstat(child, &actual) < 0 || actual.st_dev != info.st_dev ||
+      actual.st_ino != info.st_ino ||
+      insert(t, child, t->scan_index, t->candidate,
+             t->entries[t->scan_index].depth + 1, 1) < 0) {
+    close(child);
+    return -1;
+  }
+  return 0;
+}
+static int filtered_step(tree *t, bool verify) {
+  if (t->pending)
+    return -1;
+  if (!t->directory) {
+    while (t->cursor < t->count && !(t->entries[t->cursor].roles & 1))
+      ++t->cursor;
+    if (t->cursor == t->count)
+      return 0;
+    t->scan_index = t->cursor++;
+    tree_entry *e = &t->entries[t->scan_index];
+    struct stat info;
+    if (verify &&
+        (fstat(e->fd, &info) < 0 || !identity(&info, e) ||
+         (e->parent >= 0 && (fstatat(t->entries[e->parent].fd, e->name, &info,
+                                     AT_SYMLINK_NOFOLLOW) < 0 ||
+                             !identity(&info, e)))))
+      return -1;
+    int fd =
+        openat(e->fd, ".", O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
+    if (fd < 0)
+      return -1;
+    t->directory = fdopendir(fd);
+    if (!t->directory) {
+      close(fd);
+      return -1;
+    }
+    t->scan_fd = fd;
+    t->verifying = verify;
+    memset(t->seen, 0, sizeof t->seen);
+  }
+  for (;;) {
+    if (honk_watch_cancelled())
+      return -1;
+    errno = 0;
+    struct dirent *item = readdir(t->directory);
+    if (!item) {
+      bool ok = errno == 0;
+      if (verify)
+        for (int j = 0; j < t->count; ++j)
+          if (t->entries[j].parent == t->scan_index &&
+              !(t->entries[j].roles & 4) && !t->seen[j])
+            ok = false;
+      if (closedir(t->directory) < 0)
+        ok = false;
+      t->directory = NULL;
+      t->scan_fd = -1;
+      return ok ? 1 : -1;
+    }
+    if (!strcmp(item->d_name, ".") || !strcmp(item->d_name, ".."))
+      continue;
+    if (++t->visited > TREE_ENTRIES)
+      return -1;
+    if (fstatat(t->scan_fd, item->d_name, &t->candidate_info,
+                AT_SYMLINK_NOFOLLOW) < 0)
+      return -1;
+    if (!S_ISDIR(t->candidate_info.st_mode) || excluded(item->d_name))
+      continue;
+    if (strlen(item->d_name) > 255)
+      return -1;
+    strcpy(t->candidate, item->d_name);
+    t->pending = true;
+    return 2;
+  }
+}
 /* One directory per call; count every entry, including excluded names/files. */
 int64_t honk_tree_scan_step(tree_words words) {
   tree *t = owned(words);
   if (!t || !t->roots)
     return -1;
+  if (t->filtering) return filtered_step(t, false);
   while (t->cursor < t->count && !(t->entries[t->cursor].roles & 1))
     ++t->cursor;
   if (t->cursor == t->count)
@@ -289,7 +442,7 @@ int64_t honk_tree_roots_valid(tree_words words) {
 }
 int64_t honk_tree_verify_begin(tree_words words) {
   tree *t = owned(words);
-  if (!t)
+  if (!t || t->directory || t->pending)
     return -1;
   t->cursor = 0;
   t->visited = 0;
@@ -300,6 +453,7 @@ int64_t honk_tree_verify_step(tree_words words) {
   tree *t = owned(words);
   if (!t)
     return -1;
+  if (t->filtering) return filtered_step(t, true);
   while (t->cursor < t->count && !(t->entries[t->cursor].roles & 1))
     ++t->cursor;
   if (t->cursor == t->count)

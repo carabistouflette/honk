@@ -1,11 +1,44 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace watching;
 import watch;
+import glob;
 import process;
 import .platform;
 import .watch_tree;
 import std;
 import os;
+const IGNORE_WORK = 16777216;
+const IGNORE_MATCH_WORK = 4096;
+struct Ignores { remaining: i64 = IGNORE_WORK, failed: bool = false, patterns: glob::Pattern[>..] = [] }
+fn add_ignore(policy: Ignores&, text: const u8[:]) {
+    platform::require(policy.patterns.len < 16, "watch accepts at most 16 ignore patterns");
+    let pattern, status = glob::compile(text);
+    platform::require(status.error == glob::Error.None, "invalid --watch-ignore glob");
+    policy.patterns.push(copy(pattern));
+}
+// -1 matcher/path failure, 0 included, 1 excluded. Errors never imply exclusion.
+fn ignored(policy: Ignores&, path: const u8[:]) -> i64 {
+    for pattern in policy.patterns {
+        if platform::watch_cancelled() != 0 { return -1; }
+        if policy.remaining < IGNORE_MATCH_WORK { policy.failed = true; return -1; }
+        policy.remaining -= IGNORE_MATCH_WORK;
+        let matched, status = glob::matches(pattern, path, glob::Options { hidden: true, work_limit: IGNORE_MATCH_WORK });
+        if status.error != glob::Error.None { policy.failed = true; return -1; }
+        if matched { return 1; }
+    }
+    return 0;
+}
+fn ignored_event(policy: Ignores&, tree: watch_tree::Tree&, index: i64, name: const u8[:]) -> i64 {
+    if policy.patterns.len == 0 { return 0; }
+    var path: u8[4096] = [0; 4096];
+    let length = watch_tree::path(tree._state, index, name, path);
+    if length < 1 { policy.failed = true; return -1; }
+    return ignored(policy, path[..length]);
+}
+fn decision(policy: Ignores&, tree: watch_tree::Tree&) -> bool {
+    let excluded = ignored_event(policy, tree, -1, "");
+    return excluded >= 0 && watch_tree::decide(tree._state, if excluded == 1 { 0 } else { 1 }) == 0;
+}
 const DRAIN_LIMIT = 256;
 struct Run { code: i64 = 125, dirty: bool = false, lost: bool = false, stop: bool = false, repair: bool = false }
 fn relevant(event: const watch::Event&) -> bool {
@@ -14,7 +47,8 @@ fn relevant(event: const watch::Event&) -> bool {
         watch::has(event, watch::CLOSE_WRITE | watch::MOVED_FROM | watch::MOVED_TO | watch::DELETE);
 }
 // -1: stop; 0: idle; 1: dirty; 2: overflow recovered. No names are displayed.
-fn changes(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, walk_enabled: bool, directories: const (const u8[:])[:], timeout_ms: i64) -> i64 {
+fn changes(policy: Ignores&, owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, walk_enabled: bool, directories: const (const u8[:])[:], timeout_ms: i64) -> i64 {
+    policy.remaining = IGNORE_WORK;
     if walk_enabled && !guard_ok(root_watch, guard_tree) { return if platform::watch_cancelled() != 0 { 0 } else { -1 }; }
     var out = watch::SetEvent { .. }; var dirty = false;
     for i in DRAIN_LIMIT {
@@ -33,23 +67,33 @@ fn changes(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::
         if walk_enabled {
             let topology = watch_tree::event(tree._state, out.directory, out.event.name, out.event.mask);
             if topology < 0 { return -1; }
-            if topology == 1 { return 3; }
             if topology == 2 { continue; }
+            if out.event.name.len > 0 {
+                let excluded = ignored_event(policy, tree, out.directory, out.event.name);
+                if excluded < 0 { return -1; }
+                if excluded == 1 { continue; }
+            }
+            if topology == 1 { return 3; }
         }
         if !walk_enabled && watch::has(out.event, watch::IGNORED | watch::DELETE_SELF | watch::MOVE_SELF | watch::UNMOUNT) { return -1; }
+        if !walk_enabled && policy.patterns.len > 0 && relevant(out.event) {
+            let excluded = ignored(policy, out.event.name);
+            if excluded < 0 { return -1; }
+            if excluded == 1 { continue; }
+        }
         dirty = dirty || relevant(out.event);
     }
     return if dirty { 1 } else { 0 }; // Retained records remain for the next bounded drain.
 }
 // Called only for a pending rerun with no active child. Loss bypasses batching.
-fn settle(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, walk_enabled: bool, directories: const (const u8[:])[:], quiet_ms: i64) -> i64 {
+fn settle(policy: Ignores&, owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, walk_enabled: bool, directories: const (const u8[:])[:], quiet_ms: i64) -> i64 {
     let started = platform::watch_clock_ms();
     if started < 0 { return -1; }
     var last = started; var now = started;
     loop {
         if platform::process_guard_take(0) != 0 { return -1; }
         let wait = max(0, min(100, min(quiet_ms - (now - last), 1000 - (now - started))));
-        let observed = changes(owner, tree, root_watch, guard_tree, walk_enabled, directories, wait);
+        let observed = changes(policy, owner, tree, root_watch, guard_tree, walk_enabled, directories, wait);
         if observed < 0 || observed >= 2 { return observed; }
         let after = platform::watch_clock_ms();
         if after < now { return -1; }
@@ -65,7 +109,7 @@ fn compiled_honk() -> bool {
     platform::recover_status(status);
     return status.error == process::Error.None && status.exit_code == 0 && out == "honk 0.5.0-rc.1\n";
 }
-fn command(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, walk_enabled: bool, directories: const (const u8[:])[:], argv: const (const u8[:])[:]) -> Run {
+fn command(policy: Ignores&, owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, walk_enabled: bool, directories: const (const u8[:])[:], argv: const (const u8[:])[:]) -> Run {
     var result = Run { .. };
     if platform::process_guard_take(0) != 0 { result.stop = true; return result; }
     var child = process::Child { .. };
@@ -85,7 +129,7 @@ fn command(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::
             }
             let observed = if result.stop { 0 } else if result.repair {
                 if !guard_ok(root_watch, guard_tree) && platform::watch_cancelled() == 0 { -1 } else { 0 }
-            } else { changes(owner, tree, root_watch, guard_tree, walk_enabled, directories, 0) };
+            } else { changes(policy, owner, tree, root_watch, guard_tree, walk_enabled, directories, 0) };
             result.repair = result.repair || observed == 3;
             result.dirty = result.dirty || observed > 0; result.lost = result.lost || observed == 2;
             if observed < 0 || signals < 0 { result.stop = true; failed = true; }
@@ -119,7 +163,7 @@ fn guard_ok(owner: watch::WatchSet&, tree: watch_tree::Tree&) -> bool {
     return false;
 }
 // A candidate is fully installed before verification. Only true idle commits it.
-fn establish(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, roots: const (const u8[:])[:]) -> bool {
+fn establish(policy: Ignores&, owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch::WatchSet&, guard_tree: watch_tree::Tree&, roots: const (const u8[:])[:]) -> bool {
     for _ in 8 {
         if !guard_ok(root_watch, guard_tree) { return false; }
         if !watch_tree::close(tree) { return false; }
@@ -127,10 +171,16 @@ fn establish(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch
         var valid = true;
         for path in roots { if watch_tree::root(tree._state, path) < 0 { valid = false; break; } }
         if !valid { return false; }
+        if policy.patterns.len > 0 && watch_tree::filter(tree._state) < 0 { return false; }
+        policy.remaining = IGNORE_WORK;
         loop {
             if !guard_ok(root_watch, guard_tree) { return false; }
             let scanned = watch_tree::scan_step(tree._state);
             if scanned < 0 { valid = false; break; }
+            if scanned == 2 && !decision(policy, tree) {
+                if policy.failed { return false; }
+                valid = false; break;
+            }
             if scanned == 0 { break; }
         }
         if !valid { continue; }
@@ -138,14 +188,20 @@ fn establish(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch
         let count = watch_tree::fds(tree._state, descriptors);
         if count < 1 { return false; }
         if watch::open_set_fds(owner, descriptors[..count]).status.error != watch::Error.None { return false; }
+        policy.remaining = IGNORE_WORK;
         if watch_tree::verify_begin(tree._state) < 0 { valid = false; }
         while valid {
             if platform::process_guard_take(0) != 0 { valid = false; break; }
             let verified = watch_tree::verify_step(tree._state);
             if verified < 0 { valid = false; break; }
+            if verified == 2 && !decision(policy, tree) {
+                if policy.failed { return false; }
+                valid = false; break;
+            }
             if verified == 0 { break; }
         }
         var out = watch::SetEvent { .. }; var idle = false;
+        policy.remaining = IGNORE_WORK;
         if valid {
             for _ in 4096 {
                 if platform::process_guard_take(0) != 0 { valid = false; break; }
@@ -156,6 +212,12 @@ fn establish(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch
                 if watch::has(out.event, watch::OVERFLOW) { valid = false; break; }
                 let topology = watch_tree::event(tree._state, out.directory, out.event.name, out.event.mask);
                 if topology < 0 { return false; }
+                if topology == 2 { continue; }
+                if out.event.name.len > 0 {
+                    let excluded = ignored_event(policy, tree, out.directory, out.event.name);
+                    if excluded < 0 { return false; }
+                    if excluded == 1 { continue; }
+                }
                 if topology == 1 { valid = false; break; }
             }
         }
@@ -164,7 +226,7 @@ fn establish(owner: watch::WatchSet&, tree: watch_tree::Tree&, root_watch: watch
     }
     return false;
 }
-fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit: i64, debounce_ms: i64, walk_enabled: bool) -> i64 {
+fn run(policy: Ignores&, directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit: i64, debounce_ms: i64, walk_enabled: bool) -> i64 {
     platform::require(compiled_honk(), "watch requires a compiled Honk executable and /proc/self/exe");
     var first = watch::WatchSet { .. }; var second = watch::WatchSet { .. };
     var first_tree = watch_tree::Tree { .. }; var second_tree = watch_tree::Tree { .. };
@@ -179,13 +241,14 @@ fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit:
         let count = watch_tree::fds(guard_tree._state, descriptors);
         if opened && count > 0 { opened = watch::open_set_fds(root_watch, descriptors[..count]).status.error == watch::Error.None; }
         else { opened = false; }
-        if opened { opened = establish(first, first_tree, root_watch, guard_tree, directories); }
+        if opened { opened = establish(policy, first, first_tree, root_watch, guard_tree, directories); }
     }
     else { opened = watch::open_set(first, directories).status.error == watch::Error.None; }
     if !opened {
         let closed = watch::close(first); let tree_closed = watch_tree::close(first_tree);
         let guard_closed = watch::close(root_watch); let guard_anchors = watch_tree::close(guard_tree);
         let cancelled = platform::process_guard_end();
+        if policy.failed { write_stderr("honk watch: --watch-ignore path or matcher work limit exceeded\n"); }
         write_stderr("honk watch: cannot establish complete selected-directory coverage\n");
         return if cancelled > 0 { 128 + cancelled } else { 125 };
     }
@@ -195,8 +258,8 @@ fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit:
         if platform::process_guard_take(0) != 0 { code = 125; break; }
         if repair {
             var restored = false;
-            if active { restored = establish(first, first_tree, root_watch, guard_tree, directories) && watch_tree::roots_valid(second_tree._state) == 0; }
-            else { restored = establish(second, second_tree, root_watch, guard_tree, directories) && watch_tree::roots_valid(first_tree._state) == 0; }
+            if active { restored = establish(policy, first, first_tree, root_watch, guard_tree, directories) && watch_tree::roots_valid(second_tree._state) == 0; }
+            else { restored = establish(policy, second, second_tree, root_watch, guard_tree, directories) && watch_tree::roots_valid(first_tree._state) == 0; }
             if !restored { code = 125; break; }
             if active {
                 let retired = watch::close(second); let anchors = watch_tree::close(second_tree);
@@ -213,27 +276,27 @@ fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit:
         if dirty {
             if completed > 0 && debounce_ms > 0 && !immediate {
                 write_stderr("honk watch: batching pending changes\n");
-                let batched = settle(owner, tree, root_watch, guard_tree, walk_enabled, directories, debounce_ms);
+                let batched = settle(policy, owner, tree, root_watch, guard_tree, walk_enabled, directories, debounce_ms);
                 if batched < 0 { code = 125; break; }
                 if batched == 3 { repair = true; continue; }
                 if batched == 2 { write_stderr("honk watch: events lost; reopened watch, scheduling full command\n"); }
             }
             immediate = false;
             write_stderr("honk watch: running command\n");
-            let outcome = command(owner, tree, root_watch, guard_tree, walk_enabled, directories, argv);
+            let outcome = command(policy, owner, tree, root_watch, guard_tree, walk_enabled, directories, argv);
             code = outcome.code; completed++;
             if outcome.lost { write_stderr("honk watch: events lost; reopened watch, scheduling full command\n"); }
             if outcome.stop { if code == 0 { code = 125; } break; }
             if limit > 0 && completed >= limit { break; }
             if outcome.repair { repair = true; dirty = true; continue; }
-            let queued = changes(owner, tree, root_watch, guard_tree, walk_enabled, directories, 0);
+            let queued = changes(policy, owner, tree, root_watch, guard_tree, walk_enabled, directories, 0);
             if queued < 0 { code = 125; break; }
             if queued == 2 { write_stderr("honk watch: events lost; reopened watch, scheduling full command\n"); }
             if queued == 3 { repair = true; dirty = true; continue; }
             dirty = outcome.dirty || queued > 0; immediate = outcome.lost || queued == 2;
             write_stderr(if dirty { "honk watch: pending changes; rerunning\n" } else { "honk watch: command finished; waiting for changes\n" });
         } else {
-            let observed = changes(owner, tree, root_watch, guard_tree, walk_enabled, directories, 100);
+            let observed = changes(policy, owner, tree, root_watch, guard_tree, walk_enabled, directories, 100);
             if observed < 0 { code = 125; break; }
             if observed == 2 { write_stderr("honk watch: events lost; reopened watch, scheduling full command\n"); }
             if observed == 3 { repair = true; dirty = true; continue; }
@@ -246,6 +309,7 @@ fn run(directories: const (const u8[:])[:], argv: const (const u8[:])[:], limit:
     let cancelled = platform::process_guard_end();
     if cancelled < 0 || closed_first.error != watch::Error.None || closed_second.error != watch::Error.None || !anchors_first || !anchors_second || closed_guard.error != watch::Error.None || !anchors_guard { return 125; }
     if cancelled > 0 { return 128 + cancelled; }
+    if policy.failed { write_stderr("honk watch: --watch-ignore path or matcher work limit exceeded\n"); }
     if code == 125 { write_stderr("honk watch: watch or child supervision failed; stopping\n"); }
     return code;
 }
