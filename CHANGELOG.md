@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add repeatable bounded `watch --watch-ignore PATTERN` using precompiled
+  goose-glob patterns for root-relative file events and recursive subtree pruning.
+  Root guards/loss recovery stay protected; matcher/path limits fail closed.
+
 ## 0.5.0-rc.1 — 2026-11-07 (experimental prerelease)
 
 Source-only candidate for Linux x86-64/glibc. CLI, manifest and lockfile

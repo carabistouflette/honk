@@ -44,7 +44,7 @@ that trusted compiler, replace setup/build with
 | `new PATH [--lib]`, `init [PATH]` | Create a project without overwriting files. |
 | `check --diagnostics text\|json` | Single-package compiler diagnostics; [format and limits](docs/COMPILER_DIAGNOSTICS.md). |
 | `build`, `run -- ARGS`, `check` | Compile, run, or type/lifetime-check. Use `build/run --release` for release builds. |
-| `watch check/test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...]` | Rerun on `.goose` changes; optional `--watch-recursive` discovers bounded subtrees; see [watch scope and cleanup](docs/WATCH.md). |
+| `watch check/test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...]` | Rerun on `.goose` changes; optional `--watch-recursive` discovers bounded subtrees; development `--watch-ignore PATTERN` prunes selected paths; see [watch scope and cleanup](docs/WATCH.md). |
 | `test`, `bench`, `fmt [--check]` | Run test/benchmark programs or format sources. |
 | `add NAME --path PATH`, `add NAME --git URL --rev REF` | Declare a local or exact Git dependency. |
 | `add NAME --git URL --version REQUIREMENT` | Select a matching Git tag. See the [version rules](docs/GIT-VERSION-DESIGN.md). |
