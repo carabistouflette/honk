@@ -45,3 +45,9 @@ output-write and supervision/cleanup failures, with zero-based target IDs. An
 ordinary test exit125 remains a child outcome and is not mislabeled as a
 supervision failure. Exact stdout/stderr caps are accepted; excess terminates
 the cohort and is reported as failure, never silent truncation.
+
+Tests in this mode observe pipe stdout/stderr and share the package-root cwd
+and inherited environment concurrently. Dependencies between targets are not
+inferred; opt in only for independent targets. Optional progress retains Honk's
+existing best-effort presentation policy; captured-output-write failures are
+reported separately after cleanup.

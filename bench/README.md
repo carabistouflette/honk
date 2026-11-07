@@ -136,3 +136,8 @@ process group is used only to clean up a timed-out benchmark invocation.
 `make parallel-bench-smoke` runs four-target tiny/waiting execution checks for CI;
 smoke timings are not performance evidence. Shared-host synthetic results do
 not establish a general test-suite speedup or hard time/memory guarantee.
+
+The default comparison is the existing sequential path in the same candidate
+binary, not a historical release binary. Run measured comparisons after this
+agent's local compilation/qualification work has finished; retain overlapping
+stress runs separately and exclude them from timing conclusions.
