@@ -1,0 +1,59 @@
+[
+  {
+    "packages": 1,
+    "candidates": 8,
+    "selected": 1,
+    "normal_wall_ns": {
+      "median": 1623015874,
+      "min": 1610499377,
+      "max": 1662370690
+    },
+    "profile_wall_ns": {
+      "median": 1616843058,
+      "min": 1615127392,
+      "max": 1709170617
+    },
+    "prepare_ns": 36346254,
+    "discover_ns": 115834,
+    "filter_ns": 4021,
+    "filter_share_percent": 0.0002486945149131475
+  },
+  {
+    "packages": 4,
+    "candidates": 32,
+    "selected": 4,
+    "normal_wall_ns": {
+      "median": 6421854095,
+      "min": 6384448709,
+      "max": 6685681036
+    },
+    "profile_wall_ns": {
+      "median": 6472233446,
+      "min": 6281539539,
+      "max": 6598179142
+    },
+    "prepare_ns": 174758184,
+    "discover_ns": 468233,
+    "filter_ns": 16312,
+    "filter_share_percent": 0.000252671510931621
+  },
+  {
+    "packages": 8,
+    "candidates": 64,
+    "selected": 8,
+    "normal_wall_ns": {
+      "median": 12775216581,
+      "min": 12602236413,
+      "max": 13180455528
+    },
+    "profile_wall_ns": {
+      "median": 13029457875,
+      "min": 12772804630,
+      "max": 13246869052
+    },
+    "prepare_ns": 304161994,
+    "discover_ns": 909716,
+    "filter_ns": 32926,
+    "filter_share_percent": 0.0002485568466839254
+  }
+]
