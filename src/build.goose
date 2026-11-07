@@ -35,12 +35,13 @@ fn files(root: u8[:], prefix: u8[:], out: u8[][>..]&) {
         }
     }
 }
+struct TargetFilter { enabled: bool = false, pattern: glob::Pattern = glob::Pattern { .. } }
 // Filter only after traversal, preserving its safety checks and source limits.
-fn select_targets(paths: u8[][>..]&, pattern: u8[:]) {
-    if pattern.len == 0 { return; }
+fn select_targets(paths: u8[][>..]&, filter: TargetFilter&) {
+    if !filter.enabled { return; }
     var selected: u8[][>..] = [];
     for path in paths {
-        let matched, status = glob::matches(pattern, path, glob::Options { hidden: true, .. });
+        let matched, status = glob::matches(filter.pattern, path, glob::Options { hidden: true, .. });
         platform::require(status.error == glob::Error.None, "--filter glob failed (invalid path or matcher limit)");
         if matched { selected.push(str(path)); }
     }
@@ -145,13 +146,13 @@ fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: b
     }
     print("built ", output);
 }
-fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool = false, filter: u8[:] = "") {
+fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool, filter: TargetFilter&) {
     deps::activate(g, cmd == "test" || cmd == "bench");
     let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
     let output = str(p.root, "/target/", profile); platform::require(platform::mkdir(output), "cannot create build output directory");
     if cmd == "test" || cmd == "bench" {
         let dir = if cmd == "test" { "tests" } else { "bench" };
-        if !is_dir(str(stage, "/", dir)) { platform::require(filter.len == 0, "--filter matched no targets"); print("No ", dir, " targets"); return; }
+        if !is_dir(str(stage, "/", dir)) { platform::require(!filter.enabled, "--filter matched no targets"); print("No ", dir, " targets"); return; }
         var paths: u8[][>..] = []; files(stage, dir, paths);
         select_targets(paths, filter);
         for path, i in paths {

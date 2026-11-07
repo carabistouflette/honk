@@ -45,5 +45,5 @@ redistribution follows its own license. No artifact trust or signature policy
 is introduced by build reuse.
 
 Target matching includes [goose-glob](https://github.com/carabistouflette/goose-glob)
-v0.1.0-alpha.1 at `4e8d7830e81b8ffd1c4d8ae2716ea93edc7ea8e3`;
+v0.1.0-alpha.3 at `379515420be040bc603f0ea87b4e823d2e4e5c3a`;
 see [Apache-2.0](vendor/goose-glob/LICENSE) and vendor/manifest.json.

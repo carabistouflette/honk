@@ -52,7 +52,7 @@ fn cli_main() {
     let program_args = argv[if separator < argv.len { separator + 1 } else { separator }..];
     if options.error != argparse::Error.None { platform::die(options.message); }
     if options.has("help") { usage(); return; }
-    validate_options(cmd, options, program_args.len);
+    let filter = validate_options(cmd, options, program_args.len);
     if options.has("log-file") {
         platform::require(diagnostics::configure(options.get("log-file")), "invalid diagnostic configuration");
         logging_requested = true; logging_started_ns = clock_ns();
@@ -74,9 +74,9 @@ fn cli_main() {
         let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
         distribution::uninstall(destination, options.positionals[0]); platform::unlock(lock); return;
     }
-    dispatch(cmd, options, program_args);
+    dispatch(cmd, options, program_args, filter);
 }
-fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
+fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filter: build::TargetFilter&) {
     var p = manifest::Project { .. };
     let root = select_root(options);
     manifest::load(root, p);
@@ -89,7 +89,7 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
     if options.has("package") {
         let selected = selected_member(p, options.get("package"));
         var child = manifest::Project { .. }; manifest::load(selected, child);
-        commands::execute(child, cmd, options, program_args, cache);
+        commands::execute(child, cmd, options, program_args, cache, filter);
         platform::require(diagnostics::write(diagnostics::Event.ItemCompleted), "diagnostic log failed");
     } else if options.has("workspace") || p.name.len == 0 {
         platform::require(p.members.len > 0, "manifest has no workspace members"); var selected = 0;
@@ -97,11 +97,11 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:]) {
             platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
             var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
             platform::require(child.members.len == 0, "nested workspaces are not supported");
-            commands::execute(child, cmd, options, program_args, cache);
+            commands::execute(child, cmd, options, program_args, cache, filter);
             platform::require(diagnostics::write(diagnostics::Event.ItemCompleted), "diagnostic log failed"); selected++;
         }
         platform::require(selected > 0, "no workspace package matched");
-    } else { commands::execute(p, cmd, options, program_args, cache);
+    } else { commands::execute(p, cmd, options, program_args, cache, filter);
         platform::require(diagnostics::write(diagnostics::Event.ItemCompleted), "diagnostic log failed"); }
     platform::unlock(cache_lock);
 }
@@ -151,12 +151,13 @@ fn selected_member(p: manifest::Project&, selector: u8[:]) -> u8[>..] {
     platform::require(selected.len > 0, "no workspace package matched"); return selected;
 }
 
-fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {
+fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) -> build::TargetFilter {
     platform::require(!options.has("root") || options.get("root").len > 0, "installation root must not be empty");
-    if options.has("filter") {
-        let status = glob::validate(options.get("filter"));
+    let filter = if options.has("filter") {
+        let pattern, status = glob::compile(options.get("filter"));
         platform::require(status.error == glob::Error.None, "invalid --filter glob (syntax or pattern limit)");
-    }
+        build::TargetFilter { enabled: true, pattern: copy(pattern) }
+    } else { build::TargetFilter { .. } };
     platform::require(arguments == 0 || cmd == "run" || cmd == "test" || cmd == "bench", "only run/test/bench accept arguments after --");
     for entry in options.entries {
         let name = entry.name; var allowed = false;
@@ -174,6 +175,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {
         else { allowed = cmd != "new" && cmd != "init" && cmd != "uninstall"; }
         platform::require(allowed, str("--", name, " is not supported by ", cmd));
     }
+    return filter;
 }
 
 fn select_root(options: argparse::Result&) -> u8[>..] {
