@@ -44,6 +44,12 @@ not a Honk cryptographic implementation. System libsodium is external; its
 redistribution follows its own license. No artifact trust or signature policy
 is introduced by build reuse.
 
+## goose-terminal
+
+https://github.com/carabistouflette/goose-terminal at `b17449c957c5137538d8a1949af35d9bfad187ce`
+(Apache-2.0). Source and optional POSIX adapter are vendored in
+`vendor/goose-terminal`; see its LICENSE and NOTICE.
+
 Target matching includes [goose-glob](https://github.com/carabistouflette/goose-glob)
 v0.1.0-alpha.3 at `379515420be040bc603f0ea87b4e823d2e4e5c3a`;
 see [Apache-2.0](vendor/goose-glob/LICENSE) and vendor/manifest.json.

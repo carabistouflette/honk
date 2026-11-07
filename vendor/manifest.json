@@ -137,6 +137,22 @@
       }
     },
     {
+      "directory": "goose-terminal",
+      "repository": "https://github.com/carabistouflette/goose-terminal",
+      "revision": "b17449c957c5137538d8a1949af35d9bfad187ce",
+      "license": "Apache-2.0",
+      "files": {
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "NOTICE": "06cdaf9723d7fcb547686eaae9dcb1a6d2f83bf4c605df8d81511ade64357796",
+        "README.md": "29c0c5f0413ef2b1c30d76b9b7be3bdaf0e3705bbb56ca35da21c011ee049204",
+        "terminal.goose": "8e4859bb6bd063496e25eaf3b3d8aea3cb5f272bfa9655cbcfb53eef2382fba3",
+        "posix.goose": "dff6ed018014cc2f5c8aa3118cfd347504b4bdbde123061465e645e673b5d2fe",
+        "posix.build": "3746698b273cb1ba960a178398c195e485f4c8342a4014848e1e325029bd644f",
+        "native/posix.c": "9434c0510fbbb65ed78acee3044c2cc43b99599c4609746cdb52987181620aca",
+        "native/README.md": "a164c630db72c0b6ae783ff1a4028855c29ecc592132e7599a18cd3138c37e03"
+      }
+    },
+    {
       "directory": "goose-glob",
       "repository": "https://github.com/carabistouflette/goose-glob",
       "revision": "379515420be040bc603f0ea87b4e823d2e4e5c3a",

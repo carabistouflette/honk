@@ -22,4 +22,5 @@ logger = { path = "vendor/goose-log" }
 crypto = { path = "vendor/goose-crypto" }
 time = { path = "vendor/goose-time" }
 utc = { path = "vendor/goose-log/examples/utc" }
+posix = { path = "vendor/goose-terminal" }
 glob = { path = "vendor/goose-glob" }

@@ -61,10 +61,14 @@ class CLI(unittest.TestCase):
             (p/'tests/deep/check_a.goose').write_text(f'fn main() {{ print("{name.upper()}"); }}')
             (p/'tests/other.goose').write_text('invalid source')
         (self.root/'Honk.toml').write_text('[workspace]\nmembers=["alpha", "beta"]')
-        output = self.run_honk('test', '--workspace', '--filter', 'tests/**/ch*ck_[a-z].goose').stdout
-        self.assertIn('ALPHA', output)
-        self.assertIn('BETA', output)
-        self.assertEqual(output.count('Passed 1 test targets'), 2)
+        for progress in ([], ['--progress', 'always']):
+            with self.subTest(progress=progress):
+                result = self.run_honk('test', '--workspace', '--filter', 'tests/**/ch*ck_[a-z].goose', *progress)
+                self.assertIn('ALPHA', result.stdout)
+                self.assertIn('BETA', result.stdout)
+                self.assertEqual(result.stdout.count('Passed 1 test targets'), 2)
+                if progress:
+                    self.assertEqual(result.stderr.count('1/1 test'), 2)
         result = self.run_honk('test', '--filter', '[', cwd=self.root/'alpha/src', ok=False)
         self.assertIn('invalid --filter glob', result.stderr)
 
@@ -838,12 +842,12 @@ class CLI(unittest.TestCase):
             ' m.with_suffix(".done").write_text("done")\n sys.exit(0)\n'\
             'signal.signal(signal.SIGINT,stop)\nm.write_text(str(os.getpid()))\nwhile True: time.sleep(1)\n')
         compiler.chmod(0o755)
-        for mode in ('terminal', 'direct'):
+        for mode in ('terminal', 'direct', 'progress'):
             with self.subTest(mode=mode):
                 marker = self.root/mode; master, slave = pty.openpty()
                 def foreground_session():
                     os.setsid(); fcntl.ioctl(0, termios.TIOCSCTTY, 0); os.tcsetpgrp(0, os.getpgrp())
-                proc = subprocess.Popen([HONK, 'check'], cwd=p, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                proc = subprocess.Popen([HONK, 'check', *(['--progress', 'always'] if mode == 'progress' else [])], cwd=p, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         preexec_fn=foreground_session,
                                         env={**os.environ, 'GOOSE': str(compiler), 'HONK_HOME': str(self.root/'cache'), 'TEST_MARKER': str(marker)})
                 os.close(slave)

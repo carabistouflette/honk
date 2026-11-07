@@ -87,6 +87,13 @@ rev = ""
 commit = ""
 
 [[dependency]]
+name = "posix"
+path = "vendor/goose-terminal"
+git = ""
+rev = ""
+commit = ""
+
+[[dependency]]
 name = "glob"
 path = "vendor/goose-glob"
 git = ""

@@ -6,13 +6,14 @@ format:
 	python3 scripts/process-fixture.py --update
 	$(GOOSE) format honk.goose src tests bench/utc/driver.goose
 check:
-	python3 -m py_compile scripts/metadata-test-build.py tests/http_metadata.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
+	python3 -m py_compile scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
 	python3 bench/glob_consumer.py --help > /dev/null
 	python3 bench/dogfood.py --self-test
 	python3 scripts/process-fixture.py
 	python3 scripts/check-vendor.py
 	$(GOOSE) format --check honk.goose src tests bench/utc/driver.goose
 	$(GOOSE) check honk.goose
+	$(GOOSE) check tests/presentation_write.goose
 	$(GOOSE) check tests/core.goose
 	$(GOOSE) check tests/diagnostics_utc.goose
 	$(GOOSE) check tests/process.goose
@@ -26,6 +27,7 @@ build:
 	$(GOOSE) build honk.goose -o .build/honk
 test:
 	$(MAKE) build
+	$(MAKE) terminal-test terminal-write-test
 	$(MAKE) diagnostics-test
 	GOOSE=$(abspath $(GOOSE)) python3 tests/native_import.py
 	$(GOOSE) run tests/core.goose
@@ -55,6 +57,7 @@ test:
 	HONK=$(CURDIR)/.build/honk SEMVER_PROBE=$(CURDIR)/.build/semver-probe GOOSE=$(abspath $(GOOSE)) python3 tests/semver_cli.py
 	$(MAKE) metadata-test
 sanitize:
+	$(MAKE) terminal-write-sanitize
 	$(MAKE) diagnostics-sanitize
 	$(GOOSE) build tests/tag_catalog.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/tag-catalog-sanitize
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/tag-catalog-sanitize
@@ -69,6 +72,7 @@ sanitize:
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 PROCESS_PROBE=$(CURDIR)/.build/process-sanitize PROCESS_FAULT=$(CURDIR)/.build/process-fault-sanitize python3 tests/process_cli.py
 	$(GOOSE) build tests/semver_probe.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/semver-probe-sanitize
 	$(GOOSE) build honk.goose --debug --no-bce --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/honk-sanitize
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/terminal_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/build_cache_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py
@@ -116,3 +120,13 @@ diagnostics-sanitize:
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/diagnostics-utc-sanitize
 	$(GOOSE) build tests/diagnostics_utc.goose -O2 --standalone --cc $(CURDIR)/scripts/sanitizer-cc.sh -o .build/diagnostics-utc-sanitize-release
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 ./.build/diagnostics-utc-sanitize-release
+
+.PHONY: terminal-test
+terminal-test:
+	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/terminal_cli.py
+
+.PHONY: terminal-write-test terminal-write-sanitize
+terminal-write-test:
+	python3 tests/presentation_write.py --goose "$(abspath $(GOOSE))"
+terminal-write-sanitize:
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 tests/presentation_write.py --goose "$(abspath $(GOOSE))" --sanitize

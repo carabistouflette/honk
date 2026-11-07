@@ -8,6 +8,8 @@ Seven randomized sequential rounds per version/case, CPU 2, shared Linux x86-64 
 
 These samples show no clear whole-command speedup: all before/after ranges overlap, and the prepared test/bench medians are slightly higher. Compiler/target costs dominate this small real project. Maximum-RSS observations likewise provide no clear reduction.
 
+The later merge of terminal-progress main `441d1bfc67f1` changes runtime/build/vendor inputs. This report predates that merge and identifies only the two exact measured snapshots above; it is not a measurement of the combined build.
+
 ## Complete command wall time
 
 Milliseconds, median **[minimum, maximum]**. A ratio above 1 favors the prepared version; overlapping ranges do not establish a reliable speedup.

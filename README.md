@@ -73,6 +73,25 @@ must not be writable by untrusted users. Builds preserve the last-good executabl
 on compilation failure; source packaging requires tracked regular files and
 in-package dependencies. See the reference for resource, signal and HTTP limits.
 
+## Optional command progress
+
+`honk build|run|check|test|bench|install --progress auto|always|never` adds
+bounded, escaped status snapshots to stderr. The default is `never`, preserving
+existing command output. `auto` displays only on a terminal; `always` also emits
+plain text when redirected. Terminal facts are re-probed for each snapshot;
+nonempty `NO_COLOR` disables styling, and absent/empty/dumb `TERM` disables ANSI.
+Existing stdout and child diagnostics remain unchanged. Test/bench progress is
+reported after each completed target, with complete newline-terminated frames;
+snapshots begin with a newline to preserve unterminated child diagnostics, and
+there is no live animation or cursor state spanning child execution. Successful
+styled writes include the reset sequence; partial writes can leave terminal
+formatting altered, and no rollback is promised. Narrow
+terminals receive a simple completion line. A status-write failure suppresses
+later presentation without changing the command's result. A native signal-guard
+cleanup failure instead exits with status 1, without further application
+diagnostics or child launches (the runtime may flush existing stdio buffers). Blocking stderr may still block; the borrowed descriptor's flags are never changed. The rendering
+and optional POSIX adapter come from the pinned goose-terminal snapshot.
+
 ### Select test and benchmark targets
 
 `honk test --filter 'tests/unit/**/*.goose'` and
@@ -97,7 +116,8 @@ pattern through the public `glob::matches` API across all workspace packages fro
 [goose-glob v0.1.0-alpha.3](https://github.com/carabistouflette/goose-glob/releases/tag/v0.1.0-alpha.3).
 A [complete-command measurement](bench/results/glob-2026-11-07/README.md) retains
 startup, test/bench wall-time and maximum-RSS observations for the upgrade.
-Those samples show no clear whole-command speedup on the fixed Honk project.
+Those pre-terminal-merge samples show no clear whole-command speedup on the fixed
+Honk project; they do not measure the combined terminal/filter build.
 Honk retains its own traversal and staging: symlinks and special files are
 rejected, `.git`, `target`, `.honk`, `.toolchain`, `.build` remain excluded, and
 the existing 4096 source/directory caps apply before filtering. This option is

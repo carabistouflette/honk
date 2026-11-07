@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add opt-in goose-terminal command summaries and completed-target progress on
+  stderr, preserving existing stdout and child output.
+
 - Add `test/bench --filter PATTERN` using pinned public goose-glob matching,
   preserving source traversal checks and unfiltered defaults.
 

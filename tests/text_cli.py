@@ -94,6 +94,7 @@ class TextCLI(unittest.TestCase):
         self.assertEqual(manifest["dependencies"]["toml_edit"], {"path": "vendor/goose-toml-edit"})
         self.assertEqual(manifest["dependencies"]["time"], {"path": "vendor/goose-time"})
         self.assertEqual(manifest["dependencies"]["utc"], {"path": "vendor/goose-log/examples/utc"})
+        self.assertEqual(manifest["dependencies"]["posix"], {"path": "vendor/goose-terminal"})
         self.call("check", "--frozen", cwd=project)
         self.call("package", "--frozen", cwd=project)
         label = manifest["package"]["name"] + "-" + manifest["package"]["version"]
@@ -107,7 +108,9 @@ class TextCLI(unittest.TestCase):
                 self.assertEqual(package.extractfile(label + "/vendor/goose-toml-edit/" + name).read(), expected)
             for path in ("goose-glob/glob.goose", "goose-glob/LICENSE", "goose-time/time.goose", "goose-time/detail.goose", "goose-time/LICENSE",
                          "goose-time/THIRD_PARTY_NOTICES.md", "goose-log/examples/utc/utc.goose",
-                         "goose-log/LICENSE", "goose-log/NOTICE"):
+                         "goose-log/LICENSE", "goose-log/NOTICE", "goose-terminal/terminal.goose",
+                         "goose-terminal/posix.goose", "goose-terminal/posix.build",
+                         "goose-terminal/native/posix.c", "goose-terminal/LICENSE", "goose-terminal/NOTICE"):
                 expected = (project / "vendor" / path).read_bytes()
                 self.assertEqual(package.extractfile(label + "/vendor/" + path).read(), expected)
         self.assertEqual((project / "Honk.lock").read_bytes(), lock)
