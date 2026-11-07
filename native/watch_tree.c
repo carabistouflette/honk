@@ -203,13 +203,13 @@ int64_t honk_tree_scan_step(tree_words words) {
       break;
     }
     struct stat info;
-    if (fstatat(dirfd(dir), item->d_name, &info, AT_SYMLINK_NOFOLLOW) < 0) {
+    if (fstatat(fd, item->d_name, &info, AT_SYMLINK_NOFOLLOW) < 0) {
       ok = false;
       break;
     }
     if (!S_ISDIR(info.st_mode) || excluded(item->d_name))
       continue;
-    int child = openat(dirfd(dir), item->d_name,
+    int child = openat(fd, item->d_name,
                        O_RDONLY | O_DIRECTORY | O_NOFOLLOW | O_CLOEXEC);
     if (child < 0) {
       ok = false;
@@ -342,7 +342,7 @@ int64_t honk_tree_verify_step(tree_words words) {
       ok = false;
       break;
     }
-    if (fstatat(dirfd(dir), item->d_name, &info, AT_SYMLINK_NOFOLLOW) < 0) {
+    if (fstatat(fd, item->d_name, &info, AT_SYMLINK_NOFOLLOW) < 0) {
       ok = false;
       break;
     }
@@ -382,7 +382,8 @@ int64_t honk_tree_event(tree_words words, int64_t index, tree_bytes name,
     return (e->roles & (2 | 4)) ? -1 : 1;
   if (e->roles & 2)
     for (int j = 0; j < t->count; ++j)
-      if ((t->entries[j].roles & 4) && t->entries[j].parent == index &&
+      if (name.len > 0 && (t->entries[j].roles & 4) &&
+          t->entries[j].parent == index &&
           strlen(t->entries[j].name) == (size_t)name.len &&
           !memcmp(t->entries[j].name, name.data, (size_t)name.len) &&
           (mask & (0x40 | 0x80 | 0x100 | 0x200)))
