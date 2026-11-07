@@ -1,0 +1,442 @@
+{
+  "complete": true,
+  "head": "10c45728b3fe6280104b6fe9b520ab5c9a136824",
+  "source_revision": "129dc794b62ad987784db0a1d52ef618c85fccf4",
+  "records": [
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 8539008280,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "compiling the runtime for gcc 20260810\n",
+      "backend_logs_before": {},
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076525250150865,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076526845204779,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076529272286757,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076529989310964
+      },
+      "label": "warmup_ordinary"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7826056426,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076525250150865,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076526845204779,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076529272286757,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076529989310964
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076531636366541,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076533653434562,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076536564532648,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076537694570697
+      },
+      "label": "warmup_population"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 596810392,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076531636366541,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076533653434562,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076536564532648,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076537694570697
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076531636366541,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076533653434562,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076536564532648,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076537694570697
+      },
+      "label": "warmup_hit"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 6172820653,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076531636366541,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076533653434562,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076536564532648,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076537694570697
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076539805641738,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076541444696858,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076543875778559,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076544615803415
+      },
+      "label": "ordinary_0"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7590208646,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076539805641738,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076541444696858,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076543875778559,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076544615803415
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076546261858681,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076548316927636,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076551108021211,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076552179057094
+      },
+      "label": "population_0"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 411534324,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076546261858681,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076548316927636,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076551108021211,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076552179057094
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076546261858681,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076548316927636,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076551108021211,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076552179057094
+      },
+      "label": "hit_0"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 6173819695,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076546261858681,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076548316927636,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076551108021211,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076552179057094
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076554022118815,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076555662173704,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076558080254579,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076558857280552
+      },
+      "label": "ordinary_1"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 8040053013,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076554022118815,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076555662173704,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076558080254579,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076558857280552
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076560543336890,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076562651407284,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076565605505848,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076566857547594
+      },
+      "label": "population_1"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 689361439,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076560543336890,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076562651407284,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076565605505848,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076566857547594
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076560543336890,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076562651407284,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076565605505848,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076566857547594
+      },
+      "label": "hit_1"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7539189028,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076560543336890,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076562651407284,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076565605505848,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076566857547594
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076569275628169,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076571204692403,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076574072787831,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076575152823743
+      },
+      "label": "population_2"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 394645556,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076569275628169,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076571204692403,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076574072787831,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076575152823743
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076569275628169,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076571204692403,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076574072787831,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076575152823743
+      },
+      "label": "hit_2"
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 6337014017,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/project/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "backend_logs_before": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076569275628169,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076571204692403,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076574072787831,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076575152823743
+      },
+      "backend_logs_after": {
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/context-ca4de5fc/cc.log": 1794076577044886625,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/core-a73a16f2/cc.log": 1794076578731942661,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/sparse-7d375c3c/cc.log": 1794076581262026642,
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/test-reuse-measured-final/goose/build/prog/unified-4085385c/cc.log": 1794076582001051161
+      },
+      "label": "ordinary_2"
+    }
+  ],
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "load_before": [
+    3.806640625,
+    4.94287109375,
+    5.09765625
+  ],
+  "tool_hashes": {
+    "honk": "e983a66a95ab1a9508029da8cb62c7ed405d5cbc2a7a3c662670bfeeccc3c9a5",
+    "goose": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+  },
+  "harness_hash": "a252624ac299e59eee2ed812ec1681e0a4eb41a916722dccdd34a6360bba5b72",
+  "scope": "Uninstrumented full command wall time; release jobs4; warm shared compiler caches; shared host; no time gates",
+  "c_compiler": {
+    "path": "/usr/bin/gcc",
+    "sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287",
+    "version": "gcc (GCC) 16.2.1 20260810\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n"
+  },
+  "compiler_pin": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "compiler_version": "goose eadca40 (runtime 3025e5810379)\n",
+  "harness_hashes": {
+    "bench/test_reuse.py": "a252624ac299e59eee2ed812ec1681e0a4eb41a916722dccdd34a6360bba5b72",
+    "bench/process_observer.py": "5c3eb117574d065a69b00981e881d6e937f826bc9e80c80d082f07cce16acdc8",
+    "bench/qualify_parallel.py": "a24c9a7997468d11d5a3a86bb557d73650dd966f16d368fdacf364dae40aac4c",
+    "bench/observer_calibration.py": "364a75f698079295ac123ff31dfd4c707766948276b41979d1179ebaa4a6c653"
+  },
+  "environment_sha256": "61ce66ede779fbd7e941bdb90183332ce317250a675612f18686e901917b3dba",
+  "flags": [
+    "test",
+    "--release",
+    "--jobs",
+    "4"
+  ],
+  "seed": 20261107,
+  "source_files": {
+    "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+    "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+    "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d",
+    "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+    "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+    "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+    "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+    "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+    "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce"
+  },
+  "archive_sha256": "72ffe8ffdb34490595254925b373242443d4d8c799d94696c6b0b31974eeec1a",
+  "load_after": [
+    3.99853515625,
+    4.787109375,
+    5.033203125
+  ]
+}

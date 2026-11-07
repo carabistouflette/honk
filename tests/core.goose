@@ -18,6 +18,15 @@ import task from "../vendor/goose-task";
 import honk from "..";
 import std;
 fn main() {
+    var cache_graph = deps::Graph { .. };
+    var generated: u8[>..] = [];
+    // Generated declarations can exceed original-file limits; cache eligibility
+    // must reject conservatively without the fatal source requirements parser.
+    for i in 257 { generated.append(str("import alias", i, " from \"/stage/app\";\n")); }
+    assert(!build_cache::pure(generated, cache_graph, false, "/stage/app"));
+    assert(build_cache::pure("import local from \"/stage/app\"; import local.mod;", cache_graph, false, "/stage/app"));
+    assert(!build_cache::pure("import local from \"/external\";", cache_graph, false, "/stage/app"));
+
     assert(manifest::identifier("json_codec"));
     assert(!manifest::identifier("json-codec"));
     assert(!manifest::identifier("std"));

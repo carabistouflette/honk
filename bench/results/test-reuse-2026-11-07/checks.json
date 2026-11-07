@@ -1,0 +1,68 @@
+{
+  "test-reuse-final-check2.log": {
+    "sha256": "dcf82cad619326f2fd661a84ce9b6946a2622c5642a26caacda5e6a2c1adf0c7",
+    "test_counts": [],
+    "failed": false
+  },
+  "test-reuse-test-final.log": {
+    "sha256": "7a8b63895be9b2c24b808ded9d67feaeef74f5c992f6f1ce7c460c27ba301bb7",
+    "test_counts": [
+      "5",
+      "1",
+      "37",
+      "37",
+      "8",
+      "5",
+      "77",
+      "16",
+      "5",
+      "12",
+      "8",
+      "9",
+      "5",
+      "6",
+      "17"
+    ],
+    "failed": false
+  },
+  "test-reuse-sanitize.log": {
+    "sha256": "c4604049bca0fee909a9c7d7d2f3a0b54be5cd2300bf1124c85993d91476453c",
+    "test_counts": [
+      "37",
+      "5",
+      "37",
+      "8",
+      "77",
+      "15",
+      "5",
+      "9",
+      "5",
+      "12",
+      "8",
+      "6",
+      "17",
+      "3",
+      "2"
+    ],
+    "failed": false
+  },
+  "test-reuse-cache-sanitize.log": {
+    "sha256": "f5a5b454deef17cd27c56ae8c792d316e466b70da33e6fc2e6415612e66b63ed",
+    "test_counts": [
+      "15"
+    ],
+    "failed": false
+  },
+  "test-reuse-import-limit-sanitize.log": {
+    "sha256": "7435ab9305efe8f649329eb09ae893f1f557dd3fff994be627a97a3cc4655346",
+    "test_counts": [
+      "1"
+    ],
+    "failed": false
+  },
+  "test-reuse-security-bench.log": {
+    "sha256": "1d2c25781d5c54ea97e34523b48867d7d0af5dd0bae4d24815835d473302fe75",
+    "test_counts": [],
+    "failed": false
+  }
+}

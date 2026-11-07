@@ -1,0 +1,578 @@
+make: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+python3 scripts/process-fixture.py --update
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose format honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
+python3 -m py_compile bench/test_reuse.py bench/process_observer.py bench/observer_calibration.py bench/qualify_parallel.py tests/qualification_observer.py tests/qualification_driver.py bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
+python3 bench/glob_consumer.py --help > /dev/null
+python3 bench/dogfood.py --self-test
+controller_success PASS
+controller_exit PASS
+{"controller_self_test": "PASS", "fd_before": 4, "fd_after": 4, "success_exit_status": true, "timeout_cleanup": true, "unwaited_children": false}
+python3 scripts/process-fixture.py
+python3 scripts/check-vendor.py
+Vendored source and license hashes match the recorded pins
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose format --check honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check honk.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/presentation_write.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/core.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/graph.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/parallel_probe.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check bench/qualification_driver.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check bench/qualification_pressure.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/diagnostics_utc.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/process.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/semver_probe.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/process_fault.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/tag_select.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check tests/tag_catalog.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose check bench/utc/driver.goose
+git diff --check
+make watch-tree-native
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+mkdir -p .build
+gcc -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_native.c -o .build/watch-tree-native
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-native
+nofollow, identities, held-root deletion, topology verification, cancellation and fd cleanup passed
+gcc -std=c11 -Wall -Wextra -Werror -O1 -g -fno-omit-frame-pointer -fsanitize=address,undefined tests/watch_tree_guard.c -o .build/watch-tree-guard
+ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 .build/watch-tree-guard
+session-long guard catches root ABA behind more than256 irrelevant records
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+make qualification-test
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+python3 tests/qualification_observer.py
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 0.785s
+
+OK
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build bench/qualification_driver.goose -o .build/qualification-driver
+building the package honk's C
+built .build/qualification-driver
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build bench/qualification_pressure.goose -o .build/qualification-pressure
+built .build/qualification-pressure
+QUALIFICATION_DRIVER=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-driver QUALIFICATION_PRESSURE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-pressure python3 tests/qualification_driver.py
+.
+----------------------------------------------------------------------
+Ran 1 test in 1.109s
+
+OK
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+make watch-test watch-fault-test
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build honk.goose -o .build/honk
+building the package honk's C
+building the package watch's C
+building the package crypto's C with CMake
+building the package http's C with CMake
+built .build/honk
+HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/watch_cli.py
+...ssss.s...sss.sss...s........s.ss..........sss.s..s....
+----------------------------------------------------------------------
+Ran 57 tests in 11.402s
+
+OK (skipped=20)
+python3 scripts/watch-test-build.py "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose"
+building the package honk's C
+building the package watch's C
+building the package crypto's C with CMake
+building the package http's C with CMake
+building the package process's C
+building the package posix's C
+built /home/arobin/Work/Projects/goose-libs/honk/.build/honk-watch-fault
+/home/arobin/Work/Projects/goose-libs/honk/.build/honk-watch-fault
+WATCH_FAULT_TEST=1 HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk-watch-fault GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/watch_cli.py
+.........................................................
+----------------------------------------------------------------------
+Ran 57 tests in 16.380s
+
+OK
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+make terminal-test terminal-write-test
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/terminal_cli.py
+........
+----------------------------------------------------------------------
+Ran 8 tests in 3.411s
+
+OK
+python3 tests/presentation_write.py --goose "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose"
+built /home/arobin/Work/Projects/goose-libs/honk/.build/presentation-write-ce7144b0a0b4977f/probe
+consumer writes: exact partial offsets, EINTR retry, EAGAIN suppression, and 64-attempt cap pass
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+make diagnostics-test
+make[1]: Entering directory '/home/arobin/Work/Projects/goose-libs/honk'
+mkdir -p .build
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose run tests/diagnostics_utc.goose
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose run tests/diagnostics_utc.goose --debug
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/diagnostics_utc.goose -o .build/diagnostics-utc
+built .build/diagnostics-utc
+./.build/diagnostics-utc
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/diagnostics_utc.goose --debug --no-bce -o .build/diagnostics-utc-debug
+built .build/diagnostics-utc-debug
+./.build/diagnostics-utc-debug
+make[1]: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'
+GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/native_import.py
+Honk native import ignores poisoned build fixtures
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose run tests/graph.goose
+dependency graph contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/graph.goose -o .build/graph
+built .build/graph
+./.build/graph
+dependency graph contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose run tests/core.goose
+core contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/core.goose -o .build/core
+built .build/core
+./.build/core
+core contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose run tests/tag_select.goose
+tag selection contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/tag_select.goose -o .build/tag-select
+built .build/tag-select
+./.build/tag-select
+tag selection contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose run tests/tag_catalog.goose
+tag advertisement contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/tag_catalog.goose -o .build/tag-catalog
+built .build/tag-catalog
+./.build/tag-catalog
+tag advertisement contracts passed
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/process.goose -o .build/process-probe
+built .build/process-probe
+./.build/process-probe
+./.build/process-probe closed
+./.build/process-probe overflow
+./.build/process-probe signal
+./.build/process-probe missing
+/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose build tests/process_fault.goose --cc "$(python3 scripts/process-fixture.py --path)" -o .build/process-fault
+building the package honk's C
+built .build/process-fault
+PROCESS_PROBE=/home/arobin/Work/Projects/goose-libs/honk/.build/process-probe PROCESS_FAULT=/home/arobin/Work/Projects/goose-libs/honk/.build/process-fault python3 tests/process_cli.py
+.....
+----------------------------------------------------------------------
+Ran 5 tests in 1.495s
+
+OK
+HONK=/home/arobin/Work/Projects/goose-libs/honk/.build/honk GOOSE=/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose python3 tests/cli.py
+................................................................EEEEEEEEEEEEEE
+======================================================================
+ERROR: test_symlink_manifest (__main__.CLI.test_symlink_manifest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 190, in test_symlink_manifest
+    self.run_honk('metadata', ok=False)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_symlink_sources_and_output (__main__.CLI.test_symlink_sources_and_output)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 279, in test_symlink_sources_and_output
+    p = self.new()
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_target_filter_does_not_bypass_source_or_directory_caps (__main__.CLI.test_target_filter_does_not_bypass_source_or_directory_caps) (kind='file')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 95, in test_target_filter_does_not_bypass_source_or_directory_caps
+    p = self.new(kind)
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_target_filter_does_not_bypass_source_or_directory_caps (__main__.CLI.test_target_filter_does_not_bypass_source_or_directory_caps) (kind='directory')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 95, in test_target_filter_does_not_bypass_source_or_directory_caps
+    p = self.new(kind)
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_target_filter_errors (__main__.CLI.test_target_filter_errors)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 77, in test_target_filter_errors
+    p = self.new()
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_target_filter_patterns_and_default (__main__.CLI.test_target_filter_patterns_and_default)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 33, in test_target_filter_patterns_and_default
+    p = self.new()
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_target_filter_preserves_traversal_safety_and_exclusions (__main__.CLI.test_target_filter_preserves_traversal_safety_and_exclusions)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 116, in test_target_filter_preserves_traversal_safety_and_exclusions
+    p = self.new()
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_target_filter_reuses_pattern_across_workspace_packages (__main__.CLI.test_target_filter_reuses_pattern_across_workspace_packages)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 60, in test_target_filter_reuses_pattern_across_workspace_packages
+    p = self.new(name)
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_terminal_sigint_does_not_interrupt_child_cleanup_twice (__main__.CLI.test_terminal_sigint_does_not_interrupt_child_cleanup_twice)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 862, in test_terminal_sigint_does_not_interrupt_child_cleanup_twice
+    p = self.new(); compiler = self.root/'interrupt-compiler'
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_test_binary_does_not_overwrite_application (__main__.CLI.test_test_binary_does_not_overwrite_application)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 470, in test_test_binary_does_not_overwrite_application
+    p = self.new('test-0'); (p/'tests').mkdir()
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_transitive_cycle_and_conflict (__main__.CLI.test_transitive_cycle_and_conflict)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 237, in test_transitive_cycle_and_conflict
+    p = self.new()
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_uninstall_rejects_symlink_prefix_components (__main__.CLI.test_uninstall_rejects_symlink_prefix_components)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 587, in test_uninstall_rejects_symlink_prefix_components
+    self.run_honk('uninstall', 'hello', '--root', prefix, ok=False)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_workspace_and_selection (__main__.CLI.test_workspace_and_selection)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 290, in test_workspace_and_selection
+    a = self.new('alpha'); b = self.new('beta')
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+======================================================================
+ERROR: test_workspace_clean_rejects_symlink_members (__main__.CLI.test_workspace_clean_rejects_symlink_members)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 548, in test_workspace_clean_rejects_symlink_members
+    outside = self.new('outside'); workspace = self.root/'workspace'; workspace.mkdir()
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 30, in new
+    self.run_honk('new', name, *args)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^
+  File "/home/arobin/Work/Projects/goose-libs/honk/tests/cli.py", line 22, in run_honk
+    proc = subprocess.run([HONK, *map(str, args)], cwd=cwd or self.root,
+                          env={**os.environ, 'GOOSE': GOOSE, 'HONK_HOME': str(self.root/'cache'), **(env or {})},
+                          capture_output=True, text=True, timeout=90)
+  File "/usr/lib/python3.14/subprocess.py", line 555, in run
+    with Popen(*popenargs, **kwargs) as process:
+         ~~~~~^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1039, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        pass_fds, cwd, env,
+                        ^^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+                        gid, gids, uid, umask,
+                        ^^^^^^^^^^^^^^^^^^^^^^
+                        start_new_session, process_group)
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 1990, in _execute_child
+    raise child_exception_type(errno_num, err_msg, err_filename)
+PermissionError: [Errno 13] Permission denied: '/home/arobin/Work/Projects/goose-libs/honk/.build/honk'
+
+----------------------------------------------------------------------
+Ran 77 tests in 23.406s
+
+FAILED (errors=14)
+make: *** [Makefile:59: test] Error 1
+make: Leaving directory '/home/arobin/Work/Projects/goose-libs/honk'

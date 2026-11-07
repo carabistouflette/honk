@@ -65,7 +65,7 @@ class Parallel(unittest.TestCase):
         bad = [('test', '--jobs', x) for x in ('', '0', '9', '-1', '+2', '02', '1.0', ' 2', '9'*100)]
         bad += [('test', '--jobs', '2', '--test-timeout-ms', x) for x in ('', '0', '-1', '+2', '86400001', '1.1', 'x')]
         bad += [('test', '--test-timeout-ms', '2'), ('build', '--jobs', '2'), ('bench', '--jobs', '2'),
-                ('run', '--jobs', '2'), ('test', '--jobs', '2', '--reuse-build'),
+                ('run', '--jobs', '2'), ('watch', 'test', '--reuse-build', '--watch-dir', '/does/not/exist'),
                 ('watch', 'test', '--jobs', '2', '--watch-dir', '/does/not/exist')]
         self.env['GOOSE'] = '/does/not/exist'
         for args in bad:

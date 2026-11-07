@@ -263,10 +263,11 @@ and failure behavior.
 
 ## Build reuse and compiler paths
 
-`build/run --reuse-build` is off by default and supports bounded source-only targets.
+`build/run/test --reuse-build` is off by default and supports bounded source-only targets.
 See [eligibility, fingerprints and limits](INCREMENTAL-BUILDS.md). Native, embedded or
 unsupported inputs compile normally. Indirect compiler support files must remain
-unchanged; an ordinary build or clean refreshes reuse.
+unchanged; `clean` removes all reuse state. Ordinary builds refresh the binary
+slot; ordinary tests refresh the selected test buckets.
 
 Compiler-facing commands reject project paths with literal backslashes because the
 pinned compiler treats them as separators on POSIX. Source compiler bootstrap also

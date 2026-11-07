@@ -1,0 +1,16 @@
+{
+  "source": "35a5c851b97c16ded78cdec1139b2797d2f9b1d0",
+  "merged_main": "bb3cb5501d97ded03b792ddb252cc0aaa698f3f5",
+  "checks": [
+    "make check build",
+    "8 compiler diagnostics tests",
+    "17 cache tests",
+    "17 parallel CLI tests",
+    "make check after separate recorder syntax command"
+  ],
+  "scope": "Targeted integration qualification; no new performance measurements or full sanitizer/portability claims.",
+  "sha256": {
+    "integration.log": "2d6332ad77856d1568f3886e8133c51b443892d87ca11cdab6796b6aa1fdecfb",
+    "check.log": "0c5c8654b1f45bb3d1d3257365c8d9676deec20da06fb463445de11488e31444"
+  }
+}
