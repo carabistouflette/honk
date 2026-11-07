@@ -11,6 +11,7 @@ import argparse from "../vendor/goose-argparse";
 import logger from "../vendor/goose-log";
 import time from "../vendor/goose-time";
 import utc from "../vendor/goose-log/examples/utc";
+import posix from "../vendor/goose-terminal";
 import honk from "..";
 import std;
 const FIRST = "1111111111111111111111111111111111111111";

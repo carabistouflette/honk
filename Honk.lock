@@ -85,3 +85,10 @@ path = "vendor/goose-log/examples/utc"
 git = ""
 rev = ""
 commit = ""
+
+[[dependency]]
+name = "posix"
+path = "vendor/goose-terminal"
+git = ""
+rev = ""
+commit = ""

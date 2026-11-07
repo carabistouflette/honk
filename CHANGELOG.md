@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add opt-in goose-terminal command summaries and completed-target progress on
+  stderr, preserving existing stdout and child output.
+
 ## 0.4.0 — 2026-11-05 (experimental prerelease)
 
 Source-only Linux x86-64/glibc release. CLI, manifest and lockfile formats

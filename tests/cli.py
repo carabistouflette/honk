@@ -740,12 +740,12 @@ class CLI(unittest.TestCase):
             ' m.with_suffix(".done").write_text("done")\n sys.exit(0)\n'\
             'signal.signal(signal.SIGINT,stop)\nm.write_text(str(os.getpid()))\nwhile True: time.sleep(1)\n')
         compiler.chmod(0o755)
-        for mode in ('terminal', 'direct'):
+        for mode in ('terminal', 'direct', 'progress'):
             with self.subTest(mode=mode):
                 marker = self.root/mode; master, slave = pty.openpty()
                 def foreground_session():
                     os.setsid(); fcntl.ioctl(0, termios.TIOCSCTTY, 0); os.tcsetpgrp(0, os.getpgrp())
-                proc = subprocess.Popen([HONK, 'check'], cwd=p, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                proc = subprocess.Popen([HONK, 'check', *(['--progress', 'always'] if mode == 'progress' else [])], cwd=p, stdin=slave, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
                                         preexec_fn=foreground_session,
                                         env={**os.environ, 'GOOSE': str(compiler), 'HONK_HOME': str(self.root/'cache'), 'TEST_MARKER': str(marker)})
                 os.close(slave)

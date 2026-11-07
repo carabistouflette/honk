@@ -72,3 +72,22 @@ Build only projects and tools you trust: Honk is not a sandbox. Private caches
 must not be writable by untrusted users. Builds preserve the last-good executable
 on compilation failure; source packaging requires tracked regular files and
 in-package dependencies. See the reference for resource, signal and HTTP limits.
+
+## Optional command progress
+
+`honk build|run|check|test|bench|install --progress auto|always|never` adds
+bounded, escaped status snapshots to stderr. The default is `never`, preserving
+existing command output. `auto` displays only on a terminal; `always` also emits
+plain text when redirected. Terminal facts are re-probed for each snapshot;
+nonempty `NO_COLOR` disables styling, and absent/empty/dumb `TERM` disables ANSI.
+Existing stdout and child diagnostics remain unchanged. Test/bench progress is
+reported after each completed target, with complete newline-terminated frames;
+snapshots begin with a newline to preserve unterminated child diagnostics, and
+there is no live animation or cursor state spanning child execution. Successful
+styled writes include the reset sequence; partial writes can leave terminal
+formatting altered, and no rollback is promised. Narrow
+terminals receive a simple completion line. A status-write failure suppresses
+later presentation without changing the command's result. A native signal-guard
+cleanup failure instead exits with status 1, without further application
+diagnostics or child launches (the runtime may flush existing stdio buffers). Blocking stderr may still block; the borrowed descriptor's flags are never changed. The rendering
+and optional POSIX adapter come from the pinned goose-terminal snapshot.

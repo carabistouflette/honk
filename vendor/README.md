@@ -20,3 +20,6 @@ the companion remains `f8d1b1664a86b768a6f1375636d9b2c3a440aa31`.
 UTC logging uses the included goose-log adapter and goose-time snapshot.
 HTTP metadata uses the included consumer example. The manifest records exact
 source files for all of them; a newer upstream release is not adopted implicitly.
+
+Optional CLI presentation uses goose-terminal and its POSIX adapter; the manifest
+records the exact source/license snapshot. Renderer output stays application-owned.

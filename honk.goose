@@ -11,6 +11,7 @@ import argparse from "./vendor/goose-argparse";
 import logger from "./vendor/goose-log";
 import time from "./vendor/goose-time";
 import utc from "./vendor/goose-log/examples/utc";
+import posix from "./vendor/goose-terminal";
 import .src.diagnostics;
 import .src.platform;
 import .src.manifest;
@@ -25,7 +26,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain version help\n\nUse honk help for project conventions. --help prints this message.");
+    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -44,7 +45,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.4.0"); return; }
     let spec = [argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("progress"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -153,9 +154,14 @@ fn selected_member(p: manifest::Project&, selector: u8[:]) -> u8[>..] {
 fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64) {
     platform::require(!options.has("root") || options.get("root").len > 0, "installation root must not be empty");
     platform::require(arguments == 0 || cmd == "run" || cmd == "test" || cmd == "bench", "only run/test/bench accept arguments after --");
+    if options.has("progress") {
+        let policy = options.get("progress");
+        platform::require(policy == "auto" || policy == "always" || policy == "never", "--progress must be auto, always, or never");
+    }
     for entry in options.entries {
         let name = entry.name; var allowed = false;
-        if name == "reuse-build" { allowed = cmd == "build" || cmd == "run"; }
+        if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
+        else if name == "reuse-build" { allowed = cmd == "build" || cmd == "run"; }
         else if name == "metadata" { allowed = cmd == "toolchain"; }
         else if name == "help" || name == "log-file" { allowed = true; }
         else if name == "lib" || name == "name" { allowed = cmd == "new" || cmd == "init"; }
