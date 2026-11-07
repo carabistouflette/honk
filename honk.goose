@@ -30,7 +30,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-runs N] (nonrecursive).");
+    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] (nonrecursive).");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -58,13 +58,18 @@ fn cli_main() {
     if options.has("help") { usage(); return; }
     if cmd == "watch" {
         platform::require(options.positionals.len == 1 && (options.positionals[0] == "check" || options.positionals[0] == "test"), "watch needs check or test");
-        platform::require(options.has("watch-dir") && options.get("watch-dir").len > 0, "watch requires --watch-dir (one nonrecursive directory)");
+        var directories: (const u8[:])[>..] = [];
+        for entry in options.entries {
+            if entry.name != "watch-dir" { continue; }
+            platform::require(directories.len < watch::MAX_DIRECTORIES, "watch accepts at most 256 explicit directories");
+            platform::require(entry.value.len > 0 && entry.value.len <= 4095 && entry.value[0] == '/', "--watch-dir must be an absolute directory path");
+            directories.push(entry.value);
+        }
+        platform::require(directories.len > 0, "watch requires --watch-dir (1..256 nonrecursive directories)");
         let selected = options.positionals[0];
         let filter = validate_options(selected, options, program_args.len, true);
         let limit, valid = parse_int(options.get("watch-runs", "0"));
         platform::require(valid && limit >= 0 && limit <= 10000, "--watch-runs must be 0..10000 (0 waits indefinitely)");
-        let directory = options.get("watch-dir");
-        platform::require(directory.len <= 4095 && directory[0] == '/', "--watch-dir must be an absolute directory path");
         var words: u8[][>..] = []; words.push(str("/proc/self/exe")); words.push(str(selected));
         for entry in options.entries {
             if entry.name == "watch-dir" || entry.name == "watch-runs" { continue; }
@@ -73,7 +78,7 @@ fn cli_main() {
         }
         if program_args.len > 0 { words.push(str("--")); for arg in program_args { words.push(str(arg)); } }
         var child: (const u8[:])[>..] = []; for word in words { child.push(word); }
-        let code = watching::run(directory, child[..], limit);
+        let code = watching::run(directories[..], child[..], limit);
         if code != 0 { exit(code); }
         return;
     }

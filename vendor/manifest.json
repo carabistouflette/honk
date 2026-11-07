@@ -155,24 +155,26 @@
     {
       "directory": "goose-glob",
       "repository": "https://github.com/carabistouflette/goose-glob",
-      "revision": "2022a04e1847490c9c76af91e1e5c01a3c6e3cc0",
+      "revision": "5543007cc02e324c0fce51919291b40ffb2af922",
       "license": "Apache-2.0",
       "files": {
-        "glob.goose": "8d5746e2ba927ae9e8cc4ba814f6b9b8f29545dd909210fd0598fae44a3eb662",
+        "glob.goose": "6ee075e290c19781bcdcdba98a66b69756e5a6e4058327d1d3ebc1b6886e5f6e",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
     },
     {
       "directory": "goose-watch",
       "repository": "https://github.com/carabistouflette/goose-watch",
-      "revision": "7bbd7ef8c9a4d6323ef9d065d1461bae9ba9fe58",
+      "revision": "56842ee7fc4c2fd948f663f1c50425bf2b3e8a73",
       "license": "Apache-2.0",
       "files": {
-        "watch.goose": "b7339fbd8db45f3d4fd7ca715c49ee527d8e1d2b375ee0d0b4f3678dfe727724",
-        "watch.build": "5578936773c37ed44e5ac517e597153ae8342794acc8f7024b5077359dcc10e0",
-        "native/watch.c": "55b3e7ec0632d86c2de4a35b1fd57baabc03d48831187b4ecc3c2ab8b23d5462",
+        "watch.goose": "fd4f84e24aa841d99aa3b351d4c8ed32836894db0bba1a9604deb6f4cd860950",
+        "watch.build": "9c127d397814ee5168ea211c1194dd10758b58b5db2fa8da852eeb91c73f8be0",
+        "native/watch.c": "f66d3ed77a523b50e502104deb2b6e87519eaa4ed32f664e1d69556ce1f5759c",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
-        "NOTICE": "1a96b8fb0529586e381432b83bd274a175107c6f77e7e9059e6fb3884905f72c"
+        "NOTICE": "1a96b8fb0529586e381432b83bd274a175107c6f77e7e9059e6fb3884905f72c",
+        "native/common.h": "16eb4d25a884e4fcbeeafb13e9c0be1b66ee874b18889a0544110982d2deaadb",
+        "native/set.c": "8b6dc5753eb3cdb35da646fc898698106b74d2a74d759a94312917d26ff86638"
       }
     },
     {

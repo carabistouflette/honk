@@ -78,9 +78,11 @@ finally:
             time.sleep(.005)
     def count(self):
         path=self.root/'count'; return int(path.read_text()) if path.exists() else 0
-    def start(self,command='check',runs=0,extra=(),directory=None,**env):
+    def start(self,command='check',runs=0,extra=(),directory=None,directories=None,**env):
         self.log=(self.root/'stderr').open('wb')
-        self.proc=subprocess.Popen([HONK,'watch',command,'--watch-dir',str(directory or self.src),'--watch-runs',str(runs),'--offline',*extra],cwd=self.project,env={**self.env,**env},stdout=subprocess.PIPE,stderr=self.log,start_new_session=True)
+        selected = directories if directories is not None else [directory or self.src]
+        watched = [word for path in selected for word in ('--watch-dir',str(path))]
+        self.proc=subprocess.Popen([HONK,'watch',command,*watched,'--watch-runs',str(runs),'--offline',*extra],cwd=self.project,env={**self.env,**env},stdout=subprocess.PIPE,stderr=self.log,start_new_session=True)
     def finish(self,expected=0):
         output,_=self.proc.communicate(timeout=15)
         self.assertEqual(self.proc.returncode,expected,(output,(self.root/'stderr').read_text()))
@@ -105,6 +107,42 @@ finally:
         self.assertEqual(self.count(),2)
         (self.src/'temporary').write_text('fn main() {}'); (self.src/'temporary').rename(self.src/'main.goose')
         self.finish();self.assertEqual(self.count(),3)
+    def test_multiple_directories_rerun_from_each(self):
+        other=self.project/'other';other.mkdir()
+        self.start(runs=3,directories=[self.src,other]);self.idle()
+        (other/'second.goose').write_text('fn main() {}')
+        self.wait(lambda:self.count()==2 and (self.root/'stderr').read_text().count('command finished; waiting')==2)
+        (self.src/'main.goose').write_text('fn main() {} // edited')
+        self.finish();self.assertEqual(self.count(),3)
+    def test_multiple_directories_coalesce_during_active_command(self):
+        other=self.project/'other';other.mkdir()
+        self.start(runs=2,directories=[self.src,other],GATE_FIRST='1')
+        self.wait(lambda:(self.root/'pid').exists())
+        for i in range(20):
+            (self.src/'main.goose').write_text('fn main() {} // '+str(i))
+            (other/'second.goose').write_text('fn main() {} // '+str(i))
+        (self.root/'release').touch();self.finish();self.assertEqual(self.count(),2)
+    def test_later_directory_move_reaps_active_child(self):
+        other=self.project/'other';other.mkdir()
+        self.start(directories=[self.src,other],GATE_FIRST='1')
+        self.wait(lambda:(self.root/'pid').exists());pid=int((self.root/'pid').read_text())
+        other.rename(self.project/'moved');self.finish(125)
+        self.assertEqual(self.count(),1);self.assertFalse((self.root/'active').exists())
+        with self.assertRaises(ProcessLookupError):os.kill(pid,0)
+    def test_full_directory_limit_initial_run(self):
+        paths=[self.src]
+        for i in range(255):
+            path=self.project/f'watched-{i}';path.mkdir();paths.append(path)
+        self.start(runs=1,directories=paths);self.finish();self.assertEqual(self.count(),1)
+    def test_invalid_set_never_launches_compiler(self):
+        alias=self.project/'alias';alias.symlink_to(self.project,target_is_directory=True)
+        cases=[[self.src,self.src],[self.src,alias/'src'],[self.src,self.project/'missing'],
+               [self.src,'relative'],[self.src]*257]
+        for paths in cases:
+            watched=[word for path in paths for word in ('--watch-dir',str(path))]
+            result=subprocess.run([HONK,'watch','check',*watched,'--watch-runs','1','--offline'],cwd=self.project,env=self.env,capture_output=True,timeout=15)
+            self.assertNotEqual(result.returncode,0,paths)
+        self.assertEqual(self.count(),0)
     def test_literal_test_args_and_filter_forwarding(self):
         (self.project/'tests').mkdir();(self.project/'tests/unit.goose').write_text('fn main() {}')
         weird='literal;$(touch SHOULD_NOT_EXIST)'
@@ -128,11 +166,15 @@ finally:
     @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires test-only linked fault adapter')
     def test_overflow_reopens_and_coalesces_without_active_diagnostic(self):
         trigger=self.root/'trigger'
-        self.start(runs=2,GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow')
+        other=self.project/'other';other.mkdir()
+        self.start(runs=3,directories=[self.src,other],GATE_FIRST='1',WATCH_FAULT_TRIGGER=str(trigger),WATCH_FAULT_MODE='overflow')
         self.wait(lambda:(self.root/'pid').exists());trigger.touch()
         self.wait(lambda:not trigger.exists())
         self.assertNotIn('events lost',(self.root/'stderr').read_text())
-        (self.root/'release').touch();self.finish();self.assertEqual(self.count(),2)
+        (self.root/'release').touch()
+        self.wait(lambda:self.count()==2 and 'command finished; waiting' in (self.root/'stderr').read_text())
+        (other/'second.goose').write_text('fn main() {}')
+        self.finish();self.assertEqual(self.count(),3)
         self.assertIn('events lost',(self.root/'stderr').read_text())
     @unittest.skipUnless(os.environ.get('WATCH_FAULT_TEST'), 'requires test-only linked fault adapter')
     def test_full_ignored_batch_never_schedules_a_rerun(self):

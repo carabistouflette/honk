@@ -77,9 +77,9 @@ fn class_end(pattern: const u8[:], start: i64) -> i64 {
 }
 // Validate and classify directly into final metadata, without temporary spans
 // or rescanning every component to count its wildcard syntax.
-fn scan_pattern(pattern: const u8[:], out: Part[>..]&) -> bool {
-    if pattern.len == 0 || pattern.len > MAX_PATTERN_BYTES { return false; }
-    var at = 0;
+fn scan_pattern(pattern: const u8[:], out: Part[>..]&) -> i64 {
+    if pattern.len == 0 || pattern.len > MAX_PATTERN_BYTES { return -1; }
+    var at = 0; var globstars = 0;
     while at < pattern.len {
         let start = at;
         var stars = 0; var general = false; var globstar = false;
@@ -87,51 +87,54 @@ fn scan_pattern(pattern: const u8[:], out: Part[>..]&) -> bool {
             while at < pattern.len && !PATTERN_META.members[pattern[at]] { at++; }
             if at == pattern.len || pattern[at] == '/' { break; }
             let c = pattern[at];
-            if c == 0 { return false; }
+            if c == 0 { return -1; }
             if c == '\\' {
                 general = true; at++;
-                if at == pattern.len || pattern[at] == '/' || pattern[at] == 0 { return false; }
+                if at == pattern.len || pattern[at] == '/' || pattern[at] == 0 { return -1; }
             } else if c == '[' {
                 general = true; at = class_end(pattern, at);
-                if at < 0 { return false; }
+                if at < 0 { return -1; }
             } else if c == '?' { general = true; }
             else if c == '*' {
                 stars++;
                 if at + 1 < pattern.len && pattern[at + 1] == '*' {
-                    if at != start || (at + 2 < pattern.len && pattern[at + 2] != '/') { return false; }
+                    if at != start || (at + 2 < pattern.len && pattern[at + 2] != '/') { return -1; }
                     globstar = true; at++;
                 }
             }
             at++;
         }
-        if !valid_component_span(pattern, start, at) || out.len == MAX_COMPONENTS { return false; }
+        if !valid_component_span(pattern, start, at) || out.len == MAX_COMPONENTS { return -1; }
         let kind = if globstar { ComponentKind.Globstar } else if general { ComponentKind.General }
                    else if stars == 0 { ComponentKind.Literal }
                    else if stars == 1 && pattern[start] == '*' { ComponentKind.Suffix }
                    else if stars == 1 && pattern[at - 1] == '*' { ComponentKind.Prefix }
                    else { ComponentKind.Stars };
+        if globstar { globstars++; }
         out.push(Part { start: start, end: at, kind: kind });
-        if at == pattern.len { return true; }
+        if at == pattern.len { return globstars; }
         at++;
     }
-    return false;
+    return -1;
 }
-inline fn parse_pattern(pattern: const u8[:], out: Part[>..]&) -> bool {
+inline fn parse_pattern(pattern: const u8[:], out: Part[>..]&) -> i64 {
     out.clear();
-    if scan_pattern(pattern, out) { return true; }
-    out.clear(); return false;
+    let globstars = scan_pattern(pattern, out);
+    if globstars < 0 { out.clear(); }
+    return globstars;
 }
 fn validate(pattern: const u8[:]) -> Status {
     var parts: Part[>..] = [];
-    return Status { error: if parse_pattern(pattern, parts) { Error.None } else { Error.InvalidPattern } };
+    return Status { error: if parse_pattern(pattern, parts) >= 0 { Error.None } else { Error.InvalidPattern } };
 }
 fn owned<T>(source: const T[:]) -> T[] {
     var out: T[>..] = []; out.append(source); return out;
 }
 fn compile(pattern: const u8[:]) -> Pattern, Status {
     var parts: Part[>..] = [];
-    if !parse_pattern(pattern, parts) { return Pattern { .. }, Status { error: Error.InvalidPattern }; }
-    return Pattern { source: owned(pattern), parts: owned(parts), globstars: count_globstars(parts) }, Status { .. };
+    let globstars = parse_pattern(pattern, parts);
+    if globstars < 0 { return Pattern { .. }, Status { error: Error.InvalidPattern }; }
+    return Pattern { source: owned(pattern), parts: owned(parts), globstars: globstars }, Status { .. };
 }
 // Pattern syntax is already validated: decode the class once while matching.
 fn match_class(pattern: const u8[:], start: i64, c: u8, budget: Budget&) -> i64, bool {
@@ -292,11 +295,6 @@ fn match_parts(pattern: const u8[:], path: const u8[:], patterns: Part[:], names
     while p < patterns.len && patterns[p].kind == ComponentKind.Globstar { p++; }
     return p == patterns.len;
 }
-fn count_globstars(parts: Part[:]) -> i64 {
-    var count = 0;
-    for part in parts { if part.kind == ComponentKind.Globstar { count++; } }
-    return count;
-}
 // Internal traversal entry point reuses the collector's validated spans and
 // shares one work budget across all paths.
 fn match_with_budget(pattern: Pattern&, path: const u8[:], names: Span[:], hidden: bool, budget: Budget&) -> bool {
@@ -334,8 +332,9 @@ inline fn match_result(pattern: const u8[:], parts: Part[:], globstars: i64, pat
 inline fn matches(pattern: const u8[:], path: const u8[:], options: Options = Options { .. }) -> bool, Status {
     if !valid_options(options) { return false, Status { error: Error.InvalidOptions }; }
     var parts: Part[>..] = [];
-    if !parse_pattern(pattern, parts) { return false, Status { error: Error.InvalidPattern }; }
-    return match_result(pattern, parts, count_globstars(parts), path, options);
+    let globstars = parse_pattern(pattern, parts);
+    if globstars < 0 { return false, Status { error: Error.InvalidPattern }; }
+    return match_result(pattern, parts, globstars, path, options);
 }
 inline fn matches(pattern: Pattern&, path: const u8[:], options: Options = Options { .. }) -> bool, Status {
     if !valid_options(options) { return false, Status { error: Error.InvalidOptions }; }

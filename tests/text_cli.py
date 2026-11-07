@@ -108,7 +108,7 @@ class TextCLI(unittest.TestCase):
             for name in ("toml_edit.goose", "LICENSE"):
                 expected = (project / "vendor" / "goose-toml-edit" / name).read_bytes()
                 self.assertEqual(package.extractfile(label + "/vendor/goose-toml-edit/" + name).read(), expected)
-            for path in ("goose-task/task.goose", "goose-task/LICENSE", "goose-watch/watch.goose", "goose-watch/watch.build", "goose-watch/native/watch.c", "goose-watch/LICENSE", "goose-watch/NOTICE",
+            for path in ("goose-task/task.goose", "goose-task/LICENSE", "goose-watch/watch.goose", "goose-watch/watch.build", "goose-watch/native/watch.c", "goose-watch/native/common.h", "goose-watch/native/set.c", "goose-watch/LICENSE", "goose-watch/NOTICE",
                          "goose-glob/glob.goose", "goose-glob/LICENSE", "goose-time/time.goose", "goose-time/detail.goose", "goose-time/LICENSE",
                          "goose-time/THIRD_PARTY_NOTICES.md", "goose-log/examples/utc/utc.goose",
                          "goose-log/LICENSE", "goose-log/NOTICE", "goose-terminal/terminal.goose",

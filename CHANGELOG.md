@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Accept 1–256 explicit `--watch-dir` options through pinned goose-watch alpha.2;
+  recover the complete set on overflow and stop if any selected directory moves.
+
+
 - Add experimental `watch check/test --watch-dir ABS_DIR`, with nonrecursive
   source filtering, coalesced reruns, explicit event-loss recovery and cooperative
   cancellation. See docs/WATCH.md for scope and cleanup limits.
