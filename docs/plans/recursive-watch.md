@@ -1,7 +1,8 @@
 # Bounded recursive watch design
 
-Status: implementation in progress. This record is not a claim that recursive
-watching is available. Existing explicit watch behavior remains the default.
+Status: implementation and targeted race/lifecycle regressions are complete on
+the feature branch; publication remains gated on final qualification and hosted CI.
+Existing explicit watch behavior remains the default.
 
 The opt-in interface is `--watch-recursive` with existing explicit `--watch-dir`
 roots. Initial limits: eight roots, 256 watched identities per generation

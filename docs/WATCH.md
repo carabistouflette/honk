@@ -12,8 +12,7 @@ honk watch check --watch-dir "$PWD/src" --watch-runs 2 --watch-debounce-ms 100
 Supply 1–256 explicit normalized absolute directories with repeated `--watch-dir`
 options. Each directory is watched nonrecursively. Duplicate text, inode aliases,
 final symlinks and any invalid member reject the complete set before running the
-selected command. Startup errors identify a zero-based request index (`-1` for
-global errors), without displaying raw paths. A single directory remains a
+selected command. Startup coverage errors stop the command without displaying raw paths. A single directory remains a
 one-element set. Without `--watch-recursive`, nested directories are excluded. Other workspace
 members, dependencies, manifests and lockfiles are never discovered automatically. `check` or `test` still performs its ordinary full selected command;
 `--filter` selects test targets, not watched filenames. Normal command options
@@ -21,8 +20,7 @@ and test arguments after `--` are forwarded literally, without a shell.
 
 The complete set is installed before the initial run. Close-write, moved-from/to and
 delete events on immediate `.goose` names request another run; create alone is
-ignored to avoid checking files still being written. Directory events and other
-extensions are ignored. Changes observed during a command coalesce into one
+ignored to avoid checking files still being written. In nonrecursive mode, directory events and other extensions are ignored. Changes observed during a command coalesce into one
 pending rerun. By default there is no quiet-period debounce. Changes arriving in
 a later batch may cause another run; exactly-once operation counts are not promised. Each drain is capped at
 256 records so busy directories cannot starve child/signal handling.
@@ -73,8 +71,8 @@ a hard deadline; active commands do not, to avoid killing Honk before its nested
 compiler/test process can clean up.
 
 The consumer vendors unmodified goose-watch alpha.3 at
-`db39c02739bc6e5301e1deedad0caba0e2f11188`. It uses one WatchSet with fixed
-membership and one kernel fd. Linux 4.19+ and IN_MASK_CREATE headers are required.
+`db39c02739bc6e5301e1deedad0caba0e2f11188`. Nonrecursive mode uses one WatchSet with fixed membership and one kernel fd;
+recursive mode adds bounded generations and a persistent root guard. Linux 4.19+ and IN_MASK_CREATE headers are required.
 The entire set is reopened after loss; no surviving subset continues silently.
 Intermediate symlinks may still be followed; this is not filesystem confinement.
 Recursive mode is opt-in; its additional contract is described below.
