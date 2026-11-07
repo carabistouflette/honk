@@ -1,0 +1,50 @@
+{
+  "scope": "Local development watch-ignore qualification; feature is not in the published v0.5.0-rc.1 tag.",
+  "code_commit": "3e956a4133eb75bf2f5964f51a8795198d65184d",
+  "base_commit": "18e054a40187efc7c6f0893fb4b111ae43c57ee5",
+  "complete": true,
+  "source_sha256": {
+    "CHANGELOG.md": "d6aaf1d1a1f979caa3f5ad5c7e256f1d65d5c109a159830731ac8fd9d1b51c42",
+    "Makefile": "89ab84bf8d3c43cdf96d303519e9af7bd3ed1f57e4dfd97c6985fa79370c8ba0",
+    "README.md": "dcd297c9a581e67ab00e1f22cf2d7ffde1f05be0f66c74f19f604b350ef76982",
+    "docs/WATCH.md": "c5c642d20b1ca80937bdbd9d156f485a7cfe2432a93775535a37a49439fd3d13",
+    "honk.goose": "a3218a6e08af0084ba96ef72988fa9bcbdb6f7564e674f9d5a0909593d9c6c19",
+    "native/watch_tree.c": "5bbdd80ce7afa101071a277a083212daf66e0e7bff2dff43889435702b198b0f",
+    "scripts/watch-test-build.py": "5bc6d86ff7598e6d07c8179079840564b091b3639a1f235a63beac3e8016bf25",
+    "src/watch_tree.goose": "e6718b7781a8a8199c08ed4f20f3bbda226aabf05778bf088d7cb151d4c0c49f",
+    "src/watching.goose": "fa4389eecf4a822a18e99fe36c5cbc48594a749a7e048fab597e4f92c8df45be",
+    "tests/watch_cli.py": "0f49886410d397b2ca60affc01597159231bc475b3f1cc25468276c73496dc44",
+    "tests/watch_fault.c": "0ad3a5e44818b6efe15c1b42def27b0036551ed614ccf39dbc64cb04d8322edb",
+    "tests/watch_tree_filter.c": "5ccf002742c3b397388d2ba33c2c2de82ad70075a20180914df7c42b1cf64824"
+  },
+  "goose_sha256": "5e5bd97c13d8f4902855e6bbd2df1be510b81f13fe92a2482c9ac5e208bdb7a9",
+  "honk_sha256": "9a1d56d08e5f53c2ee613f336b91f55dee1a2130796cfd323a3a32551a0cae7e",
+  "checks": [
+    "make format check test security: passed",
+    "72 watch cases: normal suite passed (22 fault-only skips); linked fault adapter all 72 passed",
+    "make sanitize portable: passed",
+    "GCC/Clang ASan/UBSan native ownership/guard/filter controls: passed",
+    "make bench: passed (compatibility checks, no comparative watch-performance claim)",
+    "real compiler: ignored edit stays idle; included edit reruns; two canonical outputs; clean private-group exit0"
+  ],
+  "reviews": "Three independent implementation/design/security reviewers; fatal-limit retry issue fixed and rechecked; observed overlap regression fixed and independently reviewed.",
+  "budgets": {
+    "patterns": 16,
+    "pattern_bytes_each": 1024,
+    "relative_path_bytes": 4095,
+    "work_per_match": 4096,
+    "work_per_pass_or_drain": 16777216
+  },
+  "artifact": {
+    "file": "watch-ignore-validation.tar.gz",
+    "sha256": "86a0fa7dbd88c9ade7ca35a42a1e59402acfbf02eded529dcda9ecaf94fe6b37"
+  },
+  "limits": [
+    "Explicit roots and persistent guards remain protected; no confinement/snapshot guarantee.",
+    "Ignores affect triggers/discovery, not compiler/test target selection.",
+    "One pending enumeration descriptor; native Tree<=128KiB each excludes libc directory-stream and Goose storage.",
+    "Cooperative child cleanup and filesystem calls do not establish a hard wall-clock bound.",
+    "Historical red overlap log is exploratory evidence of the fixed defect, not an accepted qualification run.",
+    "Hosted GCC/Clang CI remains a separate merge gate."
+  ]
+}

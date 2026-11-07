@@ -30,7 +30,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive].");
+    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -49,7 +49,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
     let spec = [argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -58,6 +58,8 @@ fn cli_main() {
     if options.has("help") { usage(); return; }
     if cmd == "watch" {
         platform::require(options.positionals.len == 1 && (options.positionals[0] == "check" || options.positionals[0] == "test"), "watch needs check or test");
+        var ignores = watching::Ignores { .. };
+        for entry in options.entries { if entry.name == "watch-ignore" { watching::add_ignore(ignores, entry.value); } }
         var directories: (const u8[:])[>..] = [];
         for entry in options.entries {
             if entry.name != "watch-dir" { continue; }
@@ -74,13 +76,13 @@ fn cli_main() {
         platform::require(debounce_valid && debounce >= 0 && debounce <= 1000, "--watch-debounce-ms must be 0..1000 (0 disables batching)");
         var words: u8[][>..] = []; words.push(str("/proc/self/exe")); words.push(str(selected));
         for entry in options.entries {
-            if entry.name == "watch-recursive" || entry.name == "watch-dir" || entry.name == "watch-runs" || entry.name == "watch-debounce-ms" { continue; }
+            if entry.name == "watch-ignore" || entry.name == "watch-recursive" || entry.name == "watch-dir" || entry.name == "watch-runs" || entry.name == "watch-debounce-ms" { continue; }
             words.push(str("--", entry.name));
             for option in spec { if option.name == entry.name && option.value_name.len > 0 { words.push(str(entry.value)); } }
         }
         if program_args.len > 0 { words.push(str("--")); for arg in program_args { words.push(str(arg)); } }
         var child: (const u8[:])[>..] = []; for word in words { child.push(word); }
-        let code = watching::run(directories[..], child[..], limit, debounce, options.has("watch-recursive"));
+        let code = watching::run(ignores, directories[..], child[..], limit, debounce, options.has("watch-recursive"));
         if code != 0 { exit(code); }
         return;
     }
@@ -204,7 +206,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
     }
     for entry in options.entries {
         let name = entry.name; var allowed = false;
-        if name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
+        if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
         else if name == "diagnostics" { allowed = cmd == "check" && !watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }
