@@ -2,10 +2,10 @@
 
 ## Unreleased
 
-## 0.5.0-rc.1 — release candidate (not yet published)
+## 0.5.0-rc.1 — 2026-11-07 (experimental prerelease)
 
-Prepared source-only candidate for Linux x86-64/glibc. CLI, manifest and lockfile
-formats remain experimental. This heading does not announce a published tag.
+Source-only candidate for Linux x86-64/glibc. CLI, manifest and lockfile
+formats remain experimental.
 
 - Add experimental `watch check/test` with explicit directory sets, optional
   bounded recursive discovery, root identity guards, full event-loss recovery,

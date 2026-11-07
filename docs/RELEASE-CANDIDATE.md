@@ -1,7 +1,8 @@
 # Honk 0.5.0-rc.1 preparation
 
-Status: prepared source; no candidate tag or release has been published.
-The latest published experimental release remains v0.4.0. Candidate CLI,
+Status: [v0.5.0-rc.1 published](https://github.com/carabistouflette/honk/releases/tag/v0.5.0-rc.1).
+Source `26f8a7454d27dc81e2c24d918293f286a494d9ee` is the CI-tested candidate
+head; merged source `2957a78` has the identical Git tree. Candidate CLI,
 manifest and lockfile formats remain experimental, with no compatibility promise
 before 1.0. The platform remains Linux x86-64, kernel 5.3+, glibc 2.34+ and the
 pinned Goose compiler. Build prerequisites and trust limits remain in README.md
@@ -39,8 +40,11 @@ of the candidate executable. See RESULTS.md and the linked raw receipts.
    GitHub release immutability directly; hashes do not imply hosted immutability,
    authenticity or permanent availability. Only then describe it as published.
 
-Publication receipts and candidate CI links follow these gates. The prepared
-branch deliberately does not advertise a release URL that does not yet exist.
+[Public verification](https://github.com/carabistouflette/honk/releases/download/v0.5.0-rc.1/verification.json)
+and [publication receipt](https://github.com/carabistouflette/honk/releases/download/v0.5.0-rc.1/publication.json)
+record the passed candidate CI, anonymous source build, normal/frozen/package and
+real watch checks, all 419 tag-archive file bytes/modes and public asset digests.
+GitHub reported `immutable: false`; no hosted immutability is claimed.
 
 ## Local preparation evidence
 
@@ -49,4 +53,5 @@ log archive retain full format/check/test/security results, exact producer sourc
 and binary/compiler hashes, two independent release reviews and a two-run real
 recursive-watch test with the pinned compiler. Production differences from the
 qualified base are restricted to the three advertised-version locations.
-Required hosted CI and public artifact verification remain pending gates.
+The local receipt predates publication; the public receipts above record completed
+hosted CI and artifact verification.

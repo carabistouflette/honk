@@ -1,6 +1,6 @@
 # Validation and evidence
 
-The supported release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0)
+The preceding experimental release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0)
 at `f9f35e20e4407df56b2ad45310266c9238403144`. It passed the maintained
 GCC/Clang CI suites, normal/security checks, fresh public clone/build/import
 checks and normal/frozen self-check/package checks. Its tag archive has 242
@@ -10,10 +10,11 @@ files whose bytes and executable bits match Git.
 - [Verification clarification](https://github.com/carabistouflette/honk/releases/download/v0.4.0/release-verification-clarification-v0.4.0.json): GitHub reported `immutable: false`. Matching hashes and preserved Git objects do not imply hosted immutability or permanent availability.
 - [Functional workspace report](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.json) and [controller](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.py): one controlled two-application workspace, 18 checked commands, reuse/invalidation/fallback, multi-remove, explicit lock refresh and frozen packages. This is functional evidence, not timing or a broad stability claim. Exact-image replay needs the recorded binaries; rebuilds need not be bit-identical.
 
-## Prepared 0.5.0-rc.1 candidate
+## Published 0.5.0-rc.1 candidate
 
-Candidate preparation is not a published release or an exact-candidate CI claim.
-[Publication gates](docs/RELEASE-CANDIDATE.md) apply before tagging/publication.
+[Publication evidence](docs/RELEASE-CANDIDATE.md) records passed candidate CI,
+anonymous build and archive/download verification. The older local preparation
+receipt remains separately scoped.
 The [real-project watch receipt](bench/results/watch-stress-2026-11-07/README.md)
 checks 514 intervals across two explicitly scoped frozen harness runs, including
 real kernel loss, source failure/restoration, root changes and cancellation.

@@ -5,16 +5,12 @@ resolves Git/path dependencies, records them in a lockfile, runs tests, and
 packages tracked source files. Honk is written in Goose with a small POSIX adapter.
 It is Apache-2.0 licensed.
 
-The latest experimental release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0),
-source `f9f35e20e4407df56b2ad45310266c9238403144`. Current development source also contains
-unreleased features, including watch and `check --diagnostics`; v0.4.0 includes neither feature. CLI, manifest and lockfile compatibility are not
-yet guaranteed. Registry publishing, general dependency solving, cross
-compilation and Cargo feature/stability parity are outside this release.
-
-This branch prepares **v0.5.0-rc.1**; the candidate has not been published.
-It collects watch, parallel tests, test reuse, diagnostics, filtering and optional
-progress. [Candidate scope and publication gates](docs/RELEASE-CANDIDATE.md)
-separate prepared source from verified published artifacts.
+The latest experimental prerelease is [v0.5.0-rc.1](https://github.com/carabistouflette/honk/releases/tag/v0.5.0-rc.1),
+source `26f8a7454d27dc81e2c24d918293f286a494d9ee`. It includes watch,
+parallel tests, per-test reuse, diagnostics, filtering and optional progress.
+CLI, manifest and lockfile compatibility are not guaranteed before 1.0.
+[Publication evidence and limits](docs/RELEASE-CANDIDATE.md) accompany the release.
+Registry publishing, general dependency solving and cross compilation remain outside scope.
 
 ## Quickstart
 
@@ -25,7 +21,7 @@ development files (1.0.18+). Tests also need Python 3.11+, OpenSSL and GNU tar/g
 packaging needs GNU tar/gzip. Other platforms are not validated.
 
 ```sh
-git clone --branch v0.4.0 --depth 1 https://github.com/carabistouflette/honk.git
+git clone --branch v0.5.0-rc.1 --depth 1 https://github.com/carabistouflette/honk.git
 cd honk
 make setup build
 export GOOSE="$PWD/.toolchain/goose/build/goose"
