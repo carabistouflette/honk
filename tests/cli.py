@@ -41,7 +41,8 @@ class CLI(unittest.TestCase):
         for pattern, expected in [('tests/unit/?.goose', ['UNIT']),
                                   ('tests/[r]oot.goose', ['ROOT']),
                                   ('tests/*.goose', ['ROOT', 'HIDDEN']),
-                                  ('tests/**/*.goose', ['UNIT', 'ROOT', 'HIDDEN'])]:
+                                  ('tests/**/*.goose', ['UNIT', 'ROOT', 'HIDDEN']),
+                                  ('tests/**/**/*.goose', ['UNIT', 'ROOT', 'HIDDEN'])]:
             with self.subTest(pattern=pattern):
                 output = self.run_honk('test', '--filter', pattern, '--', 'forwarded', cwd=p).stdout
                 for marker in ['UNIT', 'ROOT', 'HIDDEN']:
@@ -74,7 +75,7 @@ class CLI(unittest.TestCase):
 
     def test_target_filter_errors(self):
         p = self.new()
-        for pattern in ['', '[', 'tests/a**', '../tests/*', '/tests/*', 'x'*1025]:
+        for pattern in ['', '[', 'tests/**/[', 'tests/a**', '../tests/*', '/tests/*', 'x'*1025]:
             with self.subTest(pattern=pattern):
                 result = self.run_honk('test', '--filter', pattern, cwd=p, ok=False)
                 self.assertIn('invalid --filter glob', result.stderr)

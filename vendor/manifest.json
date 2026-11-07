@@ -155,10 +155,10 @@
     {
       "directory": "goose-glob",
       "repository": "https://github.com/carabistouflette/goose-glob",
-      "revision": "2022a04e1847490c9c76af91e1e5c01a3c6e3cc0",
+      "revision": "5543007cc02e324c0fce51919291b40ffb2af922",
       "license": "Apache-2.0",
       "files": {
-        "glob.goose": "8d5746e2ba927ae9e8cc4ba814f6b9b8f29545dd909210fd0598fae44a3eb662",
+        "glob.goose": "6ee075e290c19781bcdcdba98a66b69756e5a6e4058327d1d3ebc1b6886e5f6e",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
     },
