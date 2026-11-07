@@ -116,21 +116,22 @@ fn root_entry(stage: u8[:], entry: u8[:], g: deps::Graph&) -> u8[>..] {
     }
     out.append(source); if out != source { platform::save_scratch(file, out); } return file;
 }
-fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: bool, root: u8[:], graph: deps::Graph&, reuse: bool, display: presentation::Output&) {
+fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: bool, root: u8[:], graph: deps::Graph&, reuse: bool, display: presentation::Output&, test_path: u8[:] = "") {
     let kind = platform::kind(output);
     platform::require(kind == 0 || kind == 1, "binary output must not be a symlink or special file");
     let private_dir = str(stage, "/.honk"); platform::require(platform::mkdir(private_dir), "cannot create private compiler output directory");
     let temporary = str(private_dir, "/program");
-    let directory = build_cache::slot(root, release, reuse);
+    let directory = if test_path.len > 0 { build_cache::test_slot(root, release, test_path, reuse) } else { build_cache::slot(root, release, reuse) };
     var cc: u8[>..] = [];
     let key: u8[>..] = if reuse { build_cache::key(compiler, entry, stage, release, root, graph, cc) } else { [] };
+    // Each target shares this private scratch path. Restore needs a fresh
+    // destination, including after a preceding target or corrupt partial copy.
+    if platform::kind(temporary) != 0 { platform::require(platform::unlink_regular(temporary), "cannot clear private compiler output"); }
     if build_cache::restore(directory, key, private_dir) {
         platform::require(platform::install(temporary, output, true), "cannot atomically publish executable");
         print("built ", output); presentation::summary(display, "Build complete (reused)"); return;
     }
     build_cache::invalidate(directory);
-    // A corrupt entry can leave a private partial copy. Never let a compiler
-    // follow it or publish it as a successful output.
     if platform::kind(temporary) != 0 { platform::require(platform::unlink_regular(temporary), "cannot clear private compiler output"); }
     var packed: u8[>..] = [];
     let argv: const u8[:][] = [compiler, "build", entry, "--offline", "-o", temporary]; for a in argv { platform::pack(packed, a); }
@@ -157,12 +158,18 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         let dir = if cmd == "test" { "tests" } else { "bench" };
         if !is_dir(str(stage, "/", dir)) { platform::require(!filter.enabled, "--filter matched no targets"); print("No ", dir, " targets"); return; }
         var paths: u8[][>..] = []; files(stage, dir, paths);
+        // Normalize all roots before hashing the complete stage. Filters do not
+        // change the snapshot or the stable path used to select a cache bucket.
+        if reuse { for path in paths { let ignored = root_entry(stage, path, g); } }
         select_targets(paths, filter);
         var executable_storage: u8[][>..] = [];
         for path, i in paths {
             let target_dir = str(output, "/.honk/", dir); platform::require(platform::mkdir(target_dir), "cannot create test output directory");
-            let entry = root_entry(stage, path, g); let executable = str(target_dir, "/", i);
-            binary(compiler, entry, stage, executable, release, p.root, g, false, display);
+            let entry = if reuse { str(stage, "/", path) } else { root_entry(stage, path, g) }; let executable = str(target_dir, "/", i);
+            // Preserve ordinary test invalidation of build/run state, while
+            // keeping opt-in test slots separate from that single binary slot.
+            if !reuse { build_cache::invalidate(build_cache::slot(p.root, release, false)); }
+            binary(compiler, entry, stage, executable, release, p.root, g, reuse, display, path);
             if jobs > 0 { executable_storage.push(copy(executable)); continue; }
             var packed:   u8[>..] = []; platform::pack(packed, executable); for a in args { platform::pack(packed, a); }
             var captured: u8[>..] = []; let status = platform::spawn(packed, p.root, false, captured); if status != 0 { platform::child_exit(status); }

@@ -227,6 +227,128 @@ class BuildCache(unittest.TestCase):
         (self.project/'src/main.build').write_text('c_flags_cc = [];\n')
         self.run_cached(); self.assertFalse((self.slot/'record').exists())
 
+    def test_test_reuse_filter_invalidation_and_every_execution(self):
+        tests=self.project/'tests';tests.mkdir()
+        (tests/'a.goose').write_text('import std; fn main() { print("A"); }')
+        (tests/'b.goose').write_text('import std; fn main() { print("B"); }')
+        self.run_cached()
+        build_record=(self.slot/'record').read_bytes()
+        def run(*flags):
+            return self.call('test','--reuse-build',*flags,cwd=self.project)
+        run('--jobs','2')
+        records=sorted((self.slot/'tests').glob('*/record'))
+        self.assertEqual(len(records),2)
+        self.assertEqual((self.slot/'record').read_bytes(),build_record)
+        logs=self.mark_compiler_logs()
+        for _ in range(2):
+            result=run('--jobs','2')
+            self.assertIn('A\nB\n',result.stdout)
+        self.assert_logs(logs,True)
+        result=run('--filter','tests/b.goose')
+        self.assertIn('B\n',result.stdout);self.assertNotIn('A\n',result.stdout)
+        self.assert_logs(logs,True)
+        (tests/'b.goose').write_text('import std; fn main() { print("C"); }')
+        self.assertIn('C\n',run('--filter','tests/b.goose').stdout)
+        self.assertTrue(any(path.read_text() != 'cache-test: no backend invocation\n' for path in logs))
+        self.call('clean',cwd=self.project)
+        self.assertFalse((self.project/'.honk/reuse').exists())
+
+    def test_test_reuse_self_import_and_corrupt_artifact(self):
+        (self.project/'src/main.goose').write_text('import std; fn value() -> i64 { 42 } fn main() {}')
+        tests=self.project/'tests';tests.mkdir()
+        (tests/'self.goose').write_text('import demo from ".."; import std; fn main() { print(value()); }')
+        self.call('test','--reuse-build',cwd=self.project)
+        records=list((self.slot/'tests').glob('*/record'));self.assertEqual(len(records),1)
+        logs=self.mark_compiler_logs()
+        self.call('test','--reuse-build',cwd=self.project);self.assert_logs(logs,True)
+        program=records[0].parent/'program';program.write_bytes(b'bad')
+        self.call('test','--reuse-build',cwd=self.project);self.assert_logs(logs,False)
+        logs=self.mark_compiler_logs()
+        self.call('test',cwd=self.project);self.assert_logs(logs,False)
+        self.assertFalse(records[0].exists())
+
+    def test_test_reuse_separates_profiles(self):
+        tests=self.project/'tests';tests.mkdir()
+        (tests/'args.goose').write_text('import std; fn main() { print(42); }')
+        def run(word,*flags):
+            result=self.call('test','--reuse-build',*flags,'--',word,cwd=self.project)
+            self.assertIn('42\n',result.stdout)
+        run('first')
+        logs=self.mark_compiler_logs();run('second','--jobs','1');self.assert_logs(logs,True)
+        debug=next((self.slot/'tests').glob('*/record')).read_bytes()
+        run('release','--release','--jobs','2')
+        self.assertEqual(next((self.slot/'tests').glob('*/record')).read_bytes(),debug)
+        release=list((self.project/'.honk/reuse/release/tests').glob('*/record'))
+        self.assertEqual(len(release),1)
+        self.assertNotEqual(release[0].read_bytes(),debug)
+
+    def test_test_reuse_collision_and_failed_compile(self):
+        tests=self.project/'tests';tests.mkdir()
+        buckets={}
+        for i in range(100):
+            name=f'case{i}.goose'
+            bucket=hashlib.sha256(('tests/'+name).encode()).digest()[-1]%16
+            if bucket in buckets:
+                first,second=buckets[bucket],name;break
+            buckets[bucket]=name
+        (tests/first).write_text('import std; fn main() { print("FIRST"); }')
+        (tests/second).write_text('import std; fn main() { print("SECOND"); }')
+        def run(name,**kwargs):
+            return self.call('test','--reuse-build','--filter','tests/'+name,cwd=self.project,**kwargs)
+        for name,expected in [(first,'FIRST'),(second,'SECOND'),(first,'FIRST')]:
+            self.assertIn(expected+'\n',run(name).stdout)
+        self.assertEqual(len(list((self.slot/'tests').glob('*/record'))),1)
+        published=self.project/'target/debug/.honk/tests/0'
+        before=published.read_bytes()
+        (tests/first).write_text('fn main() { invalid code }')
+        run(first,ok=False)
+        self.assertEqual(published.read_bytes(),before)
+        self.assertEqual(list((self.slot/'tests').glob('*/record')),[])
+
+    def test_test_reuse_rejects_external_alias_and_symlink_bucket(self):
+        tests=self.project/'tests';tests.mkdir()
+        source=tests/'self.goose'
+        source.write_text('import demo from ".."; import std; fn main() {}')
+        self.call('test','--reuse-build',cwd=self.project)
+        record=next((self.slot/'tests').glob('*/record'))
+        source.write_text('import demo from ".."; import other from "../../outside"; import std; fn main() {}')
+        self.call('test','--reuse-build',cwd=self.project,ok=False)
+        source.write_text('import demo from ".."; import std; fn main() {}')
+        bucket=record.parent;shutil.rmtree(bucket)
+        outside=self.root/'outside';outside.mkdir()
+        (outside/'marker').write_text('unchanged');bucket.symlink_to(outside,target_is_directory=True)
+        self.call('test','--reuse-build',cwd=self.project)
+        self.assertEqual(sorted(p.name for p in outside.iterdir()),['marker'])
+        self.assertEqual((outside/'marker').read_text(),'unchanged')
+
+    def test_test_reuse_generated_imports_above_original_limit(self):
+        manifest=self.project/'Honk.toml'
+        manifest.write_text(manifest.read_text().replace('[dependencies]',''))
+        with manifest.open('a') as out:
+            out.write('\n[dependencies]\n')
+            for i in range(256):
+                name=f'dep{i}';directory=self.root/name;directory.mkdir()
+                (directory/'Honk.toml').write_text(f'[package]\nname="{name}"\nversion="0.1.0"\nkind="lib"\nentry="{name}.goose"\n')
+                (directory/(name+'.goose')).write_text(f'fn value{i}() -> i64 {{ {i} }}')
+                out.write(f'{name} = {{ path = "../{name}" }}\n')
+        tests=self.project/'tests';tests.mkdir()
+        for name in ('a','b'):
+            (tests/(name+'.goose')).write_text('import demo from ".."; import std; fn main() { print("LIMIT"); }')
+        self.call('fetch',cwd=self.project)
+        self.call('test','--reuse-build',cwd=self.project)
+        logs=self.mark_compiler_logs()
+        self.call('test','--reuse-build','--filter','tests/b.goose',cwd=self.project)
+        self.assert_logs(logs,True)
+
+    def test_test_reuse_native_fallback_and_watch_rejection(self):
+        tests=self.project/'tests';tests.mkdir()
+        (tests/'native.goose').write_text('import std; import os; fn main() { print("native"); }')
+        self.call('test','--reuse-build',cwd=self.project)
+        self.assertEqual(list((self.slot/'tests').glob('*/record')),[])
+        logs=self.mark_compiler_logs()
+        self.call('test','--reuse-build',cwd=self.project);self.assert_logs(logs,False)
+        self.call('watch','test','--reuse-build','--watch-dir',tests,cwd=self.project,ok=False)
+
     def test_wrapper_and_excessive_asset_fallback_and_flag_scope(self):
         compiler = self.root/'wrapper'
         compiler.write_text('#!/bin/sh\nexec '+shlex.quote(GOOSE)+' "$@"\n'); compiler.chmod(0o755)
@@ -237,7 +359,7 @@ class BuildCache(unittest.TestCase):
         self.run_cached(); self.assertTrue((self.slot/'record').exists())
         (self.project/'large.bin').write_bytes(b'x'*(8388608+1))
         self.run_cached(); self.assertFalse((self.slot/'record').exists())
-        for command in ['check', 'test', 'clean', 'package', 'metadata']:
+        for command in ['check', 'clean', 'package', 'metadata']:
             self.call(command, '--reuse-build', cwd=self.project, ok=False)
         self.assertTrue((self.project/'target/debug/demo').exists())
 

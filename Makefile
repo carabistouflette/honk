@@ -6,7 +6,7 @@ format:
 	python3 scripts/process-fixture.py --update
 	$(GOOSE) format honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
 check:
-	python3 -m py_compile bench/process_observer.py bench/observer_calibration.py bench/qualify_parallel.py tests/qualification_observer.py tests/qualification_driver.py bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
+	python3 -m py_compile bench/test_reuse.py bench/process_observer.py bench/observer_calibration.py bench/qualify_parallel.py tests/qualification_observer.py tests/qualification_driver.py bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
 	python3 bench/glob_consumer.py --help > /dev/null
 	python3 bench/dogfood.py --self-test
 	python3 scripts/process-fixture.py
@@ -88,6 +88,7 @@ sanitize:
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/watch_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/terminal_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
+	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/build_cache_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/build_cache_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py
 	ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 HONK=$(CURDIR)/.build/honk-sanitize GOOSE=$(abspath $(GOOSE)) python3 tests/logging.py

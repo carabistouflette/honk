@@ -201,7 +201,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }
         else if name == "filter" { allowed = cmd == "test" || cmd == "bench"; }
-        else if name == "reuse-build" { allowed = cmd == "build" || cmd == "run"; }
+        else if name == "reuse-build" { allowed = cmd == "build" || cmd == "run" || (cmd == "test" && !watching); }
         else if name == "metadata" { allowed = cmd == "toolchain"; }
         else if name == "help" || name == "log-file" { allowed = true; }
         else if name == "lib" || name == "name" { allowed = cmd == "new" || cmd == "init"; }

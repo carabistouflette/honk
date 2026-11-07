@@ -7,6 +7,7 @@ import crypto;
 import .platform;
 import .project;
 import .source;
+import .manifest;
 import .deps;
 import .toolchain;
 const MAX_BYTES = 33554432;
@@ -34,7 +35,25 @@ fn feed(state: crypto::Sha256&, text: u8[:]) -> bool {
     let size = str(text.len, ":");
     return crypto::update(state, size) == crypto::Error.None && crypto::update(state, text) == crypto::Error.None;
 }
-fn pure(text: u8[:], graph: deps::Graph&, standard: bool = false) -> bool {
+fn pure(text: u8[:], graph: deps::Graph&, standard: bool = false, self_stage: u8[:] = "") -> bool {
+    // Called only after prepare/rewrite has validated every sourced import.
+    // Recognize generated aliases without imposing original-source import caps.
+    var aliases: u8[][>..] = [];
+    if self_stage.len > 0 {
+        var quoted: u8[>..] = []; manifest::quoted(quoted, self_stage);
+        var scan = source::Reader { text: text };
+        loop {
+            let word = source::token(scan); if word.start == word.end { break; }
+            if word.quoted || text[word.start..word.end] != "import" { continue; }
+            let name = source::token(scan); let from = source::token(scan);
+            if name.quoted || from.quoted || text[from.start..from.end] != "from" { continue; }
+            let value = source::token(scan);
+            if value.quoted && text[value.start..value.end] == quoted {
+                if aliases.len >= 256 { return false; }
+                aliases.push(str(text[name.start..name.end]));
+            }
+        }
+    }
     var reader = source::Reader { text: text };
     loop {
         let token = source::token(reader); if token.start == token.end { break; }
@@ -51,7 +70,9 @@ fn pure(text: u8[:], graph: deps::Graph&, standard: bool = false) -> bool {
             if next.quoted || text[next.start..next.end] == "." { return false; }
             continue;
         }
-        if value != "std" && deps::index(graph, value) < 0 { return false; }
+        var self_import = false;
+        for alias in aliases { if value == alias { self_import = true; } }
+        if value != "std" && deps::index(graph, value) < 0 && !self_import { return false; }
         if value == "std" {
             let end = source::token(reader); if end.quoted || text[end.start..end.end] != ";" { return false; }
         }
@@ -141,7 +162,7 @@ fn key(compiler: u8[:], entry: u8[:], stage: u8[:], release: bool, root: u8[:], 
             var data: u8[>..] = [];
             if !platform::read_staged(file, data) || data.len > MAX_BYTES - bytes { return []; }
             bytes += data.len;
-            if suffix(name, ".goose") && !pure(data, graph) { return []; }
+            if suffix(name, ".goose") && !pure(data, graph, false, stage) { return []; }
             if !feed(state, data) { return []; }
         }
     }
@@ -158,6 +179,20 @@ fn slot(root: u8[:], release: bool, create: bool) -> u8[>..] {
     let parent = str(root, "/.honk"); if !platform::cache_private(parent, true) { return []; }
     let state = str(parent, "/reuse"); if (create && !platform::mkdir(state)) || !platform::cache_private(state, true) { return []; }
     let directory = str(state, if release { "/release" } else { "/debug" });
+    if (create && !platform::mkdir(directory)) || !platform::cache_private(directory, true) { return []; }
+    return directory;
+}
+// Sixteen slots per profile bound storage across renamed/deleted tests.
+// Bucket collisions evict; the full entry path still participates in the key.
+fn test_slot(root: u8[:], release: bool, path: u8[:], create: bool) -> u8[>..] {
+    var state = crypto::Sha256 { .. }; var hash: u8[32] = [0; 32];
+    if crypto::init(state) != crypto::Error.None || crypto::update(state, path) != crypto::Error.None || crypto::finish(state, hash[..]) != crypto::Error.None { return []; }
+    let parent = slot(root, release, create); if parent.len == 0 { return []; }
+    let tests = str(parent, "/tests");
+    if (create && !platform::mkdir(tests)) || !platform::cache_private(tests, true) { return []; }
+    var bucket: i64 = 0;
+    for byte in hash { bucket = (bucket * 256 + byte) % 16; }
+    let directory = str(tests, "/", bucket);
     if (create && !platform::mkdir(directory)) || !platform::cache_private(directory, true) { return []; }
     return directory;
 }
