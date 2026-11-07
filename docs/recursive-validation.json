@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "checked_at": "2026-11-07T18:13:25.702680+00:00",
+  "candidate_source": "52e57668183a948a15214bb1fda8f422059d0d5b",
+  "reviewed_core": "9deb30b",
+  "final_runtime_source": "6190091",
+  "final_case_definitions": 57,
+  "normal_fault_only_skips": 20,
+  "linked_adapter_skips": 0,
+  "sources": {
+    "honk.goose": "fb31cc42bf498337edcbaeb8324420063ecd6cd09e080acb6d2ad324a3e2f393",
+    "honk.build": "6afae36b1c68de265fecc16048248ca5b2c015b68fb9f1228267ad262ff756fa",
+    "native/watch_tree.c": "19ffefa7300c705ed0e408ee2feba03c4af6285693d1413976540a8e961619e3",
+    "native/platform.c": "8b66a79987edc6887448010073d72d801e71eec8168cf93183cd7ea84f81e63c",
+    "src/watching.goose": "822fea9615e3f6fc27ca4564eb57e1f32617e03641ec9f64e3047fa21f4a605d",
+    "src/watch_tree.goose": "9693291a9914b368f78af371482a1fa898fedbb9dee33ec895b64619eb5e32f3",
+    "src/platform.goose": "8f0ad02ba45dadc36c80908ef43055461d443e9b8bf567a566b5633ffa624049",
+    "tests/watch_cli.py": "9c1a062e8fd9be39ca4e036e85d0c7700417e8dad4ae5391705a7ccbdbf85ffd",
+    "tests/watch_fault.c": "3f54f705bd0638668919188fb2c6436020f633357f1786ad5a7675187ef81a19",
+    "tests/watch_tree_native.c": "d2b27a0c64482664a3a28b39c2f62ad3044532bf0727226b61359d2e0af6b7fc",
+    "tests/watch_tree_guard.c": "ca6dba332df9c7390f9aa91acb9407b11335fce7afd08a03ee1dffaff5c47de4",
+    "scripts/watch-test-build.py": "3570f136d7f89e4ee35cc962873596ae918c3db8a35ae16051888388d3ce68da",
+    "vendor/manifest.json": "5a958abc9844980ac51964154a670a79729e73f664154ffd2403494a904c0764",
+    "Makefile": "181f730d75d2ae5cf828f76254ee5b683bfbeed0e7063887b7cfb260fd780ed4",
+    "Honk.toml": "20cb072ccebeddd8e759d2ab3fbe6c3de0705a483c952aa275360a3853fc6618",
+    "Honk.lock": "41648cfc20d8f52d6d4a514bca5232a1450f77a8736b3c38b2f34423d6309970",
+    "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15"
+  },
+  "library": {
+    "pin": "db39c02739bc6e5301e1deedad0caba0e2f11188",
+    "release": "https://github.com/carabistouflette/goose-watch/releases/tag/v0.1.0-alpha.3",
+    "immutable": true,
+    "archive_files_verified": 61,
+    "public_tag_and_exact_imports": "ClangO2 and GCCO2 passed with borrowed directory fd0",
+    "anonymous_asset_checksums": "verified"
+  },
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "compiler_binary_sha256": "5e5bd97c13d8f4902855e6bbd2df1be510b81f13fe92a2482c9ac5e208bdb7a9",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "checks": {
+    "gcc_broad": "make format check test security sanitize completed successfully;normal CLI77,security213 malformed imports/FIFO,cache/logging/manifests/metadata,parallel17/fault probes included",
+    "clang_standalone": "Fresh local clone check,nativeASan/UBSan,normal watch and linked fault suites;final57-case linked suite passed at8e64821",
+    "final_native": "Final scanner source and direct filtering invariants passed GCC/Clang ASan/UBSan;Clang static analysis has zero diagnostics",
+    "final_normal": "Final combined source6190091 passed check and57-case normal suite,20 fault-only skips",
+    "main_integration": "Benchmark-only main3aabb87 preserved;combinedcheck and qualification-test passed",
+    "real_compiler": "Initial check,populated-subtree repair and nested-source edit yielded three successful full commands"
+  },
+  "provenance": {
+    "broad_run": "Started at9deb30b. Its normal/linked phases ran54 cases;after test additions its GCC sanitizer phases ran57 cases. Serial refinements and source hashes are recorded rather than attributing every phase to one unchanged source tree.",
+    "54_56_57": "Earlier standalone54 at9deb30b and56 at7333f98 remain historical. FinalClang57 at8e64821 includes the empty-name memcpy guard.",
+    "final_guard_hardening": "6190091 additionally makes saved directory fd and nonempty root-name invariants explicit. These changes pass direct native GCC/Clang sanitizers,zero-diagnostic static analysis and final normal57-case consumption. Full hosted CI of the final source remains a merge gate.",
+    "runtime_bridge": "All other reviewed production inputs match9deb30b byte-for-byte. 52e5766 adds direct native exclusion/sentinel assertions only.",
+    "main_merge": "fb083a4 preserves main3aabb87 benchmark files byte-for-byte and both Makefile hooks.",
+    "benchmark_source": "Clean21fd79d five-round native-only discovery reports,20samples per compiler;all samples and exact earlier source identities retained"
+  },
+  "reviews": [
+    "Independent architecture review: rootABA,sentinel and exclusion findings corrected",
+    "Independent security/lifecycle review: root guard and non-consuming signal handling corrected",
+    "Fresh final review:no remaining runtime/race blocker;docs corrected",
+    "Final merge/empty-name review:both features preserved;no blocker"
+  ],
+  "bounds": {
+    "roots": 8,
+    "data_generation_identities_including_sentinels": 256,
+    "depth": 32,
+    "entries_per_scan_or_verify": 8192,
+    "attempts": 8,
+    "candidate_records_per_attempt": 4096,
+    "root_guard_records_per_check": 4096,
+    "retained_anchors_peak": 528,
+    "inotify_fds_peak": 3,
+    "transient_fds_peak": 2,
+    "native_tree_allocation_bytes_peak": 393216
+  },
+  "log_sha256": {
+    "recursive-qualification-gcc.log": "7b058e377ec2778d4cf25538f20342e2e3ab6daf620fed6532be6caefe9a4309",
+    "recursive-qualification-clang.log": "86c4163c683b4143ccbc31a1e824f66a280bece89582f152ec8344957d84d424",
+    "recursive-clang-final.log": "e45beb3befd2e2d4e632b735460410769b4ebc89eb68904927facfb72960a532",
+    "recursive-clang-complete.log": "7924255fabe34eddc8a0058ae2df91a60d6a3cd850f37fc27fc75d1378648e67",
+    "recursive-final-normal.log": "6973cd04225b52fa3ceaa90ec7724398d4e17a5e29d3d969cfb6f67743053ed2",
+    "recursive-combined-check.log": "00cbc968da3bbd16f5811f07393ef589e0374a65f796f600b1112f5a058db792",
+    "recursive-real-smoke.log": "22982dcc573218d3f1d1b813a2f285389803d843787dd50f8b38754aec6f0c4f",
+    "tree-native-candidate-gcc.log": "36b8dd3754405d650ffc02ae385c1d6dc7e50164f398df126480aefc7bb14fd1",
+    "tree-native-candidate-clang.log": "ca37f7beac176abb8110df929c6ef4bf62d093b33c89ced10e7ea4ae6c71eee4",
+    "watch-tree-analysis-final.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "binary_sha256": {
+    "honk": "2933a0b2e76e0770981a55c4e1c1fdaa1566e59082669760d669b67677df118c",
+    "honk-sanitize": "3fe7b93b789de1fc55d2fa5adf32aaa46e6c6f5548ac3b38363d19956b3e734a",
+    "honk-watch-fault-sanitize": "cd45591a15512357878a43ea8ab907f9419f810666c5ae543cf765df1569a6cc",
+    "recursive-standalone/.build/honk-watch-fault-sanitize": "3e67fe65b34a24bebe46fb4d6668f552af26f56fba602570dc82047e755e28d3"
+  },
+  "limits": [
+    "Local qualification;full final-source hosted GCC/Clang CI required before merge",
+    "Linux x86-64/glibc;existing Honk Linux5.3+/glibc2.34+ baseline",
+    "Explicit mode remains default;recursive roots /,overlaps and aliases rejected",
+    "Root-guard loss fails conservatively;data-generation loss may reconcile",
+    "Counts bound work,not wall-clock filesystem calls or child cleanup",
+    "No mount-over detection,confinement,snapshot or complete notification history guarantee",
+    "Resource bounds exclude existing runtime/application/child descriptors and Goose buffers",
+    "Native discovery benchmark excludes inotify registration,Goose dispatch and child execution;no speed comparison or percentile claim"
+  ]
+}

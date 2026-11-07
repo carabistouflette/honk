@@ -151,3 +151,7 @@ and during enumeration; active-child signal consumption remains in supervision.
 Inotify does not detect a mount placed over a watched path. Concurrent renames,
 mount changes and external writers prevent any confinement, atomic-snapshot or
 universally complete change-history guarantee.
+
+The [recursive qualification receipt](recursive-validation.json) records source
+checkpoints,57 final case definitions,earlier54/56 runs,native hardening checks
+and the separate final-source hosted CI gate.
