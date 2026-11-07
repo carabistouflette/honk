@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add optional `--watch-debounce-ms 0..1000` for quiet-period rerun batching,
+  with a fixed one-second batching cap, immediate initial/loss runs and responsive
+  cancellation. Default zero preserves immediate reruns.
+
+
 - Accept 1–256 explicit `--watch-dir` options through pinned goose-watch alpha.2;
   recover the complete set on overflow and stop if any selected directory moves.
 

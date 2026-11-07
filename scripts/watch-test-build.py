@@ -21,7 +21,7 @@ wrapper = folder/'cc'
 wrapper.write_text('#!'+sys.executable+'\nimport os,sys\n'+f'compiler={compiler!r}\nflags={flags!r}\n'+
     'args=sys.argv[1:]\nprobe=any(a in args for a in ("--version","-v","-dumpmachine","-dumpversion"))\n'+
     'link=not probe and not any(a in args for a in ("-c","-E","-S"))\n'+
-    f'extra=([{str(obj)!r},"-Wl,--wrap=gw_set_next"]+({["-no-pie"] if sanitize else []!r})) if link else []\n'+
+    f'extra=([{str(obj)!r},"-Wl,--wrap=gw_set_next","-Wl,--wrap=honk_watch_clock_ms"]+({["-no-pie"] if sanitize else []!r})) if link else []\n'+
     'os.execv(compiler,[compiler,*args,*([] if probe else flags),*extra])\n')
 wrapper.chmod(0o755)
 output=ROOT/'.build'/('honk-watch-fault-sanitize' if sanitize else 'honk-watch-fault')

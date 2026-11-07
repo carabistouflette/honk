@@ -6,7 +6,7 @@ from a trusted project:
 ```sh
 honk watch check --watch-dir "$PWD/src" --offline
 honk watch test --watch-dir "$PWD/src" --watch-dir "$PWD/tests" --filter 'tests/**/*.goose' --frozen
-honk watch check --watch-dir "$PWD/src" --watch-runs 2
+honk watch check --watch-dir "$PWD/src" --watch-runs 2 --watch-debounce-ms 100
 ```
 
 Supply 1–256 explicit normalized absolute directories with repeated `--watch-dir`
@@ -23,9 +23,26 @@ The complete set is installed before the initial run. Close-write, moved-from/to
 delete events on immediate `.goose` names request another run; create alone is
 ignored to avoid checking files still being written. Directory events and other
 extensions are ignored. Changes observed during a command coalesce into one
-pending rerun. There is no quiet-period debounce or exactly-once operation count:
-changes arriving in a later batch may cause a later run. Each drain is capped at
+pending rerun. By default there is no quiet-period debounce. Changes arriving in
+a later batch may cause another run; exactly-once operation counts are not promised. Each drain is capped at
 256 records so busy directories cannot starve child/signal handling.
+
+Optional `--watch-debounce-ms N` accepts 0..1000, default 0 (disabled). With a
+positive value, a pending rerun waits for N milliseconds without a relevant
+observed event, capped at 1000 milliseconds from the batch start. Relevant edits
+reset only the quiet interval; ignored events reset neither interval. The initial
+command stays immediate. Batching starts only after the prior child is reaped,
+or after an idle session observes a relevant change; active-command duration is
+excluded. There is no second batching-limit option.
+
+These are requested batching/poll waits, not a hard wall-clock launch guarantee:
+scheduling, bounded draining, pathname reopen and child launch can add time.
+Quiet concerns observed events, not a filesystem snapshot. Overflow recovery
+bypasses batching and schedules a full command; cancellation, terminal watch
+failure, clock failure or backwards clock movement stops the pending run.
+The clock is checked only when batching is enabled. Polls during batching request
+at most 100 milliseconds, with signal handling between bounded drains. No child
+or cache lock is held during the quiet interval. This adds no child deadline.
 
 The supervisor holds no cache/project lock. Each inner Honk command loads the
 project normally and owns its normal locks. An ordinary command result in 1..127
@@ -79,3 +96,10 @@ packages. `make watch-fault-sanitize` repeats it with ASan/UBSan.
 The [WatchSet qualification receipt](watch-set-validation.json) records exact
 source hashes, local checks and limitations. The earlier
 [one-directory receipt](watch-validation.json) is historical alpha.1 evidence.
+
+The debounce regressions include real cross-directory bursts, continuous edits,
+cancellation/removal during batching, disabled-clock bypass and deterministic
+clock failure/backwards movement. Test-only clock sequences distinguish fixed-cap
+expiry after a relevant reset from quiet expiry under ignored traffic. Overflow
+cases poison future clock calls to verify immediate recovery both during a batch
+and after an active child.
