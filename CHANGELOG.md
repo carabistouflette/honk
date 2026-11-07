@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add experimental `watch check/test --watch-dir ABS_DIR`, with nonrecursive
+  source filtering, coalesced reruns, explicit event-loss recovery and cooperative
+  cancellation. See docs/WATCH.md for scope and cleanup limits.
+
+
+## Unreleased
+
 - Add opt-in goose-terminal command summaries and completed-target progress on
   stderr, preserving existing stdout and child output.
 

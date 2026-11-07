@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "checked_at": "2026-11-07T04:01:28.552417+00:00",
+  "source_commit": "34a25f46eb281f57746cc917c1fb67e6adcc50e7",
+  "sources": {
+    "honk.goose": "6d1f39d67eeb1573cefa699fb91feea710333a11a5037225c115308281afaa5d",
+    "src/watching.goose": "80ac57e58da016c7fec3c6d51c3abbc6b6e1595c37ffbdc2a1c083a23706e61f",
+    "Makefile": "697d45bf520b6c9595c4ae2057cb9ef3708040a58efc5a14b801d85ee1cb424c",
+    "tests/watch_cli.py": "ce546c608c14a8fac76db4f4bbb8bc20b667aceb9abe7c22261a64cd877b4dff",
+    "tests/watch_fault.c": "d9869c459e11453bd279a1b91c765c3e97792a946f99df8a853891789c3e0a06",
+    "tests/text_cli.py": "b03f154996ab166e1251258076778166cbba45d3753216ae33e3057ea5e24475",
+    "scripts/watch-test-build.py": "2378308c859e5445581b3e4df567c49c7e2f0186d0b9c69f83727a2a4a29856a",
+    "vendor/manifest.json": "2a03e75b9139ae2c1ba59fb835fc489ea2be2d89570a348f380c1c2ca3dc49c8",
+    "Honk.toml": "7f356a32f78eea18c8e13357521e8e99879214a32690f09d26a6ba3048405944",
+    "Honk.lock": "7cfae85729574f8db3e9a13ecfbe18aacd522751800c11c358bd7d2f2e9c1a03"
+  },
+  "compiler_revision": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "gcc": "gcc (GCC) 16.2.1 20260810",
+  "clang": "clang version 23.1.4",
+  "watch_pin": "7bbd7ef8c9a4d6323ef9d065d1461bae9ba9fe58",
+  "checks": {
+    "format_check_test": "passed full normal suite",
+    "security": "passed 213 malformed-import probes and FIFO rejection",
+    "sanitize_gcc": "passed full existing suite plus watch cases",
+    "sanitize_clang": "passed targeted 17 watch CLI/fault cases with ASan/UBSan",
+    "standalone": "fresh local clone passed check and normal watch cases; fault-only cases run separately",
+    "real_compiler_smoke": "manual initial check and source-triggered rerun both passed",
+    "reviews": "three independent design/lifecycle/fresh reviews; actionable findings fixed"
+  },
+  "scope": "Explicit one-directory nonrecursive watch. No hard deadline, forced-kill escalation, interactive stdin, recursion, automatic manifest/dependency coverage or process-group supervision. No comparative performance claim. Hosted CI remains a separate merge/release gate."
+}

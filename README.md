@@ -6,8 +6,8 @@ packages tracked source files. Honk is written in Goose with a small POSIX adapt
 It is Apache-2.0 licensed.
 
 The latest experimental release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0),
-source `f9f35e20e4407df56b2ad45310266c9238403144`. Current main may contain
-later documentation changes. CLI, manifest and lockfile compatibility are not
+source `f9f35e20e4407df56b2ad45310266c9238403144`. Current development source also contains
+unreleased features, including watch; v0.4.0 does not include the watch command. CLI, manifest and lockfile compatibility are not
 yet guaranteed. Registry publishing, general dependency solving, cross
 compilation and Cargo feature/stability parity are outside this release.
 
@@ -42,6 +42,7 @@ that trusted compiler, replace setup/build with
 | --- | --- |
 | `new PATH [--lib]`, `init [PATH]` | Create a project without overwriting files. |
 | `build`, `run -- ARGS`, `check` | Compile, run, or type/lifetime-check. Use `build/run --release` for release builds. |
+| `watch check/test --watch-dir ABS_DIR` | Rerun on immediate `.goose` changes; see [watch scope and cleanup](docs/WATCH.md). |
 | `test`, `bench`, `fmt [--check]` | Run test/benchmark programs or format sources. |
 | `add NAME --path PATH`, `add NAME --git URL --rev REF` | Declare a local or exact Git dependency. |
 | `add NAME --git URL --version REQUIREMENT` | Select a matching Git tag. See the [version rules](docs/GIT-VERSION-DESIGN.md). |

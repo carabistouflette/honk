@@ -10,6 +10,22 @@ files whose bytes and executable bits match Git.
 - [Verification clarification](https://github.com/carabistouflette/honk/releases/download/v0.4.0/release-verification-clarification-v0.4.0.json): GitHub reported `immutable: false`. Matching hashes and preserved Git objects do not imply hosted immutability or permanent availability.
 - [Functional workspace report](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.json) and [controller](https://github.com/carabistouflette/honk/releases/download/v0.4.0/workspace-functional-v0.4.0.py): one controlled two-application workspace, 18 checked commands, reuse/invalidation/fallback, multi-remove, explicit lock refresh and frozen packages. This is functional evidence, not timing or a broad stability claim. Exact-image replay needs the recorded binaries; rebuilds need not be bit-identical.
 
+## Watch integration qualification
+
+Development source `34a25f46eb281f57746cc917c1fb67e6adcc50e7` adds the explicit,
+nonrecursive check/test watcher. [Local qualification](docs/watch-validation.json)
+records compiler/source identities and scope. Full format/check/test, security
+and GCC ASan/UBSan suites pass; the targeted Clang sanitizer adapter passes all
+17 watch cases. Controlled tests cover persistent corruption, exact ignored
+batch limits, overflow recovery and delayed child cleanup. Three independent
+reviews found no outstanding runtime blocker after fixes. A fresh local clone
+and a manual two-run check using the real pinned compiler also pass.
+
+The host's tmpfs quota interrupted one metadata compilation; rerunning with a
+private disk-backed `TMPDIR` completed validation, including a final full normal
+run. This is local evidence, not a hosted CI claim, performance ranking or
+expanded platform qualification. [Watch scope and cleanup](docs/WATCH.md).
+
 ## Run the checks
 
 With the matching compiler installed:

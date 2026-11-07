@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Exercise the actual diagnostics path using deterministic application callbacks.
+import watch from "../vendor/goose-watch";
 import glob from "../vendor/goose-glob";
 import crypto from "../vendor/goose-crypto";
 import http from "../vendor/goose-http";

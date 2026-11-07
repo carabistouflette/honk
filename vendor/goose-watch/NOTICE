@@ -1,0 +1,8 @@
+goose-watch
+Copyright 2026 goose-watch contributors
+
+Licensed under the Apache License, Version 2.0.
+Toolchain setup, native fingerprint and sanitizer wrapper scripts are adapted
+from carabistouflette's Apache-2.0 Goose libraries. No third-party runtime source
+is vendored. Linux headers/libc are supplied by the host. The optional rerun
+example imports a separately licensed Apache-2.0 goose-process commit.

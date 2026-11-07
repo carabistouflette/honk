@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 // Exercise the real consumer and POSIX adapter with test-only libc write faults.
+import watch from "../vendor/goose-watch";
 import glob from "../vendor/goose-glob";
 import crypto from "../vendor/goose-crypto";
 import http from "../vendor/goose-http";
