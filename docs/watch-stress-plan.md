@@ -3,9 +3,10 @@
 This campaign qualifies the complete watch workflow before preparing the next
 Honk release candidate. It does not add a feature or promise a speedup.
 
-Use full Git archives of public goose-diff v0.1.0 (129dc794) and goose-json
+Retain full Git archives of public goose-diff v0.1.0 (129dc794) and goose-json
 v0.2.0 (fcee7b7). Run one unmodified real test suite from each, with a recorded
-adapter Honk.toml. Preserve archives, source hashes, canonical direct-test output,
+production/native/test projection for JSON to exclude unrelated undeclared example imports, and an
+adapter Honk.toml. Preserve archives, source hashes, canonical ordinary-test output,
 the compiler/Honk/harness identities and every mutation. Only disposable copies
 are changed. No sibling working checkout is modified.
 
@@ -45,3 +46,7 @@ Independent reviewers first check workload validity/safety, then harness control
 then retained results. Fix demonstrated defects and preserve failed evidence.
 Only after final qualification prepare a release candidate, with full CI/reviews
 and exact public-source verification before publication or catalog registration.
+
+Completed evidence is retained in [the qualification receipt](../bench/results/watch-stress-2026-11-07/README.md).
+It combines three audited completed phases from the first frozen run and the remaining
+JSON resource phase from a second frozen run with an explicit larger trace budget.
