@@ -7,7 +7,7 @@ It is Apache-2.0 licensed.
 
 The latest experimental release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0),
 source `f9f35e20e4407df56b2ad45310266c9238403144`. Current development source also contains
-unreleased features, including watch; v0.4.0 does not include the watch command. CLI, manifest and lockfile compatibility are not
+unreleased features, including watch and `check --diagnostics`; v0.4.0 includes neither feature. CLI, manifest and lockfile compatibility are not
 yet guaranteed. Registry publishing, general dependency solving, cross
 compilation and Cargo feature/stability parity are outside this release.
 
@@ -41,6 +41,7 @@ that trusted compiler, replace setup/build with
 | Command | Purpose |
 | --- | --- |
 | `new PATH [--lib]`, `init [PATH]` | Create a project without overwriting files. |
+| `check --diagnostics text\|json` | Single-package compiler diagnostics; [format and limits](docs/COMPILER_DIAGNOSTICS.md). |
 | `build`, `run -- ARGS`, `check` | Compile, run, or type/lifetime-check. Use `build/run --release` for release builds. |
 | `watch check/test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...]` | Rerun on `.goose` changes; optional `--watch-recursive` discovers bounded subtrees; see [watch scope and cleanup](docs/WATCH.md). |
 | `test`, `bench`, `fmt [--check]` | Run test/benchmark programs or format sources. |

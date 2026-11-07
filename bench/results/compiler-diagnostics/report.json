@@ -1,0 +1,493 @@
+{
+  "build_commands": [
+    [
+      "/home/arobin/.cache/honk/toolchains/eadca409f68210893f366e60d0c2f0dc29a339be/build/goose",
+      "build",
+      "/home/arobin/Work/Projects/goose-libs/.build/honk-compiler-diagnostics/honk.goose",
+      "--standalone",
+      "-O2",
+      "--cc",
+      "cc",
+      "-o",
+      "/tmp/honk diagnostic benchmark sse19gre/honk-candidate"
+    ],
+    [
+      "/home/arobin/.cache/honk/toolchains/eadca409f68210893f366e60d0c2f0dc29a339be/build/goose",
+      "build",
+      "/tmp/honk diagnostic benchmark sse19gre/baseline-source/honk.goose",
+      "--standalone",
+      "-O2",
+      "--cc",
+      "cc",
+      "-o",
+      "/tmp/honk diagnostic benchmark sse19gre/honk-baseline"
+    ],
+    [
+      "/home/arobin/.cache/honk/toolchains/eadca409f68210893f366e60d0c2f0dc29a339be/build/goose",
+      "build",
+      "/home/arobin/Work/Projects/goose-libs/.build/honk-compiler-diagnostics/honk.goose",
+      "--standalone",
+      "-O2",
+      "--cc",
+      "cc",
+      "--stack-reserve",
+      "16M",
+      "-o",
+      "/tmp/honk diagnostic benchmark sse19gre/honk-profile-candidate"
+    ],
+    [
+      "/home/arobin/.cache/honk/toolchains/eadca409f68210893f366e60d0c2f0dc29a339be/build/goose",
+      "build",
+      "/tmp/honk diagnostic benchmark sse19gre/baseline-source/honk.goose",
+      "--standalone",
+      "-O2",
+      "--cc",
+      "cc",
+      "--stack-reserve",
+      "16M",
+      "-o",
+      "/tmp/honk diagnostic benchmark sse19gre/honk-profile-baseline"
+    ]
+  ],
+  "dirty": false,
+  "cc": "cc (GCC) 16.2.1 20260810\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.",
+  "valgrind": "valgrind-3.25.1",
+  "head": "486f27bae23acbd172823678b5924f2bd2c96a61",
+  "baseline_commit": "a39216aba524dc4bffe2e0d038f86ccecf4d013d",
+  "source_sha256": {
+    "honk.goose": "8d666785a56898c47a1821a3d2b0bc74d04c7eed156b935c27e72302ec1d22c1",
+    "src/build.goose": "c772e8abeb9fbfddce3b20f8d81ef5dd0147c5353f8d927c084117cc978e8117",
+    "src/commands.goose": "bdb23a72aa752f4289e5412f2948e0fc706dce19a496f98290e1a6eb37d54032",
+    "bench/compiler_diagnostics.py": "e88bf5ba0f1bbfe68bb7ac7e22ed3649c16a32ac4192ddd2e9af4b06e99ef013"
+  },
+  "binary_sha256": {
+    "candidate": "e31f8b445a8d31508ab915ad4996df8813606c74bfc59541a1fa41b6161c35e3",
+    "baseline": "fa22e697d5468c7773bc98bfc3785f96cf0a013afd542b0402e78c370abfe9c0",
+    "goose": "0ab02200b44f064869ea019c760929baad69c1c3d6dbe566a3d0eea2e321b87d",
+    "profile_candidate": "fc60d7feece2f2528c5743bf4564f8786f02221ef211d8659cca5f16676ab4b0",
+    "profile_baseline": "4916006833c0faabd62efe585d29ab9a9c124a585cee4c71154ba5b5bf5b79f0"
+  },
+  "compiler_pin": "eadca409f68210893f366e60d0c2f0dc29a339be",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "affinity": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ],
+  "samples": {
+    "success.baseline": [
+      {
+        "wall_ns": 17564722,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 21229386,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 20570861,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 21686055,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 21518015,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 21908631,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 19947009,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      }
+    ],
+    "success.default": [
+      {
+        "wall_ns": 17718391,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 20222231,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 22163192,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 20815990,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 22278497,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 20698127,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 19218804,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      }
+    ],
+    "success.text": [
+      {
+        "wall_ns": 21544077,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 19210523,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 20400647,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 21446228,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 22144797,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 19430037,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 19430803,
+        "stdout_bytes": 0,
+        "stderr_bytes": 0,
+        "exit": 0
+      }
+    ],
+    "success.json": [
+      {
+        "wall_ns": 21224273,
+        "stdout_bytes": 3,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 19839228,
+        "stdout_bytes": 3,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 22601226,
+        "stdout_bytes": 3,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 19964947,
+        "stdout_bytes": 3,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 20981889,
+        "stdout_bytes": 3,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 17531320,
+        "stdout_bytes": 3,
+        "stderr_bytes": 0,
+        "exit": 0
+      },
+      {
+        "wall_ns": 17909155,
+        "stdout_bytes": 3,
+        "stderr_bytes": 0,
+        "exit": 0
+      }
+    ],
+    "error.baseline": [
+      {
+        "wall_ns": 23187413,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 21922512,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 22685633,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 20579835,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 21870337,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 19784404,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 22317204,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      }
+    ],
+    "error.default": [
+      {
+        "wall_ns": 23170992,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 22554873,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 22028764,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 22503997,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 21016834,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 21754324,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 19207919,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      }
+    ],
+    "error.text": [
+      {
+        "wall_ns": 18961038,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 22121197,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 21447893,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 20939432,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 20260085,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 21966681,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      },
+      {
+        "wall_ns": 18853825,
+        "stdout_bytes": 0,
+        "stderr_bytes": 266,
+        "exit": 1
+      }
+    ],
+    "error.json": [
+      {
+        "wall_ns": 22129914,
+        "stdout_bytes": 739,
+        "stderr_bytes": 0,
+        "exit": 1
+      },
+      {
+        "wall_ns": 19086148,
+        "stdout_bytes": 739,
+        "stderr_bytes": 0,
+        "exit": 1
+      },
+      {
+        "wall_ns": 22473658,
+        "stdout_bytes": 739,
+        "stderr_bytes": 0,
+        "exit": 1
+      },
+      {
+        "wall_ns": 21286622,
+        "stdout_bytes": 739,
+        "stderr_bytes": 0,
+        "exit": 1
+      },
+      {
+        "wall_ns": 18789958,
+        "stdout_bytes": 739,
+        "stderr_bytes": 0,
+        "exit": 1
+      },
+      {
+        "wall_ns": 18565117,
+        "stdout_bytes": 739,
+        "stderr_bytes": 0,
+        "exit": 1
+      },
+      {
+        "wall_ns": 19955027,
+        "stdout_bytes": 739,
+        "stderr_bytes": 0,
+        "exit": 1
+      }
+    ]
+  },
+  "allocations": {
+    "success.baseline": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303854,
+      "log_sha256": "8488aeae6f975740881b35ae1b8b7afe19de5203f0d6d8ce38e72f924900ea40"
+    },
+    "success.default": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303854,
+      "log_sha256": "54dbcc5f987b65826eebebd3530fb7ecc3753d611b324c41ccd7aa02b3d26bf6"
+    },
+    "success.text": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303854,
+      "log_sha256": "e4afcb3a2a52851d18d0e1cdf499173b03f45138809ea7b38878d128f027f764"
+    },
+    "success.json": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303889,
+      "log_sha256": "e5142dfea6110d26e50b4bd279e281d84815d8638c3a2a7f9f3e1890794312cd"
+    },
+    "error.baseline": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303854,
+      "log_sha256": "4dfdd2dc6a0c612404001b4e15f5ae2c927ad42cefbf90f1645b53377370d3b7"
+    },
+    "error.default": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303854,
+      "log_sha256": "38aed392e64ae5ea123a61e21f1e946a196d5de349205839f670b170c71fd054"
+    },
+    "error.text": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303854,
+      "log_sha256": "dd25368e26cfbe819b691342d9f524f7f13c47e0797dcfb19e939c0ad3fa767b"
+    },
+    "error.json": {
+      "allocs": 30,
+      "frees": 27,
+      "requested_bytes": 303889,
+      "log_sha256": "69b1ee6136b6c8b5fb732719cd3ec23c1f41beff7c2307cd74bd883cd20a9c8f"
+    }
+  },
+  "limits": [
+    "End-to-end check includes project staging, compiler validation and child compiler execution.",
+    "No universal speed claim; two tiny fixtures on a shared host; startup/scheduling noise included.",
+    "Valgrind counts parent Honk allocations, including loaded libraries; exec child compiler allocations excluded.",
+    "Requested byte totals are cumulative, not peak live memory or RSS; profiling is separate from timing.",
+    "Allocation profiling uses separate 16 MiB stack-reservation executables; timings use default reservations."
+  ]
+}

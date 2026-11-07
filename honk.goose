@@ -30,7 +30,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive].");
+    print("honk 0.4.0 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive].");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -49,7 +49,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.4.0"); return; }
     let spec = [argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -117,6 +117,9 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filt
     var known = false;
     for name in ["build", "run", "check", "test", "bench", "fmt", "fetch", "update", "tree", "clean", "add", "remove", "toolchain", "package", "install", "doc"] { if cmd == name { known = true; } }
     platform::require(known, str("unknown command: ", cmd));
+    if options.get("diagnostics", "text") == "json" {
+        platform::require(options.has("package") || (!options.has("workspace") && p.name.len > 0), "JSON diagnostics require a single package; select a workspace member with -p");
+    }
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
     if options.has("package") {
         let selected = selected_member(p, options.get("package"));
@@ -195,9 +198,14 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         let policy = options.get("progress");
         platform::require(policy == "auto" || policy == "always" || policy == "never", "--progress must be auto, always, or never");
     }
+    if options.has("diagnostics") {
+        let mode = options.get("diagnostics");
+        platform::require(mode == "text" || mode == "json", "--diagnostics must be text or json");
+    }
     for entry in options.entries {
         let name = entry.name; var allowed = false;
         if name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
+        else if name == "diagnostics" { allowed = cmd == "check" && !watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }
         else if name == "filter" { allowed = cmd == "test" || cmd == "bench"; }
