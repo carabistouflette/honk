@@ -7,7 +7,7 @@ format:
 	$(GOOSE) format honk.goose src tests bench/utc/driver.goose bench/qualification_driver.goose bench/qualification_pressure.goose
 check:
 	python3 -m py_compile bench/compiler_diagnostics.py bench/process_observer.py bench/observer_calibration.py bench/qualify_parallel.py tests/qualification_observer.py tests/qualification_driver.py bench/parallel_tests.py scripts/parallel-test-build.py tests/parallel_cli.py tests/compiler_diagnostics.py scripts/watch-test-build.py tests/watch_cli.py scripts/metadata-test-build.py tests/http_metadata.py tests/presentation_write.py tests/build_cache_cli.py bench/dogfood.py bench/utc/run.py bench/utc/test_runner.py bench/glob_consumer.py
-	python3 -m py_compile bench/test_reuse.py
+	python3 -m py_compile bench/test_reuse.py bench/native_reuse.py tests/native_reuse_observation.py
 	python3 bench/glob_consumer.py --help > /dev/null
 	python3 bench/dogfood.py --self-test
 	python3 scripts/process-fixture.py
@@ -31,6 +31,7 @@ check:
 build:
 	$(GOOSE) build honk.goose -o .build/honk
 test: build
+	python3 tests/native_reuse_observation.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/compiler_diagnostics.py
 	$(MAKE) watch-tree-native
 	$(MAKE) qualification-test

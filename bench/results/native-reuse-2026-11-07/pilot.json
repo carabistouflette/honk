@@ -1,0 +1,3246 @@
+{
+  "complete": true,
+  "head": "cad9cfd011fb1b66af7551668a0da04ed1361f7b",
+  "platform": "Linux-7.2.11-arch1-1-x86_64-with-glibc2.44",
+  "records": [
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 4465028248,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/target/release/.honk/tests/0\ncrypto public interface regressions passed\nPassed 1 test targets\n",
+      "stderr": "building the package crypto's C with CMake\ncompiling the runtime for gcc 20260810\n",
+      "profile": "crypto",
+      "label": "ordinary",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {},
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2"
+      },
+      "backend_before": {},
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080164312175809,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 1232984350,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/target/release/.honk/tests/0\ncrypto public interface regressions passed\nPassed 1 test targets\n",
+      "stderr": "building the package crypto's C with CMake\n",
+      "profile": "crypto",
+      "label": "fallback_0",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080164312175809,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2"
+      },
+      "backend_before": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080164446772354,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080165591211286,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 1270991177,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/target/release/.honk/tests/0\ncrypto public interface regressions passed\nPassed 1 test targets\n",
+      "stderr": "building the package crypto's C with CMake\n",
+      "profile": "crypto",
+      "label": "fallback_1",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080165591211286,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2"
+      },
+      "backend_before": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080165712957986,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080166853246291,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 1218150815,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/target/release/.honk/tests/0\ncrypto public interface regressions passed\nPassed 1 test targets\n",
+      "stderr": "building the package crypto's C with CMake\n",
+      "profile": "crypto",
+      "label": "fallback_2",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080166853246291,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2"
+      },
+      "backend_before": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080167021703625,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080168099280852,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build",
+        "--filter",
+        "tests/api.goose"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 1163807088,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/target/release/.honk/tests/0\ncrypto public interface regressions passed\nPassed 1 test targets\n",
+      "stderr": "building the package crypto's C with CMake\n",
+      "profile": "crypto",
+      "label": "filtered_fallback",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080168099280852,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2"
+      },
+      "backend_before": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080168283925374,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080169328314942,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 1069160599,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/target/release/.honk/tests/0\ncrypto public interface regressions passed\nPassed 1 test targets\n",
+      "stderr": "building the package crypto's C with CMake\n",
+      "profile": "crypto",
+      "label": "edited_source_fallback",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080169328314942,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "d74befbefabf3a4cca0acc2b3e96c9407f57dcdb23e4227c713a7142bebfcd9d"
+      },
+      "backend_before": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080169488831318,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080170500347450,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 1,
+      "elapsed_ns": 238317640,
+      "stdout": "",
+      "stderr": "building the package crypto's C with CMake\nbuilding the package crypto with CMake failed (exit 1):\n    /usr/bin/cmake --build /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto-goose/build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake --config Release --target goose_linkprobe\n[0/1] Re-running CMake...\n-- Configuring done (0.0s)\n-- Generating done (0.0s)\n-- Build files have been written to: /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto-goose/build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake\n[1/5] Building C object pkg/CMakeFiles/goose_crypto_native.dir/native/ranges.c.o\n[2/5] Building C object pkg/CMakeFiles/goose_crypto_native.dir/native/crypto.c.o\nFAILED: [code=1] pkg/CMakeFiles/goose_crypto_native.dir/native/crypto.c.o \n/usr/bin/cc  -I/home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto-goose/build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/include -O3 -DNDEBUG -fPIC -Wall -Wextra -Werror -MD -MT pkg/CMakeFiles/goose_crypto_native.dir/native/crypto.c.o -MF pkg/CMakeFiles/goose_crypto_native.dir/native/crypto.c.o.d -o pkg/CMakeFiles/goose_crypto_native.dir/native/crypto.c.o -c /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/.honk/stage/app/native/crypto.c\n/home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/.honk/stage/app/native/crypto.c:111:2: error: #error intentional_qualification_failure\n  111 | #error intentional_qualification_failure\n      |  ^~~~~\nninja: build stopped: subcommand failed.\n(the output is in /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto-goose/build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake-build.log)\n",
+      "profile": "crypto",
+      "label": "failed_native_build",
+      "expected_work": "any",
+      "expected_code": 1,
+      "backend_before_marker": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080170500347450,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "5c011782ebbe8144afabe0f9ba90dd6836a9410b709c240ecc48cd97b481446e",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "238631588c76df192386bc687abb005613a4147a8d7f09b1d09133c801812356",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2"
+      },
+      "backend_before": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080170598452848,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080170598452848,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 1105479265,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/crypto/target/release/.honk/tests/0\ncrypto public interface regressions passed\nPassed 1 test targets\n",
+      "stderr": "building the package crypto's C with CMake\n",
+      "profile": "crypto",
+      "label": "restored_fallback",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080170598452848,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51",
+      "source_snapshot": {
+        "CMakeLists.txt": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "THIRD_PARTY_NOTICES.md": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+        "crypto.build": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+        "crypto.goose": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+        "native/crypto.c": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+        "native/crypto.h": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+        "native/ranges.c": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+        "tests/api.goose": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2"
+      },
+      "backend_before": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080170876598631,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/api-5252c473/cc.log": {
+          "device": 51,
+          "inode": 58938654,
+          "mtime_ns": 1794080171917386755,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {},
+      "native_cmake_tools": {
+        "build/pkg/local/9aa1ebbc/gcc-20260810-a920ca84/cmake/CMakeCache.txt": {
+          "cache_sha256": "7d9c4a43ee99256877116d18c438d5f9f726c45d184fc980ca6d6676286a8af6",
+          "compiler": "/usr/bin/cc",
+          "compiler_sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287"
+        }
+      }
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7958528212,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "population",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {},
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {},
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080173520431218,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080175561487831,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080178499569324,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080179664601638,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 509135185,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "verified_hit",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080173520431218,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080175561487831,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080178499569324,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080179664601638,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080179999871554,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080179999913661,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080179999941034,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080179999966436,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080179999871554,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080179999913661,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080179999941034,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080179999966436,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7218847106,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "source_invalidates",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080179999871554,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080179999913661,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080179999941034,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080179999966436,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "f2e372460255b08937bb280dc39d4ee94383513826c4ef369bf7806cf3879660",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080180552592901,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080180552626269,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080180552814790,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080180552894090,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080181932664547,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080183840717471,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080186511791558,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080187521819573,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "04f2e46c6f7db7faa3bbce656827518bdbabb2c1c6bbb45dbd78fbfa2e6b6f4f",
+        ".honk/reuse/release/tests/2/record": "e24dfcd83742146f10e93f76ab52f65c8de12ee109243a32063dc3dbaef2dc19",
+        ".honk/reuse/release/tests/5/record": "edc898d9161fd012c22fe6ad15a5195bc83e99f486eac2d5e0271301d8f3962d",
+        ".honk/reuse/release/tests/9/record": "31e8869e54f10a74772400be55f682b95341bf8563712df8ab6c0f21bf8af878"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 457457972,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "edited_hit",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080181932664547,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080183840717471,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080186511791558,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080187521819573,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "f2e372460255b08937bb280dc39d4ee94383513826c4ef369bf7806cf3879660",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080187800571693,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080187800610161,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080187800638350,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080187800665578,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080187800571693,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080187800610161,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080187800638350,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080187800665578,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "04f2e46c6f7db7faa3bbce656827518bdbabb2c1c6bbb45dbd78fbfa2e6b6f4f",
+        ".honk/reuse/release/tests/2/record": "e24dfcd83742146f10e93f76ab52f65c8de12ee109243a32063dc3dbaef2dc19",
+        ".honk/reuse/release/tests/5/record": "edc898d9161fd012c22fe6ad15a5195bc83e99f486eac2d5e0271301d8f3962d",
+        ".honk/reuse/release/tests/9/record": "31e8869e54f10a74772400be55f682b95341bf8563712df8ab6c0f21bf8af878"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7555558358,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "restore_repopulates",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080187800571693,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080187800610161,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080187800638350,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080187800665578,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080188297985139,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080188298121993,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080188298211837,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080188298288741,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080189677879375,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080191751239736,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080194401010379,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080195528041639,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build",
+        "--filter",
+        "tests/unified.goose"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 153122447,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 1 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "filtered_unified",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080189677879375,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080191751239736,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080194401010379,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080195528041639,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080195883863695,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080195883907021,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080195883937608,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080195883967570,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080195883863695,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080195883907021,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080195883937608,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080195883967570,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build",
+        "--filter",
+        "tests/core.goose"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 135435627,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nPassed 1 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "filtered_core",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080195883863695,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080195883907021,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080195883937608,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080195883967570,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080196067134133,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080196067244225,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080196067314456,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080196067374288,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080196067134133,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080196067244225,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080196067314456,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080196067374288,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 2447120140,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "corruption_recompiles",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080196067134133,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080196067244225,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080196067314456,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080196067374288,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080196243001485,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080196243124362,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080196243206896,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080196243274608,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080196243001485,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080198302118583,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080196243206896,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080196243274608,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 420503200,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "corruption_recovered_hit",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080196243001485,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080198302118583,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080196243206896,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080196243274608,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080198720386515,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080198720489209,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080198720525746,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080198720590745,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080198720386515,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080198720489209,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080198720525746,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080198720590745,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 2426617879,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "symlink_not_followed",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080198720386515,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080198720489209,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080198720525746,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080198720590745,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080199173159244,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080199173265410,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080199173336809,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080199173396242,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080199173159244,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080201133197107,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080199173336809,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080199173396242,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 2285118639,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "symlink_repopulate",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080199173159244,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080201133197107,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080199173336809,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080199173396242,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080201631480389,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080201631672427,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080201631761806,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080201631868493,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080201631480389,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080203557264343,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080201631761806,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080201631868493,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 414907982,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "symlink_recovered_hit",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080201631480389,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080203557264343,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080201631761806,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080201631868493,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080203955165526,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080203955295743,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080203955350938,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080203955436237,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080203955165526,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080203955295743,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080203955350938,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080203955436237,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7434615401,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "compiler_location_change",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080203955165526,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080203955295743,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080203955350938,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080203955436237,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/alternate-goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "ddc37cd73ad7a6cee79f7e1190935362fa2377bd994ca2a4c812fe13c5f76d69",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080204402011661,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080204402118369,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080204402189511,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080204402248109,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080205771325754,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080207868383919,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080210627460446,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080211647488738,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "93221d1e5004140aea2821d7d3e523a5269c9456304bf9beec4b92e02360b1f8",
+        ".honk/reuse/release/tests/2/record": "545ccc502e4898b84f6331c9f0338bfb820d1bd882371203a87a533b6b364a79",
+        ".honk/reuse/release/tests/5/record": "b571f9cabea97bf5a9e5d1e0e5cf1137031615cb073366a60e55bffb370f78cd",
+        ".honk/reuse/release/tests/9/record": "812cd4cde369bd0827204d488fdab9b55cda8f3c3694f16b72cc0586e8846117"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 398158859,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "alternate_compiler_hit",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080205771325754,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080207868383919,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080210627460446,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080211647488738,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/alternate-goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "ddc37cd73ad7a6cee79f7e1190935362fa2377bd994ca2a4c812fe13c5f76d69",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080211880057715,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080211880124002,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080211880173213,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080211880219942,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080211880057715,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080211880124002,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080211880173213,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080211880219942,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "93221d1e5004140aea2821d7d3e523a5269c9456304bf9beec4b92e02360b1f8",
+        ".honk/reuse/release/tests/2/record": "545ccc502e4898b84f6331c9f0338bfb820d1bd882371203a87a533b6b364a79",
+        ".honk/reuse/release/tests/5/record": "b571f9cabea97bf5a9e5d1e0e5cf1137031615cb073366a60e55bffb370f78cd",
+        ".honk/reuse/release/tests/9/record": "812cd4cde369bd0827204d488fdab9b55cda8f3c3694f16b72cc0586e8846117"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7500853015,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "compiler_bytes_invalidate",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080211880057715,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080211880124002,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080211880173213,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080211880219942,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/alternate-goose",
+        "sha256": "63d3dae714e3b0e9a07856f2fc13c4a96273e817f1c3f796ea768760fc8c3fed"
+      },
+      "environment_sha256": "ddc37cd73ad7a6cee79f7e1190935362fa2377bd994ca2a4c812fe13c5f76d69",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080212391307139,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080212391442933,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080212391510578,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080212391567596,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080213786548068,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080215958608314,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080218694684203,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080219705712245,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "0a34eb9596f5cb3745dc777a049d962706cd6f401306f294f56ad5496f77b24c",
+        ".honk/reuse/release/tests/2/record": "237d8ed626da3236ec633640a6f94447e0aa0376870e5992769e94c4d2801ffa",
+        ".honk/reuse/release/tests/5/record": "9f8e498c595ee9974c529e5d65ce3d954f6f384c40280db1c6f99e8460e443a3",
+        ".honk/reuse/release/tests/9/record": "76ba9c9652ac90d7df0aafb8c6e9bc7295fc9b507a55f1392fb7a2541a06c60d"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 369752196,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "changed_compiler_hit",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080213786548068,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080215958608314,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080218694684203,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080219705712245,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/alternate-goose",
+        "sha256": "63d3dae714e3b0e9a07856f2fc13c4a96273e817f1c3f796ea768760fc8c3fed"
+      },
+      "environment_sha256": "ddc37cd73ad7a6cee79f7e1190935362fa2377bd994ca2a4c812fe13c5f76d69",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080219925207079,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080219925245913,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080219925277636,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080219925310044,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080219925207079,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080219925245913,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080219925277636,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080219925310044,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "0a34eb9596f5cb3745dc777a049d962706cd6f401306f294f56ad5496f77b24c",
+        ".honk/reuse/release/tests/2/record": "237d8ed626da3236ec633640a6f94447e0aa0376870e5992769e94c4d2801ffa",
+        ".honk/reuse/release/tests/5/record": "9f8e498c595ee9974c529e5d65ce3d954f6f384c40280db1c6f99e8460e443a3",
+        ".honk/reuse/release/tests/9/record": "76ba9c9652ac90d7df0aafb8c6e9bc7295fc9b507a55f1392fb7a2541a06c60d"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 7471849962,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "original_compiler_restore",
+      "expected_work": "compile",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080219925207079,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080219925245913,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080219925277636,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080219925310044,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080220333421483,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080220333599214,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080220333703606,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080220333821053,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080221831771215,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080223773825080,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080226573902745,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080227599931203,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    },
+    {
+      "argv": [
+        "/home/arobin/Work/Projects/goose-libs/honk/.build/honk",
+        "test",
+        "--release",
+        "--jobs",
+        "4",
+        "--reuse-build"
+      ],
+      "sampled": false,
+      "requested_interval_ms": null,
+      "checkpoints": [],
+      "complete": true,
+      "post_exit_group_members": [],
+      "exit_code": 0,
+      "elapsed_ns": 394028210,
+      "stdout": "built /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/0\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/1\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/2\nbuilt /home/arobin/Work/Projects/goose-libs/honk/.build/native-reuse-qualification/diff/target/release/.honk/tests/3\ncontext: goldens, hunk windows, zero ranges, byte semantics and budgets passed\ncore: exhaustive minimality, reconstruction, byte semantics and limits passed\nsparse: independent minimality, reconstruction, deterministic paths, budgets and sparse consumer case passed\nunified: exact output, budgets, byte semantics and stale errors passed\nPassed 4 test targets\n",
+      "stderr": "",
+      "profile": "diff",
+      "label": "final_hit",
+      "expected_work": "hit",
+      "expected_code": 0,
+      "backend_before_marker": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080221831771215,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080223773825080,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080226573902745,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080227599931203,
+          "size": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "compiler": {
+        "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+        "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c"
+      },
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7",
+      "source_snapshot": {
+        "GOOSE_REVISION": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "diff.goose": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+        "sparse.goose": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+        "tests/context.goose": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+        "tests/core.goose": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+        "tests/sparse.goose": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+        "tests/unified.goose": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+        "unified.goose": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d"
+      },
+      "backend_before": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080227846227483,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080227846287177,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080227846330012,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080227846369262,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "backend_after": {
+        "build/prog/context-4de6045c/cc.log": {
+          "device": 51,
+          "inode": 58939429,
+          "mtime_ns": 1794080227846227483,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/core-6659e0a4/cc.log": {
+          "device": 51,
+          "inode": 58939446,
+          "mtime_ns": 1794080227846287177,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/sparse-e3e6bbc2/cc.log": {
+          "device": 51,
+          "inode": 58939486,
+          "mtime_ns": 1794080227846330012,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        },
+        "build/prog/unified-b575f823/cc.log": {
+          "device": 51,
+          "inode": 58939506,
+          "mtime_ns": 1794080227846369262,
+          "size": 43,
+          "sha256": "eb73793e53ec0179ef1b72231750b4d19527734f61c9fe27f81979eebc9b4f8e"
+        }
+      },
+      "cache_records": {
+        ".honk/reuse/release/tests/10/record": "e61ba308154fd80178c66367518e44c3d202dee37e7cc1965958cd636dd3a979",
+        ".honk/reuse/release/tests/2/record": "54fb8cdc425404a4b4db53bb4753d25f04495d863dd7d4e416de3d87f8801b17",
+        ".honk/reuse/release/tests/5/record": "37cab96a67fa05b5ff7a544efa1e22f47adca08c07834d52ee96e374ba8cccfc",
+        ".honk/reuse/release/tests/9/record": "8edddbb86128b6aba58a4b34f3009bd189fd2d9bdc15d23efad0dd3c617f0361"
+      },
+      "native_cmake_tools": {}
+    }
+  ],
+  "mutations": [
+    {
+      "label": "native-source-edit",
+      "path": "crypto/tests/api.goose",
+      "before_sha256": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2",
+      "after_sha256": "d74befbefabf3a4cca0acc2b3e96c9407f57dcdb23e4227c713a7142bebfcd9d",
+      "before_size": 8791,
+      "after_size": 8828
+    },
+    {
+      "label": "native-source-restore",
+      "path": "crypto/tests/api.goose",
+      "before_sha256": "d74befbefabf3a4cca0acc2b3e96c9407f57dcdb23e4227c713a7142bebfcd9d",
+      "after_sha256": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2",
+      "before_size": 8828,
+      "after_size": 8791
+    },
+    {
+      "label": "native-compile-failure",
+      "path": "crypto/native/crypto.c",
+      "before_sha256": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+      "after_sha256": "238631588c76df192386bc687abb005613a4147a8d7f09b1d09133c801812356",
+      "before_size": 5321,
+      "after_size": 5363
+    },
+    {
+      "label": "native-build-refresh",
+      "path": "crypto/crypto.build",
+      "before_sha256": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+      "after_sha256": "5c011782ebbe8144afabe0f9ba90dd6836a9410b709c240ecc48cd97b481446e",
+      "before_size": 258,
+      "after_size": 315
+    },
+    {
+      "label": "native-compile-restore",
+      "path": "crypto/native/crypto.c",
+      "before_sha256": "238631588c76df192386bc687abb005613a4147a8d7f09b1d09133c801812356",
+      "after_sha256": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+      "before_size": 5363,
+      "after_size": 5321
+    },
+    {
+      "label": "native-build-restore",
+      "path": "crypto/crypto.build",
+      "before_sha256": "5c011782ebbe8144afabe0f9ba90dd6836a9410b709c240ecc48cd97b481446e",
+      "after_sha256": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+      "before_size": 315,
+      "after_size": 258
+    },
+    {
+      "label": "pure-source-edit",
+      "path": "diff/diff.goose",
+      "before_sha256": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+      "after_sha256": "f2e372460255b08937bb280dc39d4ee94383513826c4ef369bf7806cf3879660",
+      "before_size": 5660,
+      "after_size": 5660
+    },
+    {
+      "label": "pure-source-restore",
+      "path": "diff/diff.goose",
+      "before_sha256": "f2e372460255b08937bb280dc39d4ee94383513826c4ef369bf7806cf3879660",
+      "after_sha256": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+      "before_size": 5660,
+      "after_size": 5660
+    },
+    {
+      "label": "corrupt-cached-executable",
+      "path": "diff/.honk/reuse/release/tests/5/program",
+      "before_sha256": "eeeee92afca3cbf6912056b01aa78159d474a841c1126912ffd8b7aa2ec66eab",
+      "after_sha256": "4b35b85321c4641b7349766aab79ca07a42dc0ae6605db6cf57dd7e179604267",
+      "before_size": 44496,
+      "after_size": 44496
+    },
+    {
+      "label": "compiler-bytes-change",
+      "path": "alternate-goose",
+      "before_sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c",
+      "after_sha256": "63d3dae714e3b0e9a07856f2fc13c4a96273e817f1c3f796ea768760fc8c3fed",
+      "before_size": 5784280,
+      "after_size": 5784281
+    }
+  ],
+  "profiles": {
+    "crypto": {
+      "revision": "a4643f62bd5e76b371054c6537a95169a7930101",
+      "tag": "v0.1.0-alpha.1",
+      "files": {
+        "CMakeLists.txt": {
+          "sha256": "222b114d20bae2e481c38eb6d9d74c9d39f57f206f9f12539f886767efd5fff5",
+          "mode": 420
+        },
+        "GOOSE_REVISION": {
+          "sha256": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+          "mode": 420
+        },
+        "LICENSE": {
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "mode": 420
+        },
+        "THIRD_PARTY_NOTICES.md": {
+          "sha256": "def296d0298c8e0efeae1c42ad7f99b6e51e3228fd7762267b7c2f7d08b19410",
+          "mode": 420
+        },
+        "crypto.build": {
+          "sha256": "42d5d3225733c87c1cc3443f06785e05cce34361701bb4d7e9cce6fdd1051388",
+          "mode": 420
+        },
+        "crypto.goose": {
+          "sha256": "c585a58f8143c022c5d4b0a23cd772a6173cf4b6bd61b73364af2474956fb03a",
+          "mode": 420
+        },
+        "native/crypto.c": {
+          "sha256": "57e19f494ba4e245f22211b7a927b18353f5b2d63184f4c757dfc6ef6b580f51",
+          "mode": 420
+        },
+        "native/crypto.h": {
+          "sha256": "8bb8c1b1a9adaeff88059c855b0eeb239614a038afcf9768f2e9140a660b7d15",
+          "mode": 420
+        },
+        "native/ranges.c": {
+          "sha256": "b8bcada5b09d7edcb7bc7abdb8283226ef7e7f096feb777cda260f157e4fac24",
+          "mode": 420
+        },
+        "tests/api.goose": {
+          "sha256": "c0985d80684f0abdf0d94e36fb3c486813b98e33487a3621e54d1fd1412762e2",
+          "mode": 420
+        }
+      },
+      "archive_sha256": "59de6283b332e90f3b7706b04fe33c7df8a0caf3cde25005c7a86145af5552b6",
+      "manifest": "[package]\nname=\"crypto\"\nkind=\"lib\"\nversion=\"0.1.0\"\nentry=\"crypto.goose\"\n",
+      "environment_sha256": "19621aff92264d373d3f7f3f95e93616e8472a5c3115bb31c27c41c1b1102c51"
+    },
+    "diff": {
+      "revision": "129dc794b62ad987784db0a1d52ef618c85fccf4",
+      "tag": "v0.1.0",
+      "files": {
+        "GOOSE_REVISION": {
+          "sha256": "64e14b181dfe96743211738fb0f1b1f7798ea940da2ca50ff122e6f028c24e15",
+          "mode": 420
+        },
+        "LICENSE": {
+          "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+          "mode": 420
+        },
+        "diff.goose": {
+          "sha256": "b20195b15dd36c98d605ecfd76891e000acadcb5a1314bfa82cc8012c0bab8b3",
+          "mode": 420
+        },
+        "sparse.goose": {
+          "sha256": "d666dbf402e11e993bc83febbc46b962d47cb0d486d6ba3f90fb267ca70991fc",
+          "mode": 420
+        },
+        "tests/context.goose": {
+          "sha256": "05269d8b16700bc2ecf183fc841fc213932c89caef8202ff903bbcd795659fce",
+          "mode": 420
+        },
+        "tests/core.goose": {
+          "sha256": "e13a75ec29a8586391820dea0e0ca11324c8b32dee9b5134abd5ca152d66a6e1",
+          "mode": 420
+        },
+        "tests/sparse.goose": {
+          "sha256": "8adcdb4d07624c1ef068a5fec422fd468245b3b130558289cbc76e2878ba1553",
+          "mode": 420
+        },
+        "tests/unified.goose": {
+          "sha256": "60bf53edbc3c321acd5a354c03c6c54d39fe5ffffb321554a7ba4d773dfd2626",
+          "mode": 420
+        },
+        "unified.goose": {
+          "sha256": "d7664cbf7c878c4b1bbb258657b7e9bed1832a997c56bbf1b1ed0bf8e92f4c0d",
+          "mode": 420
+        }
+      },
+      "archive_sha256": "72ffe8ffdb34490595254925b373242443d4d8c799d94696c6b0b31974eeec1a",
+      "manifest": "[package]\nname=\"diff\"\nkind=\"lib\"\nversion=\"0.1.0\"\nentry=\"diff.goose\"\n",
+      "environment_sha256": "e5443cea026e3705a7f872b125b8cdacbe65eee4fdb3b84250717db0c27aafa7"
+    }
+  },
+  "scope": "Correctness qualification, not a performance comparison. Native CMake caches may remain warm.",
+  "tools": {
+    "goose": {
+      "path": "/home/arobin/Work/Projects/goose-libs/honk/.build/qualification-toolchain/build/goose",
+      "sha256": "1a64a3f8885af87f083318458ee7bf14b07b5b921310edb8b9a8687c0935261c",
+      "version": "goose eadca40 (runtime 3025e5810379)"
+    },
+    "cc": {
+      "path": "/usr/bin/gcc",
+      "sha256": "8aac907d6fbf40394b424b5fa4a2ad1aa291dac7d3a0315c5b415c1f5ace1287",
+      "version": "gcc (GCC) 16.2.1 20260810\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE."
+    },
+    "cmake": {
+      "path": "/usr/bin/cmake",
+      "sha256": "9cb6fe1977c7f184c054af4ee478728440bc90430572110ef82f5635e42741a0",
+      "version": "cmake version 4.4.5\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake)."
+    },
+    "pkg-config": {
+      "path": "/usr/bin/pkgconf",
+      "sha256": "998694c643efb51d0fca9cbf7f809ccf34338ad7e4d3470a6317ead835a9c877",
+      "version": "3.0.10"
+    },
+    "ldd": {
+      "path": "/usr/bin/ldd",
+      "sha256": "94f332c23cf00596d0387d6f54693664f9a53334d65953b2ff308057cc8530b1",
+      "version": "ldd (GNU libc) 2.44\nCopyright (C) 2024 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\nWritten by Roland McGrath and Ulrich Drepper."
+    }
+  },
+  "honk_sha256": "ba2c5247b9628b40d66a7e04409ce6483010737936a7520dad0c64429e2e46a1",
+  "harness_sha256": {
+    "bench/native_reuse.py": "aec0428f57aaec09a67f55466c1053051d55ca4b5704e10153fc124e1767c108",
+    "bench/process_observer.py": "5c3eb117574d065a69b00981e881d6e937f826bc9e80c80d082f07cce16acdc8",
+    "bench/qualify_parallel.py": "a24c9a7997468d11d5a3a86bb557d73650dd966f16d368fdacf364dae40aac4c",
+    "bench/observer_calibration.py": "364a75f698079295ac123ff31dfd4c707766948276b41979d1179ebaa4a6c653"
+  },
+  "honk_runtime_dependencies": {
+    "ldd": "linux-vdso.so.1 (0x000077e775ba4000)\n\tlibsodium.so.26 => /usr/lib/libsodium.so.26 (0x000077e775a63000)\n\tlibcurl.so.4 => /usr/lib/libcurl.so.4 (0x000077e775958000)\n\tlibm.so.6 => /usr/lib/libm.so.6 (0x000077e775821000)\n\tlibc.so.6 => /usr/lib/libc.so.6 (0x000077e775400000)\n\t/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x000077e775ba6000)\n\tlibnghttp3.so.9 => /usr/lib/libnghttp3.so.9 (0x000077e7757f7000)\n\tlibngtcp2_crypto_ossl.so.0 => /usr/lib/libngtcp2_crypto_ossl.so.0 (0x000077e7757ea000)\n\tlibngtcp2.so.16 => /usr/lib/libngtcp2.so.16 (0x000077e77578d000)\n\tlibnghttp2.so.14 => /usr/lib/libnghttp2.so.14 (0x000077e775763000)\n\tlibidn2.so.0 => /usr/lib/libidn2.so.0 (0x000077e775741000)\n\tlibssh2.so.1 => /usr/lib/libssh2.so.1 (0x000077e7756f3000)\n\tlibpsl.so.5 => /usr/lib/libpsl.so.5 (0x000077e7756dd000)\n\tlibssl.so.3 => /usr/lib/libssl.so.3 (0x000077e775307000)\n\tlibcrypto.so.3 => /usr/lib/libcrypto.so.3 (0x000077e774c00000)\n\tlibgssapi_krb5.so.2 => /usr/lib/libgssapi_krb5.so.2 (0x000077e775685000)\n\tlibzstd.so.1 => /usr/lib/libzstd.so.1 (0x000077e775221000)\n\tlibbrotlidec.so.1 => /usr/lib/libbrotlidec.so.1 (0x000077e775675000)\n\tlibz.so.1 => /usr/lib/libz.so.1 (0x000077e775658000)\n\tlibunistring.so.5 => /usr/lib/libunistring.so.5 (0x000077e774a19000)\n\tlibbrotlienc.so.1 => /usr/lib/libbrotlienc.so.1 (0x000077e774954000)\n\tlibkrb5.so.3 => /usr/lib/libkrb5.so.3 (0x000077e774885000)\n\tlibk5crypto.so.3 => /usr/lib/libk5crypto.so.3 (0x000077e77562a000)\n\tlibcom_err.so.2 => /usr/lib/libcom_err.so.2 (0x000077e77521b000)\n\tlibkrb5support.so.0 => /usr/lib/libkrb5support.so.0 (0x000077e77520c000)\n\tlibkeyutils.so.1 => /usr/lib/libkeyutils.so.1 (0x000077e775205000)\n\tlibresolv.so.2 => /usr/lib/libresolv.so.2 (0x000077e7751f2000)\n\tlibbrotlicommon.so.1 => /usr/lib/libbrotlicommon.so.1 (0x000077e7751cf000)",
+    "sha256": {
+      "/usr/lib/libsodium.so.26.4.0": "1be30f075ad90cb94bb4ae4b70f77bcd8f4a07d346f165cb2033d0958a62bcfd",
+      "/usr/lib/libcurl.so.4.8.0": "d53ce30e973b9120643dfb53b9c99986330f28d2db245189e6bda6bc1aa55bdd",
+      "/usr/lib/libm.so.6": "965106704753eefe8c31ae7da6daba3ead3d18c52b19b5fcc41178bcc4aa999d",
+      "/usr/lib/libc.so.6": "02c8c3d06180beee9c7d0392aa85736c7d19f274a81e7f8f0b3d9e28e0641524",
+      "/usr/lib/ld-linux-x86-64.so.2": "f5e11cc62f8f2c24dff532982559f4303dba3b17e7450551372a88c8e7ea8757",
+      "/usr/lib/libnghttp3.so.9.9.1": "bd7ae045f2f55efdf18feb03ca8a4f9352ac3e99c354d9746d0e1b4cf893cfa9",
+      "/usr/lib/libngtcp2_crypto_ossl.so.0.3.2": "996eedaebd5db30642ec3d8cd8ad941b0865c412b4c2a0cafa487746cef20563",
+      "/usr/lib/libngtcp2.so.16.12.0": "df0714e945c786f87323e06fe96817ae564f0204438ff51564bba236d5875a72",
+      "/usr/lib/libnghttp2.so.14.30.0": "08b19458ffaa03e7fed45b545fee9c98721c5db111c1a066960a46d7cdb8b4b7",
+      "/usr/lib/libidn2.so.0.4.0": "9a36fa67dc82ce0e5dc38ef190c76231f532676f7ba13e363fc1df16a9c50a15",
+      "/usr/lib/libssh2.so.1.0.1": "8e31bb8758d4f780fd635aa47ca3c0306ccbfbadd7de6c85478a7d712d5ae4b4",
+      "/usr/lib/libpsl.so.5.3.5": "b5189c9a4b32b15f0bb1bab989069acd2d0dc89723b990266ad5566cd16f1924",
+      "/usr/lib/libssl.so.3": "f6409e9f083faae79a622c9534be6ed2456d0102cd8ea2b52eb18c9d72f1f41e",
+      "/usr/lib/libcrypto.so.3": "a75a864dcda6ef9e4dc29fad4b7988ca832b904c3915a63c920062c40763dae1",
+      "/usr/lib/libgssapi_krb5.so.2.2": "db71de39831ad557f7c75fadf772575f1180c4e1e7f83ec7318fabd78e129296",
+      "/usr/lib/libzstd.so.1.5.7": "f023d49e85fb22057bfdd21857263d2638b73356c06f3b342f678a75212379f8",
+      "/usr/lib/libbrotlidec.so.1.2.1": "380ec042c35705a2dbfcb3e0ed392ce7e1262d62b7e626252cd8bce4adad43f2",
+      "/usr/lib/libz.so.1.3.2": "6c78c5e58c3bb49a1cd151a95cdf1a17fe07a91a57a59e0279b984c533075ca9",
+      "/usr/lib/libunistring.so.5.2.1": "ba7a4afb4b6f823d64ebe324416e182cd42a981dba049e3ddcfa1c9af03cb7f3",
+      "/usr/lib/libbrotlienc.so.1.2.1": "036fd3cac00bc8a28de8b9e01380a8872e034203b81222ee3c4f92510593805f",
+      "/usr/lib/libkrb5.so.3.3": "eb8369680ba30529b30abeaca57429b67f9af42ac43efdd5d95ca1901bb9c44c",
+      "/usr/lib/libk5crypto.so.3.1": "e9ea7950674f25a6951b830036f95a595e1fc112247a69d11bc0003124ab7338",
+      "/usr/lib/libcom_err.so.2.1": "67ed8a11c44542ffdbaa04b3521f48729afddf936568632b6aa9d04c595316cd",
+      "/usr/lib/libkrb5support.so.0.1": "941f17df15bc3ed160b392dee2930bd68565f445b8fe8d87ad522256c972967f",
+      "/usr/lib/libkeyutils.so.1.10": "a82e692581b6215475c03538fa4b25681b5c71e8554c67afa7e34074b968b0d7",
+      "/usr/lib/libresolv.so.2": "ee828b251a61761a9e529a791758ec8a1fbefd85693e2dc23501fedb8cf2f31d",
+      "/usr/lib/libbrotlicommon.so.1.2.1": "98826693f4a8c563890f89ed04ab255d871948e07eabf314d10f79c895e0f03c"
+    }
+  },
+  "libsodium": "1.0.22",
+  "libsodium_library": {
+    "path": "/usr/lib/libsodium.so.26.4.0",
+    "sha256": "1be30f075ad90cb94bb4ae4b70f77bcd8f4a07d346f165cb2033d0958a62bcfd"
+  },
+  "libsodium_flags": "-lsodium",
+  "stdlib_sha256": "2bff7f6748300396e4c048bbf072f798566fadfe6b05d4256052d32c93e6d5d2",
+  "native_runtime_dependencies": {
+    "ldd": "linux-vdso.so.1 (0x00007133048a3000)\n\tlibsodium.so.26 => /usr/lib/libsodium.so.26 (0x00007133047dd000)\n\tlibm.so.6 => /usr/lib/libm.so.6 (0x00007133046a6000)\n\tlibc.so.6 => /usr/lib/libc.so.6 (0x0000713304400000)\n\t/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007133048a5000)",
+    "sha256": {
+      "/usr/lib/libsodium.so.26.4.0": "1be30f075ad90cb94bb4ae4b70f77bcd8f4a07d346f165cb2033d0958a62bcfd",
+      "/usr/lib/libm.so.6": "965106704753eefe8c31ae7da6daba3ead3d18c52b19b5fcc41178bcc4aa999d",
+      "/usr/lib/libc.so.6": "02c8c3d06180beee9c7d0392aa85736c7d19f274a81e7f8f0b3d9e28e0641524",
+      "/usr/lib/ld-linux-x86-64.so.2": "f5e11cc62f8f2c24dff532982559f4303dba3b17e7450551372a88c8e7ea8757"
+    }
+  }
+}

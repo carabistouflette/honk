@@ -122,3 +122,18 @@ it retains every sample and fails a hit claim if backend logs changed. It uses
 an isolated Goose home and clears the compiler override to exercise supported
 ELF tools, recording the resulting environment hash. These are trusted-project,
 shared-host measurements, not an authenticity or performance guarantee.
+
+## Native fallback qualification
+
+The [second real-project qualification](../bench/results/native-reuse-2026-11-07/README.md)
+uses goose-crypto's frozen public API suite to verify native fallback and the
+source-only goose-diff profile to verify actual hits and invalidation. Native
+reuse requests compile normally and leave no Honk cache marker; CMake may still
+reuse native objects. Requesting reuse does not make a native project eligible.
+
+For eligible source-only snapshots, unchanged tests and changed filters can hit
+stable path-derived slots. Source or selected compiler changes recompile;
+corrupt artifacts and symlinked cache programs fall back safely. Subsequent hits
+verify recovery. Cache population still costs compilation, so repeated unchanged
+eligible runs are the intended use. Full profile and correctness limits are in
+the retained evidence; no native cache support or broader speed guarantee follows.
