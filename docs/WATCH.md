@@ -155,3 +155,52 @@ universally complete change-history guarantee.
 The [recursive qualification receipt](recursive-validation.json) records source
 checkpoints,57 final case definitions,earlier54/56 runs,native hardening checks
 and the separate final-source hosted CI gate.
+
+## Ignore patterns (development source after v0.5.0-rc.1)
+
+Repeat `--watch-ignore PATTERN` to suppress watch events and prune matched
+recursive subdirectories. For example:
+
+```sh
+honk watch test --watch-dir "$PWD/src" --watch-recursive \
+  --watch-ignore 'generated' --watch-ignore '**/*.generated.goose'
+```
+
+Patterns use the pinned goose-glob syntax, matching complete root-relative byte
+paths with `/` separators, case sensitivity and hidden names enabled. Each root
+has its own relative namespace. `cache` matches only a direct child named cache;
+`**/cache` matches that name at any depth. A matching directory excludes its whole
+subtree. There is no pattern-level negation/reinclusion, implicit basename search,
+or trailing slash syntax; bracket-class negation follows goose-glob semantics. Built-in exclusions remain additive. Explicit roots themselves and
+their parent/identity guards are never excluded. In nonrecursive mode only direct
+event basenames are matched. Overflow, corruption and root loss are handled
+before filtering; ignores cannot hide a lost root or disable recovery.
+
+The initial command always runs. Ignores control watch triggers and discovery,
+not compilation or test selection; use `--filter` separately for test targets.
+Ignored events do not reset debounce. Moving included content into an ignored
+location still repairs the retired included coverage; moving it back to an
+included name discovers its nested directories again.
+
+At most 16 patterns of 1024 bytes each (16 KiB total) are compiled before watches
+or children start. Relative paths are limited to 4095 bytes when ignores are used.
+Each match permits 4096 glob work units, charged conservatively in full against
+16,777,216 units per discovery pass, verification pass or queue drain. Errors or
+exhaustion stop with 125 after cleanup, without retrying a matcher failure or
+claiming partial coverage. Traversal still counts every inspected entry toward
+its existing 8192-entry bound, including excluded entries, but never enters a
+pruned subtree. Cancellation is checked between matches and native steps.
+
+Filtering retains at most one pending directory candidate and one enumeration
+stream in the candidate generation, adding at most one live descriptor during
+discovery/verification. Native Tree storage still fits 128 KiB per tree;
+libc directory-stream storage and Goose pattern/matching scratch are outside
+that Tree-storage figure.
+With ignores enabled the earlier recursive peak estimate therefore allows
+528 anchors, three watchers and up to three transient descriptors; runtime and
+compiler/test-child resources remain outside that estimate. Without ignores the
+existing native traversal path and its descriptor limits remain unchanged.
+
+[Local ignore qualification](watch-ignore-validation.json) retains the exact
+producer, regression/sanitizer logs and real-compiler trigger checks. Hosted CI
+remains a separate merge gate; the published v0.5.0-rc.1 tag is unchanged.

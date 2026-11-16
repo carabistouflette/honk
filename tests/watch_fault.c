@@ -130,6 +130,17 @@ int64_t __wrap_gw_set_next(ints state, ints map, bytes buffer, int64_t timeout,
   return __real_gw_set_next(state, map, buffer, timeout, name, meta);
 }
 
+static int filter_attempts;
+int64_t __real_honk_tree_filter(ints) __attribute__((weak));
+int64_t __wrap_honk_tree_filter(ints tree) {
+  const char *mode=getenv("WATCH_FAULT_MODE");
+  if (mode && !strcmp(mode,"ignore-retry")) {
+    ++filter_attempts;
+    const char *path=getenv("WATCH_FAULT_FILTER_COUNT");
+    if (path) { FILE *f=fopen(path,"w"); if (f) { fprintf(f,"%d",filter_attempts); fclose(f); } }
+  }
+  return __real_honk_tree_filter ? __real_honk_tree_filter(tree) : -1;
+}
 int64_t __real_honk_tree_scan_step(ints) __attribute__((weak));
 int64_t __real_honk_tree_verify_step(ints) __attribute__((weak));
 static void tree_hook(const char *phase) {
@@ -164,10 +175,14 @@ static void tree_hook(const char *phase) {
     rename(moved, root);
 }
 int64_t __wrap_honk_tree_scan_step(ints tree) {
+  /* A forbidden retry would appear to stabilize and permit a child. */
+  if (filter_attempts > 1) return 0;
   tree_hook("scan");
   return __real_honk_tree_scan_step ? __real_honk_tree_scan_step(tree) : -1;
 }
 int64_t __wrap_honk_tree_verify_step(ints tree) {
+  /* A forbidden retry would appear to stabilize and permit a child. */
+  if (filter_attempts > 1) return 0;
   tree_hook("verify");
   return __real_honk_tree_verify_step ? __real_honk_tree_verify_step(tree) : -1;
 }

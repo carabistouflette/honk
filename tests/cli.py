@@ -8,6 +8,7 @@ import shutil
 import tarfile
 import tempfile
 import unittest
+import tomllib
 
 HONK = os.environ['HONK']
 GOOSE = os.environ['GOOSE']
@@ -29,6 +30,14 @@ class CLI(unittest.TestCase):
     def new(self, name='hello', *args):
         self.run_honk('new', name, *args)
         return self.root / name
+    def test_advertised_version_matches_package_manifest(self):
+        manifest=Path(__file__).resolve().parents[1]/'Honk.toml'
+        version=tomllib.loads(manifest.read_text())['package']['version']
+        for command in ('version','--version'):
+            self.assertEqual(self.run_honk(command).stdout,'honk '+version+'\n')
+        self.assertEqual(self.run_honk('--help').stdout.splitlines()[0],
+                         'honk '+version+' — Goose project manager')
+
     def test_target_filter_patterns_and_default(self):
         p = self.new()
         for path, marker in [('tests/unit/a.goose', 'UNIT'),

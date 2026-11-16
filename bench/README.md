@@ -141,3 +141,10 @@ The default comparison is the existing sequential path in the same candidate
 binary, not a historical release binary. Run measured comparisons after this
 agent's local compilation/qualification work has finished; retain overlapping
 stress runs separately and exclude them from timing conclusions.
+
+## Real-project watch qualification
+
+[2026-11-07 receipt](results/watch-stress-2026-11-07/README.md) retains exact
+workloads, raw phase traces, cleanup/loss outcomes, source/build provenance and
+measurement limits. Run `python3 bench/watch_stress.py --help` for the explicit
+bounded campaign; smoke is exploratory. Fast controls run through `make check`.

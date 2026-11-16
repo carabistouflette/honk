@@ -5,18 +5,20 @@ resolves Git/path and experimental registry dependencies, records them in a lock
 packages tracked source files. Honk is written in Goose with a small POSIX adapter.
 It is Apache-2.0 licensed.
 
-The latest experimental release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0),
-source `f9f35e20e4407df56b2ad45310266c9238403144`. Current development source also contains
-unreleased features, including watch and `check --diagnostics`; v0.4.0 includes neither feature. CLI, manifest and lockfile compatibility are not
-yet guaranteed. Registry publishing, general dependency solving outside the bounded registry graph, cross
-compilation and Cargo feature/stability parity are outside this release.
+The latest experimental prerelease is [v0.5.0-rc.1](https://github.com/carabistouflette/honk/releases/tag/v0.5.0-rc.1),
+source `26f8a7454d27dc81e2c24d918293f286a494d9ee`. It includes watch,
+parallel tests, per-test reuse, diagnostics, filtering and optional progress.
+CLI, manifest and lockfile compatibility are not guaranteed before 1.0.
+[Publication evidence and limits](docs/RELEASE-CANDIDATE.md) accompany the release.
+This prerelease does not include registry support. Development source adds the
+experimental Nest integration described below; hosted publishing and cross compilation remain outside scope.
 
 ## Experimental registry support
 
 Development source adds [Goose Nest](docs/REGISTRY.md): `honk search`, `honk info`,
 `honk add goose-semver --as semver`, verified archives and offline registry locks.
 Builds additionally require OpenSSL and libarchive development headers. Existing
-v0.4.0 binaries do not contain this integration. See the linked contract before
+released binaries do not contain this integration. See the linked contract before
 using the alpha registry protocol.
 
 ## Quickstart
@@ -28,7 +30,7 @@ development files (1.0.18+). Tests also need Python 3.11+, OpenSSL and GNU tar/g
 packaging needs GNU tar/gzip. Other platforms are not validated.
 
 ```sh
-git clone --branch v0.4.0 --depth 1 https://github.com/carabistouflette/honk.git
+git clone --branch v0.5.0-rc.1 --depth 1 https://github.com/carabistouflette/honk.git
 cd honk
 make setup build
 export GOOSE="$PWD/.toolchain/goose/build/goose"
@@ -51,7 +53,7 @@ that trusted compiler, replace setup/build with
 | `new PATH [--lib]`, `init [PATH]` | Create a project without overwriting files. |
 | `check --diagnostics text\|json` | Single-package compiler diagnostics; [format and limits](docs/COMPILER_DIAGNOSTICS.md). |
 | `build`, `run -- ARGS`, `check` | Compile, run, or type/lifetime-check. Use `build/run --release` for release builds. |
-| `watch check/test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...]` | Rerun on `.goose` changes; optional `--watch-recursive` discovers bounded subtrees; see [watch scope and cleanup](docs/WATCH.md). |
+| `watch check/test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...]` | Rerun on `.goose` changes; optional `--watch-recursive` discovers bounded subtrees; development `--watch-ignore PATTERN` prunes selected paths; see [watch scope and cleanup](docs/WATCH.md). |
 | `test`, `bench`, `fmt [--check]` | Run test/benchmark programs or format sources. |
 | `add NAME --path PATH`, `add NAME --git URL --rev REF` | Declare a local or exact Git dependency. |
 | `add NAME --git URL --version REQUIREMENT` | Select a matching Git tag. See the [version rules](docs/GIT-VERSION-DESIGN.md). |

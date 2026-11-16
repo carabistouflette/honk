@@ -15,3 +15,6 @@ fn close(tree: Tree&) -> bool {
     if tree._state[0] == 0 { return true; }
     return close_native(tree._state) == 0;
 }
+extern fn filter(tree: i64[:]) -> i64 = "honk_tree_filter";
+extern fn path(tree: i64[:], index: i64, name: const u8[:], output: u8[:]) -> i64 = "honk_tree_path";
+extern fn decide(tree: i64[:], include: i64) -> i64 = "honk_tree_decide";

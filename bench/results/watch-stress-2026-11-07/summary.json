@@ -1,0 +1,1067 @@
+{
+  "complete_selected_composite": true,
+  "source_commits": [
+    "a225c79dbcc6acfbefafe23b284218cbae9a10cf",
+    "7f83eb5870898893bda58ccf3547d098033c2126"
+  ],
+  "first_report_sha256": "8c3929abd6406ec39aa1328dc2b875ef1d2f12ca8bf8ef5670f7605ca716833e",
+  "second_report_sha256": "96d7689427fa2bd18b5320377ccdffdf1fad41ab5ecce56cb9ad3632b75879ff",
+  "handoff_sha256": "b7bde9145131788c64fddf3634739d73be29bbfeceed2f6f067dfec85512b252",
+  "sessions": {
+    "diff-timing": {
+      "source_run": "watch-long-final",
+      "checked_command_intervals": 124,
+      "successful_intervals": 123,
+      "expected_failed_intervals": 1,
+      "idle_cpu": {
+        "ticks": 11,
+        "hz": 100,
+        "elapsed_ns": 60005460782
+      },
+      "idle_supervisor_cpu_percent": 0.1833166491290356,
+      "quiescent_checkpoint_count": 63,
+      "quiescent_fd_counts": [
+        24
+      ],
+      "steady_rss_observations_kib": {
+        "initial": 7256,
+        "final": 7356,
+        "minimum": 7256,
+        "maximum": 7356,
+        "delta": 100
+      },
+      "atomic_save_observations": [
+        {
+          "command": 2,
+          "edit_complete_ns": 614886144429270,
+          "observed_start_delta_ns": 55615272,
+          "observed_terminal_delta_ns": 940774902
+        },
+        {
+          "command": 3,
+          "edit_complete_ns": 614887093370865,
+          "observed_start_delta_ns": 55779995,
+          "observed_terminal_delta_ns": 943005687
+        },
+        {
+          "command": 4,
+          "edit_complete_ns": 614888043696216,
+          "observed_start_delta_ns": 53975194,
+          "observed_terminal_delta_ns": 933379261
+        },
+        {
+          "command": 5,
+          "edit_complete_ns": 614888983948741,
+          "observed_start_delta_ns": 54722344,
+          "observed_terminal_delta_ns": 927253462
+        },
+        {
+          "command": 6,
+          "edit_complete_ns": 614889919037634,
+          "observed_start_delta_ns": 55668878,
+          "observed_terminal_delta_ns": 924481948
+        },
+        {
+          "command": 7,
+          "edit_complete_ns": 614890853757361,
+          "observed_start_delta_ns": 56543628,
+          "observed_terminal_delta_ns": 931371054
+        },
+        {
+          "command": 8,
+          "edit_complete_ns": 614891794498545,
+          "observed_start_delta_ns": 55847069,
+          "observed_terminal_delta_ns": 945098539
+        },
+        {
+          "command": 9,
+          "edit_complete_ns": 614892748852767,
+          "observed_start_delta_ns": 55617398,
+          "observed_terminal_delta_ns": 1005194917
+        },
+        {
+          "command": 10,
+          "edit_complete_ns": 614893764646078,
+          "observed_start_delta_ns": 55715425,
+          "observed_terminal_delta_ns": 1009852201
+        },
+        {
+          "command": 11,
+          "edit_complete_ns": 614894785638827,
+          "observed_start_delta_ns": 56676872,
+          "observed_terminal_delta_ns": 972258171
+        },
+        {
+          "command": 12,
+          "edit_complete_ns": 614895769105432,
+          "observed_start_delta_ns": 56830570,
+          "observed_terminal_delta_ns": 936233748
+        },
+        {
+          "command": 13,
+          "edit_complete_ns": 614896717645229,
+          "observed_start_delta_ns": 56914651,
+          "observed_terminal_delta_ns": 972962464
+        },
+        {
+          "command": 14,
+          "edit_complete_ns": 614897703044185,
+          "observed_start_delta_ns": 57166830,
+          "observed_terminal_delta_ns": 971856557
+        },
+        {
+          "command": 15,
+          "edit_complete_ns": 614898688679377,
+          "observed_start_delta_ns": 57826840,
+          "observed_terminal_delta_ns": 919649211
+        },
+        {
+          "command": 16,
+          "edit_complete_ns": 614899619079085,
+          "observed_start_delta_ns": 55565106,
+          "observed_terminal_delta_ns": 1014240494
+        },
+        {
+          "command": 17,
+          "edit_complete_ns": 614900644048244,
+          "observed_start_delta_ns": 52507185,
+          "observed_terminal_delta_ns": 981263212
+        },
+        {
+          "command": 18,
+          "edit_complete_ns": 614901637384664,
+          "observed_start_delta_ns": 55424460,
+          "observed_terminal_delta_ns": 971629747
+        },
+        {
+          "command": 19,
+          "edit_complete_ns": 614902620518400,
+          "observed_start_delta_ns": 56174612,
+          "observed_terminal_delta_ns": 962311065
+        },
+        {
+          "command": 20,
+          "edit_complete_ns": 614903598318298,
+          "observed_start_delta_ns": 60272479,
+          "observed_terminal_delta_ns": 962666415
+        },
+        {
+          "command": 21,
+          "edit_complete_ns": 614904574040413,
+          "observed_start_delta_ns": 57224488,
+          "observed_terminal_delta_ns": 939614246
+        },
+        {
+          "command": 22,
+          "edit_complete_ns": 614905527637921,
+          "observed_start_delta_ns": 57558808,
+          "observed_terminal_delta_ns": 931588558
+        },
+        {
+          "command": 23,
+          "edit_complete_ns": 614906474290693,
+          "observed_start_delta_ns": 58508754,
+          "observed_terminal_delta_ns": 943807865
+        },
+        {
+          "command": 24,
+          "edit_complete_ns": 614907430913297,
+          "observed_start_delta_ns": 56834321,
+          "observed_terminal_delta_ns": 960958599
+        },
+        {
+          "command": 25,
+          "edit_complete_ns": 614908405420969,
+          "observed_start_delta_ns": 59767713,
+          "observed_terminal_delta_ns": 931693010
+        },
+        {
+          "command": 26,
+          "edit_complete_ns": 614909352570584,
+          "observed_start_delta_ns": 57563152,
+          "observed_terminal_delta_ns": 956831595
+        },
+        {
+          "command": 27,
+          "edit_complete_ns": 614910323525303,
+          "observed_start_delta_ns": 57819741,
+          "observed_terminal_delta_ns": 953533667
+        },
+        {
+          "command": 28,
+          "edit_complete_ns": 614911290838410,
+          "observed_start_delta_ns": 56516932,
+          "observed_terminal_delta_ns": 962262047
+        },
+        {
+          "command": 29,
+          "edit_complete_ns": 614912271338717,
+          "observed_start_delta_ns": 59017592,
+          "observed_terminal_delta_ns": 960129646
+        },
+        {
+          "command": 30,
+          "edit_complete_ns": 614913249665490,
+          "observed_start_delta_ns": 58718965,
+          "observed_terminal_delta_ns": 943540508
+        },
+        {
+          "command": 31,
+          "edit_complete_ns": 614914214320659,
+          "observed_start_delta_ns": 60432673,
+          "observed_terminal_delta_ns": 952215894
+        }
+      ],
+      "exit_code": 143,
+      "observed_start_delta_ms": {
+        "minimum": 52.507185,
+        "median": 56.753721,
+        "maximum": 60.432673
+      },
+      "observed_terminal_delta_ms": {
+        "minimum": 919.649211,
+        "median": 952.8747805,
+        "maximum": 1014.240494
+      }
+    },
+    "diff-resources": {
+      "source_run": "watch-long-final",
+      "checked_command_intervals": 124,
+      "successful_intervals": 123,
+      "expected_failed_intervals": 1,
+      "idle_cpu": {
+        "ticks": 9,
+        "hz": 100,
+        "elapsed_ns": 60017164882
+      },
+      "idle_supervisor_cpu_percent": 0.1499571000678712,
+      "quiescent_checkpoint_count": 63,
+      "quiescent_fd_counts": [
+        24
+      ],
+      "steady_rss_observations_kib": {
+        "initial": 6952,
+        "final": 7052,
+        "minimum": 6952,
+        "maximum": 7052,
+        "delta": 100
+      },
+      "atomic_save_observations": [
+        {
+          "command": 2,
+          "edit_complete_ns": 615069664793429,
+          "observed_start_delta_ns": 56853350,
+          "observed_terminal_delta_ns": 939971016
+        },
+        {
+          "command": 3,
+          "edit_complete_ns": 615070610598247,
+          "observed_start_delta_ns": 54284145,
+          "observed_terminal_delta_ns": 921687220
+        },
+        {
+          "command": 4,
+          "edit_complete_ns": 615071537377788,
+          "observed_start_delta_ns": 55080673,
+          "observed_terminal_delta_ns": 953871488
+        },
+        {
+          "command": 5,
+          "edit_complete_ns": 615072497045259,
+          "observed_start_delta_ns": 53457813,
+          "observed_terminal_delta_ns": 965346684
+        },
+        {
+          "command": 6,
+          "edit_complete_ns": 615073471712333,
+          "observed_start_delta_ns": 57418953,
+          "observed_terminal_delta_ns": 962613554
+        },
+        {
+          "command": 7,
+          "edit_complete_ns": 615074442262967,
+          "observed_start_delta_ns": 58263887,
+          "observed_terminal_delta_ns": 931441792
+        },
+        {
+          "command": 8,
+          "edit_complete_ns": 615075382982925,
+          "observed_start_delta_ns": 58948351,
+          "observed_terminal_delta_ns": 938549344
+        },
+        {
+          "command": 9,
+          "edit_complete_ns": 615076329627891,
+          "observed_start_delta_ns": 58003691,
+          "observed_terminal_delta_ns": 932005289
+        },
+        {
+          "command": 10,
+          "edit_complete_ns": 615077269850736,
+          "observed_start_delta_ns": 55286981,
+          "observed_terminal_delta_ns": 947763561
+        },
+        {
+          "command": 11,
+          "edit_complete_ns": 615078226034589,
+          "observed_start_delta_ns": 54841368,
+          "observed_terminal_delta_ns": 880619697
+        },
+        {
+          "command": 12,
+          "edit_complete_ns": 615079116912410,
+          "observed_start_delta_ns": 57565774,
+          "observed_terminal_delta_ns": 909643578
+        },
+        {
+          "command": 13,
+          "edit_complete_ns": 615080035764059,
+          "observed_start_delta_ns": 55471123,
+          "observed_terminal_delta_ns": 915839322
+        },
+        {
+          "command": 14,
+          "edit_complete_ns": 615080963660622,
+          "observed_start_delta_ns": 58606332,
+          "observed_terminal_delta_ns": 932314487
+        },
+        {
+          "command": 15,
+          "edit_complete_ns": 615081905678200,
+          "observed_start_delta_ns": 55541719,
+          "observed_terminal_delta_ns": 953700733
+        },
+        {
+          "command": 16,
+          "edit_complete_ns": 615082871888786,
+          "observed_start_delta_ns": 59303198,
+          "observed_terminal_delta_ns": 979078182
+        },
+        {
+          "command": 17,
+          "edit_complete_ns": 615083864568400,
+          "observed_start_delta_ns": 60232974,
+          "observed_terminal_delta_ns": 961208288
+        },
+        {
+          "command": 18,
+          "edit_complete_ns": 615084839351946,
+          "observed_start_delta_ns": 59996013,
+          "observed_terminal_delta_ns": 1016557000
+        },
+        {
+          "command": 19,
+          "edit_complete_ns": 615085867152045,
+          "observed_start_delta_ns": 56281811,
+          "observed_terminal_delta_ns": 917507724
+        },
+        {
+          "command": 20,
+          "edit_complete_ns": 615086796546750,
+          "observed_start_delta_ns": 56590418,
+          "observed_terminal_delta_ns": 967238418
+        },
+        {
+          "command": 21,
+          "edit_complete_ns": 615087779020391,
+          "observed_start_delta_ns": 60920875,
+          "observed_terminal_delta_ns": 971377202
+        },
+        {
+          "command": 22,
+          "edit_complete_ns": 615088762797663,
+          "observed_start_delta_ns": 56598150,
+          "observed_terminal_delta_ns": 903411931
+        },
+        {
+          "command": 23,
+          "edit_complete_ns": 615089678926508,
+          "observed_start_delta_ns": 56775593,
+          "observed_terminal_delta_ns": 895472746
+        },
+        {
+          "command": 24,
+          "edit_complete_ns": 615090592586574,
+          "observed_start_delta_ns": 60451316,
+          "observed_terminal_delta_ns": 906146913
+        },
+        {
+          "command": 25,
+          "edit_complete_ns": 615091520106645,
+          "observed_start_delta_ns": 60770581,
+          "observed_terminal_delta_ns": 930995562
+        },
+        {
+          "command": 26,
+          "edit_complete_ns": 615092468125858,
+          "observed_start_delta_ns": 58231342,
+          "observed_terminal_delta_ns": 920453525
+        },
+        {
+          "command": 27,
+          "edit_complete_ns": 615093405878523,
+          "observed_start_delta_ns": 50274693,
+          "observed_terminal_delta_ns": 929915818
+        },
+        {
+          "command": 28,
+          "edit_complete_ns": 615094350873052,
+          "observed_start_delta_ns": 57001468,
+          "observed_terminal_delta_ns": 928597874
+        },
+        {
+          "command": 29,
+          "edit_complete_ns": 615095294707230,
+          "observed_start_delta_ns": 59270881,
+          "observed_terminal_delta_ns": 955969126
+        },
+        {
+          "command": 30,
+          "edit_complete_ns": 615096265854058,
+          "observed_start_delta_ns": 58180727,
+          "observed_terminal_delta_ns": 943287369
+        },
+        {
+          "command": 31,
+          "edit_complete_ns": 615097226938477,
+          "observed_start_delta_ns": 60267685,
+          "observed_terminal_delta_ns": 952516800
+        }
+      ],
+      "exit_code": 143,
+      "observed_start_delta_ms": {
+        "minimum": 50.274693,
+        "median": 57.492363499999996,
+        "maximum": 60.920875
+      },
+      "observed_terminal_delta_ms": {
+        "minimum": 880.619697,
+        "median": 935.4319155000001,
+        "maximum": 1016.557
+      },
+      "observation": {
+        "samples": 8005,
+        "logical_trace_bytes": 5937946,
+        "read_races": 70,
+        "permission_errors": [],
+        "maxima": {
+          "idle": {
+            "root_rss_kib": 7056,
+            "root_observed_hwm_kib": 7056,
+            "descendant_rss_sum_kib": 0,
+            "tree_rss_sum_kib": 7056,
+            "root_fds": 26,
+            "descendant_fd_sum": 0,
+            "tree_fd_sum": 26,
+            "descendants": 0
+          },
+          "non_test_descendants": {
+            "root_rss_kib": 7060,
+            "root_observed_hwm_kib": 7060,
+            "descendant_rss_sum_kib": 102620,
+            "tree_rss_sum_kib": 109620,
+            "root_fds": 28,
+            "descendant_fd_sum": 45,
+            "tree_fd_sum": 72,
+            "descendants": 5
+          },
+          "execution": {
+            "root_rss_kib": 7056,
+            "root_observed_hwm_kib": 7056,
+            "descendant_rss_sum_kib": 13720,
+            "tree_rss_sum_kib": 20776,
+            "root_fds": 26,
+            "descendant_fd_sum": 9,
+            "tree_fd_sum": 35,
+            "descendants": 2
+          }
+        },
+        "checkpoints": [],
+        "requested_semantics": "sampled observed lower bounds; RSS sums double-count shared pages",
+        "actual_gaps_ns": {
+          "min": 20030823,
+          "max": 133412961,
+          "mean": 22819467
+        }
+      }
+    },
+    "json-timing": {
+      "source_run": "watch-long-final",
+      "checked_command_intervals": 124,
+      "successful_intervals": 123,
+      "expected_failed_intervals": 1,
+      "idle_cpu": {
+        "ticks": 9,
+        "hz": 100,
+        "elapsed_ns": 60014069567
+      },
+      "idle_supervisor_cpu_percent": 0.14996483432859617,
+      "quiescent_checkpoint_count": 63,
+      "quiescent_fd_counts": [
+        15
+      ],
+      "steady_rss_observations_kib": {
+        "initial": 7192,
+        "final": 7088,
+        "minimum": 7088,
+        "maximum": 7292,
+        "delta": -104
+      },
+      "atomic_save_observations": [
+        {
+          "command": 2,
+          "edit_complete_ns": 615275931375019,
+          "observed_start_delta_ns": 54757291,
+          "observed_terminal_delta_ns": 6704386716
+        },
+        {
+          "command": 3,
+          "edit_complete_ns": 615282644860892,
+          "observed_start_delta_ns": 55495065,
+          "observed_terminal_delta_ns": 6739586261
+        },
+        {
+          "command": 4,
+          "edit_complete_ns": 615289390581766,
+          "observed_start_delta_ns": 54037975,
+          "observed_terminal_delta_ns": 6856565164
+        },
+        {
+          "command": 5,
+          "edit_complete_ns": 615296254063846,
+          "observed_start_delta_ns": 55410488,
+          "observed_terminal_delta_ns": 6938440127
+        },
+        {
+          "command": 6,
+          "edit_complete_ns": 615303200356622,
+          "observed_start_delta_ns": 55851611,
+          "observed_terminal_delta_ns": 7100415346
+        },
+        {
+          "command": 7,
+          "edit_complete_ns": 615310310050562,
+          "observed_start_delta_ns": 54139493,
+          "observed_terminal_delta_ns": 6885146229
+        },
+        {
+          "command": 8,
+          "edit_complete_ns": 615317204979346,
+          "observed_start_delta_ns": 56789430,
+          "observed_terminal_delta_ns": 7005622761
+        },
+        {
+          "command": 9,
+          "edit_complete_ns": 615324217604636,
+          "observed_start_delta_ns": 54701075,
+          "observed_terminal_delta_ns": 7006904837
+        },
+        {
+          "command": 10,
+          "edit_complete_ns": 615331233270582,
+          "observed_start_delta_ns": 54341130,
+          "observed_terminal_delta_ns": 7104628196
+        },
+        {
+          "command": 11,
+          "edit_complete_ns": 615338346017998,
+          "observed_start_delta_ns": 56499208,
+          "observed_terminal_delta_ns": 7062745438
+        },
+        {
+          "command": 12,
+          "edit_complete_ns": 615345419045100,
+          "observed_start_delta_ns": 54998396,
+          "observed_terminal_delta_ns": 6863203161
+        },
+        {
+          "command": 13,
+          "edit_complete_ns": 615352292693174,
+          "observed_start_delta_ns": 56750440,
+          "observed_terminal_delta_ns": 6840890833
+        },
+        {
+          "command": 14,
+          "edit_complete_ns": 615359144203942,
+          "observed_start_delta_ns": 56943499,
+          "observed_terminal_delta_ns": 6874518398
+        },
+        {
+          "command": 15,
+          "edit_complete_ns": 615366037369652,
+          "observed_start_delta_ns": 57424388,
+          "observed_terminal_delta_ns": 6950057767
+        },
+        {
+          "command": 16,
+          "edit_complete_ns": 615372996511030,
+          "observed_start_delta_ns": 54968880,
+          "observed_terminal_delta_ns": 6967743176
+        },
+        {
+          "command": 17,
+          "edit_complete_ns": 615379999792440,
+          "observed_start_delta_ns": 56129031,
+          "observed_terminal_delta_ns": 6952005105
+        },
+        {
+          "command": 18,
+          "edit_complete_ns": 615386962022757,
+          "observed_start_delta_ns": 56688998,
+          "observed_terminal_delta_ns": 6810755169
+        },
+        {
+          "command": 19,
+          "edit_complete_ns": 615393784638705,
+          "observed_start_delta_ns": 57341443,
+          "observed_terminal_delta_ns": 6919055182
+        },
+        {
+          "command": 20,
+          "edit_complete_ns": 615400714598658,
+          "observed_start_delta_ns": 56637631,
+          "observed_terminal_delta_ns": 6919004721
+        },
+        {
+          "command": 21,
+          "edit_complete_ns": 615407645450700,
+          "observed_start_delta_ns": 55231811,
+          "observed_terminal_delta_ns": 6717435722
+        },
+        {
+          "command": 22,
+          "edit_complete_ns": 615414372385605,
+          "observed_start_delta_ns": 54975055,
+          "observed_terminal_delta_ns": 6745983896
+        },
+        {
+          "command": 23,
+          "edit_complete_ns": 615421133487744,
+          "observed_start_delta_ns": 57264058,
+          "observed_terminal_delta_ns": 6815959357
+        },
+        {
+          "command": 24,
+          "edit_complete_ns": 615427962396235,
+          "observed_start_delta_ns": 57428642,
+          "observed_terminal_delta_ns": 6920008136
+        },
+        {
+          "command": 25,
+          "edit_complete_ns": 615434893047478,
+          "observed_start_delta_ns": 55348980,
+          "observed_terminal_delta_ns": 6741998652
+        },
+        {
+          "command": 26,
+          "edit_complete_ns": 615441645886956,
+          "observed_start_delta_ns": 55542251,
+          "observed_terminal_delta_ns": 6861531185
+        },
+        {
+          "command": 27,
+          "edit_complete_ns": 615448518581030,
+          "observed_start_delta_ns": 55581813,
+          "observed_terminal_delta_ns": 6751176184
+        },
+        {
+          "command": 28,
+          "edit_complete_ns": 615455298045600,
+          "observed_start_delta_ns": 56276032,
+          "observed_terminal_delta_ns": 6818865465
+        },
+        {
+          "command": 29,
+          "edit_complete_ns": 615462130763679,
+          "observed_start_delta_ns": 58074712,
+          "observed_terminal_delta_ns": 6854937286
+        },
+        {
+          "command": 30,
+          "edit_complete_ns": 615469010788475,
+          "observed_start_delta_ns": 60743565,
+          "observed_terminal_delta_ns": 6939934865
+        },
+        {
+          "command": 31,
+          "edit_complete_ns": 615475962688785,
+          "observed_start_delta_ns": 56814702,
+          "observed_terminal_delta_ns": 7043835633
+        }
+      ],
+      "exit_code": 143,
+      "observed_start_delta_ms": {
+        "minimum": 54.037975,
+        "median": 55.990320999999994,
+        "maximum": 60.743565
+      },
+      "observed_terminal_delta_ms": {
+        "minimum": 6704.386716,
+        "median": 6879.8323135,
+        "maximum": 7104.628196
+      }
+    },
+    "json-resources": {
+      "source_run": "watch-json-resources-final",
+      "checked_command_intervals": 124,
+      "successful_intervals": 123,
+      "expected_failed_intervals": 1,
+      "idle_cpu": {
+        "ticks": 10,
+        "hz": 100,
+        "elapsed_ns": 60017598414
+      },
+      "idle_supervisor_cpu_percent": 0.16661779651728537,
+      "quiescent_checkpoint_count": 63,
+      "quiescent_fd_counts": [
+        15
+      ],
+      "steady_rss_observations_kib": {
+        "initial": 7164,
+        "final": 7264,
+        "minimum": 7164,
+        "maximum": 7264,
+        "delta": 100
+      },
+      "atomic_save_observations": [
+        {
+          "command": 2,
+          "edit_complete_ns": 616193708658534,
+          "observed_start_delta_ns": 58439884,
+          "observed_terminal_delta_ns": 6459687961
+        },
+        {
+          "command": 3,
+          "edit_complete_ns": 616200173929890,
+          "observed_start_delta_ns": 56196765,
+          "observed_terminal_delta_ns": 6435336855
+        },
+        {
+          "command": 4,
+          "edit_complete_ns": 616206615132074,
+          "observed_start_delta_ns": 56852600,
+          "observed_terminal_delta_ns": 6466354049
+        },
+        {
+          "command": 5,
+          "edit_complete_ns": 616213088351628,
+          "observed_start_delta_ns": 54769719,
+          "observed_terminal_delta_ns": 6530718026
+        },
+        {
+          "command": 6,
+          "edit_complete_ns": 616219625365994,
+          "observed_start_delta_ns": 55482108,
+          "observed_terminal_delta_ns": 6528190656
+        },
+        {
+          "command": 7,
+          "edit_complete_ns": 616226159608988,
+          "observed_start_delta_ns": 54873066,
+          "observed_terminal_delta_ns": 6682860439
+        },
+        {
+          "command": 8,
+          "edit_complete_ns": 616232848996353,
+          "observed_start_delta_ns": 55441256,
+          "observed_terminal_delta_ns": 6554677133
+        },
+        {
+          "command": 9,
+          "edit_complete_ns": 616239411162696,
+          "observed_start_delta_ns": 56020458,
+          "observed_terminal_delta_ns": 6493909061
+        },
+        {
+          "command": 10,
+          "edit_complete_ns": 616245915736901,
+          "observed_start_delta_ns": 56823771,
+          "observed_terminal_delta_ns": 6442566141
+        },
+        {
+          "command": 11,
+          "edit_complete_ns": 616252367582895,
+          "observed_start_delta_ns": 57769062,
+          "observed_terminal_delta_ns": 6561457997
+        },
+        {
+          "command": 12,
+          "edit_complete_ns": 616258936644442,
+          "observed_start_delta_ns": 55472394,
+          "observed_terminal_delta_ns": 6480661017
+        },
+        {
+          "command": 13,
+          "edit_complete_ns": 616265426921164,
+          "observed_start_delta_ns": 58697534,
+          "observed_terminal_delta_ns": 6473105379
+        },
+        {
+          "command": 14,
+          "edit_complete_ns": 616271909063029,
+          "observed_start_delta_ns": 58614755,
+          "observed_terminal_delta_ns": 6558636074
+        },
+        {
+          "command": 15,
+          "edit_complete_ns": 616278476352648,
+          "observed_start_delta_ns": 57573470,
+          "observed_terminal_delta_ns": 6478893055
+        },
+        {
+          "command": 16,
+          "edit_complete_ns": 616284966845684,
+          "observed_start_delta_ns": 59765425,
+          "observed_terminal_delta_ns": 6431038315
+        },
+        {
+          "command": 17,
+          "edit_complete_ns": 616291407508647,
+          "observed_start_delta_ns": 58149576,
+          "observed_terminal_delta_ns": 6487333744
+        },
+        {
+          "command": 18,
+          "edit_complete_ns": 616297905753834,
+          "observed_start_delta_ns": 59298555,
+          "observed_terminal_delta_ns": 6506184653
+        },
+        {
+          "command": 19,
+          "edit_complete_ns": 616304423372384,
+          "observed_start_delta_ns": 58770148,
+          "observed_terminal_delta_ns": 6545376340
+        },
+        {
+          "command": 20,
+          "edit_complete_ns": 616310979186357,
+          "observed_start_delta_ns": 59750604,
+          "observed_terminal_delta_ns": 6526662228
+        },
+        {
+          "command": 21,
+          "edit_complete_ns": 616317518847284,
+          "observed_start_delta_ns": 58676779,
+          "observed_terminal_delta_ns": 6566010718
+        },
+        {
+          "command": 22,
+          "edit_complete_ns": 616324095753659,
+          "observed_start_delta_ns": 60672358,
+          "observed_terminal_delta_ns": 6545918733
+        },
+        {
+          "command": 23,
+          "edit_complete_ns": 616330653793265,
+          "observed_start_delta_ns": 56598958,
+          "observed_terminal_delta_ns": 6582391350
+        },
+        {
+          "command": 24,
+          "edit_complete_ns": 616337246902933,
+          "observed_start_delta_ns": 56711352,
+          "observed_terminal_delta_ns": 6620568601
+        },
+        {
+          "command": 25,
+          "edit_complete_ns": 616343878624617,
+          "observed_start_delta_ns": 56777477,
+          "observed_terminal_delta_ns": 6517090882
+        },
+        {
+          "command": 26,
+          "edit_complete_ns": 616350408376856,
+          "observed_start_delta_ns": 60249057,
+          "observed_terminal_delta_ns": 6531452187
+        },
+        {
+          "command": 27,
+          "edit_complete_ns": 616356951467362,
+          "observed_start_delta_ns": 57574817,
+          "observed_terminal_delta_ns": 6737683927
+        },
+        {
+          "command": 28,
+          "edit_complete_ns": 616363704740630,
+          "observed_start_delta_ns": 57890237,
+          "observed_terminal_delta_ns": 6486454366
+        },
+        {
+          "command": 29,
+          "edit_complete_ns": 616370202378949,
+          "observed_start_delta_ns": 60598417,
+          "observed_terminal_delta_ns": 6496983943
+        },
+        {
+          "command": 30,
+          "edit_complete_ns": 616376713181832,
+          "observed_start_delta_ns": 59741508,
+          "observed_terminal_delta_ns": 6458232849
+        },
+        {
+          "command": 31,
+          "edit_complete_ns": 616383192838857,
+          "observed_start_delta_ns": 60744867,
+          "observed_terminal_delta_ns": 6506921386
+        }
+      ],
+      "exit_code": 143,
+      "observed_start_delta_ms": {
+        "minimum": 54.769719,
+        "median": 57.8296495,
+        "maximum": 60.744867
+      },
+      "observed_terminal_delta_ms": {
+        "minimum": 6431.038315,
+        "median": 6512.006134,
+        "maximum": 6737.683927
+      },
+      "observation": {
+        "samples": 35869,
+        "logical_trace_bytes": 48029988,
+        "read_races": 332,
+        "permission_errors": [
+          "1087730: PermissionError",
+          "1091635: PermissionError",
+          "1093782: PermissionError"
+        ],
+        "maxima": {
+          "idle": {
+            "root_rss_kib": 7268,
+            "root_observed_hwm_kib": 7268,
+            "descendant_rss_sum_kib": 0,
+            "tree_rss_sum_kib": 7268,
+            "root_fds": 17,
+            "descendant_fd_sum": 0,
+            "tree_fd_sum": 17,
+            "descendants": 0
+          },
+          "non_test_descendants": {
+            "root_rss_kib": 7276,
+            "root_observed_hwm_kib": 7276,
+            "descendant_rss_sum_kib": 642904,
+            "tree_rss_sum_kib": 650068,
+            "root_fds": 19,
+            "descendant_fd_sum": 78,
+            "tree_fd_sum": 96,
+            "descendants": 10
+          },
+          "execution": {
+            "root_rss_kib": 7268,
+            "root_observed_hwm_kib": 7268,
+            "descendant_rss_sum_kib": 15672,
+            "tree_rss_sum_kib": 22940,
+            "root_fds": 17,
+            "descendant_fd_sum": 9,
+            "tree_fd_sum": 26,
+            "descendants": 2
+          }
+        },
+        "checkpoints": [],
+        "requested_semantics": "sampled observed lower bounds; RSS sums double-count shared pages",
+        "actual_gaps_ns": {
+          "min": 20005555,
+          "max": 101741235,
+          "mean": 24384397
+        }
+      }
+    }
+  },
+  "limits": "Sampled resource lower bounds; RSS sums double-count shared pages; log-poll times are observations, not kernel latency.",
+  "stopping_cases": {
+    "diff": [
+      {
+        "kind": "aba",
+        "active": false,
+        "folder": "diff-aba-False"
+      },
+      {
+        "kind": "aba",
+        "active": true,
+        "folder": "diff-aba-True"
+      },
+      {
+        "kind": "delete",
+        "active": false,
+        "folder": "diff-delete-False"
+      },
+      {
+        "kind": "delete",
+        "active": true,
+        "folder": "diff-delete-True"
+      },
+      {
+        "kind": "sigint",
+        "active": false,
+        "folder": "diff-sigint-False"
+      },
+      {
+        "kind": "sigint",
+        "active": true,
+        "folder": "diff-sigint-True"
+      }
+    ],
+    "json": [
+      {
+        "kind": "aba",
+        "active": false,
+        "folder": "json-aba-False"
+      },
+      {
+        "kind": "aba",
+        "active": true,
+        "folder": "json-aba-True"
+      },
+      {
+        "kind": "delete",
+        "active": false,
+        "folder": "json-delete-False"
+      },
+      {
+        "kind": "delete",
+        "active": true,
+        "folder": "json-delete-True"
+      },
+      {
+        "kind": "sigint",
+        "active": false,
+        "folder": "json-sigint-False"
+      },
+      {
+        "kind": "sigint",
+        "active": true,
+        "folder": "json-sigint-True"
+      }
+    ]
+  },
+  "real_kernel_overflow": {
+    "diff": {
+      "result": "observed-recovery",
+      "queue_limit": 16384,
+      "native_records": [
+        [
+          9,
+          18,
+          16384,
+          -1
+        ]
+      ],
+      "record_sha256": "fba1aa8ff79376a82dfb9b810b30a303d26d805d6cb7a5f7030c7e6deb171c75"
+    },
+    "json": {
+      "result": "observed-recovery",
+      "queue_limit": 16384,
+      "native_records": [
+        [
+          9,
+          9,
+          16384,
+          -1
+        ]
+      ],
+      "record_sha256": "9d8f56b8448a67c61211456ba7a18506252e06b65d17b9cf1ae5cf2a6199f3f7"
+    }
+  },
+  "additional_checked_intervals": 18,
+  "checked_intervals_total": 514
+}

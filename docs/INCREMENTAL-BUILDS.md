@@ -1,6 +1,7 @@
 # Opt-in local build reuse
 
-Available in experimental v0.4.0 and current main. Reuse is off by default.
+Build/run reuse is available in experimental v0.4.0. Test reuse is prepared
+for v0.5.0-rc.1 and is not part of published v0.4.0. Reuse is off by default.
 
 `build --reuse-build` and `run --reuse-build` may reuse one verified executable
 per project and profile. `test --reuse-build` opts into bounded per-test reuse;

@@ -1,0 +1,12 @@
+{
+  "files": {
+    "derive-summary.py": "f3db0974a8cb0d8ba3ea0a9caf65f44d09c64c2eb28e8cddb70c3a9612e9e147",
+    "exploratory-and-interrupted.tar.gz": "7c9044bd1892fc5ddd5f01e2e196c65beb20cd02845d49ec7cbe4f90b86d3666",
+    "qualified-phases.tar.gz": "8060d5d514eb12bdaaab5180aa2eba9a0897a25b608bcfae142041841e157ad7",
+    "source-archives.tar.gz": "531b511c6230e7e8c19c4518a064b92e40f1fd9e773b513d761db041d6d64835",
+    "summary.json": "dd53dd1d46ea8f90225c48daa01f6d372d430d5a90eb88fe53cb157f31d4e7a2",
+    "README.md": "b30f33bb412d1fe352c64974d93668729ba98b56675e13f0b90f2680ae057ba8"
+  },
+  "retention": "qualified-phases includes raw frozen phase records and controlled handoff; exploratory archive is not qualification evidence; source archives are exact Git archive bytes before extraction",
+  "product_source_commit": "8f2bb40833bf76a87a01894c986de34bc9f6553d"
+}
