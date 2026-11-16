@@ -1,0 +1,3 @@
+main_thread_only = true;
+cmake_target = "goose_nest_native";
+exclude = [".git", ".build", ".toolchain", "examples", "tests", "bench", "tools", "docs", "index", "vendor"];

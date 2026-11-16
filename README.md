@@ -1,15 +1,23 @@
 # Honk
 
 Honk builds and manages Goose projects. It creates applications and libraries,
-resolves Git/path dependencies, records them in a lockfile, runs tests, and
+resolves Git/path and experimental registry dependencies, records them in a lockfile, runs tests, and
 packages tracked source files. Honk is written in Goose with a small POSIX adapter.
 It is Apache-2.0 licensed.
 
 The latest experimental release is [v0.4.0](https://github.com/carabistouflette/honk/releases/tag/v0.4.0),
 source `f9f35e20e4407df56b2ad45310266c9238403144`. Current development source also contains
 unreleased features, including watch and `check --diagnostics`; v0.4.0 includes neither feature. CLI, manifest and lockfile compatibility are not
-yet guaranteed. Registry publishing, general dependency solving, cross
+yet guaranteed. Registry publishing, general dependency solving outside the bounded registry graph, cross
 compilation and Cargo feature/stability parity are outside this release.
+
+## Experimental registry support
+
+Development source adds [Goose Nest](docs/REGISTRY.md): `honk search`, `honk info`,
+`honk add goose-semver --as semver`, verified archives and offline registry locks.
+Builds additionally require OpenSSL and libarchive development headers. Existing
+v0.4.0 binaries do not contain this integration. See the linked contract before
+using the alpha registry protocol.
 
 ## Quickstart
 

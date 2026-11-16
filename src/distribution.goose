@@ -10,7 +10,7 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
     // Path dependencies cannot be reproduced by recipients of a source archive.
     for n in g.nodes {
         let inside = n.directory.len > p.root.len && n.directory[..p.root.len] == p.root && n.directory[p.root.len] == '/';
-        platform::require(n.git.len > 0 || (inside && n.path.len > 0 && n.path[0] != '/'), "package requires Git dependencies or vendored paths inside the project");
+        platform::require(n.registry.len > 0 || n.git.len > 0 || (inside && n.path.len > 0 && n.path[0] != '/'), "package requires Git dependencies or vendored paths inside the project");
     }
     let stage = str(p.root, "/.honk/package"); platform::require(platform::remove_tree(stage), "cannot clear package staging directory");
     let label = str(p.name, "-", p.version); let directory = str(stage, "/", label);

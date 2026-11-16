@@ -186,6 +186,19 @@
         "task.goose": "5711c0966685f87ad04df51d2e9de08cf636b2a1ac6aa05c78f19e1f24db6c46",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
       }
+    },
+    {
+      "directory": "goose-nest",
+      "repository": "https://github.com/carabistouflette/goose-nest",
+      "revision": "8fbe62c6d4d1dee8769a43b8976c80ce227f9a01",
+      "license": "Apache-2.0",
+      "files": {
+        "CMakeLists.txt": "b1a0ae71baaaccfa140260bcf7ad20945b08c8ed858aee370eeb75aa53283278",
+        "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
+        "native/nest.c": "69a3b45555a99279a47431b60d632b012d0f52029b431cce036a991cd7ef9d54",
+        "nest.build": "8e16b64a52347ee85de8d59cf5fbfa198ee635c33de04a087da528efa3d55baf",
+        "nest.goose": "3bd6b173f345e64538b295e1a3b0d1dd70e65c337042a944b5f5e9d5904215d0"
+      }
     }
   ]
 }
