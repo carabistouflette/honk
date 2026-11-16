@@ -25,5 +25,7 @@ wrapper.write_text('#!'+sys.executable+'\nimport os,sys\n'+f'compiler={compiler!
     'os.execv(compiler,[compiler,*args,*([] if probe else flags),*extra])\n')
 wrapper.chmod(0o755)
 output=ROOT/'.build'/('honk-watch-fault-sanitize' if sanitize else 'honk-watch-fault')
-subprocess.run([sys.argv[1],'build','honk.goose','--standalone','--debug','--no-bce','--cc',str(wrapper),'-o',str(output)],cwd=ROOT,check=True,timeout=180)
+# Clang instrumentation of the whole CLI can exceed three minutes on hosted CI.
+# Only this build budget grows; watch execution and cancellation deadlines do not.
+subprocess.run([sys.argv[1],'build','honk.goose','--standalone','--debug','--no-bce','--cc',str(wrapper),'-o',str(output)],cwd=ROOT,check=True,timeout=600 if sanitize else 180)
 print(output)

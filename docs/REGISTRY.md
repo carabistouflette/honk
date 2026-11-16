@@ -38,9 +38,11 @@ in addition to existing libcurl/libsodium requirements. Ubuntu packages are
 
 The registry solver selects one version per package and rejects cycles, with
 bounded backtracking. Honk currently uses global import aliases; conflicting
-aliases remain errors. Registry roots must be declared in the application
-manifest. A registry dependency discovered only in a Git/path dependency must
-also be declared at the application root in this alpha. Published registry
+aliases remain errors. Honk discovers registry dependencies inside Git/path manifests and legacy
+sourced-import chains automatically. It discovers the non-registry graph first,
+aggregates all registry requirements, then solves and downloads the registry
+graph. A later narrow constraint can change a direct registry choice before any
+archive is fetched; resolution failure leaves the old lock unchanged. Published registry
 packages use same-registry manifest dependencies, without sourced import strings.
 Their declared package, version, entry, compiler pin and dependencies are checked
 against registry metadata before use. Full protocol, transport/cache trust and

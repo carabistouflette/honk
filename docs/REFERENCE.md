@@ -132,9 +132,12 @@ the other process exits. Atomic text updates preserve existing ordinary permissi
 newly created text metadata is owner-only. Private per-user caches and project
 directories must not be writable by untrusted users.
 
-This is an evolving Git/path package workflow. Registry publishing, general dependency
-solving/backtracking, cross compilation, and Windows support are not implemented. Do not
-treat this pre-release as Cargo feature or stability parity.
+Development source adds [Nest registry resolution](REGISTRY.md), including
+registry requirements discovered through Git/path dependencies and bounded
+registry backtracking. Hosted registry publishing, general Git version
+backtracking, cross compilation and Windows support remain unimplemented.
+Released v0.5.0-rc.1 binaries do not contain Nest. Neither the prerelease nor the
+current development branch is Cargo feature or stability parity.
 
 ## Dependency editing
 
