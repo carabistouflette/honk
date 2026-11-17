@@ -23,6 +23,7 @@ import .src.manifest;
 import .src.project;
 import .src.deps;
 import .src.build;
+import .src.isolated;
 import .src.toolchain;
 import .src.commands;
 import .src.registry;
@@ -32,7 +33,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch search info version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
+    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch search info version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nExperimental scoped local packages: build/run/check --isolated (docs/ISOLATED-GRAPHS.md).\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -50,7 +51,7 @@ fn cli_main() {
     if argv.len < 2 || argv[1] == "help" || argv[1] == "--help" || argv[1] == "-h" { usage(); return; }
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
-    let spec = [argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
+    let spec = [argparse::flag("isolated"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
                 argparse::option("registry"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
@@ -118,6 +119,11 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filt
     let root = select_root(options);
     manifest::load(root, p);
     platform::require(options.positionals.len == 0 || cmd == "add" || cmd == "remove", "unexpected positional argument (program arguments follow --)");
+    if options.has("isolated") {
+        for entry in options.entries { platform::require(entry.name == "isolated" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file", "isolated mode supports only --release/--manifest-path/--log-file; locks and workspaces are not implemented yet"); }
+        platform::require(p.kind == "bin", "isolated mode currently requires a binary package");
+        isolated::execute(p, cmd, program_args, options.has("release")); return;
+    }
     if cmd == "metadata" { emit_metadata(p, options); return; }
     var known = false;
     for name in ["build", "run", "check", "test", "bench", "fmt", "fetch", "update", "tree", "clean", "add", "remove", "toolchain", "package", "install", "doc"] { if cmd == name { known = true; } }
@@ -210,6 +216,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
     for entry in options.entries {
         let name = entry.name; var allowed = false;
         if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
+        else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check"); }
         else if name == "diagnostics" { allowed = cmd == "check" && !watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }

@@ -30,6 +30,9 @@ check: watch-stress-controls watch-overflow-controls
 	git diff --check
 build:
 	$(GOOSE) build honk.goose -o .build/honk
+.PHONY: isolated-test
+isolated-test:
+	GRAPH_GOOSE=$(GRAPH_GOOSE) python3 tests/isolated_cli.py -v
 test: build
 	python3 tests/native_reuse_observation.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/compiler_diagnostics.py
