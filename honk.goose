@@ -122,7 +122,7 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filt
     if options.has("isolated") {
         for entry in options.entries { platform::require(entry.name == "isolated" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file" || entry.name == "locked" || entry.name == "frozen" || entry.name == "offline", "isolated mode supports --release/--manifest-path/--log-file/--locked/--offline/--frozen; workspaces are not implemented yet"); }
         platform::require(p.kind == "bin", "isolated mode currently requires a binary package");
-        isolated::execute(p, cmd, program_args, options.has("release"), options.has("locked") || options.has("frozen")); return;
+        isolated::execute(p, cmd, program_args, options.has("release"), options.has("locked") || options.has("frozen"), options.has("offline") || options.has("frozen")); return;
     }
     if cmd == "metadata" { emit_metadata(p, options); return; }
     var known = false;
@@ -216,7 +216,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
     for entry in options.entries {
         let name = entry.name; var allowed = false;
         if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
-        else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check"); }
+        else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check" || cmd == "fetch" || cmd == "update"); }
         else if name == "diagnostics" { allowed = cmd == "check" && !watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }
