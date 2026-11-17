@@ -1,0 +1,46 @@
+test_cycle_and_unsupported_lock_preserve_lock (__main__.Isolated.test_cycle_and_unsupported_lock_preserve_lock) ... ok
+test_dependency_change_requires_lock_update (__main__.Isolated.test_dependency_change_requires_lock_update) ... ok
+test_frozen_local_edits_do_not_change_lock (__main__.Isolated.test_frozen_local_edits_do_not_change_lock) ... ok
+test_git_changed_request_locked_and_uncached_frozen_preserve_lock (__main__.Isolated.test_git_changed_request_locked_and_uncached_frozen_preserve_lock) ... ok
+test_git_diamond_versions_and_frozen_cache (__main__.Isolated.test_git_diamond_versions_and_frozen_cache) ... ok
+test_git_dirty_cached_source_is_rejected (__main__.Isolated.test_git_dirty_cached_source_is_rejected) ... ok
+test_git_forged_pin_rejected_before_fetch (__main__.Isolated.test_git_forged_pin_rejected_before_fetch) ... ok
+test_git_locked_can_rebuild_a_cold_cache_without_reresolving_tags (__main__.Isolated.test_git_locked_can_rebuild_a_cold_cache_without_reresolving_tags) ... ok
+test_git_nested_path_preserves_provenance (__main__.Isolated.test_git_nested_path_preserves_provenance) ... ok
+test_git_owner_specific_pins_precede_shared_request_cache (__main__.Isolated.test_git_owner_specific_pins_precede_shared_request_cache) ... ok
+test_git_path_dependency_cannot_escape_checkout (__main__.Isolated.test_git_path_dependency_cannot_escape_checkout) ... ok
+test_git_same_request_is_resolved_once_even_if_tag_moves (__main__.Isolated.test_git_same_request_is_resolved_once_even_if_tag_moves) ... ok
+test_git_tag_lock_preference_and_wrong_version_types (__main__.Isolated.test_git_tag_lock_preference_and_wrong_version_types) ... ok
+test_git_update_selects_new_tag_but_locked_keeps_old (__main__.Isolated.test_git_update_selects_new_tag_but_locked_keeps_old) ... ok
+test_git_version_range_locks_selected_tag (__main__.Isolated.test_git_version_range_locks_selected_tag) ... ok
+test_legacy_cache_lock_excludes_isolated_writer (__main__.Isolated.test_legacy_cache_lock_excludes_isolated_writer) ... ok
+test_legacy_lock_is_not_silently_replaced (__main__.Isolated.test_legacy_lock_is_not_silently_replaced) ... ok
+test_lock_survives_reordering_and_relocation (__main__.Isolated.test_lock_survives_reordering_and_relocation) ... ok
+test_malformed_lock_is_preserved (__main__.Isolated.test_malformed_lock_is_preserved) ... ok
+test_project_lock_contention_preserves_metadata (__main__.Isolated.test_project_lock_contention_preserves_metadata) ... ok
+test_registry_archive_manifest_mismatch_preserves_lock (__main__.Isolated.test_registry_archive_manifest_mismatch_preserves_lock) ... ok
+test_registry_cached_tree_integrity_and_archive_manifest_validation (__main__.Isolated.test_registry_cached_tree_integrity_and_archive_manifest_validation) ... ok
+test_registry_compatible_versions_backtrack_before_download (__main__.Isolated.test_registry_compatible_versions_backtrack_before_download) ... ok
+test_registry_conflicting_compatible_pins_preserve_lock_without_archives (__main__.Isolated.test_registry_conflicting_compatible_pins_preserve_lock_without_archives) ... ok
+test_registry_cycle_can_backtrack_to_older_release (__main__.Isolated.test_registry_cycle_can_backtrack_to_older_release) ... ok
+test_registry_discovered_inside_git_package (__main__.Isolated.test_registry_discovered_inside_git_package) ... ok
+test_registry_distinct_origins_with_identical_archive_keep_separate_state (__main__.Isolated.test_registry_distinct_origins_with_identical_archive_keep_separate_state) ... ok
+test_registry_generated_graphs_against_exhaustive_oracle (__main__.Isolated.test_registry_generated_graphs_against_exhaustive_oracle) ... ok
+test_registry_immutable_metadata_change_rejected (__main__.Isolated.test_registry_immutable_metadata_change_rejected) ... ok
+test_registry_incompatible_diamond_and_frozen (__main__.Isolated.test_registry_incompatible_diamond_and_frozen) ... ok
+test_registry_lock_preference_update_and_yanks (__main__.Isolated.test_registry_lock_preference_update_and_yanks) ... ok
+test_registry_locked_constraint_change_and_missing_source_preserve_lock (__main__.Isolated.test_registry_locked_constraint_change_and_missing_source_preserve_lock) ... ok
+test_registry_new_root_retains_existing_yanked_pin (__main__.Isolated.test_registry_new_root_retains_existing_yanked_pin) ... ok
+test_registry_qualified_base_compiler_and_unknown_pin (__main__.Isolated.test_registry_qualified_base_compiler_and_unknown_pin) ... ok
+test_registry_wrong_version_nominal_types_rejected (__main__.Isolated.test_registry_wrong_version_nominal_types_rejected) ... ok
+test_scoped_diamond_jit_and_native (__main__.Isolated.test_scoped_diamond_jit_and_native) ... ok
+test_shared_alias_instance (__main__.Isolated.test_shared_alias_instance) ... ok
+test_snapshot_refresh_and_stability (__main__.Isolated.test_snapshot_refresh_and_stability) ... ok
+test_sourced_import_and_embedded_resource_rejected (__main__.Isolated.test_sourced_import_and_embedded_resource_rejected) ... ok
+test_wrong_nominal_version_rejected (__main__.Isolated.test_wrong_nominal_version_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 40 tests in 40.247s
+
+OK
+registry oracle: 64 graphs (50 SAT, 14 UNSAT)

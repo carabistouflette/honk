@@ -9,6 +9,7 @@ import toml;
 import task;
 import nest;
 import .deps;
+import .scoped_registry;
 import .project;
 import .toolchain;
 import .manifest;
@@ -16,10 +17,10 @@ import .platform;
 import .source;
 import .build;
 import .build_cache;
-struct Binding { owner: i64, alias: u8[], target: i64, git: u8[] = [], rev: u8[] = [], requirement: u8[] = [], selected_ref: u8[] = [], commit: u8[] = [] }
+struct Binding { owner: i64, alias: u8[], target: i64, git: u8[] = [], rev: u8[] = [], requirement: u8[] = [], selected_ref: u8[] = [], commit: u8[] = [], registry: u8[] = [], package: u8[] = [], record: u8[] = [] }
 struct Pin { owner: u8[], alias: u8[], git: u8[], rev: u8[], requirement: u8[], selected_ref: u8[], commit: u8[] }
-struct Package { directory: u8[], name: u8[], version: u8[], entry: u8[], ns: u8[], digest: u8[], git: u8[] = [], commit: u8[] = [], git_root: u8[] = [], subdir: u8[] = [] }
-root struct Graph { packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false }
+struct Package { directory: u8[], name: u8[], version: u8[], entry: u8[], ns: u8[], digest: u8[], git: u8[] = [], commit: u8[] = [], git_root: u8[] = [], subdir: u8[] = [], registry: u8[] = [], archive_sha: u8[] = [] }
+root struct Graph { packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..] }
 fn field(state: crypto::Sha256&, value: u8[:]) {
     platform::require(build_cache::feed(state, value), "cannot hash package snapshot");
 }
@@ -66,15 +67,16 @@ fn namespace_of(text: u8[:]) -> u8[>..] {
         if !word.quoted && (text[word.start..word.end] == "fn" || text[word.start..word.end] == "struct" || text[word.start..word.end] == "let" || text[word.start..word.end] == "var") { return []; }
     }
 }
-fn visit(g: Graph&, directory: u8[:], revision: u8[:], git: u8[:] = "", commit: u8[:] = "", git_root: u8[:] = "") -> i64 {
+fn visit(g: Graph&, directory: u8[:], revision: u8[:], git: u8[:] = "", commit: u8[:] = "", git_root: u8[:] = "", registry: u8[:] = "", archive_sha: u8[:] = "") -> i64 {
     let root = platform::absolute(directory);
-    for pkg, i in g.packages { if pkg.directory == root { platform::require(pkg.git == git && pkg.commit == commit, "one directory has conflicting source identities"); return i; } }
+    for pkg, i in g.packages { if pkg.directory == root && pkg.git == git && pkg.commit == commit && pkg.registry == registry && pkg.archive_sha == archive_sha { return i; } }
     platform::require(g.packages.len < 256, "isolated graph limit is 256 packages");
     var p = manifest::Project { .. }; manifest::load(root, p);
-    platform::require(p.name.len > 0 && (p.revision.len == 0 || p.revision == revision), "isolated package needs a package manifest and matching compiler revision");
+    let qualified_base = g.packages.len > 0 && p.revision == "eadca409f68210893f366e60d0c2f0dc29a339be";
+    platform::require(p.name.len > 0 && (p.revision.len == 0 || p.revision == revision || qualified_base), "isolated package needs a package manifest and matching compiler revision");
     let text = platform::load(str(root, "/", p.entry));
     let id = g.packages.len;
-    g.packages.push(Package { directory: str(root), name: str(p.name), version: str(p.version), entry: str(p.entry), ns: namespace_of(text), digest: snapshot(p), git: str(git), commit: str(commit), git_root: str(git_root), subdir: if git.len > 0 && root != git_root { str(root[git_root.len + 1..]) } else { str("") }, .. });
+    g.packages.push(Package { directory: str(root), name: str(p.name), version: str(p.version), entry: str(p.entry), ns: namespace_of(text), digest: snapshot(p), git: str(git), commit: str(commit), git_root: str(git_root), subdir: if git.len > 0 && root != git_root { str(root[git_root.len + 1..]) } else { str("") }, registry: str(registry), archive_sha: str(archive_sha), .. });
     return id;
 }
 fn render(g: Graph&, revision: u8[:]) -> u8[>..] {
@@ -83,9 +85,9 @@ fn render(g: Graph&, revision: u8[:]) -> u8[>..] {
     for pkg, i in g.packages {
         if i > 0 { out.push(','); }
         out.append("{\"key\":"); manifest::quoted(out, str(i));
-        let locator: u8[>..] = if pkg.git.len > 0 { str("git:", pkg.git) } else { str("path:", pkg.name) };
+        let locator: u8[>..] = if pkg.registry.len > 0 { str("registry:", pkg.registry, "/", pkg.name) } else if pkg.git.len > 0 { str("git:", pkg.git) } else { str("path:", pkg.name) };
         out.append(",\"source\":{\"locator\":"); manifest::quoted(out, locator);
-        let source_revision: u8[>..] = if pkg.git.len > 0 { str(pkg.commit) } else { str("snapshot:", pkg.digest) };
+        let source_revision: u8[>..] = if pkg.registry.len > 0 { str("sha256:", pkg.archive_sha) } else if pkg.git.len > 0 { str(pkg.commit) } else { str("snapshot:", pkg.digest) };
         out.append(",\"revision\":"); manifest::quoted(out, source_revision);
         out.append(",\"name\":"); manifest::quoted(out, pkg.name); out.append(",\"subdir\":"); manifest::quoted(out, pkg.subdir); out.append("},\"directory\":"); manifest::quoted(out, pkg.directory);
         out.append(",\"entry\":"); manifest::quoted(out, pkg.entry); out.append(",\"entry_namespace\":"); manifest::quoted(out, pkg.ns);
@@ -117,6 +119,7 @@ fn sorted_rows(out: u8[>..]&, rows: u8[][>..]&) {
     for row in order { out.append(row); }
 }
 fn package_key(pkg: Package&, base: u8[:]) -> u8[>..] {
+    if pkg.registry.len > 0 { return str("registry:", pkg.registry, "/", pkg.name, "@", pkg.version, "#", pkg.archive_sha); }
     if pkg.git.len == 0 { return coordinate(base, pkg.directory); }
     return str("git:", pkg.git, "@", pkg.commit, if pkg.subdir.len > 0 { str("/", pkg.subdir) } else { str("") });
 }
@@ -133,8 +136,9 @@ fn read_pins(g: Graph&, p: manifest::Project&) {
     platform::require(doc.nodes[bindings].kind == toml::Kind.Array, "invalid lock bindings");
     var row = doc.nodes[bindings].first;
     while row >= 0 {
-        manifest::keys(doc, row, ["owner", "alias", "target", "git", "rev", "requirement", "selected_ref", "commit"]);
-        let git = manifest::string(doc, row, "git");
+        manifest::keys(doc, row, ["owner", "alias", "target", "git", "rev", "requirement", "selected_ref", "commit", "registry", "package", "record"]);
+        let git = manifest::string(doc, row, "git"); let registry = manifest::string(doc, row, "registry");
+        platform::require(git.len == 0 || registry.len == 0, "ambiguous locked source kind");
         if git.len > 0 {
             let owner = manifest::string(doc, row, "owner"); let alias = manifest::string(doc, row, "alias");
             var dep = manifest::Dependency { name: str(alias), git: str(git), rev: manifest::string(doc, row, "rev"), requirement: manifest::string(doc, row, "requirement"), .. };
@@ -147,6 +151,16 @@ fn read_pins(g: Graph&, p: manifest::Project&) {
             for pin in g.pins { platform::require(pin.owner != owner || pin.alias != alias, "duplicate locked Git binding"); }
             platform::require(g.pins.len < 65536, "locked Git binding limit exceeded");
             g.pins.push(Pin { owner: str(owner), alias: str(alias), git: str(git), rev: str(dep.rev), requirement: str(dep.requirement), selected_ref: str(selected), commit: str(commit) });
+        }
+        if registry.len > 0 {
+            let owner = manifest::string(doc, row, "owner"); let alias = manifest::string(doc, row, "alias"); let package = manifest::string(doc, row, "package"); let requirement = manifest::string(doc, row, "requirement");
+            let record_id = toml::find(doc, row, "record");
+            platform::require(record_id >= 0 && doc.nodes[record_id].kind == toml::Kind.String, "locked registry record must be a string");
+            let record, error = nest::locked_record(str(toml::text(doc, record_id)), registry, package);
+            platform::require(error.len == 0 && manifest::identifier(alias) && nest::valid_requirement(requirement) && nest::matches(requirement, record.version), "invalid locked scoped registry record");
+            platform::require(manifest::string(doc, row, "target") == scoped_registry::key(record), "locked registry target differs from archive identity");
+            for pin in g.registry_pins { platform::require(pin.request.owner != owner || pin.request.alias != alias, "duplicate locked registry binding"); }
+            g.registry_pins.push(scoped_registry::Pin { request: scoped_registry::Request { owner: str(owner), alias: str(alias), registry: str(registry), package: str(package), requirement: str(requirement) }, record: copy(record) });
         }
         row = doc.nodes[row].next;
     }
@@ -168,6 +182,7 @@ fn lock_text(g: Graph&, p: manifest::Project&) -> u8[>..] {
         if binding.git.len > 0 {
             lock_field(row, "git", binding.git); lock_field(row, "rev", binding.rev); lock_field(row, "requirement", binding.requirement); lock_field(row, "selected_ref", binding.selected_ref); lock_field(row, "commit", binding.commit);
         }
+        if binding.registry.len > 0 { lock_field(row, "registry", binding.registry); lock_field(row, "package", binding.package); lock_field(row, "requirement", binding.requirement); lock_field(row, "record", binding.record); }
         row.push('\n'); bytes += row.len; platform::require(bytes <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB"); bindings.push(copy(row));
     }
     sorted_rows(out, packages); sorted_rows(out, bindings);
@@ -187,6 +202,42 @@ fn lock_graph(g: Graph&, p: manifest::Project&, locked: bool) {
     }
     platform::require(!locked, "isolated lockfile is missing or out of date; run honk check --isolated without --locked");
     platform::save(path, desired);
+}
+struct RegistrySelection { record: i64, node: i64 }
+fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, offline: bool, update: bool) {
+    if g.requests.len == 0 { return; } read_pins(g, p);
+    var state = scoped_registry::State { .. }; for pin in g.registry_pins { state.pins.push(copy(pin)); }
+    var catalog = nest::Resolver { cache: str(cache, "/nest"), offline: offline, .. };
+    platform::require(scoped_registry::resolve(state, catalog, g.requests[..], locked, update), state.error);
+    platform::require(g.packages.len + state.selected.len <= 256 && g.bindings.len + state.edges.len <= 65536, "combined dependency graph limit exceeded");
+    var selected: RegistrySelection[>..] = [];
+    for id in state.selected {
+        let record = nest::record_at(catalog, id);
+        let error = nest::materialize(record, catalog.cache, offline); platform::require(error.len == 0, error);
+        let directory = nest::directory(record, catalog.cache);
+        var child = manifest::Project { .. }; manifest::load(directory, child);
+        platform::require(child.name == record.package && child.version == record.version && child.entry == record.entry && child.kind == "lib", "archive manifest differs from registry metadata");
+        var count = 0;
+        for dep in child.dependencies {
+            if dep.dev { continue; } count++;
+            platform::require(dep.registry == record.registry, "registry archives require same-registry manifest dependencies");
+            var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.package == dep.package && expected.requirement == dep.requirement { found = true; } }
+            platform::require(found, "archive dependency differs from registry metadata");
+        }
+        platform::require(count == record.dependencies.len, "archive dependency count differs from registry metadata");
+        let node = visit(g, directory, p.revision, "", "", "", record.registry, record.sha256);
+        selected.push(RegistrySelection { record: id, node: node });
+    }
+    for edge in state.edges {
+        let request = scoped_registry::request_at(state, edge.request);
+        var owner = -1; var target = -1;
+        for pkg, i in g.packages { if package_key(pkg, p.root) == request.owner { owner = i; } }
+        for selection in selected { if selection.record == edge.target { target = selection.node; } }
+        platform::require(owner >= 0 && target >= 0, "invalid internal registry edge");
+        let record = nest::record_at(catalog, edge.target); var encoded = nest::record_text(record);
+        if !update { for pin in state.pins { if scoped_registry::same_request(pin.request, request) && scoped_registry::same_record(pin.record, record) { encoded = nest::record_text(pin.record); break; } } }
+        g.bindings.push(Binding { owner: owner, alias: str(request.alias), target: target, requirement: str(request.requirement), registry: str(record.registry), package: str(record.package), record: copy(encoded), .. });
+    }
 }
 fn execute(p: manifest::Project&, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
@@ -212,7 +263,10 @@ fn execute(p: manifest::Project&, command: u8[:], arguments: u8[:][:], release: 
         var owner = manifest::Project { .. }; manifest::load(directory, owner);
         for dep in owner.dependencies {
             if dep.dev { continue; }
-            platform::require(dep.registry.len == 0, "isolated registry resolution is not implemented yet");
+            if dep.registry.len > 0 {
+                platform::require(graph.requests.len < 65536, "registry request limit exceeded");
+                graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement) }); continue;
+            }
             var target = -1;
             if dep.git.len > 0 {
                 read_pins(graph, p);
@@ -246,12 +300,13 @@ fn execute(p: manifest::Project&, command: u8[:], arguments: u8[:][:], release: 
         }
         cursor++;
     }
+    apply_registry(graph, p, cache, locked, offline, command == "update");
     var edges: task::Edge[>..] = []; for binding in graph.bindings { edges.push(task::Edge { before: binding.owner, after: binding.target }); }
     var limits = task::Limits { tasks: 256, edges: 65536 };
     let order, graph_error = task::plan(graph.packages.len, edges, limits);
     platform::require(graph_error.kind == task::ErrorKind.None, "isolated dependency cycle or graph limit exceeded");
-    lock_graph(graph, p, locked);
     let metadata = render(graph, p.revision);
+    lock_graph(graph, p, locked);
     let target = str(p.root, "/target/isolated"); platform::require(platform::mkdir(target), "cannot create isolated build directory");
     let path = str(target, "/graph.json"); platform::save(path, metadata);
     if command == "fetch" || command == "update" { platform::unlock(project_lock); platform::unlock(cache_lock); return; }

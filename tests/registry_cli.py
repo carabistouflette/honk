@@ -58,11 +58,13 @@ class Registry:
         self.thread.join()
         self.server.server_close()
 
-    def package(self, name='demo', version='1.0.0', deps=(), payload=None, extra=None):
+    def package(self, name='demo', version='1.0.0', deps=(), payload=None, extra=None, compiler=None):
         label = f'{name}-{version}'
         manifest = f'[package]\nname={q(name)}\nversion={q(version)}\nkind="lib"\nentry="lib.goose"\n[dependencies]\n'
         for alias, package, requirement in deps:
             manifest += f'{alias} = {{ package={q(package)}, version={q(requirement)}, registry={q(self.url + "/index")} }}\n'
+        if compiler:
+            manifest += f'[toolchain]\nrevision={q(compiler)}\n'
         content = {'Honk.toml': manifest.encode(), 'lib.goose': payload or b'namespace demo;\nfn value() -> i64 { 42 }\n'}
         buf = io.BytesIO()
         with tarfile.open(fileobj=buf, mode='w:gz') as archive:

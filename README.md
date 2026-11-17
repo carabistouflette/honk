@@ -149,4 +149,4 @@ sequential; watch and bench do not accept these options. See
 [contracts and limits](docs/parallel-tests.md), including failure, cancellation
 and the absence of hard wall-time or descendant-cleanup guarantees.
 
-Experimental incompatible path/Git package versions are supported through `build/run/check --isolated`; see [isolated graph limitations and qualification](docs/ISOLATED-GRAPHS.md).
+Experimental incompatible path/Git/registry package versions are supported through `build/run/check --isolated`; see [isolated graph limitations and qualification](docs/ISOLATED-GRAPHS.md).
