@@ -63,3 +63,9 @@ Dependency-cycle validation uses [goose-task](https://github.com/carabistouflett
 at `166b684ca96403fea94072cc8e0c630321fb832d`; unmodified `task.goose` and
 [Apache-2.0](vendor/goose-task/LICENSE) are retained with exact hashes in
 `vendor/manifest.json`. The scheduler is not used by Honk.
+
+Registry resolution uses [Goose Nest](https://github.com/carabistouflette/goose-nest)
+at `8fbe62c6d4d1dee8769a43b8976c80ce227f9a01`; unmodified native/Goose/build sources and
+[Apache-2.0](vendor/goose-nest/LICENSE) are retained with exact hashes in
+`vendor/manifest.json`. System libcurl, OpenSSL and libarchive retain their
+upstream licenses and are not bundled in this source snapshot.

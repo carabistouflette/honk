@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
+import nest from "./vendor/goose-nest";
 import task from "./vendor/goose-task";
 import watch from "./vendor/goose-watch";
 import .src.watching;
@@ -24,13 +25,14 @@ import .src.deps;
 import .src.build;
 import .src.toolchain;
 import .src.commands;
+import .src.registry;
 import .src.version_policy;
 import .src.tag_select;
 import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
+    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch search info version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -49,7 +51,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
     let spec = [argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("registry"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -108,6 +110,7 @@ fn cli_main() {
         let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
         distribution::uninstall(destination, options.positionals[0]); platform::unlock(lock); return;
     }
+    if cmd == "search" || cmd == "info" { registry::discover(cmd, options); return; }
     dispatch(cmd, options, program_args, filter);
 }
 fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filter: build::TargetFilter&) {
@@ -215,7 +218,8 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         else if name == "metadata" { allowed = cmd == "toolchain"; }
         else if name == "help" || name == "log-file" { allowed = true; }
         else if name == "lib" || name == "name" { allowed = cmd == "new" || cmd == "init"; }
-        else if name == "path" || name == "git" || name == "rev" || name == "version" || name == "dev" { allowed = cmd == "add"; }
+        else if name == "registry" { allowed = cmd == "add" || cmd == "search" || cmd == "info"; }
+        else if name == "path" || name == "git" || name == "rev" || name == "version" || name == "dev" || name == "registry" || name == "as" { allowed = cmd == "add"; }
         else if name == "root" { allowed = cmd == "install" || cmd == "uninstall"; }
         else if name == "force" { allowed = cmd == "install"; }
         else if name == "release" { allowed = cmd == "build" || cmd == "run" || cmd == "test" || cmd == "bench" || cmd == "install"; }

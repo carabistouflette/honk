@@ -3,12 +3,13 @@ namespace manifest;
 const MAX_INPUT_BYTES = 1048576;
 import std;
 import semver;
+import nest;
 import toml;
 import text;
 import json;
 import .platform;
 
-struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [] }
+struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [] }
 root struct Project {
     root:     u8[>..], name: u8[>..], version: u8[>..], entry: u8[>..], kind: u8[>..],
     revision: u8[>..], description: u8[>..], license: u8[>..], dependencies: Dependency[>..], members: u8[][>..],
@@ -102,7 +103,10 @@ fn version_requirement(value: const u8[:]) -> bool {
     let requirement, error = semver::parse_requirement(value); return error.kind == semver::ErrorKind.None;
 }
 fn validate_dependency(dep: Dependency&) {
-    platform::require((dep.path.len > 0) != (dep.git.len > 0), "dependency needs exactly one of path or git");
+    if dep.registry.len > 0 {
+        platform::require(dep.path.len == 0 && dep.git.len == 0 && dep.rev.len == 0 && nest::registry_url(dep.registry) && nest::package_name(dep.package) && nest::valid_requirement(dep.requirement), "invalid registry dependency"); return;
+    }
+    platform::require((dep.path.len > 0) != (dep.git.len > 0), "dependency needs exactly one of path, git, or registry");
     if dep.git.len > 0 {
         platform::require(dep.git.len > 8 && dep.git[..8] == "https://", "Git sources must use https://");
         platform::require((dep.rev.len > 0) != (dep.requirement.len > 0), "Git dependency needs exactly one of rev or version");
@@ -125,12 +129,18 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
         let name = toml::key(doc, id);
         platform::require(identifier(name), str("invalid dependency import name: ", name));
         for dep in project.dependencies { platform::require(dep.name != name, "duplicate dependency across dependency tables"); }
-        keys(doc, id, ["path", "git", "rev", "version"]);
+        keys(doc, id, ["path", "git", "rev", "version", "registry", "package"]);
         let has_rev = toml::find(doc, id, "rev") >= 0; let has_version = toml::find(doc, id, "version") >= 0;
         platform::require(!(has_rev && has_version), "rev and version fields are mutually exclusive");
         platform::require(toml::find(doc, id, "path") < 0 || (!has_rev && !has_version), "path dependency cannot contain rev or version fields");
         if has_version { platform::require(version_requirement(string(doc, id, "version")), "invalid Git version requirement (ASCII space only, limit 4096 bytes)"); }
-        var dep = Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version") };
+        let registry_source = string(doc, id, "path").len == 0 && string(doc, id, "git").len == 0;
+        let dep = if registry_source {
+            Dependency { name: str(name), dev: dev, requirement: string(doc, id, "version"), registry: string(doc, id, "registry", nest::DEFAULT_REGISTRY), package: string(doc, id, "package", name), .. }
+        } else {
+            platform::require(toml::find(doc, id, "registry") < 0 && toml::find(doc, id, "package") < 0, "Git/path dependencies cannot specify registry/package");
+            Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), .. }
+        };
         validate_dependency(dep);
         platform::require(project.dependencies.len < 256, "dependency limit is 256");
         project.dependencies.push(copy(dep)); id = doc.nodes[id].next;
@@ -197,6 +207,7 @@ fn serialize(project: Project&) -> u8[>..] {
         for dep in project.dependencies {
             if dep.dev != dev { continue; } out.append(dep.name); out.append(" = { ");
             if dep.path.len > 0 { out.append("path = "); quoted(out, dep.path); }
+            else if dep.registry.len > 0 { out.append("package = "); quoted(out, dep.package); out.append(", registry = "); quoted(out, dep.registry); out.append(", version = "); quoted(out, dep.requirement); }
             else { out.append("git = "); quoted(out, dep.git); out.append(if dep.requirement.len > 0 { ", version = " } else { ", rev = " }); quoted(out, if dep.requirement.len > 0 { dep.requirement[..] } else { dep.rev[..] }); }
             out.append(" }\n");
         }

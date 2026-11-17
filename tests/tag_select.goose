@@ -15,6 +15,7 @@ import time from "../vendor/goose-time";
 import utc from "../vendor/goose-log/examples/utc";
 import posix from "../vendor/goose-terminal";
 import task from "../vendor/goose-task";
+import nest from "../vendor/goose-nest";
 import honk from "..";
 import std;
 const FIRST = "1111111111111111111111111111111111111111";

@@ -59,6 +59,7 @@ test: build
 	./.build/process-probe missing
 	$(GOOSE) build tests/process_fault.goose --cc "$$(python3 scripts/process-fixture.py --path)" -o .build/process-fault
 	PROCESS_PROBE=$(CURDIR)/.build/process-probe PROCESS_FAULT=$(CURDIR)/.build/process-fault python3 tests/process_cli.py
+	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/registry_cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/build_cache_cli.py
 	HONK=$(CURDIR)/.build/honk GOOSE=$(abspath $(GOOSE)) python3 tests/text_cli.py

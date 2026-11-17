@@ -4,6 +4,7 @@ import std;
 import os;
 import toml;
 import semver;
+import nest;
 import task;
 import .version_policy;
 import .tag_select;
@@ -13,9 +14,10 @@ import .platform;
 import .source;
 import .project;
 import .toolchain;
-struct Node { name: u8[], path: u8[], git: u8[], rev: u8[], commit: u8[], directory: u8[], entry: u8[], production: bool = false, enabled: bool = true, visiting: bool = true, requirement: u8[] = [] }
+struct Node { name: u8[], path: u8[], git: u8[], rev: u8[], commit: u8[], directory: u8[], entry: u8[], production: bool = false, enabled: bool = true, visiting: bool = true, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [], record: u8[] = [] }
 struct Edge { parent: i64, child: i64 }
-root struct Graph { edges: Edge[>..], current: i64 = -1, nodes: Node[>..], old: Node[>..], cache: u8[>..], revision: u8[>..], locked: bool = false, offline: bool = false, update: bool = false }
+struct RegistryRequest { parent: i64, dependency: manifest::Dependency }
+root struct Graph { edges: Edge[>..], current: i64 = -1, nodes: Node[>..], old: Node[>..], cache: u8[>..], revision: u8[>..], locked: bool = false, offline: bool = false, update: bool = false, registry_ready: bool = false, registry_requests: RegistryRequest[>..] }
 fn locked_version(reference: const u8[:], requirement: const u8[:]) -> bool {
     if !manifest::version_requirement(requirement) || !tag_catalog::reference(reference) { return false; }
     if tag_select::spelling(reference).len > 64 { return false; }
@@ -23,7 +25,7 @@ fn locked_version(reference: const u8[:], requirement: const u8[:]) -> bool {
     let version, version_error = version_policy::parse_tag(reference);
     return request_error.kind == semver::ErrorKind.None && version_error.kind == semver::ErrorKind.None && semver::matches(requested, version);
 }
-fn read_lock(p: manifest::Project&, g: Graph&) {
+fn read_lock(p: manifest::Project&, g: Graph&, registry: nest::Resolver&) {
     let path = str(p.root, "/Honk.lock"); if !file_exists(path) { return; }
     let input = platform::load(path); var doc = toml::Document { .. }; let error = toml::parse_into(input, doc);
     platform::require(error.len == 0, str("invalid lockfile: ", error));
@@ -34,30 +36,47 @@ fn read_lock(p: manifest::Project&, g: Graph&) {
     platform::require(doc.nodes[array].kind == toml::Kind.Array, "invalid lock dependency array");
     var id = doc.nodes[array].first;
     while id >= 0 {
-        manifest::keys(doc, id, ["name", "path", "git", "rev", "commit", "requirement"]);
+        manifest::keys(doc, id, ["name", "path", "git", "rev", "commit", "requirement", "registry", "package", "record"]);
         let name = manifest::string(doc, id, "name"); let path = manifest::string(doc, id, "path");
         let git = manifest::string(doc, id, "git"); let rev = manifest::string(doc, id, "rev"); let commit = manifest::string(doc, id, "commit");
         let requirement = manifest::string(doc, id, "requirement");
-        if toml::find(doc, id, "requirement") >= 0 {
+        let registry_url = manifest::string(doc, id, "registry"); let package = manifest::string(doc, id, "package"); let record_id = toml::find(doc, id, "record");
+        platform::require(record_id < 0 || doc.nodes[record_id].kind == toml::Kind.String, "locked registry record must be a string");
+        let record = if record_id >= 0 { str(toml::text(doc, record_id)) } else { str("") };
+        if registry_url.len > 0 {
+            let parsed, parse_error = nest::locked_record(record, registry_url, package);
+            platform::require(parse_error.len == 0 && git.len == 0 && path.len == 0 && rev == parsed.version && nest::matches(requirement, parsed.version), "invalid locked registry identity");
+            var seen = false; for previous in registry.locked_records { if previous.package == package && previous.registry == registry_url { platform::require(nest::record_text(previous) == record, "inconsistent locked package identity"); seen = true; } }
+            if !seen { registry.locked_records.push(copy(parsed)); }
+        }
+        if registry_url.len == 0 && toml::find(doc, id, "requirement") >= 0 {
             platform::require(git.len > 0 && path.len == 0 && locked_version(rev, requirement), "invalid version requirement/tag identity in lockfile");
         }
         platform::require(manifest::identifier(name), "invalid name in lockfile");
         for old in g.old { platform::require(old.name != name, "duplicate name in lockfile"); }
         if git.len > 0 { platform::require(manifest::commit(commit), "invalid Git commit in lockfile"); }
         platform::require(g.old.len < 256, "lock dependency limit is 256");
-        g.old.push(Node { name: str(name), path: str(path), git: str(git), rev: str(rev), commit: str(commit), directory: [], entry: [], visiting: false, requirement: str(requirement) });
+        g.old.push(Node { name: str(name), path: str(path), git: str(git), rev: str(rev), commit: str(commit), directory: [], entry: [], visiting: false, requirement: str(requirement), registry: str(registry_url), package: str(package), record: str(record) });
         id = doc.nodes[id].next;
     }
 }
+fn lock_node(out: u8[>..]&, n: Node&) {
+    out.append("\n[[dependency]]\nname = "); manifest::quoted(out, n.name);
+    out.append("\npath = "); manifest::quoted(out, n.path);
+    out.append("\ngit = "); manifest::quoted(out, n.git);
+    out.append("\nrev = "); manifest::quoted(out, n.rev);
+    if n.requirement.len > 0 { out.append("\nrequirement = "); manifest::quoted(out, n.requirement); }
+    if n.registry.len > 0 { out.append("\nregistry = "); manifest::quoted(out, n.registry); out.append("\npackage = "); manifest::quoted(out, n.package); out.append("\nrecord = "); manifest::quoted(out, n.record); }
+    out.append("\ncommit = "); manifest::quoted(out, n.commit); out.push('\n');
+}
 fn lock_text(g: Graph&) -> u8[>..] {
     var out = str("# Generated by Honk. Commit this file.\nversion = 1\ncompiler = "); manifest::quoted(out, g.revision); out.push('\n');
+    // Discovery order may change as sources are expanded in separate phases.
+    // Preserve existing lock row order; graph edges, not row position, carry meaning.
+    for old in g.old { for n in g.nodes { if n.name == old.name { lock_node(out, n); } } }
     for n in g.nodes {
-        out.append("\n[[dependency]]\nname = "); manifest::quoted(out, n.name);
-        out.append("\npath = "); manifest::quoted(out, n.path);
-        out.append("\ngit = "); manifest::quoted(out, n.git);
-        out.append("\nrev = "); manifest::quoted(out, n.rev);
-        if n.requirement.len > 0 { out.append("\nrequirement = "); manifest::quoted(out, n.requirement); }
-        out.append("\ncommit = "); manifest::quoted(out, n.commit); out.push('\n');
+        var known = false; for old in g.old { if old.name == n.name { known = true; } }
+        if !known { lock_node(out, n); }
     }
     return out;
 }
@@ -66,14 +85,20 @@ fn node(g: Graph&, index: i64) -> Node& {
     for n, i in g.nodes { if i == index { return n; } }
     abort("invalid internal dependency index");
 }
-fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
+fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:], registry: nest::Resolver&) {
     manifest::validate_dependency(dep);
+    // Discover the complete Git/path graph before selecting any registry version.
+    // Keep the original owner so deferred edges and dev reachability remain exact.
+    if dep.registry.len > 0 && !g.registry_ready {
+        platform::require(g.registry_requests.len < 65536, "registry dependency request limit exceeded (65536)");
+        g.registry_requests.push(RegistryRequest { parent: g.current, dependency: copy(dep) }); return;
+    }
     let candidate = if dep.path.len > 0 && dep.path[0] == '/' { str(dep.path) } else { str(base, "/", dep.path) };
     let local = if dep.path.len > 0 { platform::absolute(candidate) } else { str("") };
     let existing = index(g, dep.name);
     if existing >= 0 {
         let n .= node(g, existing);
-        platform::require(n.directory == local || (n.git.len > 0 && n.git == dep.git && n.requirement == dep.requirement && (dep.requirement.len > 0 || n.rev == dep.rev)), str("conflicting dependency: ", dep.name));
+        platform::require((dep.registry.len > 0 && n.registry == dep.registry && n.package == dep.package && nest::matches(dep.requirement, n.rev)) || (dep.registry.len == 0 && n.directory == local) || (n.git.len > 0 && n.git == dep.git && n.requirement == dep.requirement && (dep.requirement.len > 0 || n.rev == dep.rev)), str("conflicting dependency: ", dep.name));
         if g.current >= 0 { g.edges.push(Edge { g.current, existing }); } else if !dep.dev { n.production = true; } return;
     }
     platform::require(g.nodes.len < 256, "dependency graph limit exceeded (256 packages)");
@@ -140,11 +165,31 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
         let dirty = platform::git(["-C", directory, "status", "--porcelain", "--untracked-files=all", "--ignored=matching"], base);
         platform::require(dirty.len == 0, "cached Git checkout has local changes; remove its cache directory and fetch again");
     }
+    var registry_record: u8[>..] = [];
+    if dep.registry.len > 0 {
+        var found = -1;
+        for selected in registry.selected { let record = nest::record_at(registry, selected); if record.package == dep.package && record.registry == dep.registry && nest::matches(dep.requirement, record.version) { found = selected; } }
+        platform::require(found >= 0, "registry dependency is missing from the resolved graph");
+        let record = nest::record_at(registry, found);
+        let error = nest::materialize(record, registry.cache, g.offline); platform::require(error.len == 0, error);
+        directory = nest::directory(record, registry.cache); selected_ref = str(record.version); registry_record = nest::record_text(record);
+        var child = manifest::Project { .. }; manifest::load(directory, child);
+        platform::require(child.name == record.package && child.version == record.version && child.kind == "lib" && child.entry == record.entry, "archive manifest does not match registry record");
+        platform::require(child.revision.len == 0 || child.revision == g.revision, "registry package requires another Goose compiler revision");
+        var count = 0;
+        for dependency in child.dependencies {
+            if dependency.dev { continue; } count++;
+            platform::require(dependency.registry == record.registry, "registry archives require registry dependencies from the same index");
+            var matches = false; for expected in record.dependencies { if expected.alias == dependency.name && expected.package == dependency.package && expected.requirement == dependency.requirement { matches = true; } }
+            platform::require(matches, "archive dependency differs from registry metadata");
+        }
+        platform::require(count == record.dependencies.len, "archive dependency count differs from registry metadata");
+    }
     var entry = str(dep.name, ".goose");
     if file_exists(str(directory, "/Honk.toml")) {
         var child = manifest::Project { .. }; manifest::load(directory, child);
         platform::require(child.kind == "lib", "dependency Honk.toml must describe a library"); entry = str(child.entry);
-        if dep.requirement.len > 0 {
+        if dep.requirement.len > 0 && dep.registry.len == 0 {
             let selected_version, selected_error = version_policy::parse_tag(selected_ref);
             let declared_version, declared_error = semver::parse(child.version);
             platform::require(selected_error.kind == semver::ErrorKind.None && declared_error.kind == semver::ErrorKind.None && semver::compare(selected_version, declared_version) == 0, "package version does not match selected Git tag");
@@ -155,17 +200,18 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:]) {
     platform::require(file_exists(str(directory, "/", entry)), str("missing dependency entry: ", dep.name, " (", entry, ")"));
     let id = g.nodes.len;
     // Keep path spellings in the lockfile portable for direct local dependencies.
-    g.nodes.push(Node { name: str(dep.name), path: str(dep.path), git: str(dep.git), rev: str(selected_ref), commit: copy(commit), directory: copy(directory), entry: copy(entry), visiting: true, requirement: str(dep.requirement) });
+    g.nodes.push(Node { name: str(dep.name), path: str(dep.path), git: str(dep.git), rev: str(selected_ref), commit: copy(commit), directory: copy(directory), entry: copy(entry), visiting: true, requirement: str(dep.requirement), registry: str(dep.registry), package: str(dep.package), record: copy(registry_record) });
     if g.current >= 0 { g.edges.push(Edge { g.current, id }); } else if !dep.dev { node(g, id).production = true; }
 }
-fn expand(g: Graph&, id: i64) {
+fn expand(g: Graph&, id: i64, registry: nest::Resolver&) {
     let n .= node(g, id); let directory = str(n.directory); let entry = str(n.entry);
     g.current = id;
     if file_exists(str(directory, "/Honk.toml")) {
         var child = manifest::Project { .. }; manifest::load(directory, child);
-        for d in child.dependencies { if !d.dev { add(g, d, directory); } }
+        for d in child.dependencies { if !d.dev { add(g, d, directory, registry); } }
     }
     let text = platform::load(str(directory, "/", entry)); let reqs = source::requirements(text);
+    platform::require(n.registry.len == 0 || reqs.len == 0, "registry packages must declare dependencies in Honk.toml, without sourced imports");
     for req in reqs {
         var path: u8[>..] = []; var git: u8[>..] = []; var rev: u8[>..] = [];
         if req.source.len > 0 && (req.source[0] == '.' || req.source[0] == '/') { path = str(req.source); }
@@ -178,7 +224,7 @@ fn expand(g: Graph&, id: i64) {
         }
         var d = manifest::Dependency { name: str(req.name), path: copy(path), git: copy(git), rev: copy(rev), .. };
         platform::require(manifest::identifier(d.name), "invalid sourced dependency name");
-        add(g, d, project::parent(str(directory, "/", entry)));
+        add(g, d, project::parent(str(directory, "/", entry)), registry);
     }
     n.visiting = false;
 }
@@ -206,9 +252,30 @@ fn acyclic(g: Graph&) {
 
 fn resolve(p: manifest::Project&, g: Graph&) {
     g.revision = str(if p.revision.len > 0 { p.revision[..] } else { toolchain::REVISION });
-    read_lock(p, g);
-    for dep in p.dependencies { add(g, dep, p.root); }
-    var cursor = 0; while cursor < g.nodes.len { expand(g, cursor); cursor++; } acyclic(g);
+    var registry = nest::Resolver { .. };
+    registry.cache = str(g.cache, "/nest"); registry.offline = g.offline; registry.locked = g.locked; registry.update = g.update;
+    read_lock(p, g, registry);
+    // No registry package is downloaded during discovery. Requirements found in
+    // later siblings participate in the same solve as direct root requirements.
+    for dep in p.dependencies { add(g, dep, p.root, registry); }
+    var cursor = 0; while cursor < g.nodes.len { expand(g, cursor, registry); cursor++; }
+    var registry_roots: nest::Request[>..] = [];
+    for request in g.registry_requests {
+        let dependency = request.dependency;
+        registry_roots.push(nest::Request { package: str(dependency.package), requirement: str(dependency.requirement), registry: str(dependency.registry) });
+    }
+    if registry_roots.len > 0 && !nest::resolve(registry, registry_roots[..]) {
+        var message = str(registry.error, "; registry requirements:");
+        for request, i in g.registry_requests {
+            if i >= 16 || message.len > 3500 { message.append("; ..."); break; }
+            let owner = if request.parent < 0 { str("root") } else { str(node(g, request.parent).name) };
+            message.append(str(" ", owner, " -> ", request.dependency.name, " (", request.dependency.package, " ", request.dependency.requirement, ");"));
+        }
+        platform::die(message);
+    }
+    g.registry_ready = true;
+    for request in g.registry_requests { g.current = request.parent; add(g, request.dependency, p.root, registry); }
+    while cursor < g.nodes.len { expand(g, cursor, registry); cursor++; } acyclic(g);
     let text = lock_text(g);
     platform::require(text.len <= manifest::MAX_INPUT_BYTES, "resolved lockfile exceeds 1 MiB; original is unchanged");
     let file = str(p.root, "/Honk.lock");

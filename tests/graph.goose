@@ -15,6 +15,7 @@ import logger from "../vendor/goose-log";
 import time from "../vendor/goose-time";
 import utc from "../vendor/goose-log/examples/utc";
 import posix from "../vendor/goose-terminal";
+import nest from "../vendor/goose-nest";
 import honk from "..";
 import std;
 fn main() {

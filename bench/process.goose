@@ -13,6 +13,7 @@ import toml from "../vendor/goose-toml";
 import argparse from "../vendor/goose-argparse";
 import posix from "../vendor/goose-terminal";
 import task from "../vendor/goose-task";
+import nest from "../vendor/goose-nest";
 import honk from "..";
 import std;
 fn main() {

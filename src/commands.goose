@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
 namespace commands;
 import std;
+import nest;
 import os;
 import argparse;
 import toml_edit;
@@ -30,10 +31,12 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         if cmd == "add" { platform::require(options.positionals.len == 1, "add/remove needs one dependency import name"); }
         else { platform::require(options.positionals.len > 0 && options.positionals.len <= 64, "remove needs 1 to 64 dependency import names"); }
         for requested, i in options.positionals {
-            platform::require(manifest::identifier(requested), "invalid dependency import name");
+            platform::require((cmd == "add" && !options.has("git") && !options.has("path") && nest::package_name(requested)) || manifest::identifier(requested), "invalid dependency import name");
             for j in i { platform::require(options.positionals[j] != requested, "duplicate dependency import name"); }
         }
-        let name = options.positionals[0];
+        let registry_add = cmd == "add" && !options.has("git") && !options.has("path");
+        var alias = str(options.positionals[0]); if registry_add { for &c in alias { if c == '-' { c = '_'; } } }
+        let name = options.get("as", alias); platform::require(manifest::identifier(name), "invalid dependency import alias");
         // Re-read and validate after taking the project lock. Decisions and
         // source spans must describe the same manifest snapshot.
         let source = platform::load(str(p.root, "/Honk.toml"));
@@ -46,10 +49,25 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
             platform::require(!(options.has("rev") && options.has("version")), "rev and version options are mutually exclusive");
             platform::require(!options.has("path") || (!options.has("version") && !options.has("rev")), "path dependency cannot specify rev or version");
             if options.has("version") { platform::require(manifest::version_requirement(options.get("version")), "invalid Git version requirement (ASCII space only, limit 4096 bytes)"); }
-            var dep = manifest::Dependency { name: str(name), path: str(options.get("path")), git: str(options.get("git")), rev: str(options.get("rev")), dev: options.has("dev"), requirement: str(options.get("version")) };
+            platform::require(registry_add || (!options.has("registry") && !options.has("as")), "registry/as options require a registry dependency");
+            var registry_requirement = str(options.get("version"));
+            if registry_add && registry_requirement.len == 0 {
+                let registry_url = options.get("registry", nest::DEFAULT_REGISTRY);
+                var resolver = nest::Resolver { cache: str(cache, "/nest"), offline: options.has("offline") || options.has("frozen"), .. };
+                let requests = [nest::Request { package: str(options.positionals[0]), requirement: str(">=0.0.0"), registry: str(registry_url) }];
+                platform::require(nest::resolve(resolver, requests), resolver.error);
+                for selected in resolver.selected { let record = nest::record_at(resolver, selected); if record.package == options.positionals[0] && record.registry == registry_url { registry_requirement = str("^", record.version); } }
+                platform::require(registry_requirement.len > 0, "registry has no stable version to add; select a prerelease with --version");
+            }
+            let dep = if registry_add {
+                manifest::Dependency { name: str(name), dev: options.has("dev"), requirement: str(registry_requirement), registry: str(options.get("registry", nest::DEFAULT_REGISTRY)), package: str(options.positionals[0]), .. }
+            } else {
+                manifest::Dependency { name: str(name), path: str(options.get("path")), git: str(options.get("git")), rev: str(options.get("rev")), dev: options.has("dev"), requirement: str(options.get("version")), .. }
+            };
             manifest::validate_dependency(dep);
             var value = str("{ ");
             if dep.path.len > 0 { value.append("path = "); manifest::quoted(value, dep.path); }
+            else if dep.registry.len > 0 { value.append("package = "); manifest::quoted(value, dep.package); value.append(", registry = "); manifest::quoted(value, dep.registry); value.append(", version = "); manifest::quoted(value, dep.requirement); }
             else { value.append("git = "); manifest::quoted(value, dep.git); value.append(if dep.requirement.len > 0 { ", version = " } else { ", rev = " }); manifest::quoted(value, if dep.requirement.len > 0 { dep.requirement[..] } else { dep.rev[..] }); }
             value.append(" }");
             let path: const u8[:][] = [if dep.dev { "dev-dependencies" } else { "dependencies" }, name];
