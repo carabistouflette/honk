@@ -36,8 +36,8 @@ are rejected, with the existing source/file limits and a 32 MiB total snapshot
 limit. Physical paths do not enter the snapshot digest. Source edits refresh
 the graph each invocation; there is no persistent graph reuse yet.
 
-Production path and Git dependencies and binary root targets are supported.
-Registry sources, workspaces, dev/test/bench
+Production path, Git and registry dependencies and binary root targets are supported.
+Workspaces, dev/test/bench
 targets, embedded resources and build reuse are unfinished and rejected when
 requested. The compiler
 rejects non-toolchain native sidecars, foreign externs/exports and unsupported
@@ -69,7 +69,7 @@ isolated operations, while the existing Honk cache lock excludes concurrent
 legacy writers using the same HONK_HOME. Persistent locks use the existing atomic
 write helper.
 
-This is a path/Git graph lock, not yet registry pinning or a workspace-wide
+This is a per-project path/Git/registry graph lock, not yet a workspace-wide
 shared lock. Canonical lock bytes are regenerated from local manifests; arbitrary
 manual formatting changes require an unlocked canonical rewrite. As in Cargo,
 a successful dependency resolution may update the lock even if a subsequent
@@ -116,6 +116,65 @@ subdirectory. They cannot escape the checkout into arbitrary host directories.
 Existing transport restrictions remain: HTTPS-only Git sources, disabled hooks/filters, no submodule acquisition, and verified source/commit
 cache identities. Tests
 use real local Git repositories behind an explicit test-only HTTPS transport shim.
+
+## Scoped registry dependencies
+
+Registry dependencies use the existing Nest v1 index and verified archive cache.
+No server or protocol migration is needed. The default flat workflow still uses
+Nest's original single-version resolver; the isolated producer uses a separate
+bounded owner-scoped resolver. Both reuse the same native transport, checksum,
+extraction and cached-content verification.
+
+```toml
+[dependencies]
+old = { package = "example", version = "^1.0.0" }
+newer = { package = "example", version = "^2.0.0" }
+```
+
+Versions compatible under caret SemVer rules must unify; conflicting exact
+compatible versions fail, while incompatible major versions (or zero-major
+compatibility groups) may coexist. This follows Cargo's
+[version-unification rule](https://doc.rust-lang.org/cargo/reference/resolver.html#semver-compatibility),
+not its entire resolver/feature policy. All registry constraints from path/Git
+packages are collected before solving. Selected archive dependencies are solved
+from index metadata before any registry archive is materialized. Only selected
+releases are downloaded. Cycles can trigger backtracking to older releases.
+
+The resolver first tries the complete owner-specific lock without reading any
+index. If an unlocked graph change requires catalog lookup, eligible existing
+pins and already selected instances are preferred before highest releases.
+Existing pins may retain yanked releases; update ignores old candidates and
+excludes yanked releases. Reusing a published version with changed immutable
+metadata is rejected (the mutable yanked flag is excluded from that comparison).
+
+Each registry binding stores the registry, package, requirement and full release
+record. Stable coordinates use `registry:<url>/<package>@<version>#<sha256>`.
+Compiler provenance uses that registry/package source plus the full archive
+SHA-256. Different registries remain different sources, even for identical
+archive bytes. Archive manifest name/version/entry, compiler compatibility and
+same-registry dependency metadata are independently checked before use. Cached
+source corruption fails closed. --locked refuses changed bindings before index
+or replacement-archive fetches; warm --frozen replay requires no index cache.
+
+Initial limits are 256 combined instances, 65,536 edges/active requests, 8,192
+catalog releases, 512 candidates per request, 4,096 alternative frames, 100,000
+candidate decisions and 8,000,000 charged scan iterations per resolution. Limit
+exhaustion is an explicit failure, never a partial lock. The solver is bounded
+chronological backtracking, not PubGrub, and has no optimal-complexity or universal
+Cargo performance claim. Graph and lock encodings are each bounded to 1 MiB.
+
+The graph compiler is derived from the qualified Goose baseline
+`eadca409f68210893f366e60d0c2f0dc29a339be`; dependency manifests may retain that
+specific development compiler pin. Root manifests must still select an exact
+qualified graph compiler. Other mismatched pins remain rejected. This narrow
+compatibility allowance does not relax native/library-ABI gates or introduce
+an inferred minimum-compiler policy.
+
+Registry names/requirements retain the alpha protocol's current grammar. Native
+packages, sourced imports, features, registry authentication/publishing and shared
+workspace resolution remain unfinished. The test suite includes an independent
+exhaustive oracle over 64 seeded small acyclic graphs, plus real JIT/native,
+cycle/backtracking, yanked-lock, archive-integrity and mixed Git/registry cases.
 
 Qualification with a separately built graph compiler:
 

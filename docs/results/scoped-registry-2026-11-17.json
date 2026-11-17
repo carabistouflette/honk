@@ -1,0 +1,89 @@
+{
+  "schema": 1,
+  "date": "2026-11-17",
+  "platform": "Linux x86_64",
+  "base_commit": "97baa9d999937a5d43d03a7151abe3b7867e4a87",
+  "compiler_revision": "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63",
+  "c_compiler": "clang version 23.1.4",
+  "source_files": {
+    "honk.goose": "258e00c39644eeb4a081b56144656ca251b502860cbe0b7697f49ac4c5e6164d",
+    "src/isolated.goose": "cfc21b57704b931c5d5917b92531a369dc9ff41b15234a8aedc0039b4590635c",
+    "src/scoped_registry.goose": "424643b77e03bd0a3d730c27ce1ca4946b9c56034a53f9c7d0d81058017ef3d7",
+    "tests/isolated_cli.py": "2a9ab1d48ec6db49e371814c5f177815e4a5f8f86cc8d3d8464d9740a03f9867",
+    "tests/scoped_registry_oracle.py": "e2a80ec6e53fea7fb7e2f2172cb5fd1d4fb2f6a71c631ec772bf157937a625b4",
+    "tests/registry_cli.py": "d66859bae4436c1e735b965cbc87edbc5545264e7c85665d1a77f741738247b3"
+  },
+  "runs": [
+    {
+      "name": "normal",
+      "tests": 40,
+      "exit_code": 0,
+      "log": "scoped-registry-normal-2026-11-17.txt",
+      "sha256": "c2a43a07f6eecdae6cc2552dbca6514f3f3ee450b44557fcd04ed3eae9d41ce1"
+    },
+    {
+      "name": "asan-ubsan",
+      "tests": 40,
+      "exit_code": 0,
+      "log": "scoped-registry-asan-ubsan-2026-11-17.txt",
+      "sha256": "c77ac3f29909feaac7069dc6149a5260d742dfcacc994aaacdbdd95b0d998f1e"
+    },
+    {
+      "name": "legacy-cli",
+      "tests": 78,
+      "exit_code": 0,
+      "log": "scoped-registry-legacy-cli-2026-11-17.txt",
+      "sha256": "1a8bf8f7e27ec3c8e93998a7b36cba6a3262e284ba45823e4f6e5fe25a108992"
+    },
+    {
+      "name": "legacy-registry",
+      "tests": 8,
+      "exit_code": 0,
+      "log": "scoped-registry-legacy-registry-2026-11-17.txt",
+      "sha256": "2c0226b57c7b530ee837385e60706e49e5b89bfba843a40409c08ac8f83f5161"
+    }
+  ],
+  "independent_oracle": {
+    "seed": "0xC4A60",
+    "acyclic_graphs": 64,
+    "sat": 50,
+    "unsat": 14
+  },
+  "public_registry_smoke": {
+    "package": "goose-semver",
+    "registry": "https://carabistouflette.github.io/goose-nest/index",
+    "version": "0.1.1",
+    "sha256": "1d5d9b36b4efb6140c611ec399bfb091d200263d0b1cbf093d38c2b3cf0cd7fd",
+    "runs": [
+      {
+        "flags": [],
+        "exit_code": 0,
+        "stdout": "1"
+      },
+      {
+        "flags": [
+          "--frozen"
+        ],
+        "exit_code": 0,
+        "stdout": "1"
+      }
+    ]
+  },
+  "binaries": {
+    "normal": "409d35ad5699c921199034e218c8ab47a61e1f769d0314b7a2e6e62c5a4b5dba",
+    "asan-ubsan": "6aac1cd46722a22affb81a977987c093193abd2d44e2664514d098f21c454300"
+  },
+  "static_checks": {
+    "command": "make check GOOSE=/path/to/pinned/goose",
+    "exit_code": 0
+  },
+  "commands": [
+    "GRAPH_GOOSE=/path/to/graph/goose python3 tests/isolated_cli.py -v",
+    "HONK=/path/to/honk-sanitize GRAPH_GOOSE=/path/to/graph/goose ASAN_OPTIONS=detect_leaks=1:halt_on_error=1 UBSAN_OPTIONS=halt_on_error=1 python3 tests/isolated_cli.py -v"
+  ],
+  "limits": [
+    "No performance superiority claim from correctness runs.",
+    "Oracle covers a controlled stable-version requirement subset on small acyclic graphs; dedicated CLI cases cover cycles and lock/cache behavior.",
+    "Features, workspace-wide solving, native packages, authentication/publishing and general Cargo parity remain unfinished."
+  ]
+}

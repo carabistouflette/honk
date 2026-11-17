@@ -403,6 +403,249 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.network_commands(), before)
         self.assertEqual(lock.read_text(), text)
 
+    def registry_fixture(self):
+        from registry_cli import Registry
+        directory = self.root / 'registry'
+        directory.mkdir()
+        self.registry = Registry(directory)
+        self.addCleanup(self.registry.close)
+        self.registry_versions = {}
+
+    def registry_release(self, name, version, deps=(), code=None, compiler=None):
+        record = self.registry.package(name, version, deps=deps, payload=(code.encode() if code else None), compiler=compiler)
+        self.registry_versions.setdefault(name, []).append(record)
+        self.registry.index(name, self.registry_versions[name])
+        return record
+
+    def registry_dependency(self, folder, alias, package, requirement):
+        with (self.root / folder / 'Honk.toml').open('a') as f:
+            f.write(f'{alias} = {{ package = "{package}", version = "{requirement}", registry = "{self.registry.url}/index" }}\n')
+
+    def test_registry_incompatible_diamond_and_frozen(self):
+        self.registry_fixture()
+        for version, value in [('1.0.0', 1), ('2.0.0', 2)]:
+            self.registry_release('answer', version, code=f'namespace versioned; fn value() -> i64 {{ {value} }}')
+        self.registry_release('client-a', '1.0.0', [('dep', 'answer', '^1.0.0')], 'namespace client; import dep; fn value() -> i64 { dep::value() }')
+        self.registry_release('client-b', '1.0.0', [('dep', 'answer', '^2.0.0')], 'namespace client; import dep; fn value() -> i64 { dep::value() }')
+        self.package('app', 'import a; import b; import std; fn main() { print(a::value(), " ", b::value()); }')
+        self.registry_dependency('app', 'a', 'client-a', '^1.0.0')
+        self.registry_dependency('app', 'b', 'client-b', '^1.0.0')
+        self.assertEqual(self.run_honk().stdout.strip(), '1 2')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '1 2')
+        self.run_honk('build', extra=('--frozen',))
+        self.assertEqual(subprocess.check_output([str(self.root / 'app/target/isolated/app')], text=True).strip(), '1 2')
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_registry_compatible_versions_backtrack_before_download(self):
+        self.registry_fixture()
+        code = 'namespace versioned; var count: i64 = 0; fn next() -> i64 { count++; count }'
+        self.registry_release('answer', '1.0.0', code=code)
+        self.registry_release('answer', '1.1.0', code=code)
+        self.package('app', 'import a; import b; import std; fn main() { let x = a::next(); let y = b::next(); print(x, " ", y); }')
+        self.registry_dependency('app', 'a', 'answer', '^1.0.0')
+        self.registry_dependency('app', 'b', 'answer', '=1.0.0')
+        self.assertEqual(self.run_honk().stdout.strip(), '1 2')
+        self.assertFalse(any('answer-1.1.0.tar.gz' in path for path, _ in self.registry.requests))
+        graph = json.loads((self.root / 'app/target/isolated/graph.json').read_text())
+        self.assertEqual(len(graph['nodes']), 2)
+
+    def test_registry_conflicting_compatible_pins_preserve_lock_without_archives(self):
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0')
+        self.registry_release('answer', '1.1.0')
+        self.package('app', 'fn main() {}')
+        self.run_honk('check')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        self.registry_dependency('app', 'a', 'answer', '=1.0.0')
+        self.registry_dependency('app', 'b', 'answer', '=1.1.0')
+        self.assertIn('no compatible scoped registry graph', self.run_honk('fetch', ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), original)
+        self.assertFalse(any(path.endswith('.tar.gz') for path, _ in self.registry.requests))
+
+    def test_registry_locked_constraint_change_and_missing_source_preserve_lock(self):
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0')
+        self.registry_release('answer', '2.0.0')
+        self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'dep', 'answer', '^1.0.0')
+        self.run_honk('fetch')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        manifest = self.root / 'app/Honk.toml'
+        text = manifest.read_text()
+        manifest.write_text(text.replace('^1.0.0', '^2.0.0'))
+        before = list(self.registry.requests)
+        self.run_honk('fetch', ok=False, extra=('--locked',))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+        manifest.write_text(text)
+        shutil.rmtree(self.root / 'honk-cache/nest/packages')
+        self.run_honk('fetch', ok=False, extra=('--frozen',))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_registry_lock_preference_update_and_yanks(self):
+        self.registry_fixture()
+        first = self.registry_release('answer', '1.0.0', code='namespace answer; fn value() -> i64 { 1 }')
+        self.package('app', 'import dep; import std; fn main() { print(dep::value()); }')
+        self.registry_dependency('app', 'dep', 'answer', '^1.0.0')
+        self.run_honk('fetch')
+        second = self.registry_release('answer', '1.1.0', code='namespace answer; fn value() -> i64 { 2 }')
+        before = list(self.registry.requests)
+        self.assertEqual(self.run_honk(extra=('--locked',)).stdout.strip(), '1')
+        self.assertEqual(self.registry.requests, before)
+        self.run_honk('update')
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '2')
+        second['yanked'] = True
+        self.registry.index('answer', [first, second])
+        before = list(self.registry.requests)
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '2')
+        self.assertEqual(self.registry.requests, before)
+        self.run_honk('update')
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '1')
+
+    def test_registry_wrong_version_nominal_types_rejected(self):
+        self.registry_fixture()
+        for version in ('1.0.0', '2.0.0'):
+            self.registry_release('answer', version, code='namespace versioned; struct Value { x: i64 } fn make() -> Value { Value { 1 } }')
+        self.package('app', 'import a; import b; fn take(v: b::Value) {} fn main() { take(a::make()); }')
+        self.registry_dependency('app', 'a', 'answer', '^1.0.0')
+        self.registry_dependency('app', 'b', 'answer', '^2.0.0')
+        self.assertIn('answer@', self.run_honk('check', ok=False).stderr)
+
+    def test_registry_cycle_can_backtrack_to_older_release(self):
+        self.registry_fixture()
+        self.registry_release('client', '1.0.0')
+        self.registry_release('client', '1.1.0', [('dep', 'answer', '^1.0.0')])
+        self.registry_release('answer', '1.0.0', [('dep', 'client', '=1.1.0')])
+        self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'dep', 'client', '^1.0.0')
+        self.run_honk('fetch')
+        archives = [path for path, _ in self.registry.requests if path.endswith('.tar.gz')]
+        self.assertEqual(archives, ['/client-1.0.0.tar.gz'])
+
+    def test_registry_distinct_origins_with_identical_archive_keep_separate_state(self):
+        from registry_cli import Registry
+        self.registry_fixture()
+        record = self.registry_release('answer', '1.0.0', code='namespace answer; var count: i64 = 0; fn next() -> i64 { count++; count }')
+        other_root = self.root / 'other-registry'
+        other_root.mkdir()
+        other = Registry(other_root)
+        self.addCleanup(other.close)
+        (other_root / 'answer-1.0.0.tar.gz').write_bytes((self.root / 'registry/answer-1.0.0.tar.gz').read_bytes())
+        second = {**record, 'url': other.url + '/answer-1.0.0.tar.gz'}
+        other.index('answer', [second])
+        self.package('app', 'import a; import b; import std; fn main() { let x = a::next(); let y = b::next(); print(x, " ", y); }')
+        self.registry_dependency('app', 'a', 'answer', '^1.0.0')
+        with (self.root / 'app/Honk.toml').open('a') as f:
+            f.write(f'b = {{package="answer", version="^1.0.0", registry="{other.url}/index"}}\n')
+        self.assertEqual(self.run_honk().stdout.strip(), '1 1')
+
+    def test_registry_cached_tree_integrity_and_archive_manifest_validation(self):
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0')
+        self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'dep', 'answer', '^1.0.0')
+        self.run_honk('fetch')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        graph = json.loads((self.root / 'app/target/isolated/graph.json').read_text())
+        cached = next(Path(n['directory']) for n in graph['nodes'] if n['source']['locator'].startswith('registry:'))
+        (cached / 'lib.goose').write_text('fn corrupted() {}')
+        before = list(self.registry.requests)
+        self.run_honk('fetch', ok=False, extra=('--frozen',))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_registry_generated_graphs_against_exhaustive_oracle(self):
+        from scoped_registry_oracle import check
+        self.registry_fixture()
+        check(self)
+
+    def test_registry_qualified_base_compiler_and_unknown_pin(self):
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0', code='namespace answer; fn value() -> i64 { 1 }', compiler='eadca409f68210893f366e60d0c2f0dc29a339be')
+        self.registry_release('answer', '2.0.0', compiler='f' * 40)
+        self.package('app', 'import dep; import std; fn main() { print(dep::value()); }')
+        self.registry_dependency('app', 'dep', 'answer', '^1.0.0')
+        self.assertEqual(self.run_honk().stdout.strip(), '1')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        manifest = self.root / 'app/Honk.toml'
+        manifest.write_text(manifest.read_text().replace('^1.0.0', '^2.0.0'))
+        self.assertIn('matching compiler revision', self.run_honk('fetch', ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_registry_new_root_retains_existing_yanked_pin(self):
+        self.registry_fixture()
+        first = self.registry_release('answer', '1.0.0', code='namespace answer; fn value() -> i64 { 1 }')
+        self.package('app', 'import dep; import std; fn main() { print(dep::value()); }')
+        self.registry_dependency('app', 'dep', 'answer', '^1.0.0')
+        self.run_honk('fetch')
+        lock = self.root / 'app/Honk.lock'
+        pinned = next(b['record'] for b in tomllib.loads(lock.read_text())['binding'] if b.get('registry'))
+        second = self.registry_release('answer', '1.1.0', code='namespace answer; fn value() -> i64 { 2 }')
+        first['yanked'] = True
+        self.registry.index('answer', [first, second])
+        self.registry_release('other', '1.0.0')
+        self.registry_dependency('app', 'other', 'other', '^1.0.0')
+        self.assertEqual(self.run_honk().stdout.strip(), '1')
+        updated = next(b['record'] for b in tomllib.loads(lock.read_text())['binding'] if b['alias'] == 'dep')
+        self.assertEqual(updated, pinned)
+        self.assertFalse(any('answer-1.1.0.tar.gz' in path for path, _ in self.registry.requests))
+
+    def test_registry_immutable_metadata_change_rejected(self):
+        self.registry_fixture()
+        first = self.registry_release('answer', '1.0.0')
+        self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'dep', 'answer', '^1.0.0')
+        self.run_honk('fetch')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        first['sha256'] = 'f' * 64
+        self.registry.index('answer', [first])
+        before = len(self.registry.requests)
+        self.assertIn('published registry metadata changed', self.run_honk('update', ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), original)
+        self.assertFalse(any(path.endswith('.tar.gz') for path, _ in self.registry.requests[before:]))
+
+    def test_registry_archive_manifest_mismatch_preserves_lock(self):
+        self.registry_fixture()
+        record = self.registry_release('answer', '1.0.0')
+        record['entry'] = 'other.goose'
+        self.registry.index('answer', [record])
+        self.package('app', 'fn main() {}')
+        self.run_honk('check')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        self.registry_dependency('app', 'dep', 'answer', '^1.0.0')
+        self.assertIn('archive manifest differs', self.run_honk('fetch', ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_registry_discovered_inside_git_package(self):
+        self.git_fixture()
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0', code='namespace answer; fn value() -> i64 { 42 }')
+        with (self.remote / 'Honk.toml').open('a') as f:
+            f.write('[dependencies]\nanswer = {package="answer", version="^1.0.0", registry="' + self.registry.url + '/index"}\n')
+        with (self.remote / 'mathx.goose').open('a') as f:
+            f.write(' import answer; fn registry_value() -> i64 { answer::value() }')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'registry dependency')
+        commit = self.git('rev-parse', 'HEAD')
+        self.package('app', 'import dep; import std; fn main() { print(dep::registry_value()); }')
+        self.git_dependency('app', 'dep', rev=commit)
+        self.assertEqual(self.run_honk().stdout.strip(), '42')
+        before = list(self.registry.requests), self.network_commands()
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '42')
+        self.assertEqual((self.registry.requests, self.network_commands()), before)
+
     def test_wrong_nominal_version_rejected(self):
         self.diamond()
         p = self.root / 'app'

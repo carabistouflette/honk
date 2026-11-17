@@ -36,7 +36,7 @@ New native build requirements: libarchive 3+ and OpenSSL 3+ development headers,
 in addition to existing libcurl/libsodium requirements. Ubuntu packages are
 `libarchive-dev libssl-dev`. No Python or shell starts during registry resolution.
 
-The registry solver selects one version per package and rejects cycles, with
+The default flat compiler workflow selects one version per package and rejects cycles, with
 bounded backtracking. Honk currently uses global import aliases; conflicting
 aliases remain errors. Honk discovers registry dependencies inside Git/path manifests and legacy
 sourced-import chains automatically. It discovers the non-registry graph first,
@@ -58,3 +58,13 @@ Publication is currently a reviewed index PR plus a GitHub release asset, with
 publish API or `honk publish` command yet. No compile-time or universal Cargo
 performance guarantee is made; the Nest repository contains reproducible scoped
 fetch benchmarks.
+
+## Isolated multi-version graphs
+
+`honk build/run/check/fetch/update --isolated` uses the scoped compiler graph and
+version-2 lock instead of the flat workflow above. It can compile incompatible
+registry versions together, unifies SemVer-compatible releases with bounded
+backtracking, and records each owner's alias binding and complete immutable
+release metadata. See [the isolated graph contract and limits](ISOLATED-GRAPHS.md).
+The registry protocol/transport and vendored Nest client are unchanged; version
+selection policy is in Honk's scoped graph producer. This is not full Cargo parity.
