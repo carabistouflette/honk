@@ -55,7 +55,11 @@ def main():
     command = [str(Path(arguments.goose).resolve()), "build", "honk.goose",
                "--cc", str(wrapper), "--standalone", "-o", str(binary)]
     print(shlex.join(command), flush=True)
-    subprocess.run(command, cwd=ROOT, check=True, timeout=240)
+    # Whole-CLI Clang sanitizer builds can exceed four minutes on hosted runners.
+    # Match the watch fixture's sanitizer build budget; runtime/HTTP deadlines
+    # and the release build budget remain unchanged.
+    subprocess.run(command, cwd=ROOT, check=True,
+                   timeout=600 if arguments.mode == "sanitize" else 240)
     print(binary)
 
 
