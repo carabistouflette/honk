@@ -23,6 +23,22 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libsodium-dev libarchive-dev libssl-dev pkg-config
       - run: make setup
       - run: make check test security
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        if: matrix.sanitizer_cc == 'clang'
+        with:
+          repository: carabistouflette/goose
+          ref: 0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63
+          path: .build/graph-compiler
+          persist-credentials: false
+      - run: cmake -S .build/graph-compiler -B .build/graph-compiler/build -DCMAKE_BUILD_TYPE=Debug -DGOOSE_BUILTIN_LIBS=none
+        if: matrix.sanitizer_cc == 'clang'
+        env:
+          CC: clang
+          CXX: clang++
+      - run: cmake --build .build/graph-compiler/build --parallel 2
+        if: matrix.sanitizer_cc == 'clang'
+      - run: make isolated-test GRAPH_GOOSE="$GITHUB_WORKSPACE/.build/graph-compiler/build/goose"
+        if: matrix.sanitizer_cc == 'clang'
       - run: make sanitize portable
       - run: make bench
       - run: make diagnostics-bench-smoke
