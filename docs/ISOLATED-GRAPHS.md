@@ -37,12 +37,42 @@ limit. Physical paths do not enter the snapshot digest. Source edits refresh
 the graph each invocation; there is no persistent graph reuse yet.
 
 Only production path dependencies and binary root targets are supported.
-Git/registry sources, lock/frozen/offline semantics, workspaces, dev/test/bench
+Git/registry sources, workspaces, dev/test/bench
 targets, embedded resources and build reuse are unfinished and rejected when
-requested. Honk.lock is neither read nor written by this mode. The compiler
+requested. The compiler
 rejects non-toolchain native sidecars, foreign externs/exports and unsupported
 tooling. Source digest assertions are producer-owned; concurrent source edits
 are not an atomic filesystem snapshot. This is not full Cargo parity.
+
+## Multi-instance locks
+
+Isolated mode writes version 2 of `Honk.lock`: `mode = "isolated"`, the exact
+compiler revision, package coordinates/name/version/entry, and owner-local
+alias-to-package edges. Different versions with the same package name remain
+separate records. Rows are sorted independently of graph discovery order.
+Coordinates are relative to the root project, so relocating the whole project
+closure and reordering dependency declarations do not invalidate the lock.
+
+`--locked` requires the current package graph to match the existing lock and
+never rewrites it. `--frozen` implies locked plus offline operation; `--offline`
+alone permits lock creation/update for these already local path dependencies.
+Local source edits refresh compilation snapshots without changing dependency
+locks. Dependency bindings, package versions/entries and compiler changes do
+require a lock update. The mode performs no package network access.
+
+A legacy version-1 lockfile is never silently converted or overwritten. Preserve
+it separately before deliberately opting a project into the new mode; automatic
+migration is unfinished. Malformed lockfiles and cycle/resolution failures leave
+the original bytes intact. A per-project `.honk/isolated.lock` serializes Honk's
+isolated operations, while the existing Honk cache lock excludes concurrent
+legacy writers using the same HONK_HOME. Persistent locks use the existing atomic
+write helper.
+
+This is a local graph lock, not yet Git/registry pinning or a workspace-wide
+shared lock. Canonical lock bytes are regenerated from local manifests; arbitrary
+manual formatting changes require an unlocked canonical rewrite. As in Cargo,
+a successful dependency resolution may update the lock even if a subsequent
+compiler/typecheck fails.
 
 Qualification with a separately built graph compiler:
 

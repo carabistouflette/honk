@@ -4,6 +4,9 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import tomllib
+import shutil
+import fcntl
 import unittest
 
 HONK = Path(os.environ.get('HONK', '.build/honk')).resolve()
@@ -16,7 +19,7 @@ class Isolated(unittest.TestCase):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.env = dict(os.environ, GOOSE=str(GOOSE), GOOSE_HOME=str(self.root / 'compiler-cache'))
+        self.env = dict(os.environ, GOOSE=str(GOOSE), GOOSE_HOME=str(self.root / 'compiler-cache'), HONK_HOME=str(self.root / 'honk-cache'))
 
     def package(self, folder, code, dependencies=None, name=None):
         path = self.root / folder
@@ -53,7 +56,10 @@ class Isolated(unittest.TestCase):
         self.assertEqual(len(graph['nodes']), 5)
         owners = [n for n in graph['nodes'] if n['source']['name'] in ('a', 'b')]
         self.assertNotEqual(owners[0]['bindings']['dep'], owners[1]['bindings']['dep'])
-        self.assertFalse((self.root / 'app/Honk.lock').exists())
+        lock = tomllib.loads((self.root / 'app/Honk.lock').read_text())
+        self.assertEqual(lock['version'], 2)
+        self.assertEqual(len(lock['package']), 5)
+        self.assertEqual(len([p for p in lock['package'] if p['name'] == 'dep']), 2)
 
     def test_shared_alias_instance(self):
         self.package('dep', 'namespace shared; var count: i64 = 0; fn next() -> i64 { count++; count }')
@@ -78,7 +84,7 @@ class Isolated(unittest.TestCase):
         lock = self.root / 'app/Honk.lock'
         lock.write_text('sentinel')
         self.assertIn('cycle', self.run_honk('check', ok=False).stderr)
-        self.assertIn('locks', self.run_honk('check', ok=False, extra=('--frozen',)).stderr)
+        self.assertIn('cycle', self.run_honk('check', ok=False, extra=('--frozen',)).stderr)
         self.assertEqual(lock.read_text(), 'sentinel')
 
     def test_sourced_import_and_embedded_resource_rejected(self):
@@ -86,6 +92,85 @@ class Isolated(unittest.TestCase):
         self.assertIn('sourced imports', self.run_honk('check', ok=False).stderr)
         (self.root / 'app/entry.goose').write_text('fn main() { embed_file("resource"); }')
         self.assertIn('embedded resources', self.run_honk('check', ok=False).stderr)
+
+    def test_frozen_local_edits_do_not_change_lock(self):
+        self.diamond()
+        self.assertIn('missing or out of date', self.run_honk('check', ok=False, extra=('--frozen',)).stderr)
+        self.run_honk('check')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        self.run_honk('check', extra=('--frozen',))
+        with (self.root / 'one/entry.goose').open('a') as f:
+            f.write('\n// local development edit\n')
+        self.run_honk('check', extra=('--locked', '--offline'))
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_dependency_change_requires_lock_update(self):
+        self.diamond()
+        self.run_honk('check')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        manifest = self.root / 'a/Honk.toml'
+        manifest.write_text(manifest.read_text().replace('../one', '../two'))
+        self.assertIn('out of date', self.run_honk('check', ok=False, extra=('--locked',)).stderr)
+        self.assertEqual(lock.read_bytes(), original)
+        self.run_honk('check')
+        self.assertNotEqual(lock.read_bytes(), original)
+
+    def test_legacy_lock_is_not_silently_replaced(self):
+        self.package('app', 'fn main() {}')
+        lock = self.root / 'app/Honk.lock'
+        lock.write_text('version = 1\ncompiler = "legacy"\n')
+        original = lock.read_bytes()
+        self.assertIn('legacy lockfile is unchanged', self.run_honk('check', ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_lock_survives_reordering_and_relocation(self):
+        self.diamond()
+        self.run_honk('check')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        manifest = self.root / 'app/Honk.toml'
+        text = manifest.read_text()
+        a, b = 'a = { path = "../a" }', 'b = { path = "../b" }'
+        manifest.write_text(text.replace(a + '\n' + b, b + '\n' + a))
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual(lock.read_bytes(), original)
+        moved = self.root / 'relocated'
+        moved.mkdir()
+        for folder in ('app', 'a', 'b', 'one', 'two'):
+            shutil.move(self.root / folder, moved / folder)
+        self.root = moved
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual((self.root / 'app/Honk.lock').read_bytes(), original)
+
+    def test_project_lock_contention_preserves_metadata(self):
+        self.package('app', 'fn main() {}')
+        self.run_honk('check')
+        lock = self.root / 'app/Honk.lock'
+        graph = self.root / 'app/target/isolated/graph.json'
+        before = lock.read_bytes(), graph.read_bytes()
+        with (self.root / 'app/.honk/isolated.lock').open('r+b') as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.assertIn('locked by another process', self.run_honk('check', ok=False).stderr)
+        self.assertEqual((lock.read_bytes(), graph.read_bytes()), before)
+
+    def test_legacy_cache_lock_excludes_isolated_writer(self):
+        self.package('app', 'fn main() {}')
+        self.run_honk('check')
+        lock = self.root / 'app/Honk.lock'
+        before = lock.read_bytes()
+        with (self.root / 'honk-cache/lock').open('r+b') as handle:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            self.assertIn('Honk cache is locked', self.run_honk('check', ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), before)
+
+    def test_malformed_lock_is_preserved(self):
+        self.package('app', 'fn main() {}')
+        lock = self.root / 'app/Honk.lock'
+        lock.write_text('version = [broken')
+        self.assertIn('invalid existing lockfile', self.run_honk('check', ok=False).stderr)
+        self.assertEqual(lock.read_text(), 'version = [broken')
 
     def test_wrong_nominal_version_rejected(self):
         self.diamond()
