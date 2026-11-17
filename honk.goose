@@ -120,9 +120,9 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filt
     manifest::load(root, p);
     platform::require(options.positionals.len == 0 || cmd == "add" || cmd == "remove", "unexpected positional argument (program arguments follow --)");
     if options.has("isolated") {
-        for entry in options.entries { platform::require(entry.name == "isolated" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file", "isolated mode supports only --release/--manifest-path/--log-file; locks and workspaces are not implemented yet"); }
+        for entry in options.entries { platform::require(entry.name == "isolated" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file" || entry.name == "locked" || entry.name == "frozen" || entry.name == "offline", "isolated mode supports --release/--manifest-path/--log-file/--locked/--offline/--frozen; workspaces are not implemented yet"); }
         platform::require(p.kind == "bin", "isolated mode currently requires a binary package");
-        isolated::execute(p, cmd, program_args, options.has("release")); return;
+        isolated::execute(p, cmd, program_args, options.has("release"), options.has("locked") || options.has("frozen")); return;
     }
     if cmd == "metadata" { emit_metadata(p, options); return; }
     var known = false;

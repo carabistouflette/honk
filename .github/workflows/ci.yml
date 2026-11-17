@@ -40,6 +40,12 @@ jobs:
       - run: make isolated-test GRAPH_GOOSE="$GITHUB_WORKSPACE/.build/graph-compiler/build/goose"
         if: matrix.sanitizer_cc == 'clang'
       - run: make sanitize portable
+      - run: make isolated-test GRAPH_GOOSE="$GITHUB_WORKSPACE/.build/graph-compiler/build/goose"
+        if: matrix.sanitizer_cc == 'clang'
+        env:
+          HONK: ${{ github.workspace }}/.build/honk-sanitize
+          ASAN_OPTIONS: detect_leaks=1:halt_on_error=1
+          UBSAN_OPTIONS: halt_on_error=1
       - run: make bench
       - run: make diagnostics-bench-smoke
       - run: make parallel-bench-smoke PARALLEL_BENCH_OUTPUT=.build/parallel-benchmark-smoke.json
