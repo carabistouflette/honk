@@ -36,13 +36,40 @@ are rejected, with the existing source/file limits and a 32 MiB total snapshot
 limit. Physical paths do not enter the snapshot digest. Source edits refresh
 the graph each invocation; there is no persistent graph reuse yet.
 
-Production path, Git and registry dependencies and binary root targets are supported.
-Workspaces, dev/test/bench
-targets, embedded resources and build reuse are unfinished and rejected when
-requested. The compiler
+Production path, Git and registry dependencies are supported.
+Build and run produce executables from binary packages. Check supports binary
+and library packages. Dev/test/bench targets, embedded resources and build
+reuse remain unfinished. The compiler
 rejects non-toolchain native sidecars, foreign externs/exports and unsupported
 tooling. Source digest assertions are producer-owned; concurrent source edits
 are not an atomic filesystem snapshot. This is not full Cargo parity.
+
+## Shared workspace resolution
+
+Run from the workspace root, or point `--manifest-path` at its Honk.toml.
+Place the qualified compiler revision in the workspace root's `[toolchain]`
+table. Members inherit it by omitting their pin or can specify the same revision.
+
+```sh
+honk fetch --isolated --workspace
+honk check --isolated --workspace --frozen
+honk run --isolated -p app --frozen
+honk build --isolated --workspace --frozen
+```
+
+Resolution includes the root package, if present, and every declared member.
+Even when `-p` selects a single target, all members contribute production
+constraints to one solve and share the root's version-2 Honk.lock. The lock
+records sorted member paths. Each compiler invocation receives only the
+selected target's reachable dependencies. From a member directory, use the
+workspace's manifest path to select this shared mode.
+
+A virtual workspace defaults to all members. A workspace with a root package
+defaults to that package for compilation. `--workspace` checks all packages or
+builds all binary packages. Run requires one binary target. Member outputs live
+under `target/isolated/members/<graph-id>/` in the workspace, with IDs assigned in
+member path order. The root package uses `target/isolated/root/`. Member
+selection does not limit fetch or update.
 
 ## Multi-instance locks
 
@@ -69,9 +96,8 @@ isolated operations, while the existing Honk cache lock excludes concurrent
 legacy writers using the same HONK_HOME. Persistent locks use the existing atomic
 write helper.
 
-This is a per-project path/Git/registry graph lock, not yet a workspace-wide
-shared lock. Canonical lock bytes are regenerated from local manifests; arbitrary
-manual formatting changes require an unlocked canonical rewrite. As in Cargo,
+Canonical lock bytes are regenerated from local manifests. Arbitrary manual
+formatting changes require an unlocked canonical rewrite. As in Cargo,
 a successful dependency resolution may update the lock even if a subsequent
 compiler/typecheck fails.
 
@@ -171,8 +197,8 @@ compatibility allowance does not relax native/library-ABI gates or introduce
 an inferred minimum-compiler policy.
 
 Registry names/requirements retain the alpha protocol's current grammar. Native
-packages, sourced imports, features, registry authentication/publishing and shared
-workspace resolution remain unfinished. The test suite includes an independent
+packages, sourced imports, features, and registry authentication/publishing
+remain unfinished. The test suite includes an independent
 exhaustive oracle over 64 seeded small acyclic graphs, plus real JIT/native,
 cycle/backtracking, yanked-lock, archive-integrity and mixed Git/registry cases.
 

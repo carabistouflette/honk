@@ -32,8 +32,8 @@ class Isolated(unittest.TestCase):
         (path / 'entry.goose').write_text(code)
         return path
 
-    def run_honk(self, command='run', ok=True, extra=()):
-        result = subprocess.run([str(HONK), command, '--isolated', *extra], cwd=self.root / 'app',
+    def run_honk(self, command='run', ok=True, extra=(), cwd=None):
+        result = subprocess.run([str(HONK), command, '--isolated', *extra], cwd=cwd or self.root / 'app',
                                 env=self.env, capture_output=True, text=True, timeout=90)
         self.assertEqual(result.returncode == 0, ok, result.stdout + result.stderr)
         return result
@@ -645,6 +645,68 @@ class Isolated(unittest.TestCase):
         before = list(self.registry.requests), self.network_commands()
         self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '42')
         self.assertEqual((self.registry.requests, self.network_commands()), before)
+
+    def workspace(self):
+        for member in ('a', 'b'):
+            self.package(member, 'import dep; import std; fn main() { print(dep::value()); }')
+        manifest = self.root / 'Honk.toml'
+        manifest.write_text(f'[workspace]\nmembers = ["b", "a"]\n[toolchain]\nrevision = "{REVISION}"\n')
+        return manifest
+
+    def test_workspace_resolves_all_members_and_compiles_selected_closure(self):
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0', code='namespace answer; fn value() -> i64 { 10 }')
+        self.registry_release('answer', '1.1.0', code='namespace answer; fn value() -> i64 { 11 }')
+        manifest = self.workspace()
+        self.registry_dependency('a', 'dep', 'answer', '^1.0.0')
+        self.registry_dependency('b', 'dep', 'answer', '=1.0.0')
+        self.assertEqual(self.run_honk(extra=('-p', 'a'), cwd=self.root).stdout.strip(), '10')
+        lock = self.root / 'Honk.lock'
+        original = lock.read_bytes()
+        data = tomllib.loads(original.decode())
+        self.assertEqual(data['members'], ['a', 'b'])
+        self.assertEqual({e['owner'] for e in data['binding']}, {'a', 'b'})
+        graph = json.loads((self.root / 'target/isolated/members/0/graph.json').read_text())
+        self.assertEqual({n['source']['name'] for n in graph['nodes']}, {'a', 'answer'})
+        self.assertFalse(any('answer-1.1.0.tar.gz' in p for p, _ in self.registry.requests))
+        self.assertFalse(any((self.root / m / 'Honk.lock').exists() for m in ('a', 'b')))
+        before = list(self.registry.requests)
+        manifest.write_text(manifest.read_text().replace('"b", "a"', '"a", "b"'))
+        self.run_honk('build', extra=('--workspace', '--frozen'), cwd=self.root)
+        for index, member in enumerate(('a', 'b')):
+            binary = self.root / f'target/isolated/members/{index}/{member}'
+            self.assertEqual(subprocess.check_output([str(binary)], text=True).strip(), '10')
+        self.assertEqual(lock.read_bytes(), original)
+        self.assertEqual(self.registry.requests, before)
+
+    def test_workspace_conflict_preserves_lock_even_when_selecting_one_member(self):
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0')
+        self.registry_release('answer', '1.1.0')
+        self.workspace()
+        self.registry_dependency('a', 'dep', 'answer', '=1.0.0')
+        self.registry_dependency('b', 'dep', 'answer', '=1.0.0')
+        self.run_honk('fetch', cwd=self.root)
+        lock = self.root / 'Honk.lock'
+        original = lock.read_bytes()
+        other = self.root / 'b/Honk.toml'
+        other.write_text(other.read_text().replace('=1.0.0', '=1.1.0'))
+        before = list(self.registry.requests)
+        self.run_honk('fetch', ok=False, extra=('-p', 'a', '--frozen'), cwd=self.root)
+        self.assertEqual(self.registry.requests, before)
+        result = self.run_honk('check', ok=False, extra=('-p', 'a'), cwd=self.root)
+        self.assertIn('no compatible scoped registry graph', result.stderr)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_workspace_check_library_and_member_manifest_selection(self):
+        self.workspace()
+        manifest = self.root / 'b/Honk.toml'
+        manifest.write_text(manifest.read_text().replace('name = "b"', 'name = "b"\nkind = "lib"'))
+        (self.root / 'b/entry.goose').write_text('namespace library; fn value() -> i64 { 1 }')
+        (self.root / 'a/entry.goose').write_text('fn main() {}')
+        self.run_honk('check', extra=('--workspace',), cwd=self.root)
+        self.run_honk('check', extra=('--manifest-path', '../Honk.toml', '-p', 'b', '--frozen'), cwd=self.root / 'b')
+        self.assertIn('single target', self.run_honk(ok=False, cwd=self.root).stderr)
 
     def test_wrong_nominal_version_rejected(self):
         self.diamond()
