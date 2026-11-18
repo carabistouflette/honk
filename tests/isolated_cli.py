@@ -708,6 +708,57 @@ class Isolated(unittest.TestCase):
         self.run_honk('check', extra=('--manifest-path', '../Honk.toml', '-p', 'b', '--frozen'), cwd=self.root / 'b')
         self.assertIn('single target', self.run_honk(ok=False, cwd=self.root).stderr)
 
+    def test_features_activate_transitive_optional_dependencies_and_lock_selection(self):
+        app = self.package('app', 'import client; import std; fn main() { print(client::value()); }')
+        client = self.package('client', 'namespace client; import helper; fn value() -> i64 { helper::value() }')
+        self.package('helper', 'namespace helper; fn value() -> i64 { 17 }')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('client = {path="../client", optional=true}\n[features]\nfull=["io"]\nio=["dep:client", "full"]\n')
+        with (client / 'Honk.toml').open('a') as f:
+            f.write('helper = {path="../helper", optional=true}\n[features]\ndefault=["dep:helper"]\n')
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        self.assertNotIn('[[binding]]', lock.read_text())
+        before = lock.read_bytes()
+        self.assertIn('out of date', self.run_honk('fetch', ok=False, extra=('--features', 'full', '--frozen')).stderr)
+        self.assertEqual(lock.read_bytes(), before)
+        self.assertEqual(self.run_honk(extra=('--features', 'full')).stdout.strip(), '17')
+        data = tomllib.loads(lock.read_text())
+        self.assertEqual({(f['owner'], f['name']) for f in data['feature']},
+                         {('.', 'full'), ('.', 'io'), ('../client', 'default')})
+        before = lock.read_bytes()
+        self.assertEqual(self.run_honk(extra=('--features', 'io,full', '--frozen')).stdout.strip(), '17')
+        self.assertEqual(lock.read_bytes(), before)
+
+    def test_features_default_can_disable_optional_registry_requests(self):
+        self.registry_fixture()
+        self.registry_release('answer', '1.0.0')
+        app = self.package('app', 'fn main() {}')
+        (app / 'Honk.toml').write_text((app / 'Honk.toml').read_text()
+            + f'dep={{package="answer", version="^1.0.0", registry="{self.registry.url}/index", optional=true}}\n'
+            + '[features]\ndefault=["dep:dep"]\n')
+        self.run_honk('fetch', extra=('--no-default-features',))
+        self.assertEqual(self.registry.requests, [])
+        self.run_honk('fetch')
+        self.assertTrue(any(path.endswith('.tar.gz') for path, _ in self.registry.requests))
+        before = list(self.registry.requests)
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual(self.registry.requests, before)
+
+    def test_invalid_features_preserve_lock_and_fail_closed(self):
+        app = self.package('app', 'fn main() {}')
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        before = lock.read_bytes()
+        self.assertIn('unknown feature missing', self.run_honk('fetch', ok=False, extra=('--features', 'missing')).stderr)
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[features]\ndefault=["dep:missing"]\n')
+        self.assertIn('unknown optional dependency', self.run_honk('fetch', ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), before)
+        normal = subprocess.run([str(HONK), 'fetch'], cwd=app, env=self.env, capture_output=True, text=True)
+        self.assertNotEqual(normal.returncode, 0)
+        self.assertIn('features require an isolated package manifest', normal.stderr)
+
     def test_wrong_nominal_version_rejected(self):
         self.diamond()
         p = self.root / 'app'

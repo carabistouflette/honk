@@ -85,7 +85,7 @@ fn node(g: Graph&, index: i64) -> Node& {
     for n, i in g.nodes { if i == index { return n; } }
     abort("invalid internal dependency index");
 }
-fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:], registry: nest::Resolver&) {
+fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:], registry: nest::Resolver&, isolated: bool = false) {
     manifest::validate_dependency(dep);
     // Discover the complete Git/path graph before selecting any registry version.
     // Keep the original owner so deferred edges and dev reachability remain exact.
@@ -187,7 +187,7 @@ fn add(g: Graph&, dep: manifest::Dependency&, base: u8[:], registry: nest::Resol
     }
     var entry = str(dep.name, ".goose");
     if file_exists(str(directory, "/Honk.toml")) {
-        var child = manifest::Project { .. }; manifest::load(directory, child);
+        var child = manifest::Project { .. }; manifest::load(directory, child, isolated);
         platform::require(child.kind == "lib", "dependency Honk.toml must describe a library"); entry = str(child.entry);
         if dep.requirement.len > 0 && dep.registry.len == 0 {
             let selected_version, selected_error = version_policy::parse_tag(selected_ref);

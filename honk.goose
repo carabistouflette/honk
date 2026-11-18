@@ -51,7 +51,7 @@ fn cli_main() {
     if argv.len < 2 || argv[1] == "help" || argv[1] == "--help" || argv[1] == "-h" { usage(); return; }
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
-    let spec = [argparse::flag("isolated"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
+    let spec = [argparse::flag("isolated"), argparse::flag("no-default-features"), argparse::option("features"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
                 argparse::option("registry"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
@@ -117,18 +117,21 @@ fn cli_main() {
 fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filter: build::TargetFilter&) {
     var p = manifest::Project { .. };
     let root = select_root(options);
-    manifest::load(root, p);
+    manifest::load(root, p, options.has("isolated"));
     platform::require(options.positionals.len == 0 || cmd == "add" || cmd == "remove", "unexpected positional argument (program arguments follow --)");
     if options.has("isolated") {
         for entry in options.entries {
-            platform::require(entry.name == "isolated" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file" || entry.name == "locked" || entry.name == "frozen" || entry.name == "offline" || entry.name == "workspace" || entry.name == "package", "option is not supported in isolated mode");
+            platform::require(entry.name == "isolated" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file" || entry.name == "locked" || entry.name == "frozen" || entry.name == "offline" || entry.name == "workspace" || entry.name == "package" || entry.name == "features" || entry.name == "no-default-features", "option is not supported in isolated mode");
         }
         platform::require(!options.has("workspace") || p.members.len > 0, "manifest has no workspace members");
         platform::require(!(options.has("workspace") && options.has("package")), "select either --workspace or -p");
         var selected = str(p.root);
-        if options.has("package") { selected = selected_member(p, options.get("package")); }
+        if options.has("package") { selected = selected_member(p, options.get("package"), true); }
         else if options.has("workspace") || p.name.len == 0 { selected.clear(); }
-        isolated::execute(p, selected, cmd, program_args, options.has("release"), options.has("locked") || options.has("frozen"), options.has("offline") || options.has("frozen")); return;
+        var features: u8[][>..] = [];
+        for entry in options.entries { if entry.name == "features" { isolated::parse_features(features, entry.value); } }
+        platform::require((features.len == 0 && !options.has("no-default-features")) || selected.len > 0, "select one package with -p to override workspace features");
+        isolated::execute(p, selected, features, options.has("no-default-features"), cmd, program_args, options.has("release"), options.has("locked") || options.has("frozen"), options.has("offline") || options.has("frozen")); return;
     }
     if cmd == "metadata" { emit_metadata(p, options); return; }
     var known = false;
@@ -178,7 +181,7 @@ fn emit_metadata(p: manifest::Project&, options: const argparse::Result&) {
     platform::require(selected > 0, "no workspace package matched"); write_stdout("]\n");
 }
 
-fn selected_member(p: manifest::Project&, selector: u8[:]) -> u8[>..] {
+fn selected_member(p: manifest::Project&, selector: u8[:], isolated: bool = false) -> u8[>..] {
     var at = selector.len; for c, i in selector { if c == '@' { at = i; break; } }
     let name = selector[..at]; platform::require(manifest::package_name(name), "invalid workspace package selector");
     let versioned = at < selector.len;
@@ -190,7 +193,7 @@ fn selected_member(p: manifest::Project&, selector: u8[:]) -> u8[>..] {
     var selected: u8[>..] = [];
     for member in p.members {
         platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
-        var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child);
+        var child = manifest::Project { .. }; manifest::load(str(p.root, "/", member), child, isolated);
         platform::require(child.members.len == 0, "nested workspaces are not supported");
         if child.name != name { continue; }
         if versioned {
@@ -222,6 +225,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
     for entry in options.entries {
         let name = entry.name; var allowed = false;
         if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
+        else if name == "features" || name == "no-default-features" { allowed = options.has("isolated") && !watching; }
         else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check" || cmd == "fetch" || cmd == "update"); }
         else if name == "diagnostics" { allowed = cmd == "check" && !watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
