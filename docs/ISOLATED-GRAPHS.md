@@ -102,11 +102,24 @@ materialization, including registry requests. The compiler sees the resulting
 bindings. Source code that unconditionally imports an optional dependency must
 be built with that dependency enabled.
 
-This first feature model supports local groups and optional dependencies.
-Dependency-level feature requests, conditional compilation, development
-dependencies, and feature declarations in published registry archives are
-future work. A local or Git package can already gate a registry dependency
-behind one of its own feature groups.
+A production dependency from a path or Git repository can request features
+on its target:
+
+```toml
+[dependencies]
+codec = { path = "../codec", features = ["json", "pretty-print"] }
+```
+
+Honk activates the union of requests for the same resolved instance across
+the workspace. Late requests can enable additional dependencies before
+registry resolution and lock writing. Different Git revisions keep independent
+selections. A requested name must exist in the target manifest. Requests on
+optional dependencies take effect when the dependency is activated.
+
+Dependency edges add to the target's defaults. Per-edge default opt-out,
+feature forwarding syntax, conditional compilation, development dependencies,
+and feature declarations in published registry archives remain future work.
+A local or Git package can gate a registry dependency behind its own groups.
 
 ## Multi-instance locks
 

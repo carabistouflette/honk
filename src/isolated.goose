@@ -279,17 +279,37 @@ fn parse_features(out: u8[][>..]&, value: u8[:]) {
         out.push(str(name)); start = end + 1;
     }
 }
-fn activate_features(graph: Graph&, owner: manifest::Project&, key: u8[:], requested: u8[][>..]&, defaults: bool, enabled: bool[256]&) {
-    var active:  bool[256] = [false; 256];
-    var pending: i64[>..]  = [];
+// One state per graph instance. Work only grows, including across late requests.
+struct Activation {
+    requested: bool[256] = [false; 256],
+    active:    bool[256] = [false; 256],
+    emitted:   bool[256] = [false; 256],
+    enabled:   bool[256] = [false; 256],
+    dirty:     bool      = true,
+}
+fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u8[:]) {
+    if dep.features.len == 0 { return; }
+    var target = manifest::Project { .. };
+    manifest::load(directory, target, true);
+    for name in dep.features {
+        let index = manifest::feature_index(target, name);
+        platform::require(index >= 0, str("unknown feature ", name, " in ", target.name, " requested through ", dep.name));
+        if !state.requested[index] { state.requested[index] = true; state.dirty = true; }
+    }
+}
+fn activate_features(graph: Graph&, owner: manifest::Project&, key: u8[:], requested: u8[][>..]&, defaults: bool, state: Activation&) {
+    var pending: i64[>..] = [];
     if defaults {
         let index = manifest::feature_index(owner, "default");
-        if index >= 0 { active[index] = true; pending.push(index); }
+        if index >= 0 { state.requested[index] = true; }
     }
     for name in requested {
         let index = manifest::feature_index(owner, name);
         platform::require(index >= 0, str("unknown feature ", name, " in ", owner.name));
-        if !active[index] { active[index] = true; pending.push(index); }
+        state.requested[index] = true;
+    }
+    for i in owner.features.len {
+        if state.requested[i] && !state.active[i] { state.active[i] = true; pending.push(i); }
     }
     var cursor = 0;
     while cursor < pending.len {
@@ -298,10 +318,10 @@ fn activate_features(graph: Graph&, owner: manifest::Project&, key: u8[:], reque
             if i != index { continue; }
             for item in feature.items {
                 if item.len > 4 && item[..4] == "dep:" {
-                    for dep, j in owner.dependencies { if dep.name == item[4..] { enabled[j] = true; break; } }
+                    for dep, j in owner.dependencies { if dep.name == item[4..] { state.enabled[j] = true; break; } }
                 } else {
                     let other = manifest::feature_index(owner, item);
-                    if !active[other] { active[other] = true; pending.push(other); }
+                    if !state.active[other] { state.active[other] = true; pending.push(other); }
                 }
             }
             var row = str("\n[[feature]]");
@@ -347,17 +367,21 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         if command != "build" || target.kind == "bin" { compile_count++; }
     }
     platform::require(resolve_only || compile_count > 0, "no isolated compilation target matched");
+    var states: Activation[256] = [Activation { .. }; 256];
     var cursor = 0;
     while cursor < graph.packages.len {
+        if !states[cursor].dirty { cursor++; continue; }
+        states[cursor].dirty = false;
+        var next = cursor + 1;
         var directory: u8[>..] = []; var origin: u8[>..] = []; var commit: u8[>..] = []; var git_root: u8[>..] = []; var owner_key: u8[>..] = [];
         for pkg, i in graph.packages { if i == cursor { directory = str(pkg.directory); origin = str(pkg.git); commit = str(pkg.commit); git_root = str(pkg.git_root); owner_key = package_key(pkg, p.root); } }
         var owner = manifest::Project { .. }; manifest::load(directory, owner, true);
-        var enabled: bool[256] = [false; 256];
-        var empty:   u8[][>..] = [];
-        if directory == selected { activate_features(graph, owner, owner_key, features, !no_defaults, enabled); }
-        else { activate_features(graph, owner, owner_key, empty, true, enabled); }
+        var empty: u8[][>..] = [];
+        if directory == selected { activate_features(graph, owner, owner_key, features, !no_defaults, states[cursor]); }
+        else { activate_features(graph, owner, owner_key, empty, true, states[cursor]); }
         for dep, index in owner.dependencies {
-            if dep.dev || (dep.optional && !enabled[index]) { continue; }
+            if dep.dev || states[cursor].emitted[index] || (dep.optional && !states[cursor].enabled[index]) { continue; }
+            states[cursor].emitted[index] = true;
             if dep.registry.len > 0 {
                 platform::require(graph.requests.len < 65536, "registry request limit exceeded");
                 graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement) }); continue;
@@ -383,6 +407,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
                 var registry = nest::Resolver { .. }; deps::add(materialized, dep, directory, registry, true);
                 for node in materialized.nodes {
                     target = visit(graph, node.directory, p.revision, dep.git, node.commit, node.directory);
+                    request_features(states[target], dep, node.directory);
                     graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, git: str(dep.git), rev: str(dep.rev), requirement: str(dep.requirement), selected_ref: str(node.rev), commit: str(node.commit) });
                 }
             } else {
@@ -390,10 +415,12 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
                 let path = platform::absolute(candidate);
                 if origin.len > 0 { platform::require(path == git_root || (path.len > git_root.len && path[..git_root.len] == git_root && path[git_root.len] == '/'), "Git path dependency escapes its checkout"); }
                 target = visit(graph, path, p.revision, origin, commit, git_root);
+                request_features(states[target], dep, path);
                 graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, .. });
             }
+            if states[target].dirty && target < next { next = target; }
         }
-        cursor++;
+        cursor = next;
     }
     apply_registry(graph, p, cache, locked, offline, command == "update");
     var edges: task::Edge[>..] = []; for binding in graph.bindings { edges.push(task::Edge { before: binding.owner, after: binding.target }); }
