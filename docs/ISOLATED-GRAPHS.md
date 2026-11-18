@@ -71,6 +71,43 @@ under `target/isolated/members/<graph-id>/` in the workspace, with IDs assigned 
 member path order. The root package uses `target/isolated/root/`. Member
 selection does not limit fetch or update.
 
+## Features and optional dependencies
+
+Isolated path and Git packages can define named groups of optional production
+dependencies. A group can also include other groups in the same package.
+
+```toml
+[dependencies]
+json = { path = "../json-codec", optional = true }
+
+[features]
+default = []
+export-data = ["dep:json"]
+full = ["export-data"]
+```
+
+Run `honk fetch --isolated --features full` to resolve this configuration.
+Use the same effective feature set when replaying the lock, for example
+`honk build --isolated --features full --frozen`. Feature selection accepts
+comma-separated names. The `default` group is activated for each package
+unless `--no-default-features` disables it for the selected package.
+On workspaces, use `-p` to override a member's selection while the other
+members keep their defaults. Repeated and cyclic feature references terminate
+once each reached feature has been activated.
+
+The version-2 lock records active feature names and bindings. A feature
+selection that changes the effective graph or enabled feature names requires
+an unlocked update. A disabled dependency is excluded from resolution and
+materialization, including registry requests. The compiler sees the resulting
+bindings. Source code that unconditionally imports an optional dependency must
+be built with that dependency enabled.
+
+This first feature model supports local groups and optional dependencies.
+Dependency-level feature requests, conditional compilation, development
+dependencies, and feature declarations in published registry archives are
+future work. A local or Git package can already gate a registry dependency
+behind one of its own feature groups.
+
 ## Multi-instance locks
 
 Isolated mode writes version 2 of `Honk.lock`: `mode = "isolated"`, the exact
@@ -197,7 +234,7 @@ compatibility allowance does not relax native/library-ABI gates or introduce
 an inferred minimum-compiler policy.
 
 Registry names/requirements retain the alpha protocol's current grammar. Native
-packages, sourced imports, features, and registry authentication/publishing
+packages, sourced imports, and registry authentication/publishing
 remain unfinished. The test suite includes an independent
 exhaustive oracle over 64 seeded small acyclic graphs, plus real JIT/native,
 cycle/backtracking, yanked-lock, archive-integrity and mixed Git/registry cases.
