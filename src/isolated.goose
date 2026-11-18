@@ -20,7 +20,8 @@ import .build_cache;
 struct Binding { owner: i64, alias: u8[], target: i64, git: u8[] = [], rev: u8[] = [], requirement: u8[] = [], selected_ref: u8[] = [], commit: u8[] = [], registry: u8[] = [], package: u8[] = [], record: u8[] = [] }
 struct Pin { owner: u8[], alias: u8[], git: u8[], rev: u8[], requirement: u8[], selected_ref: u8[], commit: u8[] }
 struct Package { directory: u8[], name: u8[], version: u8[], entry: u8[], ns: u8[], digest: u8[], git: u8[] = [], commit: u8[] = [], git_root: u8[] = [], subdir: u8[] = [], registry: u8[] = [], archive_sha: u8[] = [] }
-root struct Graph { packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], feature_bytes: i64 = 0 }
+struct ActiveFeature { owner: i64, name: u8[] }
+root struct Graph { packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
 fn field(state: crypto::Sha256&, value: u8[:]) {
     platform::require(build_cache::feed(state, value), "cannot hash package snapshot");
 }
@@ -79,7 +80,7 @@ fn visit(g: Graph&, directory: u8[:], revision: u8[:], git: u8[:] = "", commit: 
     g.packages.push(Package { directory: str(root), name: str(p.name), version: str(p.version), entry: str(p.entry), ns: namespace_of(text), digest: snapshot(p), git: str(git), commit: str(commit), git_root: str(git_root), subdir: if git.len > 0 && root != git_root { str(root[git_root.len + 1..]) } else { str("") }, registry: str(registry), archive_sha: str(archive_sha), .. });
     return id;
 }
-fn render(g: Graph&, revision: u8[:], root_id: i64) -> u8[>..] {
+fn render(g: Graph&, revision: u8[:], root_id: i64, graph_features: bool) -> u8[>..] {
     var out = str("{\"schema\":\"goose-package-graph-v1\",\"compiler_revision\":"); manifest::quoted(out, revision);
     out.append(",\"root\":"); manifest::quoted(out, str(root_id)); out.append(",\"nodes\":[");
     var reachable: bool[256] = [false; 256]; reachable[root_id] = true;
@@ -101,7 +102,18 @@ fn render(g: Graph&, revision: u8[:], root_id: i64) -> u8[>..] {
         out.append(",\"revision\":"); manifest::quoted(out, source_revision);
         out.append(",\"name\":"); manifest::quoted(out, pkg.name); out.append(",\"subdir\":"); manifest::quoted(out, pkg.subdir); out.append("},\"directory\":"); manifest::quoted(out, pkg.directory);
         out.append(",\"entry\":"); manifest::quoted(out, pkg.entry); out.append(",\"entry_namespace\":"); manifest::quoted(out, pkg.ns);
-        out.append(",\"config\":{},\"bindings\":{"); var first = true;
+        out.append(",\"config\":{");
+        if graph_features {
+            var names: (const u8[:])[>..] = [];
+            for feature in g.active_features { if feature.owner == i { names.push(feature.name); } }
+            if names.len > 0 {
+                sort(names[..]) { a, b => before(a, b) }
+                out.append("\"features\":[");
+                for name, j in names { if j > 0 { out.push(','); } manifest::quoted(out, name); }
+                out.push(']');
+            }
+        }
+        out.append("},\"bindings\":{"); var first = true;
         for binding in g.bindings { if binding.owner == i { if !first { out.push(','); } first = false; manifest::quoted(out, binding.alias); out.push(':'); manifest::quoted(out, str(binding.target)); } }
         out.append("}}");
     }
@@ -297,7 +309,7 @@ fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u
         if !state.requested[index] { state.requested[index] = true; state.dirty = true; }
     }
 }
-fn activate_features(graph: Graph&, owner: manifest::Project&, key: u8[:], requested: u8[][>..]&, defaults: bool, state: Activation&) {
+fn activate_features(graph: Graph&, owner: manifest::Project&, owner_id: i64, key: u8[:], requested: u8[][>..]&, defaults: bool, state: Activation&) {
     var pending: i64[>..] = [];
     if defaults {
         let index = manifest::feature_index(owner, "default");
@@ -329,13 +341,15 @@ fn activate_features(graph: Graph&, owner: manifest::Project&, key: u8[:], reque
             graph.feature_bytes += row.len;
             platform::require(graph.feature_bytes <= manifest::MAX_INPUT_BYTES, "isolated feature lock exceeds 1 MiB");
             graph.feature_rows.push(copy(row));
+            graph.active_features.push(ActiveFeature { owner: owner_id, name: str(feature.name) });
             break;
         }
     }
 }
+const FEATURE_COMPILER = "eeab7eebcae92d9a04b6caf43c321da560b8d269";
 fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
-    platform::require(p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
+    platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
     let probe: const u8[:][] = [compiler, "version", "--json"];
     let report, status = platform::command(probe, p.root, true);
@@ -346,6 +360,8 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     let revision, valid = json::as_string(json::member(root, "compiler_revision"));
     let schema, supported = json::as_string(json::member(root, "package_graph"));
     platform::require(valid && supported && revision == p.revision && schema == "goose-package-graph-v1", "compiler graph capability or full revision mismatch");
+    let graph_features, feature_capability = json::as_bool(json::member(root, "package_graph_features"));
+    platform::require(p.revision != FEATURE_COMPILER || (feature_capability && graph_features), "compiler does not advertise package graph features");
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create graph lock directory");
     let project_lock = platform::lock(str(p.root, "/.honk/isolated.lock")); platform::require(project_lock >= 0, "isolated project is locked by another process");
@@ -377,8 +393,8 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         for pkg, i in graph.packages { if i == cursor { directory = str(pkg.directory); origin = str(pkg.git); commit = str(pkg.commit); git_root = str(pkg.git_root); owner_key = package_key(pkg, p.root); } }
         var owner = manifest::Project { .. }; manifest::load(directory, owner, true);
         var empty: u8[][>..] = [];
-        if directory == selected { activate_features(graph, owner, owner_key, features, !no_defaults, states[cursor]); }
-        else { activate_features(graph, owner, owner_key, empty, true, states[cursor]); }
+        if directory == selected { activate_features(graph, owner, cursor, owner_key, features, !no_defaults, states[cursor]); }
+        else { activate_features(graph, owner, cursor, owner_key, empty, true, states[cursor]); }
         for dep, index in owner.dependencies {
             if dep.dev || states[cursor].emitted[index] || (dep.optional && !states[cursor].enabled[index]) { continue; }
             states[cursor].emitted[index] = true;
@@ -429,7 +445,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     platform::require(graph_error.kind == task::ErrorKind.None, "isolated dependency cycle or graph limit exceeded");
     // Validate every selected graph before changing the shared lock.
     var documents: u8[][>..] = [];
-    for target in targets { documents.push(render(graph, p.revision, target.id)); }
+    for target in targets { documents.push(render(graph, p.revision, target.id, feature_capability && graph_features)); }
     lock_graph(graph, p, locked);
     for target, i in targets {
         if command == "build" && target.kind != "bin" { continue; }

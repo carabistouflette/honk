@@ -27,7 +27,7 @@ jobs:
         if: matrix.sanitizer_cc == 'clang'
         with:
           repository: carabistouflette/goose
-          ref: 0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63
+          ref: eeab7eebcae92d9a04b6caf43c321da560b8d269
           path: .build/graph-compiler
           persist-credentials: false
       - run: cmake -S .build/graph-compiler -B .build/graph-compiler/build -DCMAKE_BUILD_TYPE=Debug -DGOOSE_BUILTIN_LIBS=none

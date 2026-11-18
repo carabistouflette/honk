@@ -11,7 +11,8 @@ import unittest
 
 HONK = Path(os.environ.get('HONK', '.build/honk')).resolve()
 GOOSE = Path(os.environ['GRAPH_GOOSE']).resolve()
-REVISION = json.loads(subprocess.check_output([str(GOOSE), 'version', '--json']))['compiler_revision']
+COMPILER = json.loads(subprocess.check_output([str(GOOSE), 'version', '--json']))
+REVISION = COMPILER['compiler_revision']
 
 
 class Isolated(unittest.TestCase):
@@ -809,6 +810,19 @@ class Isolated(unittest.TestCase):
         self.run_honk('check', extra=('--frozen',))
         self.assertEqual(self.network_commands(), network)
         self.assertEqual(lock.read_bytes(), before)
+
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_feature_blocks_gate_optional_import_end_to_end(self):
+        self.package('extra', 'namespace extra; fn value() -> i64 { 9 }')
+        app = self.package('app', 'import std; if feature("io") { import extra; '
+                           'fn main() { print(extra::value()); } } else { fn main() { print(0); } }')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('extra={path="../extra",optional=true}\n[features]\nio=["dep:extra"]\n')
+        self.assertEqual(self.run_honk().stdout.strip(), '0')
+        self.assertEqual(self.run_honk(extra=('--features', 'io')).stdout.strip(), '9')
+        self.run_honk('build', extra=('--frozen', '--features', 'io'))
+        binary = app / 'target/isolated/app'
+        self.assertEqual(subprocess.check_output([str(binary)], text=True).strip(), '9')
 
     def test_wrong_nominal_version_rejected(self):
         self.diamond()
