@@ -78,11 +78,11 @@ dependencies. A group can also include other groups in the same package.
 
 ```toml
 [dependencies]
-json = { path = "../json-codec", optional = true }
+json_codec = { path = "../json-codec", optional = true }
 
 [features]
 default = []
-export-data = ["dep:json"]
+export-data = ["dep:json_codec"]
 full = ["export-data"]
 ```
 
@@ -117,9 +117,29 @@ selections. A requested name must exist in the target manifest. Requests on
 optional dependencies take effect when the dependency is activated.
 
 Dependency edges add to the target's defaults. Per-edge default opt-out,
-feature forwarding syntax, conditional compilation, development dependencies,
+feature forwarding syntax, development dependencies,
 and feature declarations in published registry archives remain future work.
 A local or Git package can gate a registry dependency behind its own groups.
+
+### Conditional declarations
+
+Set the workspace or root project's compiler revision to
+`eeab7eebcae92d9a04b6caf43c321da560b8d269` and use a Goose binary built from that revision.
+Honk sends each instance's active feature names to the compiler along with
+its dependency bindings. Make optional imports conditional with top-level blocks:
+
+```goose
+if feature("export-data") {
+    import json_codec;
+    fn export_format() -> i64 { json_codec::format_id() }
+} else {
+    fn export_format() -> i64 { 0 }
+}
+```
+
+Use an unconditional namespace directive if the file has one. Previous supported
+compiler pins still work for dependency selection alone. Graph-aware formatting
+and editing tools are future work.
 
 ## Multi-instance locks
 
