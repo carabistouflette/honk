@@ -759,6 +759,57 @@ class Isolated(unittest.TestCase):
         self.assertNotEqual(normal.returncode, 0)
         self.assertIn('features require an isolated package manifest', normal.stderr)
 
+    def test_dependency_features_unify_late_requests_and_replay_frozen(self):
+        app = self.package('app', 'fn main() {}')
+        shared = self.package('shared', 'namespace shared; fn value() -> i64 { 1 }')
+        bridge = self.package('bridge', 'namespace bridge; fn value() -> i64 { 2 }')
+        self.package('first', 'namespace first; fn value() -> i64 { 3 }')
+        self.package('second', 'namespace second; fn value() -> i64 { 4 }')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('shared={path="../shared",features=["one"]}\nbridge={path="../bridge"}\n')
+        with (bridge / 'Honk.toml').open('a') as f:
+            f.write('shared={path="../shared",features=["two","one"]}\n')
+        with (shared / 'Honk.toml').open('a') as f:
+            f.write('first={path="../first",optional=true}\nsecond={path="../second",optional=true}\n'
+                    '[features]\none=["dep:first"]\ntwo=["dep:second"]\n')
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        before = lock.read_bytes()
+        data = tomllib.loads(before.decode())
+        self.assertEqual([(f['owner'], f['name']) for f in data['feature']],
+                         [('../shared', 'one'), ('../shared', 'two')])
+        self.assertEqual({b['alias'] for b in data['binding'] if b['owner'] == '../shared'},
+                         {'first', 'second'})
+        self.assertEqual(len(data['binding']), 5)
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual(lock.read_bytes(), before)
+        manifest = bridge / 'Honk.toml'
+        manifest.write_text(manifest.read_text().replace('"two","one"', '"missing"'))
+        result = self.run_honk('fetch', ok=False)
+        self.assertIn('unknown feature missing in shared requested through shared', result.stderr)
+        self.assertEqual(lock.read_bytes(), before)
+
+    def test_git_dependency_feature_selection_is_per_commit(self):
+        old, _ = self.git_fixture()
+        with (self.remote / 'Honk.toml').open('a') as f:
+            f.write('[features]\nextra=[]\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'declare feature')
+        new = self.git('rev-parse', 'HEAD')
+        app = self.package('app', 'fn main() {}')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write(f'old={{git="https://test.invalid/mathx.git",rev="{old}"}}\n'
+                    f'new={{git="https://test.invalid/mathx.git",rev="{new}",features=["extra"]}}\n')
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        before = lock.read_bytes()
+        self.assertEqual(tomllib.loads(before.decode())['feature'],
+                         [{'owner': f'git:https://test.invalid/mathx.git@{new}', 'name': 'extra'}])
+        network = self.network_commands()
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual(self.network_commands(), network)
+        self.assertEqual(lock.read_bytes(), before)
+
     def test_wrong_nominal_version_rejected(self):
         self.diamond()
         p = self.root / 'app'
