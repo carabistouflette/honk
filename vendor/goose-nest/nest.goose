@@ -9,10 +9,11 @@ const VERSION = "0.1.0-alpha.1";
 const MAX_PACKAGES = 256;
 const MAX_DECISIONS = 100000;
 struct Request { package: u8[], requirement: u8[], registry: u8[] }
-struct Dependency { alias: u8[], package: u8[], requirement: u8[] }
+struct Dependency { alias: u8[], package: u8[], requirement: u8[], optional: bool = false, features: u8[][] = [] }
+struct Feature { name: u8[], items: u8[][] }
 struct Record {
     package:      u8[], version: u8[], registry: u8[], url: u8[], sha256: u8[], entry: u8[],
-    dependencies: Dependency[], yanked: bool = false,
+    dependencies: Dependency[], yanked: bool = false, features: Feature[] = [],
 }
 struct Catalog { package: u8[], registry: u8[] }
 root struct Resolver {
@@ -70,6 +71,50 @@ fn keys(doc: toml::Document&, id: i64, allowed: const u8[:][:]) -> bool {
     while child >= 0 { var known = false; for key in allowed { if key == toml::key(doc, child) { known = true; } } if !known { return false; } child = doc.nodes[child].next; }
     return true;
 }
+fn feature_name(name: const u8[:]) -> bool {
+    if name.len == 0 || name.len > 64 || name[0] < 'a' || name[0] > 'z' { return false; }
+    for c in name { if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') { return false; } }
+    return true;
+}
+fn has_feature_metadata(record: const Record&) -> bool {
+    if record.features.len > 0 { return true; }
+    for dep in record.dependencies { if dep.optional || dep.features.len > 0 { return true; } }
+    return false;
+}
+fn read_feature_array(doc: toml::Document&, array: i64, out: u8[][>..]&) -> bool {
+    if array < 0 { return true; }
+    if doc.nodes[array].kind != toml::Kind.Array || doc.nodes[array].count > 256 { return false; }
+    var item = doc.nodes[array].first;
+    while item >= 0 {
+        if doc.nodes[item].kind != toml::Kind.String { return false; }
+        let name = toml::text(doc, item);
+        if name.len == 0 || name.len > 68 { return false; }
+        out.push(str(name));
+        item = doc.nodes[item].next;
+    }
+    return true;
+}
+fn valid_features(record: const Record&) -> bool {
+    if record.features.len > 256 { return false; }
+    for dep in record.dependencies {
+        if dep.features.len > 256 { return false; }
+        for name in dep.features { if !feature_name(name) { return false; } }
+    }
+    for feature, i in record.features {
+        if !feature_name(feature.name) || feature.items.len > 256 { return false; }
+        for previous, j in record.features { if j < i && previous.name == feature.name { return false; } }
+        for item in feature.items {
+            var found = false;
+            if item.len > 4 && item[..4] == "dep:" {
+                for dep in record.dependencies { if dep.optional && dep.alias == item[4..] { found = true; break; } }
+            } else {
+                for group in record.features { if group.name == item { found = true; break; } }
+            }
+            if !found { return false; }
+        }
+    }
+    return true;
+}
 fn valid(record: const Record&) -> bool {
     let version, error = semver::parse(record.version);
     if !package_name(record.package) || !registry_url(record.registry) || !url(record.url) || !relative(record.entry) ||
@@ -79,50 +124,71 @@ fn valid(record: const Record&) -> bool {
         if !alias_name(dep.alias) || !package_name(dep.package) || !valid_requirement(dep.requirement) { return false; }
         for previous, j in record.dependencies { if j < i && previous.alias == dep.alias { return false; } }
     }
-    return true;
+    return valid_features(record);
 }
-fn parse_record(doc: toml::Document&, id: i64, registry: u8[:], package: u8[:]) -> Record, u8[>..] {
-    if !keys(doc, id, ["version", "url", "sha256", "entry", "yanked", "dependencies"]) { return Record { .. }, str("unknown registry record field"); }
+fn parse_record(doc: toml::Document&, id: i64, registry: u8[:], package: u8[:], feature_metadata: bool = false) -> Record, u8[>..] {
+    if !keys(doc, id, ["version", "url", "sha256", "entry", "yanked", "dependencies", "features"]) { return Record { .. }, str("unknown registry record field"); }
     var record = Record { package: str(package), version: string(doc, id, "version"), registry: str(registry), url: string(doc, id, "url"), sha256: string(doc, id, "sha256"), entry: string(doc, id, "entry"), .. };
     let yanked = toml::find(doc, id, "yanked");
     if yanked >= 0 { if doc.nodes[yanked].kind != toml::Kind.Boolean { return Record { .. }, str("yanked must be a boolean"); } record.yanked = doc.nodes[yanked].boolean; }
+    var features: Feature[>..] = [];
+    let table = toml::find(doc, id, "features");
+    if table >= 0 {
+        if !feature_metadata || doc.nodes[table].kind != toml::Kind.Table || doc.nodes[table].count > 256 {
+            return Record { .. }, str("invalid or unsupported feature table");
+        }
+        var item = doc.nodes[table].first;
+        while item >= 0 {
+            var values: u8[][>..] = [];
+            if !read_feature_array(doc, item, values) { return Record { .. }, str("invalid feature group"); }
+            features.push(Feature { name: str(toml::key(doc, item)), items: copy(values) });
+            item = doc.nodes[item].next;
+        }
+    }
     var dependencies: Dependency[>..] = [];
     let array = toml::find(doc, id, "dependencies");
     if array >= 0 {
         if doc.nodes[array].kind != toml::Kind.Array || doc.nodes[array].count > 256 { return Record { .. }, str("invalid registry dependency list"); }
         var child = doc.nodes[array].first;
         while child >= 0 {
-            if !keys(doc, child, ["alias", "package", "version"]) { return Record { .. }, str("unknown dependency field"); }
-            dependencies.push(Dependency { alias: string(doc, child, "alias"), package: string(doc, child, "package"), requirement: string(doc, child, "version") });
+            if !keys(doc, child, ["alias", "package", "version", "optional", "features"]) { return Record { .. }, str("unknown dependency field"); }
+            let opt = toml::find(doc, child, "optional");
+            let requested = toml::find(doc, child, "features");
+            if !feature_metadata && (opt >= 0 || requested >= 0) { return Record { .. }, str("dependency feature metadata requires schema 2"); }
+            if opt >= 0 && doc.nodes[opt].kind != toml::Kind.Boolean { return Record { .. }, str("optional must be a boolean"); }
+            var names: u8[][>..] = [];
+            if !read_feature_array(doc, requested, names) { return Record { .. }, str("invalid requested features"); }
+            dependencies.push(Dependency { alias: string(doc, child, "alias"), package: string(doc, child, "package"), requirement: string(doc, child, "version"),
+                optional: opt >= 0 && doc.nodes[opt].boolean, features: copy(names) });
             child = doc.nodes[child].next;
         }
     }
-    let complete = Record { package: str(record.package), version: str(record.version), registry: str(record.registry), url: str(record.url), sha256: str(record.sha256), entry: str(record.entry), dependencies: copy(dependencies), yanked: record.yanked };
+    let complete = Record { package: str(record.package), version: str(record.version), registry: str(record.registry), url: str(record.url), sha256: str(record.sha256), entry: str(record.entry), dependencies: copy(dependencies), yanked: record.yanked, features: copy(features) };
     if !valid(complete) { return Record { .. }, str("invalid registry package record"); }
     return copy(complete), [];
 }
-fn parse_index(input: u8[:], registry: u8[:], package: u8[:], records: Record[>..]&) -> u8[>..] {
+fn parse_index(input: u8[:], registry: u8[:], package: u8[:], records: Record[>..]&, feature_metadata: bool = false) -> u8[>..] {
     var doc = toml::Document { .. }; let error = toml::parse_into(input, doc); if error.len > 0 { return error; }
     if !keys(doc, 0, ["schema", "package", "releases"]) { return str("invalid registry index fields"); }
     let schema = toml::find(doc, 0, "schema"); let array = toml::find(doc, 0, "releases");
-    if schema < 0 || doc.nodes[schema].kind != toml::Kind.Integer || doc.nodes[schema].integer != 1 ||
+    if schema < 0 || doc.nodes[schema].kind != toml::Kind.Integer || (doc.nodes[schema].integer != 1 && !(feature_metadata && doc.nodes[schema].integer == 2)) ||
         string(doc, 0, "package") != package || array < 0 || doc.nodes[array].kind != toml::Kind.Array || doc.nodes[array].count > 512 { return str("invalid registry index schema, name, or release count"); }
     var id = doc.nodes[array].first;
     while id >= 0 {
-        let record, record_error = parse_record(doc, id, registry, package); if record_error.len > 0 { return record_error; }
+        let record, record_error = parse_record(doc, id, registry, package, doc.nodes[schema].integer == 2); if record_error.len > 0 { return record_error; }
         for previous in records { if previous.registry == registry && previous.package == package && previous.version == record.version { return str("duplicate published version"); } }
         if records.len >= 8192 { return str("registry index work limit exceeded (8192 releases)"); }
         records.push(copy(record)); id = doc.nodes[id].next;
     }
     return [];
 }
-fn catalog(resolver: Resolver&, request: const Request&) -> bool {
+fn catalog(resolver: Resolver&, request: const Request&, feature_metadata: bool = false) -> bool {
     for loaded in resolver.catalogs { if loaded.package == request.package && loaded.registry == request.registry { return true; } }
     if resolver.catalogs.len >= MAX_PACKAGES { resolver.error = str("registry graph exceeds 256 packages"); return false; }
     var input: u8[>..] = []; input.resize(1048576, 0);
     let size = native_index(request.registry, request.package, str(resolver.cache, "/index"), resolver.offline, !resolver.offline, input[..]);
     if size < 0 { resolver.error = last_error(); return false; } input.resize(size);
-    let error = parse_index(input, request.registry, request.package, resolver.records);
+    let error = parse_index(input, request.registry, request.package, resolver.records, feature_metadata);
     if error.len > 0 { resolver.error = copy(error); return false; }
     resolver.catalogs.push(Catalog { package: str(request.package), registry: str(request.registry) }); return true;
 }
@@ -212,7 +278,7 @@ fn resolve(resolver: Resolver&, roots: const Request[:]) -> bool {
     resolver.error.clear(); resolver.records.clear(); resolver.catalogs.clear();
     for root in roots { if !package_name(root.package) || !registry_url(root.registry) || !valid_requirement(root.requirement) { resolver.error = str("invalid registry request"); return false; } }
     if !resolver.update && resolver.locked_records.len > 0 {
-        for record in resolver.locked_records { if !valid(record) { resolver.error = str("invalid locked registry record"); return false; } resolver.records.push(copy(record)); }
+        for record in resolver.locked_records { if !valid(record) || has_feature_metadata(record) { resolver.error = str("invalid or feature-aware locked registry record"); return false; } resolver.records.push(copy(record)); }
         if solve(resolver, roots, true) { return true; }
         if resolver.locked { return false; }
         resolver.error.clear(); resolver.records.clear();
@@ -228,15 +294,36 @@ fn directory(record: const Record&, cache: u8[:]) -> u8[>..] { str(cache, "/pack
 fn quoted(out: u8[>..]&, value: const u8[:]) {
     out.push('"'); for c in value { if c == '"' || c == '\\' { out.push('\\'); } if c == '\n' { out.append("\\n"); } else { out.push(c); } } out.push('"');
 }
+fn write_feature_array(out: u8[>..]&, values: const u8[][:]) {
+    out.push('[');
+    for value, i in values { if i > 0 { out.append(", "); } quoted(out, value); }
+    out.push(']');
+}
 fn record_text(record: const Record&) -> u8[>..] {
     var out: u8[>..] = [];
     out.append("version = "); quoted(out, record.version); out.append("\nurl = "); quoted(out, record.url);
     out.append("\nsha256 = "); quoted(out, record.sha256); out.append("\nentry = "); quoted(out, record.entry);
     out.append("\nyanked = "); out.append(if record.yanked { "true" } else { "false" }); out.append("\ndependencies = [");
-    for dep, i in record.dependencies { if i > 0 { out.append(", "); } out.append("{ alias = "); quoted(out, dep.alias); out.append(", package = "); quoted(out, dep.package); out.append(", version = "); quoted(out, dep.requirement); out.append(" }"); }
-    out.append("]\n"); return out;
+    for dep, i in record.dependencies {
+        if i > 0 { out.append(", "); }
+        out.append("{ alias = "); quoted(out, dep.alias); out.append(", package = "); quoted(out, dep.package);
+        out.append(", version = "); quoted(out, dep.requirement);
+        if dep.optional { out.append(", optional = true"); }
+        if dep.features.len > 0 { out.append(", features = "); write_feature_array(out, dep.features); }
+        out.append(" }");
+    }
+    out.append("]\n");
+    if record.features.len > 0 {
+        out.append("features = { ");
+        for feature, i in record.features {
+            if i > 0 { out.append(", "); }
+            quoted(out, feature.name); out.append(" = "); write_feature_array(out, feature.items);
+        }
+        out.append(" }\n");
+    }
+    return out;
 }
-fn locked_record(input: u8[:], registry: u8[:], package: u8[:]) -> Record, u8[>..] {
+fn locked_record(input: u8[:], registry: u8[:], package: u8[:], feature_metadata: bool = false) -> Record, u8[>..] {
     var doc = toml::Document { .. }; let error = toml::parse_into(input, doc); if error.len > 0 { return Record { .. }, copy(error); }
-    return parse_record(doc, 0, registry, package);
+    return parse_record(doc, 0, registry, package, feature_metadata);
 }
