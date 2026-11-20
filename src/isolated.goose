@@ -21,7 +21,7 @@ struct Binding { owner: i64, alias: u8[], target: i64, git: u8[] = [], rev: u8[]
 struct Pin { owner: u8[], alias: u8[], git: u8[], rev: u8[], requirement: u8[], selected_ref: u8[], commit: u8[] }
 struct Package { directory: u8[], name: u8[], version: u8[], entry: u8[], ns: u8[], digest: u8[], git: u8[] = [], commit: u8[] = [], git_root: u8[] = [], subdir: u8[] = [], registry: u8[] = [], archive_sha: u8[] = [] }
 struct ActiveFeature { owner: i64, name: u8[] }
-root struct Graph { packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
+root struct Graph { testing: bool = false, packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
 fn field(state: crypto::Sha256&, value: u8[:]) {
     platform::require(build_cache::feed(state, value), "cannot hash package snapshot");
 }
@@ -80,7 +80,7 @@ fn visit(g: Graph&, directory: u8[:], revision: u8[:], git: u8[:] = "", commit: 
     g.packages.push(Package { directory: str(root), name: str(p.name), version: str(p.version), entry: str(p.entry), ns: namespace_of(text), digest: snapshot(p), git: str(git), commit: str(commit), git_root: str(git_root), subdir: if git.len > 0 && root != git_root { str(root[git_root.len + 1..]) } else { str("") }, registry: str(registry), archive_sha: str(archive_sha), .. });
     return id;
 }
-fn render(g: Graph&, revision: u8[:], root_id: i64, graph_features: bool) -> u8[>..] {
+fn render(g: Graph&, revision: u8[:], root_id: i64, graph_features: bool, entry: u8[:] = "", ns: u8[:] = "") -> u8[>..] {
     var out = str("{\"schema\":\"goose-package-graph-v1\",\"compiler_revision\":"); manifest::quoted(out, revision);
     out.append(",\"root\":"); manifest::quoted(out, str(root_id)); out.append(",\"nodes\":[");
     var reachable: bool[256] = [false; 256]; reachable[root_id] = true;
@@ -101,7 +101,7 @@ fn render(g: Graph&, revision: u8[:], root_id: i64, graph_features: bool) -> u8[
         let source_revision: u8[>..] = if pkg.registry.len > 0 { str("sha256:", pkg.archive_sha) } else if pkg.git.len > 0 { str(pkg.commit) } else { str("snapshot:", pkg.digest) };
         out.append(",\"revision\":"); manifest::quoted(out, source_revision);
         out.append(",\"name\":"); manifest::quoted(out, pkg.name); out.append(",\"subdir\":"); manifest::quoted(out, pkg.subdir); out.append("},\"directory\":"); manifest::quoted(out, pkg.directory);
-        out.append(",\"entry\":"); manifest::quoted(out, pkg.entry); out.append(",\"entry_namespace\":"); manifest::quoted(out, pkg.ns);
+        out.append(",\"entry\":"); manifest::quoted(out, if i == root_id && entry.len > 0 { entry } else { pkg.entry }); out.append(",\"entry_namespace\":"); manifest::quoted(out, if i == root_id && entry.len > 0 { ns } else { pkg.ns });
         out.append(",\"config\":{");
         if graph_features {
             var names: (const u8[:])[>..] = [];
@@ -148,13 +148,10 @@ fn package_key(pkg: Package&, base: u8[:]) -> u8[>..] {
 fn read_pins(g: Graph&, p: manifest::Project&) {
     if g.pins_loaded { return; } g.pins_loaded = true;
     let path = str(p.root, "/Honk.lock"); if platform::kind(path) == 0 { return; }
-    let previous = platform::load(path); var doc = toml::Document { .. }; let error = toml::parse_into(previous, doc);
-    platform::require(error.len == 0, "invalid existing lockfile; original is unchanged");
-    let version = toml::find(doc, 0, "version");
-    platform::require(version >= 0 && doc.nodes[version].kind == toml::Kind.Integer && doc.nodes[version].integer == 2, "isolated mode requires a version-2 lockfile; legacy lockfile is unchanged");
-    manifest::keys(doc, 0, ["version", "mode", "compiler", "package", "binding", "members", "feature"]);
-    platform::require(manifest::string(doc, 0, "mode") == "isolated", "incompatible lockfile mode");
-    let bindings = toml::find(doc, 0, "binding"); if bindings < 0 { return; }
+    let previous = platform::load(path); var doc = toml::Document { .. }; parse_lock(previous, doc);
+    let test = toml::find(doc, 0, "test");
+    let parent = if g.testing && test >= 0 { test } else { 0 };
+    let bindings = toml::find(doc, parent, "binding"); if bindings < 0 { return; }
     platform::require(doc.nodes[bindings].kind == toml::Kind.Array, "invalid lock bindings");
     var row = doc.nodes[bindings].first;
     while row >= 0 {
@@ -188,7 +185,7 @@ fn read_pins(g: Graph&, p: manifest::Project&) {
     }
 }
 fn lock_field(out: u8[>..]&, key: u8[:], value: u8[:]) { out.append(str("\n", key, " = ")); manifest::quoted(out, value); }
-fn lock_text(g: Graph&, p: manifest::Project&) -> u8[>..] {
+fn lock_header(p: manifest::Project&) -> u8[>..] {
     var out = str("# Generated by Honk. Commit this file.\nversion = 2\nmode = \"isolated\"\ncompiler = "); manifest::quoted(out, p.revision); out.push('\n');
     if p.members.len > 0 {
         var members: (const u8[:])[>..] = []; for member in p.members { members.push(member); }
@@ -197,14 +194,18 @@ fn lock_text(g: Graph&, p: manifest::Project&) -> u8[>..] {
         for member, i in members { if i > 0 { out.append(", "); } manifest::quoted(out, member); }
         out.append("]\n");
     }
+    return out;
+}
+fn append_lock_rows(out: u8[>..]&, g: Graph&, p: manifest::Project&) {
+    let section = if g.testing { "test." } else { "" };
     var packages: u8[][>..] = []; var bindings: u8[][>..] = []; var bytes = out.len + g.feature_bytes;
     for pkg in g.packages {
-        var row = str("\n[[package]]\ndirectory = "); manifest::quoted(row, package_key(pkg, p.root));
+        var row = str("\n[[", section, "package]]\ndirectory = "); manifest::quoted(row, package_key(pkg, p.root));
         row.append("\nname = "); manifest::quoted(row, pkg.name); row.append("\nversion = "); manifest::quoted(row, pkg.version);
         row.append("\nentry = "); manifest::quoted(row, pkg.entry); row.push('\n'); bytes += row.len; platform::require(bytes <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB"); packages.push(copy(row));
     }
     for binding in g.bindings {
-        var row = str("\n[[binding]]\nowner = ");
+        var row = str("\n[[", section, "binding]]\nowner = ");
         for pkg, i in g.packages { if i == binding.owner { manifest::quoted(row, package_key(pkg, p.root)); } }
         row.append("\nalias = "); manifest::quoted(row, binding.alias); row.append("\ntarget = ");
         for pkg, i in g.packages { if i == binding.target { manifest::quoted(row, package_key(pkg, p.root)); } }
@@ -215,25 +216,49 @@ fn lock_text(g: Graph&, p: manifest::Project&) -> u8[>..] {
         row.push('\n'); bytes += row.len; platform::require(bytes <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB"); bindings.push(copy(row));
     }
     sorted_rows(out, packages); sorted_rows(out, bindings); sorted_rows(out, g.feature_rows);
-    platform::require(out.len <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB"); return out;
+    platform::require(out.len <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB");
 }
-fn lock_graph(g: Graph&, p: manifest::Project&, locked: bool) {
-    let path = str(p.root, "/Honk.lock"); let desired = lock_text(g, p);
-    if platform::kind(path) != 0 {
-        let previous = platform::load(path);
-        if previous == desired { return; }
-        var doc = toml::Document { .. }; let error = toml::parse_into(previous, doc);
-        platform::require(error.len == 0, "invalid existing lockfile; original is unchanged");
-        let version = toml::find(doc, 0, "version");
-        platform::require(version >= 0 && doc.nodes[version].kind == toml::Kind.Integer && doc.nodes[version].integer == 2, "isolated mode requires a version-2 lockfile; legacy lockfile is unchanged");
-        manifest::keys(doc, 0, ["version", "mode", "compiler", "package", "binding", "members", "feature"]);
-        platform::require(manifest::string(doc, 0, "mode") == "isolated", "incompatible lockfile mode; original is unchanged");
+const TEST_LOCK_HEADER = "\n[test]\n";
+fn parse_lock(input: u8[:], doc: toml::Document&) {
+    let error = toml::parse_into(input, doc);
+    platform::require(error.len == 0, "invalid existing lockfile; original is unchanged");
+    let version = toml::find(doc, 0, "version");
+    platform::require(version >= 0 && doc.nodes[version].kind == toml::Kind.Integer && doc.nodes[version].integer == 2, "isolated mode requires a version-2 lockfile; legacy lockfile is unchanged");
+    manifest::keys(doc, 0, ["version", "mode", "compiler", "package", "binding", "members", "feature", "test"]);
+    platform::require(manifest::string(doc, 0, "mode") == "isolated", "incompatible lockfile mode; original is unchanged");
+    let test = toml::find(doc, 0, "test");
+    if test >= 0 {
+        platform::require(doc.nodes[test].kind == toml::Kind.Table, "invalid isolated test lock section");
+        manifest::keys(doc, test, ["package", "binding", "feature"]);
     }
-    platform::require(!locked, "isolated lockfile is missing or out of date; run honk check --isolated without --locked");
-    platform::save(path, desired);
+}
+fn lock_graph(p: manifest::Project&, normal: u8[>..]&, tests: u8[:], testing: bool, locked: bool) {
+    let path = str(p.root, "/Honk.lock");
+    var previous: u8[>..] = [];
+    let exists = platform::kind(path) != 0;
+    var has_test_rows = testing;
+    if exists { previous = platform::load(path); }
+    if !testing && previous == normal { return; }
+    if exists {
+        var doc = toml::Document { .. }; parse_lock(previous, doc);
+        if !testing && toml::find(doc, 0, "test") >= 0 {
+            let offset = find(previous, TEST_LOCK_HEADER);
+            platform::require(offset >= 0 && find(previous[offset + TEST_LOCK_HEADER.len..], TEST_LOCK_HEADER) < 0, "invalid isolated test lock section header");
+            normal.append(previous[offset..]);
+            has_test_rows = true;
+        }
+    }
+    if testing { normal.append(tests); }
+    platform::require(normal.len <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB");
+    if previous == normal { return; }
+    platform::require(!locked, "isolated lockfile is missing or out of date; rerun the command without --locked");
+    if has_test_rows {
+        var doc = toml::Document { .. }; parse_lock(normal, doc);
+    }
+    platform::save(path, normal);
 }
 fn record_feature(g: Graph&, owner: i64, key: u8[:], name: u8[:]) {
-    var row = str("\n[[feature]]");
+    var row = str(if g.testing { "\n[[test.feature]]" } else { "\n[[feature]]" });
     lock_field(row, "owner", key); lock_field(row, "name", name); row.push('\n');
     g.feature_bytes += row.len;
     platform::require(g.feature_bytes <= manifest::MAX_INPUT_BYTES, "isolated feature lock exceeds 1 MiB");
@@ -339,8 +364,8 @@ struct Activation {
     dirty:     bool      = true,
     defaults:  bool      = false,
 }
-fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u8[:], names: const u8[][:]) {
-    if dep.default_features && !state.defaults { state.defaults = true; state.dirty = true; }
+fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u8[:], names: const u8[][:], defaults: bool) {
+    if defaults && !state.defaults { state.defaults = true; state.dirty = true; }
     if names.len == 0 { return; }
     var target = manifest::Project { .. };
     manifest::load(directory, target, true);
@@ -397,9 +422,10 @@ fn add_requested_name(names: u8[][>..]&, name: u8[:]) {
     platform::require(names.len < 256, "dependency feature requests exceed 256 names");
     names.push(str(name));
 }
-fn forwarded_names(owner: manifest::Project&, state: Activation&, dep: manifest::Dependency&) -> u8[][>..] {
+fn forwarded_names(owner: manifest::Project&, state: Activation&, dep: manifest::Dependency&, extra: const u8[][:]) -> u8[][>..] {
     var names: u8[][>..] = [];
     for name in dep.features { add_requested_name(names, name); }
+    for name in extra { add_requested_name(names, name); }
     for group, i in owner.features {
         if !state.active[i] { continue; }
         for item in group.items {
@@ -410,6 +436,147 @@ fn forwarded_names(owner: manifest::Project&, state: Activation&, dep: manifest:
     return names;
 }
 const FEATURE_COMPILER = "eeab7eebcae92d9a04b6caf43c321da560b8d269";
+fn add_roots(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, selected: u8[:]) {
+    if p.name.len > 0 { add_root(graph, p, targets, p.root, selected); }
+    var members: (const u8[:])[>..] = []; for member in p.members { members.push(member); }
+    sort(members[..]) { a, b => before(a, b) }
+    for member in members {
+        platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
+        add_root(graph, p, targets, str(p.root, "/", member), selected);
+    }
+}
+fn resolve_graph(graph: Graph&, p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, cache: u8[:], locked: bool, offline: bool, update: bool, graph_features: bool) {
+    let workspace_roots = graph.packages.len;
+    var states: Activation[256] = [Activation { .. }; 256];
+    for pkg, i in graph.packages { states[i].defaults = pkg.directory != selected || !no_defaults; }
+    var cursor = 0;
+    while cursor < graph.packages.len {
+        if !states[cursor].dirty { cursor++; continue; }
+        states[cursor].dirty = false;
+        var next = cursor + 1;
+        var directory: u8[>..] = []; var origin: u8[>..] = []; var commit: u8[>..] = []; var git_root: u8[>..] = []; var owner_key: u8[>..] = [];
+        for pkg, i in graph.packages { if i == cursor { directory = str(pkg.directory); origin = str(pkg.git); commit = str(pkg.commit); git_root = str(pkg.git_root); owner_key = package_key(pkg, p.root); } }
+        var owner = manifest::Project { .. }; manifest::load(directory, owner, true);
+        var empty: u8[][>..] = [];
+        if directory == selected { activate_features(graph, owner, cursor, owner_key, features, states[cursor]); }
+        else { activate_features(graph, owner, cursor, owner_key, empty, states[cursor]); }
+        let include_dev = graph.testing && cursor < workspace_roots;
+        for dep, index in owner.dependencies {
+            if dep.dev && !include_dev { continue; }
+            var shared = false; var defaults = dep.default_features;
+            var extra: u8[][>..] = [];
+            if include_dev {
+                for other in owner.dependencies {
+                    if other.name != dep.name || other.dev == dep.dev { continue; }
+                    shared = true;
+                    defaults = defaults || other.default_features;
+                    for name in other.features { extra.push(str(name)); }
+                    break;
+                }
+                if dep.dev && shared { continue; }
+            }
+            if dep.optional && !shared && !states[cursor].enabled[index] { continue; }
+            let emitted = states[cursor].emitted[index];
+            let changed = states[cursor].changed[index];
+            if emitted && !changed { continue; }
+            states[cursor].emitted[index] = true;
+            states[cursor].changed[index] = false;
+            let combined: u8[][>..]     = if changed || extra.len > 0 { forwarded_names(owner, states[cursor], dep, extra) } else { [] };
+            let names:    const u8[][:] = if changed || extra.len > 0 { combined } else { dep.features };
+            if dep.registry.len > 0 {
+                if emitted {
+                    for name in names {
+                        platform::require(graph.requests.len < 65536, "registry request limit exceeded");
+                        graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), default_features: false, forwarded: str(name), .. });
+                    }
+                } else {
+                    platform::require(graph.requests.len < 65536, "registry request limit exceeded");
+                    var requested: u8[][>..] = [];
+                    for name in names { requested.push(str(name)); }
+                    graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(requested), default_features: defaults, .. });
+                }
+                continue;
+            }
+            var target = states[cursor].targets[index];
+            if emitted {
+                for pkg, i in graph.packages { if i == target { request_features(states[target], dep, pkg.directory, names, defaults); break; } }
+                if states[target].dirty && target < next { next = target; }
+                continue;
+            }
+            if dep.git.len > 0 {
+                read_pins(graph, p);
+                var materialized = deps::Graph { cache: str(cache), locked: locked, offline: offline, update: update, .. };
+                for pin in graph.pins { if pin.owner == owner_key && pin.alias == dep.name && pin.git == dep.git && pin.rev == dep.rev && pin.requirement == dep.requirement {
+                    materialized.old.push(deps::Node { name: str(dep.name), path: [], git: str(pin.git), rev: str(pin.selected_ref), commit: str(pin.commit), directory: [], entry: [], visiting: false, requirement: str(pin.requirement), .. });
+                } }
+                // Resolve an unlocked source request only once in this invocation.
+                // Owner-specific locked pins still take precedence, including distinct pins.
+                if !locked && (update || materialized.old.len == 0) {
+                    for prior in graph.bindings {
+                        if prior.git == dep.git && prior.rev == dep.rev && prior.requirement == dep.requirement {
+                            materialized.old.clear();
+                            materialized.old.push(deps::Node { name: str(dep.name), path: [], git: str(prior.git), rev: str(prior.selected_ref), commit: str(prior.commit), directory: [], entry: [], visiting: false, requirement: str(prior.requirement), .. });
+                            materialized.update = false; break;
+                        }
+                    }
+                }
+                var registry = nest::Resolver { .. }; deps::add(materialized, dep, directory, registry, true);
+                for node in materialized.nodes {
+                    target = visit(graph, node.directory, p.revision, dep.git, node.commit, node.directory);
+                    request_features(states[target], dep, node.directory, names, defaults);
+                    graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, git: str(dep.git), rev: str(dep.rev), requirement: str(dep.requirement), selected_ref: str(node.rev), commit: str(node.commit) });
+                }
+            } else {
+                let candidate = if dep.path[0] == '/' { str(dep.path) } else { str(directory, "/", dep.path) };
+                let path = platform::absolute(candidate);
+                if origin.len > 0 { platform::require(path == git_root || (path.len > git_root.len && path[..git_root.len] == git_root && path[git_root.len] == '/'), "Git path dependency escapes its checkout"); }
+                target = visit(graph, path, p.revision, origin, commit, git_root);
+                request_features(states[target], dep, path, names, defaults);
+                graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, .. });
+            }
+            states[cursor].targets[index] = target;
+            if states[target].dirty && target < next { next = target; }
+        }
+        cursor = next;
+    }
+    apply_registry(graph, p, cache, locked, offline, update, graph_features);
+    var edges: task::Edge[>..] = []; for binding in graph.bindings { edges.push(task::Edge { before: binding.owner, after: binding.target }); }
+    var limits = task::Limits { tasks: 256, edges: 65536 };
+    let order, graph_error = task::plan(graph.packages.len, edges, limits);
+    platform::require(graph_error.kind == task::ErrorKind.None, "isolated dependency cycle or graph limit exceeded");
+}
+struct TestTarget { root: u8[], entry: u8[], output: u8[] }
+fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compiler: u8[:], graph_features: bool, normal: u8[>..]&, tests: u8[:], locked: bool, release: bool, arguments: u8[:][:]) {
+    var planned: TestTarget[>..] = [];
+    for target in targets {
+        let prefix = str(target.root, "/tests");
+        if platform::kind(prefix) == 0 { continue; }
+        var paths:   u8[][>..]          = []; build::files(target.root, "tests", paths);
+        var ordered: (const u8[:])[>..] = [];
+        for path in paths { ordered.push(path); }
+        sort(ordered[..]) { a, b => before(a, b) }
+        for path, i in ordered {
+            platform::require(manifest::relative(path), "invalid isolated test entry");
+            let entry = str(target.root, "/", path);
+            let output = str(target.output, "/tests/", if release { "release" } else { "debug" }, "/", i);
+            let doc = render(graph, p.revision, target.id, graph_features, path, namespace_of(platform::load(entry)));
+            platform::require(platform::mkdir(output), "cannot create isolated test output directory");
+            platform::save(str(output, "/graph.json"), doc);
+            planned.push(TestTarget { root: str(target.root), entry: copy(entry), output: copy(output) });
+        }
+    }
+    lock_graph(p, normal, tests, true, locked);
+    for target in planned {
+        let path = str(target.output, "/graph.json"); let executable = str(target.output, "/test");
+        var argv: (const u8[:])[>..] = [compiler, "build", target.entry, "--package-graph", path, "-o", executable];
+        if release { argv.push("-O2"); }
+        platform::run(argv[..], target.root);
+        argv.clear(); argv.push(executable);
+        for arg in arguments { argv.push(arg); }
+        platform::run(argv[..], target.root);
+    }
+    print("Passed ", planned.len, " test targets");
+}
 fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
@@ -429,13 +596,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create graph lock directory");
     let project_lock = platform::lock(str(p.root, "/.honk/isolated.lock")); platform::require(project_lock >= 0, "isolated project is locked by another process");
     var graph = Graph { .. }; var targets: Target[>..] = [];
-    if p.name.len > 0 { add_root(graph, p, targets, p.root, selected); }
-    var members: (const u8[:])[>..] = []; for member in p.members { members.push(member); }
-    sort(members[..]) { a, b => before(a, b) }
-    for member in members {
-        platform::require(platform::directory(p.root, member), "workspace member must be a directory without symlink components");
-        add_root(graph, p, targets, str(p.root, "/", member), selected);
-    }
+    add_roots(graph, p, targets, selected);
     let resolve_only = command == "fetch" || command == "update";
     if command == "run" { platform::require(targets.len == 1, "isolated run requires a single target, select a workspace member with -p"); }
     var compile_count = 0;
@@ -446,93 +607,21 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         if command != "build" || target.kind == "bin" { compile_count++; }
     }
     platform::require(resolve_only || compile_count > 0, "no isolated compilation target matched");
-    var states: Activation[256] = [Activation { .. }; 256];
-    for pkg, i in graph.packages { states[i].defaults = pkg.directory != selected || !no_defaults; }
-    var cursor = 0;
-    while cursor < graph.packages.len {
-        if !states[cursor].dirty { cursor++; continue; }
-        states[cursor].dirty = false;
-        var next = cursor + 1;
-        var directory: u8[>..] = []; var origin: u8[>..] = []; var commit: u8[>..] = []; var git_root: u8[>..] = []; var owner_key: u8[>..] = [];
-        for pkg, i in graph.packages { if i == cursor { directory = str(pkg.directory); origin = str(pkg.git); commit = str(pkg.commit); git_root = str(pkg.git_root); owner_key = package_key(pkg, p.root); } }
-        var owner = manifest::Project { .. }; manifest::load(directory, owner, true);
-        var empty: u8[][>..] = [];
-        if directory == selected { activate_features(graph, owner, cursor, owner_key, features, states[cursor]); }
-        else { activate_features(graph, owner, cursor, owner_key, empty, states[cursor]); }
-        for dep, index in owner.dependencies {
-            if dep.dev || (dep.optional && !states[cursor].enabled[index]) { continue; }
-            let emitted = states[cursor].emitted[index];
-            let changed = states[cursor].changed[index];
-            if emitted && !changed { continue; }
-            states[cursor].emitted[index] = true;
-            states[cursor].changed[index] = false;
-            let combined: u8[][>..]     = if changed { forwarded_names(owner, states[cursor], dep) } else { [] };
-            let names:    const u8[][:] = if changed { combined } else { dep.features };
-            if dep.registry.len > 0 {
-                if emitted {
-                    for name in names {
-                        platform::require(graph.requests.len < 65536, "registry request limit exceeded");
-                        graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), default_features: false, forwarded: str(name), .. });
-                    }
-                } else {
-                    platform::require(graph.requests.len < 65536, "registry request limit exceeded");
-                    var requested: u8[][>..] = [];
-                    for name in names { requested.push(str(name)); }
-                    graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(requested), default_features: dep.default_features, .. });
-                }
-                continue;
-            }
-            var target = states[cursor].targets[index];
-            if emitted {
-                for pkg, i in graph.packages { if i == target { request_features(states[target], dep, pkg.directory, names); break; } }
-                if states[target].dirty && target < next { next = target; }
-                continue;
-            }
-            if dep.git.len > 0 {
-                read_pins(graph, p);
-                var materialized = deps::Graph { cache: str(cache), locked: locked, offline: offline, update: command == "update", .. };
-                for pin in graph.pins { if pin.owner == owner_key && pin.alias == dep.name && pin.git == dep.git && pin.rev == dep.rev && pin.requirement == dep.requirement {
-                    materialized.old.push(deps::Node { name: str(dep.name), path: [], git: str(pin.git), rev: str(pin.selected_ref), commit: str(pin.commit), directory: [], entry: [], visiting: false, requirement: str(pin.requirement), .. });
-                } }
-                // Resolve an unlocked source request only once in this invocation.
-                // Owner-specific locked pins still take precedence, including distinct pins.
-                if !locked && (command == "update" || materialized.old.len == 0) {
-                    for prior in graph.bindings {
-                        if prior.git == dep.git && prior.rev == dep.rev && prior.requirement == dep.requirement {
-                            materialized.old.clear();
-                            materialized.old.push(deps::Node { name: str(dep.name), path: [], git: str(prior.git), rev: str(prior.selected_ref), commit: str(prior.commit), directory: [], entry: [], visiting: false, requirement: str(prior.requirement), .. });
-                            materialized.update = false; break;
-                        }
-                    }
-                }
-                var registry = nest::Resolver { .. }; deps::add(materialized, dep, directory, registry, true);
-                for node in materialized.nodes {
-                    target = visit(graph, node.directory, p.revision, dep.git, node.commit, node.directory);
-                    request_features(states[target], dep, node.directory, names);
-                    graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, git: str(dep.git), rev: str(dep.rev), requirement: str(dep.requirement), selected_ref: str(node.rev), commit: str(node.commit) });
-                }
-            } else {
-                let candidate = if dep.path[0] == '/' { str(dep.path) } else { str(directory, "/", dep.path) };
-                let path = platform::absolute(candidate);
-                if origin.len > 0 { platform::require(path == git_root || (path.len > git_root.len && path[..git_root.len] == git_root && path[git_root.len] == '/'), "Git path dependency escapes its checkout"); }
-                target = visit(graph, path, p.revision, origin, commit, git_root);
-                request_features(states[target], dep, path, names);
-                graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, .. });
-            }
-            states[cursor].targets[index] = target;
-            if states[target].dirty && target < next { next = target; }
-        }
-        cursor = next;
+    resolve_graph(graph, p, selected, features, no_defaults, cache, locked, offline, command == "update", feature_capability && graph_features);
+    var normal = lock_header(p); append_lock_rows(normal, graph, p);
+    if command == "test" {
+        var test_graph = Graph { testing: true, .. }; var test_targets: Target[>..] = [];
+        add_roots(test_graph, p, test_targets, selected);
+        resolve_graph(test_graph, p, selected, features, no_defaults, cache, locked, offline, false, feature_capability && graph_features);
+        var tests = str(TEST_LOCK_HEADER); append_lock_rows(tests, test_graph, p);
+        run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments);
+        platform::unlock(project_lock); platform::unlock(cache_lock);
+        return;
     }
-    apply_registry(graph, p, cache, locked, offline, command == "update", feature_capability && graph_features);
-    var edges: task::Edge[>..] = []; for binding in graph.bindings { edges.push(task::Edge { before: binding.owner, after: binding.target }); }
-    var limits = task::Limits { tasks: 256, edges: 65536 };
-    let order, graph_error = task::plan(graph.packages.len, edges, limits);
-    platform::require(graph_error.kind == task::ErrorKind.None, "isolated dependency cycle or graph limit exceeded");
     // Validate every selected graph before changing the shared lock.
     var documents: u8[][>..] = [];
     for target in targets { documents.push(render(graph, p.revision, target.id, feature_capability && graph_features)); }
-    lock_graph(graph, p, locked);
+    lock_graph(p, normal, "", false, locked);
     for target, i in targets {
         if command == "build" && target.kind != "bin" { continue; }
         // Resolution-only workspace commands have no compiler output.

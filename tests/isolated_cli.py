@@ -858,6 +858,63 @@ class Isolated(unittest.TestCase):
         self.assertIn('unknown feature missing in shared requested through shared', result.stderr)
         self.assertEqual(lock.read_bytes(), before)
 
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_isolated_test_lock_keeps_dev_features_out_of_production(self):
+        self.registry_fixture()
+        self.registry_release('shared', '1.0.0', features={'devtools': []},
+                              code='namespace shared; fn value() -> i64 { 1 } '
+                                   'if feature("devtools") { fn verify() -> i64 { 42 } }')
+        app = self.package('app', 'import shared; import std; fn main() { print(shared::value()); }')
+        self.registry_dependency('app', 'shared', 'shared', '*')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write(f'[dev-dependencies]\nshared={{package="shared",version="*",registry="{self.registry.url}/index",'
+                    'features=["devtools"]}\n')
+        (app / 'tests').mkdir()
+        (app / 'tests/smoke.goose').write_text(
+            'import shared; import std; fn main() { assert(shared::verify() == 42); print("smoke"); }')
+        self.run_honk('build')
+        lock = app / 'Honk.lock'
+        production = lock.read_bytes()
+        self.assertNotIn('test', tomllib.loads(production.decode()))
+        self.run_honk('test', ok=False, extra=('--frozen',))
+        self.assertEqual(lock.read_bytes(), production)
+        self.assertIn('smoke', self.run_honk('test').stdout)
+        original = lock.read_bytes()
+        self.assertTrue(original.startswith(production))
+        data = tomllib.loads(original.decode())
+        self.assertNotIn('feature', data)
+        self.assertEqual([row['name'] for row in data['test']['feature']], ['devtools'])
+        self.assertEqual(len(data['test']['binding']), 1)
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        self.assertIn('smoke', self.run_honk('test', extra=('--frozen',)).stdout)
+        self.run_honk('build', extra=('--frozen',))
+        self.assertEqual(subprocess.check_output([str(app / 'target/isolated/app')], text=True).strip(), '1')
+        graph = json.loads((app / 'target/isolated/graph.json').read_text())
+        self.assertTrue(all('features' not in n['config'] for n in graph['nodes']))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_isolated_test_ignores_transitive_dev_dependencies(self):
+        commit, _ = self.git_fixture()
+        helper = self.package('helper', 'namespace helper; fn value() -> i64 { 43 }')
+        with (helper / 'Honk.toml').open('a') as f:
+            f.write('[dev-dependencies]\nmissing={path="../absent"}\n')
+        app = self.package('app', 'fn main() {}')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[dev-dependencies]\nhelper={path="../helper",default-features=false}\n')
+        self.git_dependency('app', 'mathx', rev=commit)
+        (app / 'tests').mkdir()
+        (app / 'tests/smoke.goose').write_text(
+            'import helper; import mathx; import std; fn main() { assert(helper::value() == 43); assert(mathx::make().x == 1); }')
+        self.run_honk('test')
+        lock = tomllib.loads((app / 'Honk.lock').read_text())
+        self.assertNotIn('binding', lock)
+        self.assertEqual({b['alias'] for b in lock['test']['binding']}, {'helper', 'mathx'})
+        before = self.network_commands()
+        self.run_honk('test', extra=('--frozen',))
+        self.assertEqual(self.network_commands(), before)
+
     def test_forwarded_features_reach_already_bound_path_git_and_registry_edges(self):
         self.git_fixture()
         with (self.remote / 'Honk.toml').open('a') as f:
