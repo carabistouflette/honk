@@ -76,6 +76,14 @@ fn feature_name(name: const u8[:]) -> bool {
     for c in name { if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '-' || c == '_') { return false; } }
     return true;
 }
+fn forwarded_feature(item: const u8[:]) -> const u8[:], const u8[:], bool {
+    for byte, i in item {
+        if byte != '/' || i == 0 { continue; }
+        let weak = item[i - 1] == '?';
+        return item[..i - (if weak { 1 } else { 0 })], item[i + 1..], weak;
+    }
+    return "", "", false;
+}
 fn has_feature_metadata(record: const Record&) -> bool {
     if record.features.len > 0 { return true; }
     for dep in record.dependencies { if dep.optional || dep.features.len > 0 || !dep.default_features { return true; } }
@@ -88,7 +96,7 @@ fn read_feature_array(doc: toml::Document&, array: i64, out: u8[][>..]&) -> bool
     while item >= 0 {
         if doc.nodes[item].kind != toml::Kind.String { return false; }
         let name = toml::text(doc, item);
-        if name.len == 0 || name.len > 68 { return false; }
+        if name.len == 0 || name.len > 130 { return false; }
         out.push(str(name));
         item = doc.nodes[item].next;
     }
@@ -108,7 +116,13 @@ fn valid_features(record: const Record&) -> bool {
             if item.len > 4 && item[..4] == "dep:" {
                 for dep in record.dependencies { if dep.optional && dep.alias == item[4..] { found = true; break; } }
             } else {
-                for group in record.features { if group.name == item { found = true; break; } }
+                let alias, name, weak = forwarded_feature(item);
+                if alias.len > 0 {
+                    if !feature_name(name) { return false; }
+                    for dep in record.dependencies { if dep.alias == alias && (!weak || dep.optional) { found = true; break; } }
+                } else {
+                    for group in record.features { if group.name == item { found = true; break; } }
+                }
             }
             if !found { return false; }
         }

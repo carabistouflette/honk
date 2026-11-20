@@ -5,7 +5,7 @@ import std;
 import nest;
 import semver;
 import task;
-struct Request { owner: u8[], alias: u8[], registry: u8[], package: u8[], requirement: u8[], features: u8[][] = [], default_features: bool = true }
+struct Request { owner: u8[], alias: u8[], registry: u8[], package: u8[], requirement: u8[], features: u8[][] = [], default_features: bool = true, forwarded: u8[] = [] }
 struct Pin { request: Request, record: nest::Record }
 struct Edge { request: i64, target: i64 }
 struct Activation { record: i64, index: i64 }
@@ -49,7 +49,7 @@ fn enqueue(s: State&, request: Request&) -> bool {
     if s.pending.len >= 65536 { s.error = str("registry dependency work exceeds 65536 requests"); return false; }
     // A binding's owner and alias determine its declared feature requests for
     // this solve. Pins match the binding coordinates across manifest edits.
-    for known, i in s.requests { if !spend(s) { return false; } if same_request(known, request) { s.pending.push(i); return true; } }
+    for known, i in s.requests { if !spend(s) { return false; } if same_request(known, request) && known.forwarded == request.forwarded { s.pending.push(i); return true; } }
     if s.requests.len >= 65536 { s.error = str("registry request arena exceeds 65536 entries"); return false; }
     s.pending.push(s.requests.len); s.requests.push(copy(request)); return true;
 }
@@ -65,8 +65,12 @@ fn missing_feature(record: const nest::Record&, request: Request&) -> u8[>..] {
     for name in request.features { if feature_index(record, name) < 0 { return str(name); } }
     return [];
 }
-fn enqueue_dependency(s: State&, record: const nest::Record&, dep: const nest::Dependency&, owner: u8[:]) -> bool {
-    var next = Request { owner: str(owner), alias: str(dep.alias), registry: str(record.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(dep.features), default_features: dep.default_features };
+fn enqueue_dependency(s: State&, record: const nest::Record&, dep: const nest::Dependency&, owner: u8[:], forwarded: u8[:] = "") -> bool {
+    var next = if forwarded.len == 0 {
+        Request { owner: str(owner), alias: str(dep.alias), registry: str(record.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(dep.features), default_features: dep.default_features, .. }
+    } else {
+        Request { owner: str(owner), alias: str(dep.alias), registry: str(record.registry), package: str(dep.package), requirement: str(dep.requirement), default_features: false, forwarded: str(forwarded), .. }
+    };
     return enqueue(s, next);
 }
 // Append only the activation delta so a failed candidate can be rolled back
@@ -79,13 +83,19 @@ fn activate(s: State&, record: const nest::Record&, id: i64, request: Request&, 
         for edge in s.optional_edges { if !spend(s) { return false; } if edge.record == id { enabled[edge.index] = true; } }
     }
     var pending: i64[>..] = [];
-    if !spend(s, (1 + request.features.len) * record.features.len) { return false; }
+    if !spend(s, (2 + request.features.len) * record.features.len) { return false; }
     let default_index = feature_index(record, "default");
     if request.default_features && default_index >= 0 && !active[default_index] { active[default_index] = true; pending.push(default_index); }
     for name in request.features {
         let i = feature_index(record, name);
         if !active[i] { active[i] = true; pending.push(i); }
     }
+    if request.forwarded.len > 0 {
+        let i = feature_index(record, request.forwarded);
+        if !active[i] { active[i] = true; pending.push(i); }
+    }
+    var changed: bool[256] = [false; 256];
+    var followups = false;
     var cursor = 0;
     while cursor < pending.len {
         let index = pending[cursor]; cursor++;
@@ -93,21 +103,45 @@ fn activate(s: State&, record: const nest::Record&, id: i64, request: Request&, 
         if !spend(s, record.features.len) { return false; }
         let feature = feature_at(record, index);
         for item in feature.items {
-            if item.len > 4 && item[..4] == "dep:" {
+            if !spend(s, item.len + 1) { return false; }
+            let alias, name, weak = nest::forwarded_feature(item);
+            let enable = item.len > 4 && item[..4] == "dep:";
+            if enable || alias.len > 0 {
+                let dependency = if enable { item[4..] } else { alias };
                 if !spend(s, record.dependencies.len) { return false; }
                 for dep, i in record.dependencies {
-                    if dep.alias != item[4..] { continue; }
-                    if !enabled[i] {
+                    if dep.alias != dependency { continue; }
+                    if dep.optional && !enabled[i] && !weak {
                         enabled[i] = true;
                         s.optional_edges.push(Activation { record: id, index: i });
                         if !enqueue_dependency(s, record, dep, owner) { return false; }
+                        changed[i] = true; followups = true;
                     }
+                    if alias.len > 0 && (!dep.optional || enabled[i]) { changed[i] = true; followups = true; }
                     break;
                 }
             } else {
                 if !spend(s, record.features.len) { return false; }
                 let i = feature_index(record, item);
                 if !active[i] { active[i] = true; pending.push(i); }
+            }
+        }
+    }
+    if followups {
+        // Re-read active groups so a weak request also takes effect when a
+        // different group enables its edge in a later solver decision.
+        for group, i in record.features {
+            if !active[i] { continue; }
+            for item in group.items {
+                if !spend(s, item.len + 1) { return false; }
+                let alias, name, weak = nest::forwarded_feature(item);
+                if alias.len == 0 { continue; }
+                if !spend(s, record.dependencies.len) { return false; }
+                for dep, j in record.dependencies {
+                    if dep.alias != alias { continue; }
+                    if changed[j] && !enqueue_dependency(s, record, dep, owner, name) { return false; }
+                    break;
+                }
             }
         }
     }
@@ -146,6 +180,16 @@ fn acyclic(s: State&, catalog: nest::Resolver&) -> bool {
     let order, error = task::plan(s.selected.len, edges, limits); return error.kind == task::ErrorKind.None;
 }
 fn request_at(s: State&, index: i64) -> Request& { for request, i in s.requests { if i == index { return request; } } abort("invalid registry request index"); }
+// Forwarding constrains the release already selected for this alias. A
+// missing feature is a solver conflict so the original choice can backtrack.
+fn forwarded_target(s: State&, request: Request&) -> i64 {
+    for edge in s.edges {
+        if !spend(s) { return -1; }
+        if same_request(request_at(s, edge.request), request) { return edge.target; }
+    }
+    s.error = str("missing registry binding for forwarded feature: ", request.owner, " -> ", request.alias);
+    return -1;
+}
 fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins: bool, update: bool) -> bool {
     s.selected.clear(); s.pending.clear(); s.requests.clear(); s.edges.clear(); s.features.clear(); s.optional_edges.clear(); s.error.clear();
     for root in roots { var request = copy(root); if !enqueue(s, request) { return false; } }
@@ -154,48 +198,59 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
         if !conflict && cursor == s.pending.len { if acyclic(s, catalog) { return true; } if s.error.len > 0 { return false; } detail = str("dependency cycle"); conflict = true; }
         if !conflict {
             let request_id = s.pending[cursor]; var request = copy(request_at(s, request_id)); cursor++;
-            if !only_pins {
-                let lookup = nest::Request { package: str(request.package), requirement: str(request.requirement), registry: str(request.registry) };
-                if !nest::catalog(catalog, lookup, true) { s.error = str(catalog.error); return false; }
-            }
-            var candidates: i64[>..] = [];
-            var missing:    u8[>..]  = [];
-            for record, i in catalog.records {
-                if !spend(s) { return false; }
-                if record.registry != request.registry || record.package != request.package || !nest::matches(request.requirement, record.version) || !allowed(s, catalog, i) { continue; }
-                let pin = !update && preferred(s, record, request); if s.error.len > 0 { return false; }
-                if (only_pins && !pin) || (record.yanked && !pin) { continue; }
+            if request.forwarded.len > 0 {
+                let id = forwarded_target(s, request); if id < 0 { return false; }
+                let record = nest::record_at(catalog, id);
+                if feature_index(record, request.forwarded) >= 0 {
+                    if !activate(s, record, id, request, key(record), false) { return false; }
+                    continue;
+                }
+                detail = str("unknown feature ", request.forwarded, " in ", request.package, " requested by ", request.owner, " -> ", request.alias);
+                conflict = true;
+            } else {
                 if !only_pins {
-                    for locked in s.pins { if !spend(s) { return false; } if locked.record.registry == record.registry && locked.record.package == record.package && locked.record.version == record.version && !same_record(locked.record, record) { s.error = str("published registry metadata changed for ", record.package, " ", record.version); return false; } }
+                    let lookup = nest::Request { package: str(request.package), requirement: str(request.requirement), registry: str(request.registry) };
+                    if !nest::catalog(catalog, lookup, true) { s.error = str(catalog.error); return false; }
                 }
-                if request.features.len > 0 {
-                    if !spend(s, request.features.len * (record.features.len + 1)) { return false; }
-                    let unknown = missing_feature(record, request);
-                    if unknown.len > 0 { missing = str(unknown); continue; }
+                var candidates: i64[>..] = [];
+                var missing:    u8[>..]  = [];
+                for record, i in catalog.records {
+                    if !spend(s) { return false; }
+                    if record.registry != request.registry || record.package != request.package || !nest::matches(request.requirement, record.version) || !allowed(s, catalog, i) { continue; }
+                    let pin = !update && preferred(s, record, request); if s.error.len > 0 { return false; }
+                    if (only_pins && !pin) || (record.yanked && !pin) { continue; }
+                    if !only_pins {
+                        for locked in s.pins { if !spend(s) { return false; } if locked.record.registry == record.registry && locked.record.package == record.package && locked.record.version == record.version && !same_record(locked.record, record) { s.error = str("published registry metadata changed for ", record.package, " ", record.version); return false; } }
+                    }
+                    if request.features.len > 0 {
+                        if !spend(s, request.features.len * (record.features.len + 1)) { return false; }
+                        let unknown = missing_feature(record, request);
+                        if unknown.len > 0 { missing = str(unknown); continue; }
+                    }
+                    if candidates.len >= 512 { s.error = str("registry candidate limit exceeded (512)"); return false; }
+                    var at = candidates.len; candidates.push(i);
+                    while at > 0 {
+                        let left = nest::record_at(catalog, candidates[at - 1]);
+                        let left_reused = reused(s, candidates[at - 1]); let right_reused = reused(s, i);
+                        let left_pin = !update && preferred(s, left, request); if s.error.len > 0 { return false; }
+                        let lv, le = semver::parse(left.version); let rv, re = semver::parse(record.version);
+                        if (left_reused && !right_reused) || (left_reused == right_reused && ((left_pin && !pin) || (left_pin == pin && semver::compare(lv, rv) >= 0))) { break; }
+                        candidates[at] = candidates[at - 1]; at--;
+                    }
+                    candidates[at] = i;
                 }
-                if candidates.len >= 512 { s.error = str("registry candidate limit exceeded (512)"); return false; }
-                var at = candidates.len; candidates.push(i);
-                while at > 0 {
-                    let left = nest::record_at(catalog, candidates[at - 1]);
-                    let left_reused = reused(s, candidates[at - 1]); let right_reused = reused(s, i);
-                    let left_pin = !update && preferred(s, left, request); if s.error.len > 0 { return false; }
-                    let lv, le = semver::parse(left.version); let rv, re = semver::parse(record.version);
-                    if (left_reused && !right_reused) || (left_reused == right_reused && ((left_pin && !pin) || (left_pin == pin && semver::compare(lv, rv) >= 0))) { break; }
-                    candidates[at] = candidates[at - 1]; at--;
+                if s.error.len > 0 { return false; }
+                if candidates.len == 0 { detail = str(request.package, " ", request.requirement, " requested by ", request.owner, " -> ", request.alias); if missing.len > 0 { detail.append(str(" (unknown feature ", missing, ")")); } }
+                if candidates.len == 1 {
+                    if !choose(s, catalog, request_id, candidates[0]) { return false; } continue;
                 }
-                candidates[at] = i;
+                if candidates.len > 1 {
+                    if frames.len >= 4096 { s.error = str("registry alternative frame limit exceeded (4096)"); return false; }
+                    var frame = Frame { candidates: [0; 512], count: candidates.len, cursor: cursor, pending: s.pending.len, selected: s.selected.len, edges: s.edges.len, features: s.features.len, optional_edges: s.optional_edges.len, .. };
+                    for id, i in candidates { frame.candidates[i] = id; } frames.push(copy(frame));
+                }
+                conflict = true;
             }
-            if s.error.len > 0 { return false; }
-            if candidates.len == 0 { detail = str(request.package, " ", request.requirement, " requested by ", request.owner, " -> ", request.alias); if missing.len > 0 { detail.append(str(" (unknown feature ", missing, ")")); } }
-            if candidates.len == 1 {
-                if !choose(s, catalog, request_id, candidates[0]) { return false; } continue;
-            }
-            if candidates.len > 1 {
-                if frames.len >= 4096 { s.error = str("registry alternative frame limit exceeded (4096)"); return false; }
-                var frame = Frame { candidates: [0; 512], count: candidates.len, cursor: cursor, pending: s.pending.len, selected: s.selected.len, edges: s.edges.len, features: s.features.len, optional_edges: s.optional_edges.len, .. };
-                for id, i in candidates { frame.candidates[i] = id; } frames.push(copy(frame));
-            }
-            conflict = true;
         }
         while conflict {
             if frames.len == 0 { s.error = str("no compatible scoped registry graph: ", detail); return false; }

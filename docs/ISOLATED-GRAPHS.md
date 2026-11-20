@@ -120,8 +120,15 @@ A production dependency from any of the three sources can use
 `default-features = false` to opt out of requesting the target's default
 group. Any active edge that requests defaults enables them for the shared
 instance, including edges discovered after that instance was first visited.
-Explicitly requesting `"default"` also enables it. Feature forwarding syntax
-and development dependency features remain future work.
+Explicitly requesting `"default"` also enables it.
+
+A feature can forward a request to a dependency by its manifest alias.
+For example, `"codec/json"` requests `json` and activates `codec` if it
+is optional. With `"codec?/json"`, the request takes effect only if that
+optional edge is otherwise active. Honk applies pending requests when
+the edge is activated later. Registry version selection can backtrack if
+the chosen release lacks a forwarded feature. Development dependency
+features remain future work.
 A local or Git package can gate a registry dependency behind its own groups.
 
 ### Conditional declarations
