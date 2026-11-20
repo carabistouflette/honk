@@ -5,7 +5,7 @@ import std;
 import nest;
 import semver;
 import task;
-struct Request { owner: u8[], alias: u8[], registry: u8[], package: u8[], requirement: u8[], features: u8[][] = [] }
+struct Request { owner: u8[], alias: u8[], registry: u8[], package: u8[], requirement: u8[], features: u8[][] = [], default_features: bool = true }
 struct Pin { request: Request, record: nest::Record }
 struct Edge { request: i64, target: i64 }
 struct Activation { record: i64, index: i64 }
@@ -66,7 +66,7 @@ fn missing_feature(record: const nest::Record&, request: Request&) -> u8[>..] {
     return [];
 }
 fn enqueue_dependency(s: State&, record: const nest::Record&, dep: const nest::Dependency&, owner: u8[:]) -> bool {
-    var next = Request { owner: str(owner), alias: str(dep.alias), registry: str(record.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(dep.features) };
+    var next = Request { owner: str(owner), alias: str(dep.alias), registry: str(record.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(dep.features), default_features: dep.default_features };
     return enqueue(s, next);
 }
 // Append only the activation delta so a failed candidate can be rolled back
@@ -81,7 +81,7 @@ fn activate(s: State&, record: const nest::Record&, id: i64, request: Request&, 
     var pending: i64[>..] = [];
     if !spend(s, (1 + request.features.len) * record.features.len) { return false; }
     let default_index = feature_index(record, "default");
-    if fresh && default_index >= 0 { active[default_index] = true; pending.push(default_index); }
+    if request.default_features && default_index >= 0 && !active[default_index] { active[default_index] = true; pending.push(default_index); }
     for name in request.features {
         let i = feature_index(record, name);
         if !active[i] { active[i] = true; pending.push(i); }
@@ -117,7 +117,6 @@ fn choose(s: State&, catalog: nest::Resolver&, request_id: i64, id: i64) -> bool
     s.decisions++; if s.decisions > nest::MAX_DECISIONS { s.error = str("scoped registry resolution exceeded 100000 decisions"); return false; }
     s.edges.push(Edge { request: request_id, target: id });
     let fresh = !reused(s, id);
-    if !fresh && request_at(s, request_id).features.len == 0 { return true; }
     let record = nest::record_at(catalog, id); let owner = key(record);
     if fresh {
         if s.selected.len >= 256 { s.error = str("registry graph exceeds 256 instances"); return false; }
@@ -127,7 +126,9 @@ fn choose(s: State&, catalog: nest::Resolver&, request_id: i64, id: i64) -> bool
         }
     }
     if record.features.len == 0 { return true; }
-    var request = copy(request_at(s, request_id));
+    let incoming = request_at(s, request_id);
+    if incoming.features.len == 0 && !incoming.default_features { return true; }
+    var request = copy(incoming);
     return activate(s, record, id, request, owner, fresh);
 }
 fn acyclic(s: State&, catalog: nest::Resolver&) -> bool {

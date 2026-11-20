@@ -240,12 +240,21 @@ fn record_feature(g: Graph&, owner: i64, key: u8[:], name: u8[:]) {
     g.feature_rows.push(copy(row));
     g.active_features.push(ActiveFeature { owner: owner, name: str(name) });
 }
+// The publisher canonicalizes feature lists as sets.
 fn same_names(left: const u8[][:], right: const u8[][:]) -> bool {
-    if left.len != right.len { return false; }
-    var names: (const u8[:])[>..] = [];
-    for name in right { names.push(name); }
-    for name, i in left { if name != names[i] { return false; } }
-    return true;
+    if left.len == 0 || right.len == 0 { return left.len == right.len; }
+    var a: (const u8[:])[>..] = []; for name in left { a.push(name); }
+    var b: (const u8[:])[>..] = []; for name in right { b.push(name); }
+    sort(a[..]) { x, y => before(x, y) }
+    sort(b[..]) { x, y => before(x, y) }
+    var i = 0; var j = 0;
+    while i < a.len && j < b.len {
+        if a[i] != b[j] { return false; }
+        i++; j++;
+        while i < a.len && a[i] == a[i - 1] { i++; }
+        while j < b.len && b[j] == b[j - 1] { j++; }
+    }
+    return i == a.len && j == b.len;
 }
 struct RegistrySelection { record: i64, node: i64 }
 fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, offline: bool, update: bool, graph_features: bool) {
@@ -266,7 +275,7 @@ fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, 
         for dep in child.dependencies {
             if dep.dev { continue; } count++;
             platform::require(dep.registry == record.registry, "registry archives require same-registry manifest dependencies");
-            var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.package == dep.package && expected.requirement == dep.requirement && expected.optional == dep.optional && same_names(expected.features, dep.features) { found = true; break; } }
+            var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.package == dep.package && expected.requirement == dep.requirement && expected.optional == dep.optional && expected.default_features == dep.default_features && same_names(expected.features, dep.features) { found = true; break; } }
             platform::require(found, "archive dependency differs from registry metadata");
         }
         platform::require(count == record.dependencies.len, "archive dependency count differs from registry metadata");
@@ -326,8 +335,10 @@ struct Activation {
     emitted:   bool[256] = [false; 256],
     enabled:   bool[256] = [false; 256],
     dirty:     bool      = true,
+    defaults:  bool      = false,
 }
 fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u8[:]) {
+    if dep.default_features && !state.defaults { state.defaults = true; state.dirty = true; }
     if dep.features.len == 0 { return; }
     var target = manifest::Project { .. };
     manifest::load(directory, target, true);
@@ -337,9 +348,9 @@ fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u
         if !state.requested[index] { state.requested[index] = true; state.dirty = true; }
     }
 }
-fn activate_features(graph: Graph&, owner: manifest::Project&, owner_id: i64, key: u8[:], requested: u8[][>..]&, defaults: bool, state: Activation&) {
+fn activate_features(graph: Graph&, owner: manifest::Project&, owner_id: i64, key: u8[:], requested: u8[][>..]&, state: Activation&) {
     var pending: i64[>..] = [];
-    if defaults {
+    if state.defaults {
         let index = manifest::feature_index(owner, "default");
         if index >= 0 { state.requested[index] = true; }
     }
@@ -407,6 +418,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     }
     platform::require(resolve_only || compile_count > 0, "no isolated compilation target matched");
     var states: Activation[256] = [Activation { .. }; 256];
+    for pkg, i in graph.packages { states[i].defaults = pkg.directory != selected || !no_defaults; }
     var cursor = 0;
     while cursor < graph.packages.len {
         if !states[cursor].dirty { cursor++; continue; }
@@ -416,14 +428,14 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         for pkg, i in graph.packages { if i == cursor { directory = str(pkg.directory); origin = str(pkg.git); commit = str(pkg.commit); git_root = str(pkg.git_root); owner_key = package_key(pkg, p.root); } }
         var owner = manifest::Project { .. }; manifest::load(directory, owner, true);
         var empty: u8[][>..] = [];
-        if directory == selected { activate_features(graph, owner, cursor, owner_key, features, !no_defaults, states[cursor]); }
-        else { activate_features(graph, owner, cursor, owner_key, empty, true, states[cursor]); }
+        if directory == selected { activate_features(graph, owner, cursor, owner_key, features, states[cursor]); }
+        else { activate_features(graph, owner, cursor, owner_key, empty, states[cursor]); }
         for dep, index in owner.dependencies {
             if dep.dev || states[cursor].emitted[index] || (dep.optional && !states[cursor].enabled[index]) { continue; }
             states[cursor].emitted[index] = true;
             if dep.registry.len > 0 {
                 platform::require(graph.requests.len < 65536, "registry request limit exceeded");
-                graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(dep.features) }); continue;
+                graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(dep.features), default_features: dep.default_features }); continue;
             }
             var target = -1;
             if dep.git.len > 0 {

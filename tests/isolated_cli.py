@@ -858,6 +858,67 @@ class Isolated(unittest.TestCase):
         self.assertIn('unknown feature missing in shared requested through shared', result.stderr)
         self.assertEqual(lock.read_bytes(), before)
 
+    def test_path_and_git_dependency_defaults_follow_active_edges(self):
+        self.git_fixture()
+        git_manifest = self.remote / 'Honk.toml'
+        with git_manifest.open('a') as f:
+            f.write('[features]\ndefault=[]\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'add default feature')
+        commit = self.git('rev-parse', 'HEAD')
+        shared = self.package('shared', 'namespace shared; fn value() {}')
+        with (shared / 'Honk.toml').open('a') as f:
+            f.write('[features]\ndefault=[]\n')
+        bridge = self.package('bridge', 'namespace bridge; fn value() {}')
+        self.package('app', 'fn main() {}')
+        app = self.root / 'app/Honk.toml'
+        git = f'git="https://test.invalid/mathx.git",rev="{commit}"'
+        with app.open('a') as f:
+            f.write('shared={path="../shared",default-features=false}\n'
+                    f'mathx={{{git},default-features=false}}\n'
+                    'bridge={path="../bridge"}\n')
+        self.run_honk('fetch')
+        lock = app.with_name('Honk.lock')
+        self.assertNotIn('feature', tomllib.loads(lock.read_text()))
+        with (bridge / 'Honk.toml').open('a') as f:
+            f.write(f'shared={{path="../shared"}}\nmathx={{{git}}}\n')
+        self.run_honk('fetch')
+        original = lock.read_bytes()
+        self.assertEqual({(item['owner'], item['name']) for item in tomllib.loads(original.decode())['feature']},
+                         {('../shared', 'default'), (f'git:https://test.invalid/mathx.git@{commit}', 'default')})
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_registry_defaults_reactivate_on_a_late_edge_and_replay_frozen(self):
+        self.registry_fixture()
+        self.registry_release('helper', '1.0.0')
+        record = self.registry_release(
+            'codec', '1.0.0', [('helper', 'helper', '*')],
+            dependency_options={'helper': {'optional': True}},
+            features={'default': ['dep:helper', 'base', 'base'], 'base': []})
+        # Match the publisher's sorting and deduplication of feature members.
+        record['features']['default'] = ['base', 'dep:helper']
+        self.registry.index('codec', [record])
+        self.registry_release('bridge-a', '1.0.0', [('codec', 'codec', '*')],
+                              dependency_options={'codec': {'default-features': False}})
+        self.registry_release('bridge-b', '1.0.0', [('codec', 'codec', '*')])
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'a', 'bridge-a', '*')
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        self.assertNotIn('feature', tomllib.loads(lock.read_text()))
+        self.assertFalse(any('helper' in path for path, _ in self.registry.requests))
+        self.registry_dependency('app', 'b', 'bridge-b', '*')
+        self.run_honk('fetch')
+        original = lock.read_bytes()
+        self.assertEqual({item['name'] for item in tomllib.loads(original.decode())['feature']}, {'base', 'default'})
+        self.assertTrue(any('helper-1.0.0.tar.gz' in path for path, _ in self.registry.requests))
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_git_dependency_feature_selection_is_per_commit(self):
         old, _ = self.git_fixture()
         with (self.remote / 'Honk.toml').open('a') as f:
