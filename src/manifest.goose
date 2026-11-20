@@ -9,7 +9,7 @@ import text;
 import json;
 import .platform;
 
-struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [], optional: bool = false, features: u8[][] = [] }
+struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [], optional: bool = false, features: u8[][] = [], default_features: bool = true }
 struct Feature { name: u8[], items: u8[][] }
 root struct Project {
     root:     u8[>..], name: u8[>..], version: u8[>..], entry: u8[>..], kind: u8[>..],
@@ -130,13 +130,18 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
         let name = toml::key(doc, id);
         platform::require(identifier(name), str("invalid dependency import name: ", name));
         for dep in project.dependencies { platform::require(dep.name != name, "duplicate dependency across dependency tables"); }
-        keys(doc, id, ["path", "git", "rev", "version", "registry", "package", "optional", "features"]);
+        keys(doc, id, ["path", "git", "rev", "version", "registry", "package", "optional", "features", "default-features"]);
         let optional_id = toml::find(doc, id, "optional");
         var optional = false;
         if optional_id >= 0 {
             platform::require(isolated && !dev && doc.nodes[optional_id].kind == toml::Kind.Boolean, "optional requires an isolated production dependency and a boolean");
             optional = doc.nodes[optional_id].boolean;
         }
+        let defaults = toml::find(doc, id, "default-features");
+        if defaults >= 0 {
+            platform::require(isolated && !dev && doc.nodes[defaults].kind == toml::Kind.Boolean, "default-features requires an isolated production dependency and a boolean");
+        }
+        let default_features = defaults < 0 || doc.nodes[defaults].boolean;
         let has_rev = toml::find(doc, id, "rev") >= 0; let has_version = toml::find(doc, id, "version") >= 0;
         platform::require(!(has_rev && has_version), "rev and version fields are mutually exclusive");
         platform::require(toml::find(doc, id, "path") < 0 || (!has_rev && !has_version), "path dependency cannot contain rev or version fields");
@@ -156,10 +161,10 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
             }
         }
         let dep = if registry_source {
-            Dependency { name: str(name), dev: dev, requirement: string(doc, id, "version"), registry: string(doc, id, "registry", nest::DEFAULT_REGISTRY), package: string(doc, id, "package", name), optional: optional, features: copy(features), .. }
+            Dependency { name: str(name), dev: dev, requirement: string(doc, id, "version"), registry: string(doc, id, "registry", nest::DEFAULT_REGISTRY), package: string(doc, id, "package", name), optional: optional, features: copy(features), default_features: default_features, .. }
         } else {
             platform::require(toml::find(doc, id, "registry") < 0 && toml::find(doc, id, "package") < 0, "Git/path dependencies cannot specify registry/package");
-            Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), optional: optional, features: copy(features), .. }
+            Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), optional: optional, features: copy(features), default_features: default_features, .. }
         };
         validate_dependency(dep);
         platform::require(project.dependencies.len < 256, "dependency limit is 256");

@@ -94,7 +94,7 @@ class Registry:
     def index(self, name, entries):
         target = self.root / 'index' / f'{name}.toml'
         target.parent.mkdir(exist_ok=True)
-        schema = 2 if any('features' in release or any('optional' in dep or 'features' in dep for dep in release['dependencies']) for release in entries) else 1
+        schema = 2 if any('features' in release or any('optional' in dep or 'features' in dep or 'default-features' in dep for dep in release['dependencies']) for release in entries) else 1
         text = f'schema={schema}\npackage={q(name)}\n'
         for entry in entries:
             text += '\n[[releases]]\n'

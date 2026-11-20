@@ -9,7 +9,7 @@ const VERSION = "0.1.0-alpha.1";
 const MAX_PACKAGES = 256;
 const MAX_DECISIONS = 100000;
 struct Request { package: u8[], requirement: u8[], registry: u8[] }
-struct Dependency { alias: u8[], package: u8[], requirement: u8[], optional: bool = false, features: u8[][] = [] }
+struct Dependency { alias: u8[], package: u8[], requirement: u8[], optional: bool = false, features: u8[][] = [], default_features: bool = true }
 struct Feature { name: u8[], items: u8[][] }
 struct Record {
     package:      u8[], version: u8[], registry: u8[], url: u8[], sha256: u8[], entry: u8[],
@@ -78,7 +78,7 @@ fn feature_name(name: const u8[:]) -> bool {
 }
 fn has_feature_metadata(record: const Record&) -> bool {
     if record.features.len > 0 { return true; }
-    for dep in record.dependencies { if dep.optional || dep.features.len > 0 { return true; } }
+    for dep in record.dependencies { if dep.optional || dep.features.len > 0 || !dep.default_features { return true; } }
     return false;
 }
 fn read_feature_array(doc: toml::Document&, array: i64, out: u8[][>..]&) -> bool {
@@ -151,15 +151,17 @@ fn parse_record(doc: toml::Document&, id: i64, registry: u8[:], package: u8[:], 
         if doc.nodes[array].kind != toml::Kind.Array || doc.nodes[array].count > 256 { return Record { .. }, str("invalid registry dependency list"); }
         var child = doc.nodes[array].first;
         while child >= 0 {
-            if !keys(doc, child, ["alias", "package", "version", "optional", "features"]) { return Record { .. }, str("unknown dependency field"); }
+            if !keys(doc, child, ["alias", "package", "version", "optional", "features", "default-features"]) { return Record { .. }, str("unknown dependency field"); }
             let opt = toml::find(doc, child, "optional");
             let requested = toml::find(doc, child, "features");
-            if !feature_metadata && (opt >= 0 || requested >= 0) { return Record { .. }, str("dependency feature metadata requires schema 2"); }
+            let defaults = toml::find(doc, child, "default-features");
+            if defaults >= 0 && doc.nodes[defaults].kind != toml::Kind.Boolean { return Record { .. }, str("default-features must be a boolean"); }
+            if !feature_metadata && (opt >= 0 || requested >= 0 || defaults >= 0) { return Record { .. }, str("dependency feature metadata requires schema 2"); }
             if opt >= 0 && doc.nodes[opt].kind != toml::Kind.Boolean { return Record { .. }, str("optional must be a boolean"); }
             var names: u8[][>..] = [];
             if !read_feature_array(doc, requested, names) { return Record { .. }, str("invalid requested features"); }
             dependencies.push(Dependency { alias: string(doc, child, "alias"), package: string(doc, child, "package"), requirement: string(doc, child, "version"),
-                optional: opt >= 0 && doc.nodes[opt].boolean, features: copy(names) });
+                optional: opt >= 0 && doc.nodes[opt].boolean, features: copy(names), default_features: defaults < 0 || doc.nodes[defaults].boolean });
             child = doc.nodes[child].next;
         }
     }
@@ -309,6 +311,7 @@ fn record_text(record: const Record&) -> u8[>..] {
         out.append("{ alias = "); quoted(out, dep.alias); out.append(", package = "); quoted(out, dep.package);
         out.append(", version = "); quoted(out, dep.requirement);
         if dep.optional { out.append(", optional = true"); }
+        if !dep.default_features { out.append(", default-features = false"); }
         if dep.features.len > 0 { out.append(", features = "); write_feature_array(out, dep.features); }
         out.append(" }");
     }

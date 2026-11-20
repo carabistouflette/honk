@@ -116,8 +116,12 @@ registry resolution and lock writing. Different Git revisions keep independent
 selections. A requested name must exist in the target manifest. Requests on
 optional dependencies take effect when the dependency is activated.
 
-Dependency edges add to the target's defaults. Per-edge default opt-out,
-feature forwarding syntax, and development dependency features remain future work.
+A production dependency from any of the three sources can use
+`default-features = false` to opt out of requesting the target's default
+group. Any active edge that requests defaults enables them for the shared
+instance, including edges discovered after that instance was first visited.
+Explicitly requesting `"default"` also enables it. Feature forwarding syntax
+and development dependency features remain future work.
 A local or Git package can gate a registry dependency behind its own groups.
 
 ### Conditional declarations
@@ -237,8 +241,8 @@ releases are downloaded. Cycles can trigger backtracking to older releases.
 
 Isolated mode accepts schema-1 and schema-2 indexes. Schema 2 allows releases
 to declare feature groups, optional dependencies, and feature requests on
-dependency edges. Requested features constrain eligible versions. Honk activates
-defaults and merges late requests per selected release, then validates the
+dependency edges, including per-edge default opt-out. Requested features
+constrain eligible versions. Honk merges late requests per selected release, then validates the
 downloaded manifest against the index before writing the lock. Only activated
 optional dependencies enter the graph. Active registry features require a Goose
 compiler that advertises package graph feature support. The flat workflow
