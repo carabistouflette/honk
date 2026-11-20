@@ -1,6 +1,7 @@
 # Experimental isolated packages
 
-`honk check --isolated`, `honk run --isolated` and `honk build --isolated`
+`honk check --isolated`, `honk run --isolated`, `honk build --isolated` and
+`honk test --isolated`
 produce the compiler's resolved graph directly, retaining dependency aliases
 inside their owning packages. Two dependencies can both import `dep` with
 different bindings, and incompatible nominal types and globals stay isolated.
@@ -36,10 +37,10 @@ are rejected, with the existing source/file limits and a 32 MiB total snapshot
 limit. Physical paths do not enter the snapshot digest. Source edits refresh
 the graph each invocation; there is no persistent graph reuse yet.
 
-Production path, Git and registry dependencies are supported.
+Production and development dependencies can come from paths, Git, or registries.
 Build and run produce executables from binary packages. Check supports binary
-and library packages. Dev/test/bench targets, embedded resources and build
-reuse remain unfinished. The compiler
+and library packages. Bench targets, embedded resources and build reuse
+remain unfinished. The compiler
 rejects non-toolchain native sidecars, foreign externs/exports and unsupported
 tooling. Source digest assertions are producer-owned; concurrent source edits
 are not an atomic filesystem snapshot. This is not full Cargo parity.
@@ -127,9 +128,8 @@ For example, `"codec/json"` requests `json` and activates `codec` if it
 is optional. With `"codec?/json"`, the request takes effect only if that
 optional edge is otherwise active. Honk applies pending requests when
 the edge is activated later. Registry version selection can backtrack if
-the chosen release lacks a forwarded feature. Development dependency
-features remain future work.
-A local or Git package can gate a registry dependency behind its own groups.
+the chosen release lacks a forwarded feature. A local or Git package can
+gate a registry dependency behind its own groups.
 
 ### Conditional declarations
 
@@ -150,6 +150,27 @@ if feature("export-data") {
 Use an unconditional namespace directive if the file has one. Previous supported
 compiler pins still work for dependency selection alone. Graph-aware formatting
 and editing tools are future work.
+
+## Isolated tests
+
+`honk test --isolated` discovers standalone executables under `tests/`,
+builds them with their package's isolated bindings, and runs them serially.
+Build outputs are separate from normal executables. Test arguments follow
+`--`. The workspace selectors also apply to test execution.
+
+Only the test graph includes workspace package development dependencies.
+Dependencies acquired through path, Git or a registry contribute their
+production edges. Within the test graph, `features` and
+`default-features` on development edges participate in feature unification.
+A production edge and a development edge can share an alias when their
+source and version requirement match. Tests use the union of both requests.
+
+The first unlocked test run writes a `[test]` section to the same
+`Honk.lock`, alongside the production graph. `honk build --isolated --frozen`
+checks the production rows and preserves the test section. `honk test
+--isolated --frozen` checks both graphs using cached sources. If dependencies
+change, rerun the affected command without `--locked` to refresh its rows.
+The isolated graph still rejects package dependency cycles.
 
 ## Multi-instance locks
 

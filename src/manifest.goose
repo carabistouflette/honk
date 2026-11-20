@@ -129,7 +129,7 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
     while id >= 0 {
         let name = toml::key(doc, id);
         platform::require(identifier(name), str("invalid dependency import name: ", name));
-        for dep in project.dependencies { platform::require(dep.name != name, "duplicate dependency across dependency tables"); }
+
         keys(doc, id, ["path", "git", "rev", "version", "registry", "package", "optional", "features", "default-features"]);
         let optional_id = toml::find(doc, id, "optional");
         var optional = false;
@@ -139,7 +139,7 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
         }
         let defaults = toml::find(doc, id, "default-features");
         if defaults >= 0 {
-            platform::require(isolated && !dev && doc.nodes[defaults].kind == toml::Kind.Boolean, "default-features requires an isolated production dependency and a boolean");
+            platform::require(isolated && doc.nodes[defaults].kind == toml::Kind.Boolean, "default-features requires an isolated dependency and a boolean");
         }
         let default_features = defaults < 0 || doc.nodes[defaults].boolean;
         let has_rev = toml::find(doc, id, "rev") >= 0; let has_version = toml::find(doc, id, "version") >= 0;
@@ -150,7 +150,7 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
         var features: u8[][>..] = [];
         let feature_list = toml::find(doc, id, "features");
         if feature_list >= 0 {
-            platform::require(isolated && !dev, "dependency features require an isolated production dependency");
+            platform::require(isolated, "dependency features require an isolated dependency");
             platform::require(doc.nodes[feature_list].kind == toml::Kind.Array && doc.nodes[feature_list].count <= 256, "dependency features must be an array of at most 256 names");
             var item = doc.nodes[feature_list].first;
             while item >= 0 {
@@ -167,6 +167,11 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
             Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), optional: optional, features: copy(features), default_features: default_features, .. }
         };
         validate_dependency(dep);
+        for prior in project.dependencies {
+            if prior.name != name { continue; }
+            platform::require(isolated && dev && !prior.dev, "duplicate dependency across dependency tables");
+            platform::require(prior.path == dep.path && prior.git == dep.git && prior.rev == dep.rev && prior.registry == dep.registry && prior.package == dep.package && prior.requirement == dep.requirement, "shared isolated production and development aliases require identical source and version requirements");
+        }
         platform::require(project.dependencies.len < 256, "dependency limit is 256");
         project.dependencies.push(copy(dep)); id = doc.nodes[id].next;
     }
