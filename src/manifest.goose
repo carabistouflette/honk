@@ -199,7 +199,14 @@ fn read_features(doc: toml::Document&, table: i64, project: Project&) {
                 for dep in project.dependencies { if dep.optional && dep.name == item[4..] { found = true; } }
                 platform::require(found, str("unknown optional dependency in feature: ", item));
             } else {
-                platform::require(feature_index(project, item) >= 0, str("unknown feature reference: ", item));
+                let alias, name, weak = nest::forwarded_feature(item);
+                if alias.len > 0 {
+                    var found = false;
+                    for dep in project.dependencies { if !dep.dev && dep.name == alias && (!weak || dep.optional) { found = true; break; } }
+                    platform::require(found && nest::feature_name(name), str("invalid dependency feature reference: ", item));
+                } else {
+                    platform::require(feature_index(project, item) >= 0, str("unknown feature reference: ", item));
+                }
             }
         }
     }

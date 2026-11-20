@@ -65,7 +65,7 @@ at `166b684ca96403fea94072cc8e0c630321fb832d`; unmodified `task.goose` and
 `vendor/manifest.json`. The scheduler is not used by Honk.
 
 Registry resolution uses [Goose Nest](https://github.com/carabistouflette/goose-nest)
-at `c0bb5a757378f89c601d4b67ead5531506e753a5`; unmodified native/Goose/build sources and
+at `59ec71e3be632164f38a2891458d1b146843bce9`; unmodified native/Goose/build sources and
 [Apache-2.0](vendor/goose-nest/LICENSE) are retained with exact hashes in
 `vendor/manifest.json`. System libcurl, OpenSSL and libarchive retain their
 upstream licenses and are not bundled in this source snapshot.

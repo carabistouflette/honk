@@ -858,6 +858,99 @@ class Isolated(unittest.TestCase):
         self.assertIn('unknown feature missing in shared requested through shared', result.stderr)
         self.assertEqual(lock.read_bytes(), before)
 
+    def test_forwarded_features_reach_already_bound_path_git_and_registry_edges(self):
+        self.git_fixture()
+        with (self.remote / 'Honk.toml').open('a') as f:
+            f.write('[features]\nextra=[]\n')
+        self.git('add', '.')
+        self.git('commit', '-qm', 'declare forwarded feature')
+        commit = self.git('rev-parse', 'HEAD')
+        self.registry_fixture()
+        self.registry_release('published', '1.0.0', features={'extra': []})
+        shared = self.package('shared', 'namespace shared; fn value() {}')
+        with (shared / 'Honk.toml').open('a') as f:
+            f.write('[features]\nextra=[]\n')
+        bridge = self.package('bridge', 'namespace bridge; fn value() {}', {'shared': 'shared'})
+        self.registry_dependency('bridge', 'published', 'published', '*')
+        with (bridge / 'Honk.toml').open('a') as f:
+            f.write(f'mathx={{git="https://test.invalid/mathx.git",rev="{commit}"}}\n'
+                    '[features]\nforward=["shared/extra","mathx/extra","published/extra"]\n')
+        trigger = self.package('trigger', 'namespace trigger; fn value() {}')
+        app = self.package('app', 'fn main() {}', {'bridge': 'bridge', 'trigger': 'trigger'})
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        self.assertNotIn('feature', tomllib.loads(lock.read_text()))
+        with (trigger / 'Honk.toml').open('a') as f:
+            f.write('bridge={path="../bridge",features=["forward"]}\n')
+        self.run_honk('fetch')
+        original = lock.read_bytes()
+        data = tomllib.loads(original.decode())
+        self.assertEqual(len(data['binding']), 6)
+        self.assertEqual(sorted(f['name'] for f in data['feature']), ['extra', 'extra', 'extra', 'forward'])
+        before = self.network_commands(), list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        self.run_honk('check', extra=('--frozen',))
+        self.assertEqual((self.network_commands(), self.registry.requests), before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    def test_weak_path_forwarding_activates_only_with_its_own_optional_edge(self):
+        codec = self.package('codec', 'namespace codec; fn value() {}')
+        with (codec / 'Honk.toml').open('a') as f:
+            f.write('[features]\njson=[]\n')
+        app = self.package('app', 'fn main() {}', {'always': 'codec'})
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('optional_codec={path="../codec",optional=true}\n'
+                    '[features]\ndefault=["optional_codec?/json"]\n'
+                    'enable=["dep:optional_codec"]\n')
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        weak = tomllib.loads(lock.read_text())
+        self.assertEqual([b['alias'] for b in weak['binding']], ['always'])
+        self.assertEqual([f['name'] for f in weak['feature']], ['default'])
+        self.run_honk('fetch', extra=('--features', 'enable'))
+        original = lock.read_bytes()
+        active = tomllib.loads(original.decode())
+        self.assertEqual({b['alias'] for b in active['binding']}, {'always', 'optional_codec'})
+        self.assertEqual({f['name'] for f in active['feature']}, {'default', 'enable', 'json'})
+        self.run_honk('check', extra=('--features', 'enable', '--frozen'))
+        self.assertEqual(lock.read_bytes(), original)
+
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_registry_weak_forwarding_waits_for_activation_and_backtracks(self):
+        self.registry_fixture()
+        self.registry_release('codec', '1.0.0', features={'json': [], 'reader': []},
+                              code='namespace codec; if feature("json") { fn value() -> i64 { 42 } }')
+        self.registry_release('codec', '1.1.0', features={'reader': []})
+        self.registry_release(
+            'driver', '1.0.0', [('codec', 'codec', '^1.0.0')],
+            dependency_options={'codec': {'optional': True}},
+            features={'weak': ['codec?/json'], 'strong': ['codec/reader']},
+            code='namespace driver; if feature("strong") { import codec; fn value() -> i64 { codec::value() } }')
+        self.registry_release('trigger', '1.0.0', [('driver', 'driver', '*')],
+                              dependency_options={'driver': {'features': ['strong']}})
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'driver', 'driver', '*', ['weak'])
+        self.run_honk('fetch')
+        self.assertFalse(any('codec' in path for path, _ in self.registry.requests))
+        self.registry_dependency('app', 'trigger', 'trigger', '*')
+        (app / 'entry.goose').write_text('import driver; import std; fn main() { print(driver::value()); }')
+        self.assertEqual(self.run_honk().stdout.strip(), '42')
+        self.assertFalse(any('codec-1.1.0.tar.gz' in path for path, _ in self.registry.requests))
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        data = tomllib.loads(original.decode())
+        self.assertEqual(len(data['binding']), 4)
+        self.assertEqual({f['name'] for f in data['feature']}, {'json', 'reader', 'strong', 'weak'})
+        manifest = app / 'Honk.toml'
+        lines = manifest.read_text().splitlines()
+        lines[-2:] = reversed(lines[-2:])
+        manifest.write_text('\n'.join(lines) + '\n')
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '42')
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_path_and_git_dependency_defaults_follow_active_edges(self):
         self.git_fixture()
         git_manifest = self.remote / 'Honk.toml'

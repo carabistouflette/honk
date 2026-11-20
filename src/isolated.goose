@@ -334,15 +334,17 @@ struct Activation {
     active:    bool[256] = [false; 256],
     emitted:   bool[256] = [false; 256],
     enabled:   bool[256] = [false; 256],
+    changed:   bool[256] = [false; 256],
+    targets:   i64[256]  = [-1; 256],
     dirty:     bool      = true,
     defaults:  bool      = false,
 }
-fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u8[:]) {
+fn request_features(state: Activation&, dep: manifest::Dependency&, directory: u8[:], names: const u8[][:]) {
     if dep.default_features && !state.defaults { state.defaults = true; state.dirty = true; }
-    if dep.features.len == 0 { return; }
+    if names.len == 0 { return; }
     var target = manifest::Project { .. };
     manifest::load(directory, target, true);
-    for name in dep.features {
+    for name in names {
         let index = manifest::feature_index(target, name);
         platform::require(index >= 0, str("unknown feature ", name, " in ", target.name, " requested through ", dep.name));
         if !state.requested[index] { state.requested[index] = true; state.dirty = true; }
@@ -370,6 +372,16 @@ fn activate_features(graph: Graph&, owner: manifest::Project&, owner_id: i64, ke
             for item in feature.items {
                 if item.len > 4 && item[..4] == "dep:" {
                     for dep, j in owner.dependencies { if dep.name == item[4..] { state.enabled[j] = true; break; } }
+                    continue;
+                }
+                let alias, name, weak = nest::forwarded_feature(item);
+                if alias.len > 0 {
+                    for dep, j in owner.dependencies {
+                        if dep.name != alias { continue; }
+                        state.changed[j] = true;
+                        if !weak { state.enabled[j] = true; }
+                        break;
+                    }
                 } else {
                     let other = manifest::feature_index(owner, item);
                     if !state.active[other] { state.active[other] = true; pending.push(other); }
@@ -379,6 +391,23 @@ fn activate_features(graph: Graph&, owner: manifest::Project&, owner_id: i64, ke
             break;
         }
     }
+}
+fn add_requested_name(names: u8[][>..]&, name: u8[:]) {
+    for present in names { if present == name { return; } }
+    platform::require(names.len < 256, "dependency feature requests exceed 256 names");
+    names.push(str(name));
+}
+fn forwarded_names(owner: manifest::Project&, state: Activation&, dep: manifest::Dependency&) -> u8[][>..] {
+    var names: u8[][>..] = [];
+    for name in dep.features { add_requested_name(names, name); }
+    for group, i in owner.features {
+        if !state.active[i] { continue; }
+        for item in group.items {
+            let alias, name, weak = nest::forwarded_feature(item);
+            if alias == dep.name { add_requested_name(names, name); }
+        }
+    }
+    return names;
 }
 const FEATURE_COMPILER = "eeab7eebcae92d9a04b6caf43c321da560b8d269";
 fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool) {
@@ -431,13 +460,34 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         if directory == selected { activate_features(graph, owner, cursor, owner_key, features, states[cursor]); }
         else { activate_features(graph, owner, cursor, owner_key, empty, states[cursor]); }
         for dep, index in owner.dependencies {
-            if dep.dev || states[cursor].emitted[index] || (dep.optional && !states[cursor].enabled[index]) { continue; }
+            if dep.dev || (dep.optional && !states[cursor].enabled[index]) { continue; }
+            let emitted = states[cursor].emitted[index];
+            let changed = states[cursor].changed[index];
+            if emitted && !changed { continue; }
             states[cursor].emitted[index] = true;
+            states[cursor].changed[index] = false;
+            let combined: u8[][>..]     = if changed { forwarded_names(owner, states[cursor], dep) } else { [] };
+            let names:    const u8[][:] = if changed { combined } else { dep.features };
             if dep.registry.len > 0 {
-                platform::require(graph.requests.len < 65536, "registry request limit exceeded");
-                graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(dep.features), default_features: dep.default_features }); continue;
+                if emitted {
+                    for name in names {
+                        platform::require(graph.requests.len < 65536, "registry request limit exceeded");
+                        graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), default_features: false, forwarded: str(name), .. });
+                    }
+                } else {
+                    platform::require(graph.requests.len < 65536, "registry request limit exceeded");
+                    var requested: u8[][>..] = [];
+                    for name in names { requested.push(str(name)); }
+                    graph.requests.push(scoped_registry::Request { owner: str(owner_key), alias: str(dep.name), registry: str(dep.registry), package: str(dep.package), requirement: str(dep.requirement), features: copy(requested), default_features: dep.default_features, .. });
+                }
+                continue;
             }
-            var target = -1;
+            var target = states[cursor].targets[index];
+            if emitted {
+                for pkg, i in graph.packages { if i == target { request_features(states[target], dep, pkg.directory, names); break; } }
+                if states[target].dirty && target < next { next = target; }
+                continue;
+            }
             if dep.git.len > 0 {
                 read_pins(graph, p);
                 var materialized = deps::Graph { cache: str(cache), locked: locked, offline: offline, update: command == "update", .. };
@@ -458,7 +508,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
                 var registry = nest::Resolver { .. }; deps::add(materialized, dep, directory, registry, true);
                 for node in materialized.nodes {
                     target = visit(graph, node.directory, p.revision, dep.git, node.commit, node.directory);
-                    request_features(states[target], dep, node.directory);
+                    request_features(states[target], dep, node.directory, names);
                     graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, git: str(dep.git), rev: str(dep.rev), requirement: str(dep.requirement), selected_ref: str(node.rev), commit: str(node.commit) });
                 }
             } else {
@@ -466,9 +516,10 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
                 let path = platform::absolute(candidate);
                 if origin.len > 0 { platform::require(path == git_root || (path.len > git_root.len && path[..git_root.len] == git_root && path[git_root.len] == '/'), "Git path dependency escapes its checkout"); }
                 target = visit(graph, path, p.revision, origin, commit, git_root);
-                request_features(states[target], dep, path);
+                request_features(states[target], dep, path, names);
                 graph.bindings.push(Binding { owner: cursor, alias: str(dep.name), target: target, .. });
             }
+            states[cursor].targets[index] = target;
             if states[target].dirty && target < next { next = target; }
         }
         cursor = next;
