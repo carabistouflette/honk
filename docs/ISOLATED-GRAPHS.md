@@ -102,7 +102,7 @@ materialization, including registry requests. The compiler sees the resulting
 bindings. Source code that unconditionally imports an optional dependency must
 be built with that dependency enabled.
 
-A production dependency from a path or Git repository can request features
+A production dependency from a path, Git repository, or registry can request features
 on its target:
 
 ```toml
@@ -117,8 +117,7 @@ selections. A requested name must exist in the target manifest. Requests on
 optional dependencies take effect when the dependency is activated.
 
 Dependency edges add to the target's defaults. Per-edge default opt-out,
-feature forwarding syntax, development dependencies,
-and feature declarations in published registry archives remain future work.
+feature forwarding syntax, and development dependency features remain future work.
 A local or Git package can gate a registry dependency behind its own groups.
 
 ### Conditional declarations
@@ -235,6 +234,15 @@ not its entire resolver/feature policy. All registry constraints from path/Git
 packages are collected before solving. Selected archive dependencies are solved
 from index metadata before any registry archive is materialized. Only selected
 releases are downloaded. Cycles can trigger backtracking to older releases.
+
+Isolated mode accepts schema-1 and schema-2 indexes. Schema 2 allows releases
+to declare feature groups, optional dependencies, and feature requests on
+dependency edges. Requested features constrain eligible versions. Honk activates
+defaults and merges late requests per selected release, then validates the
+downloaded manifest against the index before writing the lock. Only activated
+optional dependencies enter the graph. Active registry features require a Goose
+compiler that advertises package graph feature support. The flat workflow
+continues to use schema 1.
 
 The resolver first tries the complete owner-specific lock without reading any
 index. If an unlocked graph change requires catalog lookup, eligible existing

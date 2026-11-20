@@ -412,15 +412,16 @@ class Isolated(unittest.TestCase):
         self.addCleanup(self.registry.close)
         self.registry_versions = {}
 
-    def registry_release(self, name, version, deps=(), code=None, compiler=None):
-        record = self.registry.package(name, version, deps=deps, payload=(code.encode() if code else None), compiler=compiler)
+    def registry_release(self, name, version, deps=(), code=None, compiler=None, **options):
+        record = self.registry.package(name, version, deps=deps, payload=(code.encode() if code else None), compiler=compiler, **options)
         self.registry_versions.setdefault(name, []).append(record)
         self.registry.index(name, self.registry_versions[name])
         return record
 
-    def registry_dependency(self, folder, alias, package, requirement):
+    def registry_dependency(self, folder, alias, package, requirement, features=()):
         with (self.root / folder / 'Honk.toml').open('a') as f:
-            f.write(f'{alias} = {{ package = "{package}", version = "{requirement}", registry = "{self.registry.url}/index" }}\n')
+            selection = f', features = {json.dumps(list(features))}' if features else ''
+            f.write(f'{alias} = {{ package = "{package}", version = "{requirement}", registry = "{self.registry.url}/index"{selection} }}\n')
 
     def test_registry_incompatible_diamond_and_frozen(self):
         self.registry_fixture()
@@ -441,6 +442,73 @@ class Isolated(unittest.TestCase):
         self.assertEqual(subprocess.check_output([str(self.root / 'app/target/isolated/app')], text=True).strip(), '1 2')
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
+
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_registry_features_unify_backtrack_and_replay_frozen(self):
+        self.registry_fixture()
+        self.registry_release('helper', '1.0.0')
+        self.registry_release('unused', '1.0.0')
+        self.registry_release('rejected', '1.0.0', [('fail', 'missing', '=2.0.0')])
+        code = ('namespace codec; if feature("extra") { import helper; '
+                'fn value() -> i64 { helper::value() } }')
+        for version, child in [('1.0.0', 'helper'), ('1.1.0', 'rejected')]:
+            self.registry_release(
+                'codec', version, [('helper', child, '*'), ('unused', 'unused', '*')], code,
+                dependency_options={'helper': {'optional': True}, 'unused': {'optional': True}},
+                features={'default': [], 'root': [], 'extra': ['internal'], 'internal': ['extra', 'dep:helper'],
+                          'unused': ['dep:unused']})
+        self.registry_release('bridge', '1.0.0', [('codec', 'codec', '^1.0.0')],
+                              dependency_options={'codec': {'features': ['extra']}})
+        self.package('app', 'import codec; import bridge; import std; fn main() { print(codec::value()); }')
+        self.registry_dependency('app', 'codec', 'codec', '^1.0.0', ['root'])
+        self.registry_dependency('app', 'bridge', 'bridge', '*')
+        # Publish the missing package without any version accepted by the rejected branch.
+        self.registry_release('missing', '1.0.0')
+        self.assertEqual(self.run_honk().stdout.strip(), '42')
+        self.assertFalse(any('unused.toml' in path or 'rejected-1.0.0.tar.gz' in path or
+                             'codec-1.1.0.tar.gz' in path for path, _ in self.registry.requests))
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        data = tomllib.loads(original.decode())
+        self.assertEqual({f['name'] for f in data['feature']}, {'default', 'extra', 'internal', 'root'})
+        self.assertEqual(len(data['feature']), 4)
+        self.assertEqual(len(data['binding']), 4)
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '42')
+        self.run_honk('build', extra=('--frozen',))
+        self.assertEqual(subprocess.check_output([str(self.root / 'app/target/isolated/app')], text=True).strip(), '42')
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_registry_feature_filters_versions_and_reports_missing_name(self):
+        self.registry_fixture()
+        self.registry_release('codec', '1.0.0', features={'extra': []})
+        self.registry_release('codec', '1.1.0')
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'codec', 'codec', '^1.0.0', ['extra'])
+        self.run_honk('fetch')
+        self.assertFalse(any('codec-1.1.0.tar.gz' in path for path, _ in self.registry.requests))
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        manifest = app / 'Honk.toml'
+        manifest.write_text(manifest.read_text().replace('"extra"', '"unknown"'))
+        result = self.run_honk('fetch', ok=False)
+        self.assertIn('unknown feature unknown', result.stderr)
+        self.assertEqual(lock.read_bytes(), original)
+
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_registry_archive_feature_metadata_must_match(self):
+        self.registry_fixture()
+        record = self.registry_release('codec', '1.0.0', features={'default': []})
+        record['features']['extra'] = []
+        self.registry.index('codec', [record])
+        self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'codec', 'codec', '*', ['extra'])
+        result = self.run_honk('fetch', ok=False)
+        self.assertIn('archive feature count differs', result.stderr)
+        self.assertFalse((self.root / 'app/Honk.lock').exists())
 
     def test_registry_compatible_versions_backtrack_before_download(self):
         self.registry_fixture()

@@ -58,11 +58,17 @@ class Registry:
         self.thread.join()
         self.server.server_close()
 
-    def package(self, name='demo', version='1.0.0', deps=(), payload=None, extra=None, compiler=None):
+    def package(self, name='demo', version='1.0.0', deps=(), payload=None, extra=None, compiler=None, dependency_options=None, features=None):
         label = f'{name}-{version}'
         manifest = f'[package]\nname={q(name)}\nversion={q(version)}\nkind="lib"\nentry="lib.goose"\n[dependencies]\n'
+        dependencies = []
         for alias, package, requirement in deps:
-            manifest += f'{alias} = {{ package={q(package)}, version={q(requirement)}, registry={q(self.url + "/index")} }}\n'
+            fields = dict(package=package, version=requirement, **(dependency_options or {}).get(alias, {}))
+            dependencies.append(dict(alias=alias, **fields))
+            fields['registry'] = self.url + '/index'
+            manifest += f'{alias} = {{ ' + ', '.join(f'{key}={json.dumps(value)}' for key, value in fields.items()) + ' }\n'
+        if features:
+            manifest += '[features]\n' + ''.join(f'{name}={json.dumps(items)}\n' for name, items in features.items())
         if compiler:
             manifest += f'[toolchain]\nrevision={q(compiler)}\n'
         content = {'Honk.toml': manifest.encode(), 'lib.goose': payload or b'namespace demo;\nfn value() -> i64 { 42 }\n'}
@@ -79,20 +85,25 @@ class Registry:
         path = self.root / f'{label}.tar.gz'
         path.write_bytes(data)
         entry = {'version': version, 'url': self.url + '/' + path.name, 'sha256': hashlib.sha256(data).hexdigest(), 'entry': 'lib.goose', 'yanked': False,
-                 'dependencies': [{'alias': a, 'package': p, 'version': r} for a, p, r in deps]}
+                 'dependencies': dependencies}
+        if features:
+            entry['features'] = features
         self.index(name, [entry])
         return entry
 
     def index(self, name, entries):
         target = self.root / 'index' / f'{name}.toml'
         target.parent.mkdir(exist_ok=True)
-        text = f'schema=1\npackage={q(name)}\n'
+        schema = 2 if any('features' in release or any('optional' in dep or 'features' in dep for dep in release['dependencies']) for release in entries) else 1
+        text = f'schema={schema}\npackage={q(name)}\n'
         for entry in entries:
             text += '\n[[releases]]\n'
             for key in ('version', 'url', 'sha256', 'entry'):
                 text += f'{key}={q(entry[key])}\n'
             text += f'yanked={str(entry.get("yanked", False)).lower()}\n'
-            text += 'dependencies=[' + ','.join('{'+','.join(f'{k}={q(v)}' for k, v in dep.items())+'}' for dep in entry['dependencies']) + ']\n'
+            text += 'dependencies=[' + ','.join('{'+','.join(f'{k}={json.dumps(v)}' for k, v in dep.items())+'}' for dep in entry['dependencies']) + ']\n'
+            if 'features' in entry:
+                text += '[releases.features]\n' + ''.join(f'{name}={json.dumps(items)}\n' for name, items in entry['features'].items())
         target.write_text(text)
         (target.parent / '_catalog.toml').write_text(f'schema=1\n[[packages]]\nname={q(name)}\nversion={q(entries[0]["version"])}\n')
 

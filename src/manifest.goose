@@ -145,7 +145,7 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
         var features: u8[][>..] = [];
         let feature_list = toml::find(doc, id, "features");
         if feature_list >= 0 {
-            platform::require(isolated && !dev && !registry_source, "dependency features require an isolated path or Git production dependency");
+            platform::require(isolated && !dev, "dependency features require an isolated production dependency");
             platform::require(doc.nodes[feature_list].kind == toml::Kind.Array && doc.nodes[feature_list].count <= 256, "dependency features must be an array of at most 256 names");
             var item = doc.nodes[feature_list].first;
             while item >= 0 {
