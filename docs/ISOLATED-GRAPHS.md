@@ -187,6 +187,22 @@ OS, ordinary and development edges follow the same alias rules as
 unconditional dependencies. Features forwarded to an alias unavailable
 on the selected OS have no effect there.
 
+## Targeted dependency updates
+
+`honk update --isolated --dependency <package-name>` refreshes a registry
+or Git package already present in the selected production lock. Use the
+package's manifest name even if it is imported through an alias.
+Other pinned releases are preferred, including transitives whose owner's
+version changes. Honk initially reuses their locked registry records.
+If the graph needs different versions, it can expand the search to
+other releases. The command reports added and removed package versions
+and source identities, including transitive changes.
+
+Use the same target selectors used to create the lock. The update leaves
+the other target entries and the test section in place. After an update
+that changes the test graph, refresh that graph with
+`honk fetch --isolated --tests` and the applicable target selectors.
+
 ## Inspecting dependencies
 
 `honk tree --isolated` shows the production dependency graph. Add

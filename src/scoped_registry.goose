@@ -9,7 +9,7 @@ struct Request { owner: u8[], alias: u8[], registry: u8[], package: u8[], requir
 struct Pin { request: Request, record: nest::Record }
 struct Edge { request: i64, target: i64 }
 struct Activation { record: i64, index: i64 }
-root struct State { target_os: u8[] = [], target_arch: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
+root struct State { refresh: u8[] = [], conflict: bool = false, target_os: u8[] = [], target_arch: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
 struct Frame { candidates: i64[512], count: i64, next: i64 = 0, cursor: i64, pending: i64, selected: i64, edges: i64, features: i64, optional_edges: i64 }
 const MAX_WORK = 8000000;
 fn spend(s: State&, units: i64 = 1) -> bool { s.work += units; if s.work > MAX_WORK { s.error = str("registry resolution scan budget exceeded (8000000)"); return false; } return true; }
@@ -42,7 +42,11 @@ fn allowed(s: State&, catalog: nest::Resolver&, id: i64) -> bool {
 }
 fn reused(s: State&, id: i64) -> bool { for selected in s.selected { if selected == id { return true; } } return false; }
 fn preferred(s: State&, record: const nest::Record&, request: Request&) -> bool {
-    for pin in s.pins { if !spend(s) { return false; } if same_request(pin.request, request) && same_record(pin.record, record) { return true; } }
+    if s.refresh == request.package { return false; }
+    for pin in s.pins {
+        if !spend(s) { return false; }
+        if (same_request(pin.request, request) || (s.refresh.len > 0 && pin.request.registry == request.registry && pin.request.package == request.package)) && same_record(pin.record, record) { return true; }
+    }
     return false;
 }
 fn enqueue(s: State&, request: Request&) -> bool {
@@ -190,8 +194,32 @@ fn forwarded_target(s: State&, request: Request&) -> i64 {
     s.error = str("missing registry binding for forwarded feature: ", request.owner, " -> ", request.alias);
     return -1;
 }
-fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins: bool, update: bool) -> bool {
-    s.selected.clear(); s.pending.clear(); s.requests.clear(); s.edges.clear(); s.features.clear(); s.optional_edges.clear(); s.error.clear();
+// An older release must not win just because it fits a pin considered
+// earlier in the search. Try the graph with upgrades required wherever a
+// newer release satisfies the selected edge's own version and features.
+fn refresh_floor(s: State&, catalog: nest::Resolver&, request: Request&, strict: bool) -> u8[>..], bool {
+    if s.refresh != request.package { return [], false; }
+    for pin in s.pins {
+        if !spend(s) { return [], false; }
+        if !same_request(pin.request, request) { continue; }
+        if strict {
+            let old, error = semver::parse(pin.record.version);
+            for candidate in catalog.records {
+                if !spend(s) { return [], false; }
+                if candidate.yanked || candidate.registry != request.registry || candidate.package != request.package
+                    || !nest::matches(request.requirement, candidate.version) { continue; }
+                if !spend(s, request.features.len * (candidate.features.len + 1)) { return [], false; }
+                if missing_feature(candidate, request).len > 0 { continue; }
+                let newer, parse_error = semver::parse(candidate.version);
+                if semver::compare(newer, old) > 0 { return str(pin.record.version), true; }
+            }
+        }
+        return str(pin.record.version), false;
+    }
+    return [], false;
+}
+fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins: bool, update: bool, strict_refresh: bool = false) -> bool {
+    s.selected.clear(); s.pending.clear(); s.requests.clear(); s.edges.clear(); s.features.clear(); s.optional_edges.clear(); s.error.clear(); s.conflict = false;
     for root in roots { var request = copy(root); if !enqueue(s, request) { return false; } }
     var frames: Frame[>..] = []; var cursor = 0; var conflict = false; var detail = str("constraints or cycle");
     loop {
@@ -212,6 +240,9 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                     let lookup = nest::Request { package: str(request.package), requirement: str(request.requirement), registry: str(request.registry) };
                     if !nest::catalog(catalog, lookup, true) { s.error = str(catalog.error); return false; }
                 }
+                let floor, require_newer = refresh_floor(s, catalog, request, strict_refresh);
+                if s.error.len > 0 { return false; }
+                let minimum, minimum_error = semver::parse(if floor.len > 0 { floor[..] } else { "0.0.0" });
                 var candidates: i64[>..] = [];
                 var missing:    u8[>..]  = [];
                 for record, i in catalog.records {
@@ -221,6 +252,11 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                     if (only_pins && !pin) || (record.yanked && !pin) { continue; }
                     if !only_pins {
                         for locked in s.pins { if !spend(s) { return false; } if locked.record.registry == record.registry && locked.record.package == record.package && locked.record.version == record.version && !same_record(locked.record, record) { s.error = str("published registry metadata changed for ", record.package, " ", record.version); return false; } }
+                    }
+                    if floor.len > 0 {
+                        let candidate, error = semver::parse(record.version);
+                        let order = semver::compare(candidate, minimum);
+                        if order < 0 || (order == 0 && require_newer) { continue; }
                     }
                     if request.features.len > 0 {
                         if !spend(s, request.features.len * (record.features.len + 1)) { return false; }
@@ -253,7 +289,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
             }
         }
         while conflict {
-            if frames.len == 0 { s.error = str("no compatible scoped registry graph: ", detail); return false; }
+            if frames.len == 0 { s.conflict = true; s.error = str("no compatible scoped registry graph: ", detail); return false; }
             let frame = frames[frames.len - 1];
             s.selected.resize(frame.selected); s.edges.resize(frame.edges); s.pending.resize(frame.pending); cursor = frame.cursor;
             s.features.resize(frame.features); s.optional_edges.resize(frame.optional_edges);
@@ -263,17 +299,38 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
         }
     }
 }
+fn seed_pins(s: State&, catalog: nest::Resolver&) -> bool {
+    for pin in s.pins {
+        if pin.record.package == s.refresh { continue; }
+        if s.refresh.len > 0 {
+            var covered = false;
+            for saved in catalog.catalogs {
+                if saved.registry == pin.record.registry && saved.package == pin.record.package { covered = true; break; }
+            }
+            if !covered { catalog.catalogs.push(nest::Catalog { package: str(pin.record.package), registry: str(pin.record.registry) }); }
+        }
+        if !nest::valid(pin.record) { s.error = str("invalid locked registry record"); return false; }
+        var found = false;
+        for record in catalog.records { if !spend(s) { return false; } if record.registry == pin.record.registry && record.package == pin.record.package && record.version == pin.record.version {
+            if !same_record(record, pin.record) { s.error = str("inconsistent locked registry metadata"); return false; } found = true;
+        } }
+        if !found { if catalog.records.len >= 8192 { s.error = str("locked registry release limit exceeded (8192)"); return false; } catalog.records.push(copy(pin.record)); }
+    }
+    return true;
+}
 fn resolve(s: State&, catalog: nest::Resolver&, roots: const Request[:], locked: bool, update: bool) -> bool {
     catalog.records.clear(); catalog.catalogs.clear(); s.selected.clear(); s.pending.clear(); s.requests.clear(); s.edges.clear(); s.features.clear(); s.optional_edges.clear(); s.error.clear(); s.decisions = 0; s.work = 0;
+    if s.refresh.len > 0 {
+        if !seed_pins(s, catalog) { return false; }
+        if solve(s, catalog, roots, false, false, true) { return true; }
+        if !s.conflict { return false; }
+        catalog.records.clear(); catalog.catalogs.clear();
+        if solve(s, catalog, roots, false, false, true) { return true; }
+        if !s.conflict { return false; }
+        return solve(s, catalog, roots, false, false);
+    }
     if !update && s.pins.len > 0 {
-        for pin in s.pins {
-            if !nest::valid(pin.record) { s.error = str("invalid locked registry record"); return false; }
-            var found = false;
-            for record in catalog.records { if !spend(s) { return false; } if record.registry == pin.record.registry && record.package == pin.record.package && record.version == pin.record.version {
-                if !same_record(record, pin.record) { s.error = str("inconsistent locked registry metadata"); return false; } found = true;
-            } }
-            if !found { if catalog.records.len >= 8192 { s.error = str("locked registry release limit exceeded (8192)"); return false; } catalog.records.push(copy(pin.record)); }
-        }
+        if !seed_pins(s, catalog) { return false; }
         if solve(s, catalog, roots, true, false) { return true; }
         if locked { return false; }
         catalog.records.clear(); catalog.catalogs.clear();
