@@ -187,6 +187,26 @@ OS, ordinary and development edges follow the same alias rules as
 unconditional dependencies. Features forwarded to an alias unavailable
 on the selected OS have no effect there.
 
+## Inspecting dependencies
+
+`honk tree --isolated` shows the production dependency graph. Add
+`--tests` to inspect the test graph, including development dependencies.
+Each edge shows the import alias, package version and source. Active
+features appear beside the package. A repeated instance is marked
+`(*)` and its children are printed only once per root.
+
+Use the same workspace, feature and target selectors as the command
+whose graph you are inspecting. For example:
+
+```sh
+honk fetch --isolated --target-os linux --target-arch aarch64 --tests --locked
+honk tree --isolated --target-os linux --target-arch aarch64 --tests --frozen
+```
+
+Tree resolves dependencies without compiling or writing a build graph.
+An unlocked invocation can update the selected lock graph. Frozen
+inspection replays the existing lock using the local cache.
+
 ## Cross-building Linux AArch64
 
 From Linux x86_64, install an AArch64 Linux C compiler and its target

@@ -609,6 +609,50 @@ fn resolve_graph(graph: Graph&, p: manifest::Project&, selected: u8[:], features
     let order, graph_error = task::plan(graph.packages.len, edges, limits);
     platform::require(graph_error.kind == task::ErrorKind.None, "isolated dependency cycle or graph limit exceeded");
 }
+fn print_tree(graph: Graph&, p: manifest::Project&, targets: Target[>..]&) {
+    var labels: u8[][>..]          = [];
+    var names:  (const u8[:])[>..] = [];
+    for pkg, i in graph.packages {
+        var label = str(pkg.name, " v", pkg.version, " (", package_key(pkg, p.root), ")");
+        var features: (const u8[:])[>..] = [];
+        for feature in graph.active_features { if feature.owner == i { features.push(feature.name); } }
+        if features.len > 0 {
+            sort(features[..]) { a, b => before(a, b) }
+            label.append(" [features: ");
+            for feature, j in features { if j > 0 { label.append(", "); } label.append(feature); }
+            label.push(']');
+        }
+        let stored .= labels.push(copy(label)); names.push(stored);
+    }
+
+    var first:   i64[256]           = [-1; 256]; var last: i64[256] = [-1; 256];
+    var next:    i64[>..]           = []; var children: i64[>..] = [];
+    var aliases: (const u8[:])[>..] = [];
+    for binding, i in graph.bindings {
+        if first[binding.owner] < 0 { first[binding.owner] = i; }
+        else { next[last[binding.owner]] = i; }
+        last[binding.owner] = i;
+        next.push(-1); children.push(binding.target); aliases.push(binding.alias);
+    }
+
+    for root in targets {
+        print(names[root.id]);
+        var seen:    bool[256] = [false; 256]; seen[root.id] = true;
+        var pending: i64[>..]  = [first[root.id]];
+        while pending.len > 0 {
+            let top = pending.len - 1; let edge = pending[top];
+            if edge < 0 { pending.pop(); continue; }
+            pending[top] = next[edge];
+            let child = children[edge];
+            var line: u8[>..] = [];
+            for _ in pending.len { line.append("  "); }
+            line.append(aliases[edge]); line.append(" -> "); line.append(names[child]);
+            if seen[child] { line.append(" (*)"); }
+            print(line);
+            if !seen[child] { seen[child] = true; pending.push(first[child]); }
+        }
+    }
+}
 fn run_binary(executable: u8[:], root: u8[:], runner: u8[:], arguments: u8[:][:]) {
     var argv: (const u8[:])[>..] = [];
     if runner.len > 0 { argv.push(runner); }
@@ -656,7 +700,7 @@ fn cross_compiler(path: u8[:], root: u8[:]) -> u8[>..] {
         "--cc must target Linux AArch64");
     return compiler;
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, fetch_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:]) {
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:]) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -674,12 +718,13 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create graph lock directory");
     let project_lock = platform::lock(str(p.root, "/.honk/isolated.lock")); platform::require(project_lock >= 0, "isolated project is locked by another process");
+    let inspect_graph = command == "tree";
     let host = platform::host_os(); let arch = platform::host_arch();
     platform::require(requested_os.len == 0 || manifest::supported_os(requested_os), "unsupported --target-os");
     platform::require(requested_arch.len == 0 || (requested_os.len > 0 && manifest::supported_arch(requested_arch)), "unsupported --target-arch");
-    platform::require(requested_os.len == 0 || requested_os == host || command == "fetch", "foreign --target-os requires fetch");
+    platform::require(requested_os.len == 0 || requested_os == host || command == "fetch" || inspect_graph, "foreign --target-os requires fetch or tree");
     let cross_build = (command == "build" || command == "run" || command == "test") && host == "linux" && arch == "x86_64" && requested_os == "linux" && requested_arch == "aarch64";
-    platform::require(requested_arch.len == 0 || requested_arch == arch || command == "fetch" || cross_build, "foreign --target-arch requires fetch unless cross-building for Linux AArch64");
+    platform::require(requested_arch.len == 0 || requested_arch == arch || command == "fetch" || inspect_graph || cross_build, "foreign --target-arch requires fetch or tree unless cross-building for Linux AArch64");
     platform::require(cross_build || requested_cc.len == 0, "--cc is supported for Linux x86_64 to AArch64 builds");
     let cc: u8[>..] = if cross_build { cross_compiler(requested_cc, p.root) } else { [] };
     let cross_execute = cross_build && (command == "run" || command == "test");
@@ -692,7 +737,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     let key = if requested_arch.len == 0 { str(requested_os) } else { str(requested_os, "-", requested_arch) };
     var graph = Graph { target_os: str(selected_os), target_arch: str(selected_arch), platform_key: str(key), .. }; var targets: Target[>..] = [];
     add_roots(graph, p, targets, selected);
-    let resolve_only = command == "fetch" || command == "update";
+    let resolve_only = command == "fetch" || command == "update" || inspect_graph;
     if command == "run" { platform::require(targets.len == 1, "isolated run requires a single target, select a workspace member with -p"); }
     var compile_count = 0;
     for target in targets {
@@ -704,13 +749,21 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     platform::require(resolve_only || compile_count > 0, "no isolated compilation target matched");
     resolve_graph(graph, p, selected, features, no_defaults, cache, locked, offline, command == "update", feature_capability && graph_features);
     var normal = lock_header(p); append_lock_rows(normal, graph, p);
-    if command == "test" || fetch_tests {
+    if command == "test" || include_tests {
         var test_graph = Graph { testing: true, target_os: str(selected_os), target_arch: str(selected_arch), platform_key: str(key), .. }; var test_targets: Target[>..] = [];
         add_roots(test_graph, p, test_targets, selected);
         resolve_graph(test_graph, p, selected, features, no_defaults, cache, locked, offline, false, feature_capability && graph_features);
         var tests = str(TEST_LOCK_HEADER); append_lock_rows(tests, test_graph, p);
-        if fetch_tests { lock_graph(p, normal, tests, true, locked, graph.platform_key); }
-        else { run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments, cc, runner); }
+        if include_tests {
+            lock_graph(p, normal, tests, true, locked, graph.platform_key);
+            if inspect_graph { print_tree(test_graph, p, test_targets); }
+        } else { run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments, cc, runner); }
+        platform::unlock(project_lock); platform::unlock(cache_lock);
+        return;
+    }
+    if inspect_graph {
+        lock_graph(p, normal, "", false, locked, graph.platform_key);
+        print_tree(graph, p, targets);
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
     }
