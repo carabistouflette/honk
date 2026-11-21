@@ -1,6 +1,10 @@
 # Measurements
 
-Honk has no general latency ranking or Cargo comparison. The
+Honk has no general latency ranking. The isolated registry baseline
+compares Honk and Cargo on synthetic loopback graphs.
+[Isolated registry comparison](ISOLATED-REGISTRY.md)
+
+The
 [released v0.4.0 reuse record](results/announcement-v040/README.md) is one bounded
 current build workload, with full cold, warm and fallback ranges. Read the
 [performance currentness audit](../docs/PERFORMANCE.md) before quoting results.
