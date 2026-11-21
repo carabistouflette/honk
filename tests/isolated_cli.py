@@ -1,5 +1,6 @@
 """Real Honk -> scoped graph -> Goose JIT/native qualification."""
 import json
+import platform
 import os
 from pathlib import Path
 import subprocess
@@ -1023,6 +1024,43 @@ class Isolated(unittest.TestCase):
             self.assertEqual({b['package'] for b in graph['binding']}, {'driver', package})
             self.assertEqual({f['name'] for f in graph['feature']}, {feature, 'arm' if arch == 'aarch64' else 'default'})
             self.run_honk('fetch', extra=('--target-os', 'linux', '--target-arch', arch, '--frozen'))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    @unittest.skipUnless(sys.platform.startswith('linux') and platform.machine() == 'x86_64'
+                         and os.environ.get('HONK_AARCH64_SYSROOT'),
+                         'requires the Linux AArch64 cross toolchain and QEMU')
+    def test_cross_build_uses_frozen_aarch64_registry_graph_under_qemu(self):
+        cross_cc = shutil.which('aarch64-linux-gnu-gcc')
+        qemu = shutil.which('qemu-aarch64')
+        self.assertIsNotNone(cross_cc)
+        self.assertIsNotNone(qemu)
+        self.registry_fixture()
+        self.registry_release('arm-codec', '1.0.0',
+                              code='namespace codec; fn value() -> i64 { 42 }')
+        app = self.package('app', 'import codec; import std; fn main() { print(codec::value()); }')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[target.linux-aarch64.dependencies]\n')
+        self.registry_dependency('app', 'codec', 'arm-codec', '*')
+        target = ('--target-os', 'linux', '--target-arch', 'aarch64')
+        self.run_honk('fetch', extra=target)
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        self.assertTrue(any(path == '/arm-codec-1.0.0.tar.gz' for path, _ in self.registry.requests))
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        before = list(self.registry.requests)
+        self.assertIn('requires --cc', self.run_honk('build', ok=False, extra=(*target, '--frozen')).stderr)
+        self.assertIn('--cc must target Linux AArch64', self.run_honk(
+            'build', ok=False, extra=(*target, '--frozen', '--cc', shutil.which('cc'))).stderr)
+        self.run_honk('build', extra=(*target, '--frozen', '--cc', cross_cc))
+        binary = app / 'target/isolated/platform/linux-aarch64/app'
+        with binary.open('rb') as executable:
+            elf = executable.read(20)
+        self.assertEqual(elf[:6], b'\x7fELF\x02\x01')
+        self.assertEqual(int.from_bytes(elf[18:20], 'little'), 183)  # EM_AARCH64
+        result = subprocess.check_output(
+            [qemu, '-L', os.environ['HONK_AARCH64_SYSROOT'], str(binary)], text=True, timeout=30)
+        self.assertEqual(result.strip(), '42')
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
 
