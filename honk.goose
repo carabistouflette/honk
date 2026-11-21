@@ -226,7 +226,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         let name = entry.name; var allowed = false;
         if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
         else if name == "features" || name == "no-default-features" { allowed = options.has("isolated") && !watching; }
-        else if name == "tests" { allowed = !watching && cmd == "fetch" && options.has("isolated"); }
+        else if name == "tests" { allowed = !watching && (cmd == "fetch" || cmd == "tree") && options.has("isolated"); }
         else if name == "cc" {
             allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "test") && options.has("isolated") && options.has("target-arch");
             platform::require(entry.value.len > 0 && entry.value[0] == '/', "--cc requires an absolute compiler path");
@@ -237,7 +237,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         }
         else if name == "target-arch" { allowed = !watching && options.has("isolated") && options.has("target-os"); platform::require(manifest::supported_arch(entry.value), "unsupported --target-arch"); }
         else if name == "target-os" { allowed = !watching && options.has("isolated"); platform::require(manifest::supported_os(entry.value), "unsupported --target-os"); }
-        else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "fetch" || cmd == "update"); }
+        else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "fetch" || cmd == "update" || cmd == "tree"); }
         else if name == "diagnostics" { allowed = cmd == "check" && !watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }
