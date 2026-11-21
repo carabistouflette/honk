@@ -165,8 +165,13 @@ production edges. Within the test graph, `features` and
 A production edge and a development edge can share an alias when their
 source and version requirement match. Tests use the union of both requests.
 
-The first unlocked test run writes a `[test]` section to the same
-`Honk.lock`, alongside the production graph. `honk build --isolated --frozen`
+The first unlocked `honk test --isolated` or `honk fetch --isolated --tests`
+writes a `[test]` section to the same `Honk.lock`, alongside the production
+graph. Fetching with `--tests` resolves and materializes both graphs without
+compiling or running test targets. In CI, use `honk fetch --isolated --tests
+--locked` to populate an empty cache from the committed lock, then run
+`honk test --isolated --frozen`. Plain `honk fetch --isolated` prepares the
+production graph. `honk build --isolated --frozen`
 checks the production rows and preserves the test section. `honk test
 --isolated --frozen` checks both graphs using cached sources. If dependencies
 change, rerun the affected command without `--locked` to refresh its rows.

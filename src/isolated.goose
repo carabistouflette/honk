@@ -577,7 +577,7 @@ fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compil
     }
     print("Passed ", planned.len, " test targets");
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool) {
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, fetch_tests: bool) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -609,12 +609,13 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     platform::require(resolve_only || compile_count > 0, "no isolated compilation target matched");
     resolve_graph(graph, p, selected, features, no_defaults, cache, locked, offline, command == "update", feature_capability && graph_features);
     var normal = lock_header(p); append_lock_rows(normal, graph, p);
-    if command == "test" {
+    if command == "test" || fetch_tests {
         var test_graph = Graph { testing: true, .. }; var test_targets: Target[>..] = [];
         add_roots(test_graph, p, test_targets, selected);
         resolve_graph(test_graph, p, selected, features, no_defaults, cache, locked, offline, false, feature_capability && graph_features);
         var tests = str(TEST_LOCK_HEADER); append_lock_rows(tests, test_graph, p);
-        run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments);
+        if fetch_tests { lock_graph(p, normal, tests, true, locked); }
+        else { run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments); }
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
     }
