@@ -155,7 +155,9 @@ and editing tools are future work.
 
 Isolated package manifests can add dependencies and development dependencies
 under `target.<os>`. Supported selectors are `linux`, `macos`, `windows`,
-and `freebsd`.
+and `freebsd`. Append `-x86_64` or `-aarch64` to narrow a selector
+to one architecture, for example `[target.linux-aarch64.dependencies]`.
+OS-only tables apply to every architecture on that OS.
 
 ```toml
 [target.linux.dependencies]
@@ -165,9 +167,12 @@ files = { path = "../linux-files" }
 files = { path = "../windows-files" }
 ```
 
-Unqualified commands resolve for the host OS. An explicit `--target-os`
+Unqualified commands resolve for the host OS and architecture. An explicit `--target-os`
 stores its own production and test graphs in the shared `[platforms]`
-section of `Honk.lock`. Use the same explicit target when replaying a
+section of `Honk.lock`. Add `--target-arch` alongside `--target-os` to
+create a distinct entry for each OS/architecture pair. Omitting
+`--target-arch` uses the host architecture and the existing OS-only key.
+Use the same explicit target when replaying a
 platform lock, for example `honk fetch --isolated --target-os windows
 --frozen`. Foreign targets support fetching, including `--tests`.
 Compilation and execution use the host compiler. Platform-specific
@@ -176,7 +181,7 @@ registry packages using a schema-2 index. Honk selects the active registry
 edges before downloading archives and checks every published production
 edge against the archive manifest, including inactive edges.
 
-Aliases can name different dependencies on disjoint OSes. On the active
+Aliases can name different dependencies on disjoint target selectors. On the active
 OS, ordinary and development edges follow the same alias rules as
 unconditional dependencies. Features forwarded to an alias unavailable
 on the selected OS have no effect there.

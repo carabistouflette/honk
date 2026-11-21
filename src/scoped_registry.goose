@@ -9,7 +9,7 @@ struct Request { owner: u8[], alias: u8[], registry: u8[], package: u8[], requir
 struct Pin { request: Request, record: nest::Record }
 struct Edge { request: i64, target: i64 }
 struct Activation { record: i64, index: i64 }
-root struct State { target_os: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
+root struct State { target_os: u8[] = [], target_arch: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
 struct Frame { candidates: i64[512], count: i64, next: i64 = 0, cursor: i64, pending: i64, selected: i64, edges: i64, features: i64, optional_edges: i64 }
 const MAX_WORK = 8000000;
 fn spend(s: State&, units: i64 = 1) -> bool { s.work += units; if s.work > MAX_WORK { s.error = str("registry resolution scan budget exceeded (8000000)"); return false; } return true; }
@@ -110,7 +110,7 @@ fn activate(s: State&, record: const nest::Record&, id: i64, request: Request&, 
                 let dependency = if enable { item[4..] } else { alias };
                 if !spend(s, record.dependencies.len) { return false; }
                 for dep, i in record.dependencies {
-                    if !nest::active_on(dep, s.target_os) || dep.alias != dependency { continue; }
+                    if !nest::active_on(dep, s.target_os, s.target_arch) || dep.alias != dependency { continue; }
                     if dep.optional && !enabled[i] && !weak {
                         enabled[i] = true;
                         s.optional_edges.push(Activation { record: id, index: i });
@@ -138,7 +138,7 @@ fn activate(s: State&, record: const nest::Record&, id: i64, request: Request&, 
                 if alias.len == 0 { continue; }
                 if !spend(s, record.dependencies.len) { return false; }
                 for dep, j in record.dependencies {
-                    if !nest::active_on(dep, s.target_os) || dep.alias != alias { continue; }
+                    if !nest::active_on(dep, s.target_os, s.target_arch) || dep.alias != alias { continue; }
                     if changed[j] && !enqueue_dependency(s, record, dep, owner, name) { return false; }
                     break;
                 }
@@ -156,7 +156,7 @@ fn choose(s: State&, catalog: nest::Resolver&, request_id: i64, id: i64) -> bool
         if s.selected.len >= 256 { s.error = str("registry graph exceeds 256 instances"); return false; }
         s.selected.push(id);
         for dep in record.dependencies {
-            if !dep.optional && nest::active_on(dep, s.target_os) && !enqueue_dependency(s, record, dep, owner) { return false; }
+            if !dep.optional && nest::active_on(dep, s.target_os, s.target_arch) && !enqueue_dependency(s, record, dep, owner) { return false; }
         }
     }
     if record.features.len == 0 { return true; }

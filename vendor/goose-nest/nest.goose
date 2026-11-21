@@ -9,7 +9,7 @@ const VERSION = "0.1.0-alpha.1";
 const MAX_PACKAGES = 256;
 const MAX_DECISIONS = 100000;
 struct Request { package: u8[], requirement: u8[], registry: u8[] }
-struct Dependency { alias: u8[], package: u8[], requirement: u8[], optional: bool = false, features: u8[][] = [], default_features: bool = true, target_os: u8[] = [] }
+struct Dependency { alias: u8[], package: u8[], requirement: u8[], optional: bool = false, features: u8[][] = [], default_features: bool = true, target_os: u8[] = [], target_arch: u8[] = [] }
 struct Feature { name: u8[], items: u8[][] }
 struct Record {
     package:      u8[], version: u8[], registry: u8[], url: u8[], sha256: u8[], entry: u8[],
@@ -87,12 +87,26 @@ fn forwarded_feature(item: const u8[:]) -> const u8[:], const u8[:], bool {
 fn supported_os(name: const u8[:]) -> bool {
     return name == "linux" || name == "macos" || name == "windows" || name == "freebsd";
 }
-fn active_on(dep: const Dependency&, target_os: u8[:]) -> bool {
-    return dep.target_os.len == 0 || dep.target_os == target_os;
+fn supported_arch(name: const u8[:]) -> bool {
+    return name == "x86_64" || name == "aarch64";
+}
+fn target_parts(name: const u8[:]) -> const u8[:], const u8[:], bool {
+    let dash = find(name, "-");
+    if dash < 0 { return name, "", supported_os(name); }
+    let os = name[..dash]; let arch = name[dash + 1..];
+    return os, arch, supported_os(os) && supported_arch(arch);
+}
+fn targets_overlap(left_os: u8[:], left_arch: u8[:], right_os: u8[:], right_arch: u8[:]) -> bool {
+    return (left_os.len == 0 || right_os.len == 0 || left_os == right_os)
+        && (left_arch.len == 0 || right_arch.len == 0 || left_arch == right_arch);
+}
+fn active_on(dep: const Dependency&, target_os: u8[:], target_arch: u8[:] = "") -> bool {
+    return (dep.target_os.len == 0 || dep.target_os == target_os)
+        && (dep.target_arch.len == 0 || dep.target_arch == target_arch);
 }
 fn has_feature_metadata(record: const Record&) -> bool {
     if record.features.len > 0 { return true; }
-    for dep in record.dependencies { if dep.optional || dep.features.len > 0 || !dep.default_features || dep.target_os.len > 0 { return true; } }
+    for dep in record.dependencies { if dep.optional || dep.features.len > 0 || !dep.default_features || dep.target_os.len > 0 || dep.target_arch.len > 0 { return true; } }
     return false;
 }
 fn read_feature_array(doc: toml::Document&, array: i64, out: u8[][>..]&) -> bool {
@@ -143,8 +157,9 @@ fn valid(record: const Record&) -> bool {
     for dep, i in record.dependencies {
         if !alias_name(dep.alias) || !package_name(dep.package) || !valid_requirement(dep.requirement) { return false; }
         if dep.target_os.len > 0 && !supported_os(dep.target_os) { return false; }
+        if dep.target_arch.len > 0 && (dep.target_os.len == 0 || !supported_arch(dep.target_arch)) { return false; }
         for previous, j in record.dependencies {
-            if j < i && previous.alias == dep.alias && (previous.target_os.len == 0 || dep.target_os.len == 0 || previous.target_os == dep.target_os) { return false; }
+            if j < i && previous.alias == dep.alias && targets_overlap(previous.target_os, previous.target_arch, dep.target_os, dep.target_arch) { return false; }
         }
     }
     return valid_features(record);
@@ -174,7 +189,7 @@ fn parse_record(doc: toml::Document&, id: i64, registry: u8[:], package: u8[:], 
         if doc.nodes[array].kind != toml::Kind.Array || doc.nodes[array].count > 256 { return Record { .. }, str("invalid registry dependency list"); }
         var child = doc.nodes[array].first;
         while child >= 0 {
-            if !keys(doc, child, ["alias", "package", "version", "optional", "features", "default-features", "target-os"]) { return Record { .. }, str("unknown dependency field"); }
+            if !keys(doc, child, ["alias", "package", "version", "optional", "features", "default-features", "target-os", "target-arch"]) { return Record { .. }, str("unknown dependency field"); }
             let opt = toml::find(doc, child, "optional");
             let requested = toml::find(doc, child, "features");
             let defaults = toml::find(doc, child, "default-features");
@@ -182,12 +197,15 @@ fn parse_record(doc: toml::Document&, id: i64, registry: u8[:], package: u8[:], 
             let target = toml::find(doc, child, "target-os");
             let target_os = string(doc, child, "target-os");
             if target >= 0 && !supported_os(target_os) { return Record { .. }, str("invalid dependency target-os"); }
-            if !feature_metadata && (opt >= 0 || requested >= 0 || defaults >= 0 || target >= 0) { return Record { .. }, str("dependency feature metadata requires schema 2"); }
+            let arch = toml::find(doc, child, "target-arch");
+            let target_arch = string(doc, child, "target-arch");
+            if arch >= 0 && (target < 0 || !supported_arch(target_arch)) { return Record { .. }, str("invalid dependency target-arch"); }
+            if !feature_metadata && (opt >= 0 || requested >= 0 || defaults >= 0 || target >= 0 || arch >= 0) { return Record { .. }, str("dependency feature metadata requires schema 2"); }
             if opt >= 0 && doc.nodes[opt].kind != toml::Kind.Boolean { return Record { .. }, str("optional must be a boolean"); }
             var names: u8[][>..] = [];
             if !read_feature_array(doc, requested, names) { return Record { .. }, str("invalid requested features"); }
             dependencies.push(Dependency { alias: string(doc, child, "alias"), package: string(doc, child, "package"), requirement: string(doc, child, "version"),
-                optional: opt >= 0 && doc.nodes[opt].boolean, features: copy(names), default_features: defaults < 0 || doc.nodes[defaults].boolean, target_os: str(target_os) });
+                optional: opt >= 0 && doc.nodes[opt].boolean, features: copy(names), default_features: defaults < 0 || doc.nodes[defaults].boolean, target_os: str(target_os), target_arch: str(target_arch) });
             child = doc.nodes[child].next;
         }
     }
@@ -338,6 +356,7 @@ fn record_text(record: const Record&) -> u8[>..] {
         out.append(", version = "); quoted(out, dep.requirement);
         if dep.optional { out.append(", optional = true"); }
         if dep.target_os.len > 0 { out.append(", target-os = "); quoted(out, dep.target_os); }
+        if dep.target_arch.len > 0 { out.append(", target-arch = "); quoted(out, dep.target_arch); }
         if !dep.default_features { out.append(", default-features = false"); }
         if dep.features.len > 0 { out.append(", features = "); write_feature_array(out, dep.features); }
         out.append(" }");

@@ -13,6 +13,13 @@ fn host_os() -> u8[>..] {
     if id == 4 { return str("freebsd"); }
     return [];
 }
+extern fn host_arch_id() -> i64 = "honk_host_arch";
+fn host_arch() -> u8[>..] {
+    let id = host_arch_id();
+    if id == 1 { return str("x86_64"); }
+    if id == 2 { return str("aarch64"); }
+    return [];
+}
 extern fn cache_open(path: const u8[:], limit: i64) -> i64 = "honk_cache_open";
 extern fn cache_read(descriptor: i64, buffer: u8[:]) -> i64 = "honk_cache_read";
 extern fn cache_close(descriptor: i64) -> bool = "honk_cache_close";

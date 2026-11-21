@@ -42,6 +42,15 @@ int64_t honk_host_os(void) {
   return 0;
 #endif
 }
+int64_t honk_host_arch(void) {
+#if defined(__x86_64__) || defined(_M_X64)
+  return 1;
+#elif defined(__aarch64__) || defined(_M_ARM64)
+  return 2;
+#else
+  return 0;
+#endif
+}
 /* Checked timing for bounded watch batching; -1 never becomes a deadline. */
 int64_t honk_watch_clock_ms(void) {
   struct timespec now;
