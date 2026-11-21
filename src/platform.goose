@@ -4,6 +4,15 @@ import .diagnostics;
 import std;
 import process;
 import os;
+extern fn host_os_id() -> i64 = "honk_host_os";
+fn host_os() -> u8[>..] {
+    let id = host_os_id();
+    if id == 1 { return str("linux"); }
+    if id == 2 { return str("macos"); }
+    if id == 3 { return str("windows"); }
+    if id == 4 { return str("freebsd"); }
+    return [];
+}
 extern fn cache_open(path: const u8[:], limit: i64) -> i64 = "honk_cache_open";
 extern fn cache_read(descriptor: i64, buffer: u8[:]) -> i64 = "honk_cache_read";
 extern fn cache_close(descriptor: i64) -> bool = "honk_cache_close";

@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import tomllib
 import shutil
+import sys
 import fcntl
 import unittest
 
@@ -892,6 +893,49 @@ class Isolated(unittest.TestCase):
         self.assertEqual(subprocess.check_output([str(app / 'target/isolated/app')], text=True).strip(), '1')
         graph = json.loads((app / 'target/isolated/graph.json').read_text())
         self.assertTrue(all('features' not in n['config'] for n in graph['nodes']))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    @unittest.skipUnless(COMPILER.get('package_graph_features') and sys.platform.startswith('linux'),
+                         'requires a Linux host and package graph features')
+    def test_target_platforms_replay_independent_registry_features_in_one_lock(self):
+        self.registry_fixture()
+        self.registry_release(
+            'codec', '1.0.0', features={'linux-api': [], 'windows-api': [], 'common': []},
+            code='namespace codec; if feature("linux-api") { fn value() -> i64 { 42 } }')
+        self.registry_release('win-support', '1.0.0')
+        app = self.package('app', 'import codec; import std; fn main() { print(codec::value()); }')
+        manifest = app / 'Honk.toml'
+        with manifest.open('a') as f:
+            f.write('[target.linux.dependencies]\n')
+        self.registry_dependency('app', 'codec', 'codec', '*', ['linux-api'])
+        with manifest.open('a') as f:
+            f.write('[target.windows.dependencies]\n')
+        self.registry_dependency('app', 'codec', 'codec', '*', ['windows-api'])
+        self.registry_dependency('app', 'support', 'win-support', '*')
+        with manifest.open('a') as f:
+            f.write('[features]\ndefault=["codec/common"]\n')
+        self.assertEqual(self.run_honk().stdout.strip(), '42')
+        self.assertEqual(self.run_honk(extra=('--target-os', 'linux')).stdout.strip(), '42')
+        self.assertFalse(any('win-support' in path for path, _ in self.registry.requests))
+        self.run_honk('fetch', extra=('--target-os', 'windows'))
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        locks = tomllib.loads(original.decode())['platforms']
+        self.assertEqual(set(locks), {'linux', 'windows'})
+        for target in locks:
+            platform_graph = tomllib.loads(locks[target])
+            self.assertEqual({row['name'] for row in platform_graph['feature']},
+                             {'default', 'common', target + '-api'})
+            self.assertEqual(len(platform_graph['binding']), 1 if target == 'linux' else 2)
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        for target in ('windows', 'linux'):
+            self.run_honk('fetch', extra=('--target-os', target, '--frozen'))
+        self.assertEqual(self.run_honk(extra=('--target-os', 'linux', '--frozen')).stdout.strip(), '42')
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '42')
+        self.assertIn('foreign --target-os requires fetch',
+                      self.run_honk('build', ok=False, extra=('--target-os', 'windows')).stderr)
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
 
