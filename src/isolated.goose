@@ -22,7 +22,7 @@ struct Pin { owner: u8[], alias: u8[], git: u8[], rev: u8[], requirement: u8[], 
 struct Package { directory: u8[], name: u8[], version: u8[], entry: u8[], ns: u8[], digest: u8[], git: u8[] = [], commit: u8[] = [], git_root: u8[] = [], subdir: u8[] = [], registry: u8[] = [], archive_sha: u8[] = [] }
 struct ActiveFeature { owner: i64, name: u8[] }
 struct LockedPackage { key: u8[], name: u8[], version: u8[] }
-root struct Graph { refresh: u8[] = [], precise: u8[] = [], old_packages: LockedPackage[>..], testing: bool = false, target_os: u8[] = [], target_arch: u8[] = [], platform_key: u8[] = [], packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
+root struct Graph { dry_run: bool = false, refresh: u8[] = [], precise: u8[] = [], old_packages: LockedPackage[>..], testing: bool = false, target_os: u8[] = [], target_arch: u8[] = [], platform_key: u8[] = [], packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
 fn field(state: crypto::Sha256&, value: u8[:]) {
     platform::require(build_cache::feed(state, value), "cannot hash package snapshot");
 }
@@ -146,7 +146,7 @@ fn package_key(pkg: Package&, base: u8[:]) -> u8[>..] {
     if pkg.git.len == 0 { return coordinate(base, pkg.directory); }
     return str("git:", pkg.git, "@", pkg.commit, if pkg.subdir.len > 0 { str("/", pkg.subdir) } else { str("") });
 }
-fn read_pins(g: Graph&, p: manifest::Project&) {
+fn read_pins(g: Graph&, p: manifest::Project&, read_packages: bool = false) {
     if g.pins_loaded { return; } g.pins_loaded = true;
     let path = str(p.root, "/Honk.lock"); if platform::kind(path) == 0 { return; }
     let input = platform::load(path); var doc = toml::Document { .. }; parse_lock(input, doc);
@@ -157,7 +157,7 @@ fn read_pins(g: Graph&, p: manifest::Project&) {
     }
     let test = toml::find(doc, 0, "test");
     let parent = if g.testing && test >= 0 { test } else { 0 };
-    if g.refresh.len > 0 {
+    if read_packages {
         let packages = toml::find(doc, parent, "package");
         if packages >= 0 {
             platform::require(doc.nodes[packages].kind == toml::Kind.Array, "invalid lock packages");
@@ -364,6 +364,32 @@ fn same_names(left: const u8[][:], right: const u8[][:]) -> bool {
     return i == a.len && j == b.len;
 }
 struct RegistrySelection { record: i64, node: i64 }
+fn registry_node(g: Graph&, record: const nest::Record&, cache: u8[:], revision: u8[:], offline: bool) -> i64 {
+    if g.dry_run {
+        let node = g.packages.len;
+        g.packages.push(Package { directory: [], name: str(record.package), version: str(record.version), entry: str(record.entry), ns: [], digest: [], registry: str(record.registry), archive_sha: str(record.sha256), .. });
+        return node;
+    }
+    let error = nest::materialize(record, cache, offline); platform::require(error.len == 0, error);
+    let directory = nest::directory(record, cache);
+    var child = manifest::Project { .. }; manifest::load(directory, child, true);
+    platform::require(child.name == record.package && child.version == record.version && child.entry == record.entry && child.kind == "lib", "archive manifest differs from registry metadata");
+    var count = 0;
+    for dep in child.dependencies {
+        if dep.dev { continue; } count++;
+        platform::require(dep.registry == record.registry, "registry archives require same-registry manifest dependencies");
+        var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.target_os == dep.target_os && expected.target_arch == dep.target_arch && expected.package == dep.package && expected.requirement == dep.requirement && expected.optional == dep.optional && expected.default_features == dep.default_features && same_names(expected.features, dep.features) { found = true; break; } }
+        platform::require(found, "archive dependency differs from registry metadata");
+    }
+    platform::require(count == record.dependencies.len, "archive dependency count differs from registry metadata");
+    platform::require(child.features.len == record.features.len, "archive feature count differs from registry metadata");
+    for feature in record.features {
+        var found = false;
+        for declared in child.features { if declared.name == feature.name && same_names(declared.items, feature.items) { found = true; break; } }
+        platform::require(found, "archive feature differs from registry metadata");
+    }
+    return visit(g, directory, revision, "", "", "", record.registry, record.sha256);
+}
 fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, offline: bool, update: bool, graph_features: bool) {
     if g.requests.len == 0 { return; } read_pins(g, p);
     var state = scoped_registry::State { refresh: str(g.refresh), precise: str(g.precise), target_os: str(g.target_os), target_arch: str(g.target_arch), .. }; for pin in g.registry_pins { state.pins.push(copy(pin)); }
@@ -374,25 +400,7 @@ fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, 
     var selected: RegistrySelection[>..] = [];
     for id in state.selected {
         let record = nest::record_at(catalog, id);
-        let error = nest::materialize(record, catalog.cache, offline); platform::require(error.len == 0, error);
-        let directory = nest::directory(record, catalog.cache);
-        var child = manifest::Project { .. }; manifest::load(directory, child, true);
-        platform::require(child.name == record.package && child.version == record.version && child.entry == record.entry && child.kind == "lib", "archive manifest differs from registry metadata");
-        var count = 0;
-        for dep in child.dependencies {
-            if dep.dev { continue; } count++;
-            platform::require(dep.registry == record.registry, "registry archives require same-registry manifest dependencies");
-            var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.target_os == dep.target_os && expected.target_arch == dep.target_arch && expected.package == dep.package && expected.requirement == dep.requirement && expected.optional == dep.optional && expected.default_features == dep.default_features && same_names(expected.features, dep.features) { found = true; break; } }
-            platform::require(found, "archive dependency differs from registry metadata");
-        }
-        platform::require(count == record.dependencies.len, "archive dependency count differs from registry metadata");
-        platform::require(child.features.len == record.features.len, "archive feature count differs from registry metadata");
-        for feature in record.features {
-            var found = false;
-            for declared in child.features { if declared.name == feature.name && same_names(declared.items, feature.items) { found = true; break; } }
-            platform::require(found, "archive feature differs from registry metadata");
-        }
-        let node = visit(g, directory, p.revision, "", "", "", record.registry, record.sha256);
+        let node = registry_node(g, record, catalog.cache, p.revision, offline);
         selected.push(RegistrySelection { record: id, node: node });
         if record.features.len > 0 {
             let key = scoped_registry::key(record);
@@ -786,7 +794,7 @@ fn cross_compiler(path: u8[:], root: u8[:]) -> u8[>..] {
     return compiler;
 }
 fn validate_refresh(graph: Graph&, p: manifest::Project&) {
-    read_pins(graph, p);
+    read_pins(graph, p, true);
     for pin in graph.registry_pins { if pin.request.package == graph.refresh { return; } }
     if graph.precise.len > 0 { platform::die(str("no locked registry package matches --dependency: ", graph.refresh)); }
     for pin in graph.pins { if pin.refresh { return; } }
@@ -813,7 +821,7 @@ fn report_update(graph: Graph&, p: manifest::Project&) {
     sorted_rows(out, removed); sorted_rows(out, added);
     write_stdout(out);
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:], invert: u8[:], refresh: u8[:], precise: u8[:]) {
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:], invert: u8[:], refresh: u8[:], precise: u8[:], dry_run: bool) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -849,7 +857,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     let selected_os = if requested_os.len == 0 { str(host) } else { str(requested_os) };
     let selected_arch = if requested_arch.len == 0 { str(arch) } else { str(requested_arch) };
     let key = if requested_arch.len == 0 { str(requested_os) } else { str(requested_os, "-", requested_arch) };
-    var graph = Graph { refresh: str(refresh), precise: str(precise), target_os: str(selected_os), target_arch: str(selected_arch), platform_key: str(key), .. }; var targets: Target[>..] = [];
+    var graph = Graph { dry_run: dry_run, refresh: str(refresh), precise: str(precise), target_os: str(selected_os), target_arch: str(selected_arch), platform_key: str(key), .. }; var targets: Target[>..] = [];
     add_roots(graph, p, targets, selected);
     let resolve_only = command == "fetch" || command == "update" || inspect_graph;
     if command == "run" { platform::require(targets.len == 1, "isolated run requires a single target, select a workspace member with -p"); }
@@ -862,6 +870,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     }
     platform::require(resolve_only || compile_count > 0, "no isolated compilation target matched");
     if refresh.len > 0 { validate_refresh(graph, p); }
+    else if command == "update" { read_pins(graph, p, true); }
     resolve_graph(graph, p, selected, features, no_defaults, cache, locked, offline, command == "update" && refresh.len == 0, feature_capability && graph_features);
     var normal = lock_header(p); append_lock_rows(normal, graph, p);
     if command == "test" || include_tests {
@@ -887,7 +896,9 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         var found = false;
         for pkg in graph.packages { if pkg.name == refresh && (if precise.len > 0 { pkg.registry.len > 0 && pkg.version == precise } else { pkg.registry.len > 0 || pkg.git.len > 0 }) { found = true; break; } }
         platform::require(found, str("package is not active in this graph: ", refresh));
-        lock_graph(p, normal, "", false, locked, graph.platform_key);
+    }
+    if refresh.len > 0 || dry_run {
+        if !dry_run { lock_graph(p, normal, "", false, locked, graph.platform_key); }
         report_update(graph, p);
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
@@ -915,5 +926,6 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         platform::run(argv[..], target.root);
         if cross_execute { run_binary(executable, target.root, runner, arguments); }
     }
+    if command == "update" { report_update(graph, p); }
     platform::unlock(project_lock); platform::unlock(cache_lock);
 }

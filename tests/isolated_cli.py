@@ -673,6 +673,47 @@ class Isolated(unittest.TestCase):
         self.assertEqual(lock.read_bytes(), final)
         self.assertEqual((app / 'Honk.toml').read_bytes(), manifest)
 
+    def test_update_dry_run_reports_real_changes_without_downloading_archives(self):
+        self.registry_fixture()
+        self.registry_release('helper', '1.0.0')
+        self.registry_release('codec', '1.0.0', [('helper', 'helper', '^1.0.0')])
+        self.registry_release('unrelated', '1.0.0')
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'helper', 'helper', '^1.0.0')
+        self.registry_dependency('app', 'codec', 'codec', '^1.0.0')
+        self.registry_dependency('app', 'unrelated', 'unrelated', '*')
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        manifest = (app / 'Honk.toml').read_bytes()
+        shutil.rmtree(app / 'target')
+        self.registry_release('helper', '1.1.0')
+        self.registry_release('codec', '1.1.0', [('helper', 'helper', '^1.1.0')])
+        self.registry_release('unrelated', '1.1.0')
+
+        targeted = ('--dependency', 'codec')
+        exact = (*targeted, '--precise', '1.1.0')
+        before = len(self.registry.requests)
+        preview = self.run_honk('update', extra=(*targeted, '--dry-run')).stdout
+        self.assertEqual(self.run_honk('update', extra=(*exact, '--dry-run')).stdout, preview)
+        self.assertIn('+ codec v1.1.0', preview)
+        self.assertIn('+ helper v1.1.0', preview)
+        self.assertNotIn('unrelated', preview)
+        self.assertTrue(all(p.startswith('/index/') for p, _ in self.registry.requests[before:]))
+        self.assertFalse((app / 'target').exists())
+        self.assertEqual(lock.read_bytes(), original)
+        self.assertEqual(self.run_honk('update', extra=exact).stdout, preview)
+
+        after = lock.read_bytes()
+        before = len(self.registry.requests)
+        full_preview = self.run_honk('update', extra=('--dry-run',)).stdout
+        self.assertIn('+ unrelated v1.1.0', full_preview)
+        self.assertTrue(all(p.startswith('/index/') for p, _ in self.registry.requests[before:]))
+        self.assertFalse((app / 'target').exists())
+        self.assertEqual(lock.read_bytes(), after)
+        self.assertEqual(self.run_honk('update').stdout, full_preview)
+        self.assertEqual((app / 'Honk.toml').read_bytes(), manifest)
+
     def test_registry_lock_preference_update_and_yanks(self):
         self.registry_fixture()
         first = self.registry_release('answer', '1.0.0', code='namespace answer; fn value() -> i64 { 1 }')
