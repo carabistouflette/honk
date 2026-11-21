@@ -9,7 +9,7 @@ import text;
 import json;
 import .platform;
 
-struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [], optional: bool = false, features: u8[][] = [], default_features: bool = true, target_os: u8[] = [] }
+struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [], optional: bool = false, features: u8[][] = [], default_features: bool = true, target_os: u8[] = [], target_arch: u8[] = [] }
 struct Feature { name: u8[], items: u8[][] }
 root struct Project {
     root:     u8[>..], name: u8[>..], version: u8[>..], entry: u8[>..], kind: u8[>..],
@@ -125,10 +125,11 @@ fn validate_dependency(dep: Dependency&) {
 fn supported_os(name: const u8[:]) -> bool {
     return nest::supported_os(name);
 }
-fn active_on(dep: const Dependency&, target_os: u8[:]) -> bool {
-    return dep.target_os.len == 0 || dep.target_os == target_os;
+fn supported_arch(name: const u8[:]) -> bool { return nest::supported_arch(name); }
+fn active_on(dep: const Dependency&, target_os: u8[:], target_arch: u8[:]) -> bool {
+    return (dep.target_os.len == 0 || dep.target_os == target_os) && (dep.target_arch.len == 0 || dep.target_arch == target_arch);
 }
-fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Project&, isolated: bool, parent: i64 = 0, target_os: u8[:] = "") {
+fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Project&, isolated: bool, parent: i64 = 0, target_os: u8[:] = "", target_arch: u8[:] = "") {
     let table = toml::find(doc, parent, key); if table < 0 { return; }
     platform::require(doc.nodes[table].kind == toml::Kind.Table, "dependencies must be a table");
     var id = doc.nodes[table].first;
@@ -167,14 +168,14 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
             }
         }
         let dep = if registry_source {
-            Dependency { name: str(name), dev: dev, requirement: string(doc, id, "version"), registry: string(doc, id, "registry", nest::DEFAULT_REGISTRY), package: string(doc, id, "package", name), optional: optional, features: copy(features), default_features: default_features, target_os: str(target_os), .. }
+            Dependency { name: str(name), dev: dev, requirement: string(doc, id, "version"), registry: string(doc, id, "registry", nest::DEFAULT_REGISTRY), package: string(doc, id, "package", name), optional: optional, features: copy(features), default_features: default_features, target_os: str(target_os), target_arch: str(target_arch), .. }
         } else {
             platform::require(toml::find(doc, id, "registry") < 0 && toml::find(doc, id, "package") < 0, "Git/path dependencies cannot specify registry/package");
-            Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), optional: optional, features: copy(features), default_features: default_features, target_os: str(target_os), .. }
+            Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), optional: optional, features: copy(features), default_features: default_features, target_os: str(target_os), target_arch: str(target_arch), .. }
         };
         validate_dependency(dep);
         for prior in project.dependencies {
-            if prior.name != name || (prior.target_os.len > 0 && target_os.len > 0 && prior.target_os != target_os) { continue; }
+            if prior.name != name || !nest::targets_overlap(prior.target_os, prior.target_arch, target_os, target_arch) { continue; }
             platform::require(isolated && dev != prior.dev, "duplicate dependency across dependency tables");
             platform::require(prior.path == dep.path && prior.git == dep.git && prior.rev == dep.rev && prior.registry == dep.registry && prior.package == dep.package && prior.requirement == dep.requirement, "shared isolated production and development aliases require identical source and version requirements");
         }
@@ -272,10 +273,11 @@ fn parse(input: u8[:], project: Project&, isolated: bool = false) {
         var row = doc.nodes[target].first;
         while row >= 0 {
             let name = toml::key(doc, row);
-            platform::require(supported_os(name), str("unsupported target OS: ", name));
+            let os, arch, valid = nest::target_parts(name);
+            platform::require(valid, str("unsupported target: ", name));
             keys(doc, row, ["dependencies", "dev-dependencies"]);
-            read_dependencies(doc, "dependencies", false, project, isolated, row, name);
-            read_dependencies(doc, "dev-dependencies", true, project, isolated, row, name);
+            read_dependencies(doc, "dependencies", false, project, isolated, row, os, arch);
+            read_dependencies(doc, "dev-dependencies", true, project, isolated, row, os, arch);
             row = doc.nodes[row].next;
         }
     }

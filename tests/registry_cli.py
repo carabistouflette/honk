@@ -69,7 +69,10 @@ class Registry:
                 fields = dict(package=package, version=requirement, **(dependency_options or {}).get(alias, {}))
                 record_dep = dict(alias=alias, **fields)
                 if target_os:
-                    record_dep['target-os'] = target_os
+                    os_name, separator, arch = target_os.partition('-')
+                    record_dep['target-os'] = os_name
+                    if separator:
+                        record_dep['target-arch'] = arch
                 dependencies.append(record_dep)
                 fields['registry'] = self.url + '/index'
                 manifest += f'{alias} = {{ ' + ', '.join(f'{key}={json.dumps(value)}' for key, value in fields.items()) + ' }\n'

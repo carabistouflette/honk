@@ -984,6 +984,48 @@ class Isolated(unittest.TestCase):
                       self.run_honk('fetch', extra=('--target-os', 'linux'), cwd=other, ok=False).stderr)
         self.assertEqual(lock.read_bytes(), original)
 
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_published_arch_variants_share_one_frozen_lock(self):
+        self.registry_fixture()
+        self.registry_release('x86-codec', '1.0.0', features={'vector': []})
+        self.registry_release('arm-codec', '1.0.0', features={'neon': []})
+        self.registry_release(
+            'driver', '1.0.0',
+            features={'default': ['codec/vector'], 'arm': ['codec/neon']},
+            target_dependencies={'linux-x86_64': [('codec', 'x86-codec', '*')],
+                                 'linux-aarch64': [('codec', 'arm-codec', '*')]})
+        app = self.package('app', 'fn main() {}')
+        manifest = app / 'Honk.toml'
+        with manifest.open('a') as f:
+            f.write('[target.linux-x86_64.dependencies]\n')
+        self.registry_dependency('app', 'driver', 'driver', '*')
+        with manifest.open('a') as f:
+            f.write('[target.linux-aarch64.dependencies]\n')
+        self.registry_dependency('app', 'driver', 'driver', '*', ['arm'])
+        manifest.write_text(manifest.read_text().replace(
+            'features = ["arm"]', 'features = ["arm"], default-features = false'))
+
+        arches = [('x86_64', 'x86-codec', 'vector'), ('aarch64', 'arm-codec', 'neon')]
+        for arch, package, _ in arches:
+            before = len(self.registry.requests)
+            self.run_honk('fetch', extra=('--target-os', 'linux', '--target-arch', arch))
+            archives = {path for path, _ in self.registry.requests[before:] if path.endswith('.tar.gz')}
+            self.assertIn(f'/{package}-1.0.0.tar.gz', archives)
+            self.assertTrue(archives <= {f'/{package}-1.0.0.tar.gz', '/driver-1.0.0.tar.gz'})
+
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        platforms = tomllib.loads(original.decode())['platforms']
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        for arch, package, feature in reversed(arches):
+            graph = tomllib.loads(platforms[f'linux-{arch}'])
+            self.assertEqual({b['package'] for b in graph['binding']}, {'driver', package})
+            self.assertEqual({f['name'] for f in graph['feature']}, {feature, 'arm' if arch == 'aarch64' else 'default'})
+            self.run_honk('fetch', extra=('--target-os', 'linux', '--target-arch', arch, '--frozen'))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_fetch_isolated_tests_prepares_a_cold_locked_cache_without_compiling(self):
         self.registry_fixture()
         self.registry_release('test-helper', '1.0.0')
