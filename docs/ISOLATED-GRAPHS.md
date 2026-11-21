@@ -175,7 +175,8 @@ create a distinct entry for each OS/architecture pair. Omitting
 Use the same explicit target when replaying a
 platform lock, for example `honk fetch --isolated --target-os windows
 --frozen`. Foreign targets support fetching, including `--tests`.
-Compilation and execution use the host compiler. Platform-specific
+Execution uses the host target. Linux x86_64 also supports building for
+Linux AArch64 with an explicit cross compiler. Platform-specific
 declarations are supported in path and Git packages and in published
 registry packages using a schema-2 index. Honk selects the active registry
 edges before downloading archives and checks every published production
@@ -185,6 +186,25 @@ Aliases can name different dependencies on disjoint target selectors. On the act
 OS, ordinary and development edges follow the same alias rules as
 unconditional dependencies. Features forwarded to an alias unavailable
 on the selected OS have no effect there.
+
+## Cross-building Linux AArch64
+
+From Linux x86_64, install an AArch64 Linux C compiler and its target
+headers and libraries. Honk checks the compiler target and passes the
+compiler to Goose for both the program and its runtime. The same qualified
+Goose binary runs on the host.
+
+```sh
+honk fetch --isolated --target-os linux --target-arch aarch64
+honk build --isolated --target-os linux --target-arch aarch64 \
+  --cc /usr/bin/aarch64-linux-gnu-gcc --frozen
+qemu-aarch64 -L /usr/aarch64-linux-gnu target/isolated/platform/linux-aarch64/my-app
+```
+
+The runtime paths in this example are for a GNU toolchain. Use the
+cross toolchain's sysroot when running under QEMU. The test suite can
+run this flow when `HONK_AARCH64_SYSROOT` points to that sysroot and
+`aarch64-linux-gnu-gcc` and `qemu-aarch64` are on PATH.
 
 ## Isolated tests
 

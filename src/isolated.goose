@@ -641,7 +641,16 @@ fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compil
     }
     print("Passed ", planned.len, " test targets");
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, fetch_tests: bool, requested_os: u8[:], requested_arch: u8[:]) {
+fn cross_compiler(path: u8[:], root: u8[:]) -> u8[>..] {
+    platform::require(path.len > 0, "cross-building for Linux AArch64 requires --cc /absolute/path/to/compiler");
+    let compiler = platform::absolute(path);
+    let probe: const u8[:][] = [compiler, "-dumpmachine"];
+    let machine, status = platform::command(probe, root, true);
+    platform::require(status == 0 && machine.len > 8 && machine[..8] == "aarch64-" && find(machine, "-linux-") >= 0,
+        "--cc must target Linux AArch64");
+    return compiler;
+}
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, fetch_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:]) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -663,7 +672,10 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     platform::require(requested_os.len == 0 || manifest::supported_os(requested_os), "unsupported --target-os");
     platform::require(requested_arch.len == 0 || (requested_os.len > 0 && manifest::supported_arch(requested_arch)), "unsupported --target-arch");
     platform::require(requested_os.len == 0 || requested_os == host || command == "fetch", "foreign --target-os requires fetch");
-    platform::require(requested_arch.len == 0 || requested_arch == arch || command == "fetch", "foreign --target-arch requires fetch");
+    let cross_build = command == "build" && host == "linux" && arch == "x86_64" && requested_os == "linux" && requested_arch == "aarch64";
+    platform::require(requested_arch.len == 0 || requested_arch == arch || command == "fetch" || cross_build, "foreign --target-arch requires fetch unless cross-building for Linux AArch64");
+    platform::require(cross_build || requested_cc.len == 0, "--cc is supported for Linux x86_64 to AArch64 builds");
+    let cc: u8[>..] = if cross_build { cross_compiler(requested_cc, p.root) } else { [] };
     let selected_os = if requested_os.len == 0 { str(host) } else { str(requested_os) };
     let selected_arch = if requested_arch.len == 0 { str(arch) } else { str(requested_arch) };
     let key = if requested_arch.len == 0 { str(requested_os) } else { str(requested_os, "-", requested_arch) };
@@ -705,6 +717,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         if resolve_only { break; }
         var words: u8[][>..] = [str(compiler), str(command), str(target.root, "/", target.entry), str("--package-graph"), str(path)];
         if command == "build" { words.push(str("-o")); words.push(str(target.output, "/", target.name)); }
+        if cc.len > 0 { words.push(str("--cc")); words.push(copy(cc)); }
         if release { words.push(str("-O2")); }
         if arguments.len > 0 { words.push(str("--")); for argument in arguments { words.push(str(argument)); } }
         var argv: (const u8[:])[>..] = []; for word in words { argv.push(word); }

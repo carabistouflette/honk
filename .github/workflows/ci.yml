@@ -37,8 +37,12 @@ jobs:
           CXX: clang++
       - run: cmake --build .build/graph-compiler/build --parallel 2
         if: matrix.sanitizer_cc == 'clang'
+      - run: sudo apt-get install -y --no-install-recommends gcc-aarch64-linux-gnu libc6-dev-arm64-cross qemu-user
+        if: matrix.sanitizer_cc == 'clang'
       - run: make isolated-test GRAPH_GOOSE="$GITHUB_WORKSPACE/.build/graph-compiler/build/goose"
         if: matrix.sanitizer_cc == 'clang'
+        env:
+          HONK_AARCH64_SYSROOT: /usr/aarch64-linux-gnu
       - run: make sanitize portable
       - run: make isolated-test GRAPH_GOOSE="$GITHUB_WORKSPACE/.build/graph-compiler/build/goose"
         if: matrix.sanitizer_cc == 'clang'
