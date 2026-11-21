@@ -204,6 +204,12 @@ and satisfy all active requirements and feature requests for that
 registry package name. Honk updates the lock without changing
 `Honk.toml`. A failed selection preserves the lock.
 
+Add `--dry-run` to an isolated update to preview its version and source
+changes. It works with full, targeted and exact registry updates. Honk
+can read registry indexes and fetch Git inputs needed for resolution.
+It leaves the lock and build outputs untouched and skips registry archive
+acquisition and manifest verification until the real update.
+
 Use the same target selectors used to create the lock. The update leaves
 the other target entries and the test section in place. After an update
 that changes the test graph, refresh that graph with
