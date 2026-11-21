@@ -1226,6 +1226,49 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
 
+    @unittest.skipUnless(sys.platform.startswith('linux') and platform.machine() in ('x86_64', 'aarch64')
+                         and COMPILER.get('package_graph_features'), 'requires a qualified Linux graph target')
+    def test_isolated_metadata_matches_frozen_production_and_test_compiler_inputs(self):
+        self.registry_fixture()
+        self.registry_release('codec', '1.0.0', features={'api': []},
+                              code='namespace codec; if feature("api") { fn value() -> i64 { 42 } }')
+        self.registry_release('test-helper', '1.0.0')
+        app = self.package('app', 'import codec; import std; fn main() { print(codec::value()); }')
+        self.registry_dependency('app', 'codec', 'codec', '*', ['api'])
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[dev-dependencies]\n')
+        self.registry_dependency('app', 'helper', 'test-helper', '*')
+        (app / 'tests').mkdir()
+        (app / 'tests/smoke.goose').write_text('import helper; fn main() { assert(helper::value() == 42); }')
+        arch = platform.machine()
+        target = ('--target-os', 'linux', '--target-arch', arch)
+        self.run_honk('fetch', extra=(*target, '--tests'))
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        frozen = (*target, '--frozen')
+        args = (*frozen, '--format-version', '1')
+        normal = json.loads(self.run_honk('metadata', extra=args).stdout)
+        testing = json.loads(self.run_honk('metadata', extra=(*args, '--tests')).stdout)
+        for profile, doc in [('production', normal), ('test', testing)]:
+            self.assertEqual(doc['format_version'], 1)
+            self.assertEqual(doc['target'], {'os': 'linux', 'arch': arch})
+            self.assertEqual(doc['profile'], profile)
+            self.assertEqual(len(doc['graphs']), 1)
+        unsupported = self.run_honk('metadata', ok=False, extra=(*frozen, '--format-version', '2'))
+        self.assertIn('supports --format-version 1', unsupported.stderr)
+        self.assertEqual(unsupported.stdout, '')
+        self.assertFalse((app / 'target').exists())
+
+        self.run_honk('build', extra=frozen)
+        self.run_honk('test', extra=frozen)
+        output = app / f'target/isolated/platform/linux-{arch}'
+        self.assertEqual(normal['graphs'][0], json.loads((output / 'graph.json').read_text()))
+        self.assertEqual(testing['graphs'][0], json.loads((output / 'tests/debug/0/graph.json').read_text()))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_fetch_isolated_tests_prepares_a_cold_locked_cache_without_compiling(self):
         self.registry_fixture()
         self.registry_release('test-helper', '1.0.0')

@@ -51,7 +51,7 @@ fn cli_main() {
     if argv.len < 2 || argv[1] == "help" || argv[1] == "--help" || argv[1] == "-h" { usage(); return; }
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
-    let spec = [argparse::flag("isolated"), argparse::option("invert"), argparse::option("target-os"), argparse::option("target-arch"), argparse::option("cc"), argparse::option("runner"), argparse::flag("tests"), argparse::flag("no-default-features"), argparse::option("features"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
+    let spec = [argparse::flag("isolated"), argparse::option("format-version"), argparse::option("invert"), argparse::option("target-os"), argparse::option("target-arch"), argparse::option("cc"), argparse::option("runner"), argparse::flag("tests"), argparse::flag("no-default-features"), argparse::option("features"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
                 argparse::option("registry"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
@@ -121,7 +121,7 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filt
     platform::require(options.positionals.len == 0 || cmd == "add" || cmd == "remove", "unexpected positional argument (program arguments follow --)");
     if options.has("isolated") {
         for entry in options.entries {
-            platform::require(entry.name == "isolated" || entry.name == "invert" || entry.name == "target-os" || entry.name == "target-arch" || entry.name == "cc" || entry.name == "runner" || entry.name == "tests" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file" || entry.name == "locked" || entry.name == "frozen" || entry.name == "offline" || entry.name == "workspace" || entry.name == "package" || entry.name == "features" || entry.name == "no-default-features", "option is not supported in isolated mode");
+            platform::require(entry.name == "isolated" || entry.name == "format-version" || entry.name == "invert" || entry.name == "target-os" || entry.name == "target-arch" || entry.name == "cc" || entry.name == "runner" || entry.name == "tests" || entry.name == "release" || entry.name == "manifest-path" || entry.name == "log-file" || entry.name == "locked" || entry.name == "frozen" || entry.name == "offline" || entry.name == "workspace" || entry.name == "package" || entry.name == "features" || entry.name == "no-default-features", "option is not supported in isolated mode");
         }
         platform::require(!options.has("workspace") || p.members.len > 0, "manifest has no workspace members");
         platform::require(!(options.has("workspace") && options.has("package")), "select either --workspace or -p");
@@ -230,7 +230,11 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
             allowed = !watching && cmd == "tree" && options.has("isolated");
             platform::require(manifest::package_name(entry.value), "--invert requires a package name");
         }
-        else if name == "tests" { allowed = !watching && (cmd == "fetch" || cmd == "tree") && options.has("isolated"); }
+        else if name == "format-version" {
+            allowed = !watching && cmd == "metadata" && options.has("isolated");
+            platform::require(entry.value == "1", "isolated metadata supports --format-version 1");
+        }
+        else if name == "tests" { allowed = !watching && (cmd == "fetch" || cmd == "tree" || cmd == "metadata") && options.has("isolated"); }
         else if name == "cc" {
             allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "test") && options.has("isolated") && options.has("target-arch");
             platform::require(entry.value.len > 0 && entry.value[0] == '/', "--cc requires an absolute compiler path");
@@ -241,7 +245,7 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         }
         else if name == "target-arch" { allowed = !watching && options.has("isolated") && options.has("target-os"); platform::require(manifest::supported_arch(entry.value), "unsupported --target-arch"); }
         else if name == "target-os" { allowed = !watching && options.has("isolated"); platform::require(manifest::supported_os(entry.value), "unsupported --target-os"); }
-        else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "fetch" || cmd == "update" || cmd == "tree"); }
+        else if name == "isolated" { allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "fetch" || cmd == "update" || cmd == "tree" || cmd == "metadata"); }
         else if name == "diagnostics" { allowed = cmd == "check" && !watching; }
         else if name == "progress" { allowed = cmd == "build" || cmd == "run" || cmd == "check" || cmd == "test" || cmd == "bench" || cmd == "install"; }
         else if name == "jobs" || name == "test-timeout-ms" { allowed = cmd == "test" && !watching; }
