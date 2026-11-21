@@ -609,7 +609,49 @@ fn resolve_graph(graph: Graph&, p: manifest::Project&, selected: u8[:], features
     let order, graph_error = task::plan(graph.packages.len, edges, limits);
     platform::require(graph_error.kind == task::ErrorKind.None, "isolated dependency cycle or graph limit exceeded");
 }
-fn print_tree(graph: Graph&, p: manifest::Project&, targets: Target[>..]&) {
+root struct TreeLinks {
+    first: i64[256] = [-1; 256], next: i64[>..], nodes: i64[>..], aliases: (const u8[:])[>..],
+}
+fn tree_links(links: TreeLinks&, graph: Graph&, reverse: bool, reachable: bool[:]) {
+    var last: i64[256] = [-1; 256];
+    for binding in graph.bindings {
+        if !reachable[binding.owner] { continue; }
+        let from = if reverse { binding.target } else { binding.owner };
+        let to = if reverse { binding.owner } else { binding.target };
+        let index = links.next.len;
+        if links.first[from] < 0 { links.first[from] = index; }
+        else { links.next[last[from]] = index; }
+        last[from] = index;
+        links.next.push(-1); links.nodes.push(to); links.aliases.push(binding.alias);
+    }
+}
+fn print_tree(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, invert: u8[:], normal: u8[>..]&, tests: u8[:], locked: bool) {
+    var forward = TreeLinks { .. };
+    var reachable: bool[256] = [true; 256];
+    tree_links(forward, graph, false, reachable[..]);
+    var roots: i64[>..] = [];
+    for root in targets { roots.push(root.id); }
+    let reverse = invert.len > 0;
+    var backwards = TreeLinks { .. };
+    if reverse {
+        for i in reachable.len { reachable[i] = false; }
+        for node in roots { reachable[node] = true; }
+        var cursor = 0;
+        while cursor < roots.len {
+            var edge = forward.first[roots[cursor]]; cursor++;
+            while edge >= 0 {
+                let child = forward.nodes[edge];
+                if !reachable[child] { reachable[child] = true; roots.push(child); }
+                edge = forward.next[edge];
+            }
+        }
+        roots.clear();
+        for pkg, i in graph.packages { if reachable[i] && pkg.name == invert { roots.push(i); } }
+        platform::require(roots.len > 0, str("no reachable package matches --invert: ", invert));
+        tree_links(backwards, graph, true, reachable[..]);
+    }
+    lock_graph(p, normal, tests, graph.testing, locked, graph.platform_key);
+
     var labels: u8[][>..]          = [];
     var names:  (const u8[:])[>..] = [];
     for pkg, i in graph.packages {
@@ -625,28 +667,22 @@ fn print_tree(graph: Graph&, p: manifest::Project&, targets: Target[>..]&) {
         let stored .= labels.push(copy(label)); names.push(stored);
     }
 
-    var first:   i64[256]           = [-1; 256]; var last: i64[256] = [-1; 256];
-    var next:    i64[>..]           = []; var children: i64[>..] = [];
-    var aliases: (const u8[:])[>..] = [];
-    for binding, i in graph.bindings {
-        if first[binding.owner] < 0 { first[binding.owner] = i; }
-        else { next[last[binding.owner]] = i; }
-        last[binding.owner] = i;
-        next.push(-1); children.push(binding.target); aliases.push(binding.alias);
-    }
-
-    for root in targets {
-        print(names[root.id]);
-        var seen:    bool[256] = [false; 256]; seen[root.id] = true;
-        var pending: i64[>..]  = [first[root.id]];
+    let first = if reverse { backwards.first[..] } else { forward.first[..] };
+    let next = if reverse { backwards.next[..] } else { forward.next[..] };
+    let nodes = if reverse { backwards.nodes[..] } else { forward.nodes[..] };
+    let aliases = if reverse { backwards.aliases[..] } else { forward.aliases[..] };
+    for root in roots {
+        print(names[root]);
+        var seen:    bool[256] = [false; 256]; seen[root] = true;
+        var pending: i64[>..]  = [first[root]];
         while pending.len > 0 {
             let top = pending.len - 1; let edge = pending[top];
             if edge < 0 { pending.pop(); continue; }
             pending[top] = next[edge];
-            let child = children[edge];
+            let child = nodes[edge];
             var line: u8[>..] = [];
             for _ in pending.len { line.append("  "); }
-            line.append(aliases[edge]); line.append(" -> "); line.append(names[child]);
+            line.append(aliases[edge]); line.append(if reverse { " <- " } else { " -> " }); line.append(names[child]);
             if seen[child] { line.append(" (*)"); }
             print(line);
             if !seen[child] { seen[child] = true; pending.push(first[child]); }
@@ -700,7 +736,7 @@ fn cross_compiler(path: u8[:], root: u8[:]) -> u8[>..] {
         "--cc must target Linux AArch64");
     return compiler;
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:]) {
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:], invert: u8[:]) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -755,15 +791,14 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         resolve_graph(test_graph, p, selected, features, no_defaults, cache, locked, offline, false, feature_capability && graph_features);
         var tests = str(TEST_LOCK_HEADER); append_lock_rows(tests, test_graph, p);
         if include_tests {
-            lock_graph(p, normal, tests, true, locked, graph.platform_key);
-            if inspect_graph { print_tree(test_graph, p, test_targets); }
+            if inspect_graph { print_tree(test_graph, p, test_targets, invert, normal, tests, locked); }
+            else { lock_graph(p, normal, tests, true, locked, graph.platform_key); }
         } else { run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments, cc, runner); }
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
     }
     if inspect_graph {
-        lock_graph(p, normal, "", false, locked, graph.platform_key);
-        print_tree(graph, p, targets);
+        print_tree(graph, p, targets, invert, normal, "", locked);
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
     }
