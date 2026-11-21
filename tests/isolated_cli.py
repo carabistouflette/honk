@@ -1147,6 +1147,49 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.registry.requests, requests)
         self.assertEqual(lock.read_bytes(), original)
 
+    @unittest.skipUnless(COMPILER.get('package_graph_features'), 'graph compiler lacks feature blocks')
+    def test_isolated_tree_inspects_frozen_arches_and_test_graph_without_building(self):
+        self.registry_fixture()
+        self.registry_release('support', '1.0.0')
+        self.registry_release('codec', '1.0.0', [('support', 'support', '*')], features={'arm': [], 'x86': []})
+        self.registry_release('test-helper', '1.0.0')
+        app = self.package('app', 'fn main( {')  # Tree must not compile the entry.
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[target.linux-x86_64.dependencies]\n')
+        self.registry_dependency('app', 'codec', 'codec', '*', ['x86'])
+        self.registry_dependency('app', 'mirror', 'codec', '*')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[target.linux-aarch64.dependencies]\n')
+        self.registry_dependency('app', 'codec', 'codec', '*', ['arm'])
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[target.linux-aarch64.dev-dependencies]\n')
+        self.registry_dependency('app', 'helper', 'test-helper', '*')
+
+        x86 = ('--target-os', 'linux', '--target-arch', 'x86_64')
+        arm = ('--target-os', 'linux', '--target-arch', 'aarch64')
+        for target in (x86, arm):
+            self.run_honk('fetch', extra=(*target, '--tests'))
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+
+        x86_tree = self.run_honk('tree', extra=(*x86, '--frozen')).stdout
+        self.assertIn('codec -> codec v1.0.0', x86_tree)
+        self.assertIn('[features: x86] (*)', x86_tree)
+        self.assertEqual(x86_tree.count('    support -> support v1.0.0'), 1)
+        self.assertNotIn('[features: arm]', x86_tree)
+        arm_tree = self.run_honk('tree', extra=(*arm, '--frozen')).stdout
+        self.assertIn('[features: arm]', arm_tree)
+        self.assertNotIn('[features: x86]', arm_tree)
+        self.assertNotIn('test-helper', arm_tree)
+        test_tree = self.run_honk('tree', extra=(*arm, '--tests', '--frozen')).stdout
+        self.assertIn('helper -> test-helper v1.0.0', test_tree)
+        self.assertIn('[features: arm]', test_tree)
+        self.assertFalse((app / 'target').exists())
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_fetch_isolated_tests_prepares_a_cold_locked_cache_without_compiling(self):
         self.registry_fixture()
         self.registry_release('test-helper', '1.0.0')
