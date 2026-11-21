@@ -349,6 +349,11 @@ class Isolated(unittest.TestCase):
         self.package('app', 'import dep; import std; fn main() { print(dep::make().x); }')
         self.git_dependency('app', 'dep', version='^1.0.0')
         self.run_honk('fetch')
+        lock = self.root / 'app/Honk.lock'
+        original = lock.read_bytes()
+        result = self.run_honk('update', ok=False, extra=('--dependency', 'mathx', '--precise', '1.0.0'))
+        self.assertIn('no locked registry package', result.stderr)
+        self.assertEqual(lock.read_bytes(), original)
         (self.remote / 'Honk.toml').write_text('[package]\nname="mathx"\nversion="1.1.0"\nkind="lib"\nentry="mathx.goose"\n')
         (self.remote / 'mathx.goose').write_text('namespace versioned; struct Value { x: i64 } fn make() -> Value { Value { 7 } }')
         self.git('add', '.')
@@ -627,6 +632,46 @@ class Isolated(unittest.TestCase):
             self.run_honk('fetch', extra=(*target, '--frozen'))
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), final)
+
+    def test_precise_registry_update_can_downgrade_without_changing_manifest(self):
+        self.registry_fixture()
+        old = self.registry_release('codec', '1.2.0',
+                                    code='namespace codec; fn value() -> i64 { 12 }')
+        self.registry_release('codec', '1.3.0',
+                              code='namespace codec; fn value() -> i64 { 13 }')
+        self.registry_release('codec', '2.0.0')
+        self.registry_release('unrelated', '1.0.0')
+        app = self.package('app', 'import codec; import std; fn main() { print(codec::value()); }')
+        self.registry_dependency('app', 'codec', 'codec', '^1.0.0')
+        self.registry_dependency('app', 'unrelated', 'unrelated', '*')
+        self.assertEqual(self.run_honk().stdout.strip(), '13')
+        lock = app / 'Honk.lock'
+        manifest = (app / 'Honk.toml').read_bytes()
+        self.registry_release('unrelated', '1.1.0')
+        before = len(self.registry.requests)
+        update = ('--dependency', 'codec', '--precise')
+        changes = self.run_honk('update', extra=(*update, '1.2.0')).stdout
+        self.assertIn('- codec v1.3.0', changes)
+        self.assertIn('+ codec v1.2.0', changes)
+        self.assertNotIn('unrelated', changes)
+        self.assertEqual({p for p, _ in self.registry.requests[before:]},
+                         {'/index/codec.toml', '/codec-1.2.0.tar.gz'})
+        final = lock.read_bytes()
+        for rejected in ('2.0.0', '1.9.0', '^1.2.0'):
+            result = self.run_honk('update', ok=False, extra=(*update, rejected))
+            self.assertIn('--precise', result.stderr)
+            self.assertEqual(lock.read_bytes(), final)
+        old['yanked'] = True
+        self.registry.index('codec', self.registry_versions['codec'])
+        self.run_honk('update', ok=False, extra=(*update, '1.2.0'))
+        self.assertEqual(lock.read_bytes(), final)
+
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '12')
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), final)
+        self.assertEqual((app / 'Honk.toml').read_bytes(), manifest)
 
     def test_registry_lock_preference_update_and_yanks(self):
         self.registry_fixture()

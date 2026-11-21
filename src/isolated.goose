@@ -22,7 +22,7 @@ struct Pin { owner: u8[], alias: u8[], git: u8[], rev: u8[], requirement: u8[], 
 struct Package { directory: u8[], name: u8[], version: u8[], entry: u8[], ns: u8[], digest: u8[], git: u8[] = [], commit: u8[] = [], git_root: u8[] = [], subdir: u8[] = [], registry: u8[] = [], archive_sha: u8[] = [] }
 struct ActiveFeature { owner: i64, name: u8[] }
 struct LockedPackage { key: u8[], name: u8[], version: u8[] }
-root struct Graph { refresh: u8[] = [], old_packages: LockedPackage[>..], testing: bool = false, target_os: u8[] = [], target_arch: u8[] = [], platform_key: u8[] = [], packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
+root struct Graph { refresh: u8[] = [], precise: u8[] = [], old_packages: LockedPackage[>..], testing: bool = false, target_os: u8[] = [], target_arch: u8[] = [], platform_key: u8[] = [], packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
 fn field(state: crypto::Sha256&, value: u8[:]) {
     platform::require(build_cache::feed(state, value), "cannot hash package snapshot");
 }
@@ -189,7 +189,7 @@ fn read_pins(g: Graph&, p: manifest::Project&) {
             for pin in g.pins { platform::require(pin.owner != owner || pin.alias != alias, "duplicate locked Git binding"); }
             platform::require(g.pins.len < 65536, "locked Git binding limit exceeded");
             var refresh = false;
-            if g.refresh.len > 0 {
+            if g.refresh.len > 0 && g.precise.len == 0 {
                 let key = str("git:", git, "@", commit);
                 for pkg in g.old_packages { if pkg.key == key && pkg.name == g.refresh { refresh = true; break; } }
             }
@@ -366,7 +366,7 @@ fn same_names(left: const u8[][:], right: const u8[][:]) -> bool {
 struct RegistrySelection { record: i64, node: i64 }
 fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, offline: bool, update: bool, graph_features: bool) {
     if g.requests.len == 0 { return; } read_pins(g, p);
-    var state = scoped_registry::State { refresh: str(g.refresh), target_os: str(g.target_os), target_arch: str(g.target_arch), .. }; for pin in g.registry_pins { state.pins.push(copy(pin)); }
+    var state = scoped_registry::State { refresh: str(g.refresh), precise: str(g.precise), target_os: str(g.target_os), target_arch: str(g.target_arch), .. }; for pin in g.registry_pins { state.pins.push(copy(pin)); }
     var catalog = nest::Resolver { cache: str(cache, "/nest"), offline: offline, .. };
     platform::require(scoped_registry::resolve(state, catalog, g.requests[..], locked, update), state.error);
     platform::require(graph_features || state.features.len == 0, "registry features require a compiler with package graph feature support");
@@ -788,6 +788,7 @@ fn cross_compiler(path: u8[:], root: u8[:]) -> u8[>..] {
 fn validate_refresh(graph: Graph&, p: manifest::Project&) {
     read_pins(graph, p);
     for pin in graph.registry_pins { if pin.request.package == graph.refresh { return; } }
+    if graph.precise.len > 0 { platform::die(str("no locked registry package matches --dependency: ", graph.refresh)); }
     for pin in graph.pins { if pin.refresh { return; } }
     platform::die(str("no locked registry or Git package matches --dependency: ", graph.refresh));
 }
@@ -812,7 +813,7 @@ fn report_update(graph: Graph&, p: manifest::Project&) {
     sorted_rows(out, removed); sorted_rows(out, added);
     write_stdout(out);
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:], invert: u8[:], refresh: u8[:]) {
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:], invert: u8[:], refresh: u8[:], precise: u8[:]) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -848,7 +849,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     let selected_os = if requested_os.len == 0 { str(host) } else { str(requested_os) };
     let selected_arch = if requested_arch.len == 0 { str(arch) } else { str(requested_arch) };
     let key = if requested_arch.len == 0 { str(requested_os) } else { str(requested_os, "-", requested_arch) };
-    var graph = Graph { refresh: str(refresh), target_os: str(selected_os), target_arch: str(selected_arch), platform_key: str(key), .. }; var targets: Target[>..] = [];
+    var graph = Graph { refresh: str(refresh), precise: str(precise), target_os: str(selected_os), target_arch: str(selected_arch), platform_key: str(key), .. }; var targets: Target[>..] = [];
     add_roots(graph, p, targets, selected);
     let resolve_only = command == "fetch" || command == "update" || inspect_graph;
     if command == "run" { platform::require(targets.len == 1, "isolated run requires a single target, select a workspace member with -p"); }
@@ -884,7 +885,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     }
     if refresh.len > 0 {
         var found = false;
-        for pkg in graph.packages { if pkg.name == refresh && (pkg.registry.len > 0 || pkg.git.len > 0) { found = true; break; } }
+        for pkg in graph.packages { if pkg.name == refresh && (if precise.len > 0 { pkg.registry.len > 0 && pkg.version == precise } else { pkg.registry.len > 0 || pkg.git.len > 0 }) { found = true; break; } }
         platform::require(found, str("package is not active in this graph: ", refresh));
         lock_graph(p, normal, "", false, locked, graph.platform_key);
         report_update(graph, p);

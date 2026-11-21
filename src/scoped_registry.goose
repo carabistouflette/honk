@@ -9,7 +9,7 @@ struct Request { owner: u8[], alias: u8[], registry: u8[], package: u8[], requir
 struct Pin { request: Request, record: nest::Record }
 struct Edge { request: i64, target: i64 }
 struct Activation { record: i64, index: i64 }
-root struct State { refresh: u8[] = [], conflict: bool = false, target_os: u8[] = [], target_arch: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
+root struct State { refresh: u8[] = [], precise: u8[] = [], conflict: bool = false, target_os: u8[] = [], target_arch: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
 struct Frame { candidates: i64[512], count: i64, next: i64 = 0, cursor: i64, pending: i64, selected: i64, edges: i64, features: i64, optional_edges: i64 }
 const MAX_WORK = 8000000;
 fn spend(s: State&, units: i64 = 1) -> bool { s.work += units; if s.work > MAX_WORK { s.error = str("registry resolution scan budget exceeded (8000000)"); return false; } return true; }
@@ -198,7 +198,7 @@ fn forwarded_target(s: State&, request: Request&) -> i64 {
 // earlier in the search. Try the graph with upgrades required wherever a
 // newer release satisfies the selected edge's own version and features.
 fn refresh_floor(s: State&, catalog: nest::Resolver&, request: Request&, strict: bool) -> u8[>..], bool {
-    if s.refresh != request.package { return [], false; }
+    if s.refresh != request.package || s.precise.len > 0 { return [], false; }
     for pin in s.pins {
         if !spend(s) { return [], false; }
         if !same_request(pin.request, request) { continue; }
@@ -240,6 +240,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                     let lookup = nest::Request { package: str(request.package), requirement: str(request.requirement), registry: str(request.registry) };
                     if !nest::catalog(catalog, lookup, true) { s.error = str(catalog.error); return false; }
                 }
+                let exact = s.precise.len > 0 && request.package == s.refresh;
                 let floor, require_newer = refresh_floor(s, catalog, request, strict_refresh);
                 if s.error.len > 0 { return false; }
                 let minimum, minimum_error = semver::parse(if floor.len > 0 { floor[..] } else { "0.0.0" });
@@ -253,6 +254,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                     if !only_pins {
                         for locked in s.pins { if !spend(s) { return false; } if locked.record.registry == record.registry && locked.record.package == record.package && locked.record.version == record.version && !same_record(locked.record, record) { s.error = str("published registry metadata changed for ", record.package, " ", record.version); return false; } }
                     }
+                    if exact && record.version != s.precise { continue; }
                     if floor.len > 0 {
                         let candidate, error = semver::parse(record.version);
                         let order = semver::compare(candidate, minimum);
@@ -276,7 +278,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                     candidates[at] = i;
                 }
                 if s.error.len > 0 { return false; }
-                if candidates.len == 0 { detail = str(request.package, " ", request.requirement, " requested by ", request.owner, " -> ", request.alias); if missing.len > 0 { detail.append(str(" (unknown feature ", missing, ")")); } }
+                if candidates.len == 0 { detail = str(request.package, " ", request.requirement, " requested by ", request.owner, " -> ", request.alias); if exact { detail.append(str(" (--precise ", s.precise, ")")); } if missing.len > 0 { detail.append(str(" (unknown feature ", missing, ")")); } }
                 if candidates.len == 1 {
                     if !choose(s, catalog, request_id, candidates[0]) { return false; } continue;
                 }
@@ -326,7 +328,7 @@ fn resolve(s: State&, catalog: nest::Resolver&, roots: const Request[:], locked:
         if !s.conflict { return false; }
         catalog.records.clear(); catalog.catalogs.clear();
         if solve(s, catalog, roots, false, false, true) { return true; }
-        if !s.conflict { return false; }
+        if !s.conflict || s.precise.len > 0 { return false; }
         return solve(s, catalog, roots, false, false);
     }
     if !update && s.pins.len > 0 {
