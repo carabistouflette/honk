@@ -344,6 +344,21 @@ class Isolated(unittest.TestCase):
         self.run_honk('update')
         self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '7')
 
+    def test_targeted_git_update_selects_the_locked_package_name(self):
+        self.git_fixture()
+        self.package('app', 'import dep; import std; fn main() { print(dep::make().x); }')
+        self.git_dependency('app', 'dep', version='^1.0.0')
+        self.run_honk('fetch')
+        (self.remote / 'Honk.toml').write_text('[package]\nname="mathx"\nversion="1.1.0"\nkind="lib"\nentry="mathx.goose"\n')
+        (self.remote / 'mathx.goose').write_text('namespace versioned; struct Value { x: i64 } fn make() -> Value { Value { 7 } }')
+        self.git('add', '.')
+        self.git('commit', '-qm', '1.1.0')
+        self.git('tag', 'v1.1.0')
+        change = self.run_honk('update', extra=('--dependency', 'mathx')).stdout
+        self.assertIn('- mathx v1.0.0', change)
+        self.assertIn('+ mathx v1.1.0', change)
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '7')
+
     def test_git_same_request_is_resolved_once_even_if_tag_moves(self):
         commits = self.git_fixture()
         shim = self.root / 'tools/git'
@@ -560,6 +575,58 @@ class Isolated(unittest.TestCase):
         self.run_honk('fetch', ok=False, extra=('--frozen',))
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
+
+    def test_targeted_registry_update_pins_other_packages_and_target_graphs(self):
+        self.registry_fixture()
+        self.registry_release('helper', '1.0.0')
+        self.registry_release('unrelated', '1.0.0')
+        self.registry_release('codec', '1.0.0', [('helper', 'helper', '^1.0.0')])
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'helper', 'helper', '^1.0.0')
+        self.registry_dependency('app', 'unrelated', 'unrelated', '^1.0.0')
+        self.registry_dependency('app', 'codec', 'codec', '^1.0.0')
+        x86 = ('--target-os', 'linux', '--target-arch', 'x86_64')
+        arm = ('--target-os', 'linux', '--target-arch', 'aarch64')
+        for target in (x86, arm):
+            self.run_honk('fetch', extra=target)
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        self.run_honk('update', ok=False, extra=(*arm, '--dependency', 'missing'))
+        self.assertEqual(lock.read_bytes(), original)
+        prior = tomllib.loads(original.decode())['platforms']
+        self.registry_release('helper', '1.1.0')
+        self.registry_release('unrelated', '1.1.0')
+        self.registry_release('codec', '1.1.0', [('helper', 'helper', '^1.0.0')])
+        before = len(self.registry.requests)
+        update = (*arm, '--dependency', 'codec')
+        changes = self.run_honk('update', extra=update).stdout
+        self.assertIn('+ codec v1.1.0', changes)
+        self.assertNotIn('helper v', changes)
+        self.assertNotIn('unrelated v', changes)
+        self.assertEqual({path for path, _ in self.registry.requests[before:]},
+                         {'/index/codec.toml', '/codec-1.1.0.tar.gz'})
+        self.registry_release('codec', '1.2.0', [('helper', 'helper', '^1.1.0')])
+        changes = self.run_honk('update', extra=update).stdout
+        self.assertIn('+ codec v1.2.0', changes)
+        self.assertIn('- helper v1.0.0', changes)
+        self.assertIn('+ helper v1.1.0', changes)
+        self.assertNotIn('unrelated v', changes)
+        final = lock.read_bytes()
+        platforms = tomllib.loads(final.decode())['platforms']
+        self.assertEqual(platforms['linux-x86_64'], prior['linux-x86_64'])
+        packages = {p['name']: p['version'] for p in tomllib.loads(platforms['linux-aarch64'])['package']}
+        self.assertEqual(packages, {'app': '0.1.0', 'codec': '1.2.0',
+                                    'helper': '1.1.0', 'unrelated': '1.0.0'})
+        self.registry_release('codec', '1.3.0', [('helper', 'helper', '^2.0.0')])
+        self.assertIn('No dependency version or source changes',
+                      self.run_honk('update', extra=update).stdout)
+        self.assertEqual(lock.read_bytes(), final)
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        for target in (arm, x86):
+            self.run_honk('fetch', extra=(*target, '--frozen'))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), final)
 
     def test_registry_lock_preference_update_and_yanks(self):
         self.registry_fixture()
