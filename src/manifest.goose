@@ -9,7 +9,7 @@ import text;
 import json;
 import .platform;
 
-struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [], optional: bool = false, features: u8[][] = [], default_features: bool = true }
+struct Dependency { name: u8[], path: u8[], git: u8[], rev: u8[], dev: bool = false, requirement: u8[] = [], registry: u8[] = [], package: u8[] = [], optional: bool = false, features: u8[][] = [], default_features: bool = true, target_os: u8[] = [] }
 struct Feature { name: u8[], items: u8[][] }
 root struct Project {
     root:     u8[>..], name: u8[>..], version: u8[>..], entry: u8[>..], kind: u8[>..],
@@ -122,8 +122,14 @@ fn validate_dependency(dep: Dependency&) {
         for c in value { platform::require(c >= 32 && c != 127, "control character in dependency value"); }
     }
 }
-fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Project&, isolated: bool) {
-    let table = toml::find(doc, 0, key); if table < 0 { return; }
+fn supported_os(name: const u8[:]) -> bool {
+    return name == "linux" || name == "macos" || name == "windows" || name == "freebsd";
+}
+fn active_on(dep: const Dependency&, target_os: u8[:]) -> bool {
+    return dep.target_os.len == 0 || dep.target_os == target_os;
+}
+fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Project&, isolated: bool, parent: i64 = 0, target_os: u8[:] = "") {
+    let table = toml::find(doc, parent, key); if table < 0 { return; }
     platform::require(doc.nodes[table].kind == toml::Kind.Table, "dependencies must be a table");
     var id = doc.nodes[table].first;
     while id >= 0 {
@@ -161,15 +167,15 @@ fn read_dependencies(doc: toml::Document&, key: u8[:], dev: bool, project: Proje
             }
         }
         let dep = if registry_source {
-            Dependency { name: str(name), dev: dev, requirement: string(doc, id, "version"), registry: string(doc, id, "registry", nest::DEFAULT_REGISTRY), package: string(doc, id, "package", name), optional: optional, features: copy(features), default_features: default_features, .. }
+            Dependency { name: str(name), dev: dev, requirement: string(doc, id, "version"), registry: string(doc, id, "registry", nest::DEFAULT_REGISTRY), package: string(doc, id, "package", name), optional: optional, features: copy(features), default_features: default_features, target_os: str(target_os), .. }
         } else {
             platform::require(toml::find(doc, id, "registry") < 0 && toml::find(doc, id, "package") < 0, "Git/path dependencies cannot specify registry/package");
-            Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), optional: optional, features: copy(features), default_features: default_features, .. }
+            Dependency { name: str(name), path: string(doc, id, "path"), git: string(doc, id, "git"), rev: string(doc, id, "rev"), dev: dev, requirement: string(doc, id, "version"), optional: optional, features: copy(features), default_features: default_features, target_os: str(target_os), .. }
         };
         validate_dependency(dep);
         for prior in project.dependencies {
-            if prior.name != name { continue; }
-            platform::require(isolated && dev && !prior.dev, "duplicate dependency across dependency tables");
+            if prior.name != name || (prior.target_os.len > 0 && target_os.len > 0 && prior.target_os != target_os) { continue; }
+            platform::require(isolated && dev != prior.dev, "duplicate dependency across dependency tables");
             platform::require(prior.path == dep.path && prior.git == dep.git && prior.rev == dep.rev && prior.registry == dep.registry && prior.package == dep.package && prior.requirement == dep.requirement, "shared isolated production and development aliases require identical source and version requirements");
         }
         platform::require(project.dependencies.len < 256, "dependency limit is 256");
@@ -224,7 +230,7 @@ fn load(root: u8[:], project: Project&, isolated: bool = false) {
 fn parse(input: u8[:], project: Project&, isolated: bool = false) {
     var doc = toml::Document { .. }; let error = toml::parse_into(input, doc);
     platform::require(error.len == 0, error);
-    keys(doc, 0, ["package", "dependencies", "dev-dependencies", "toolchain", "workspace", "features"]);
+    keys(doc, 0, ["package", "dependencies", "dev-dependencies", "toolchain", "workspace", "features", "target"]);
     let package = toml::find(doc, 0, "package");
     if package >= 0 {
         keys(doc, package, ["name", "version", "entry", "kind", "description", "license"]);
@@ -259,6 +265,20 @@ fn parse(input: u8[:], project: Project&, isolated: bool = false) {
     platform::require(package >= 0 || project.members.len > 0, "manifest needs a package or nonempty workspace");
     read_dependencies(doc, "dependencies", false, project, isolated);
     read_dependencies(doc, "dev-dependencies", true, project, isolated);
+    let target = toml::find(doc, 0, "target");
+    if target >= 0 {
+        platform::require(isolated && package >= 0, "target dependencies require an isolated package manifest");
+        platform::require(doc.nodes[target].kind == toml::Kind.Table, "target must be a table of operating systems");
+        var row = doc.nodes[target].first;
+        while row >= 0 {
+            let name = toml::key(doc, row);
+            platform::require(supported_os(name), str("unsupported target OS: ", name));
+            keys(doc, row, ["dependencies", "dev-dependencies"]);
+            read_dependencies(doc, "dependencies", false, project, isolated, row, name);
+            read_dependencies(doc, "dev-dependencies", true, project, isolated, row, name);
+            row = doc.nodes[row].next;
+        }
+    }
     let features = toml::find(doc, 0, "features");
     if features >= 0 {
         platform::require(isolated && package >= 0, "features require an isolated package manifest");

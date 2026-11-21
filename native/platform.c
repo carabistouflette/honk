@@ -29,6 +29,19 @@ typedef struct {
 } hs;
 #define HPATH 4096
 #define HCAP (1024 * 1024)
+int64_t honk_host_os(void) {
+#if defined(_WIN32) || defined(__CYGWIN__)
+  return 3;
+#elif defined(__linux__)
+  return 1;
+#elif defined(__APPLE__)
+  return 2;
+#elif defined(__FreeBSD__)
+  return 4;
+#else
+  return 0;
+#endif
+}
 /* Checked timing for bounded watch batching; -1 never becomes a deadline. */
 int64_t honk_watch_clock_ms(void) {
   struct timespec now;

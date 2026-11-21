@@ -21,7 +21,7 @@ struct Binding { owner: i64, alias: u8[], target: i64, git: u8[] = [], rev: u8[]
 struct Pin { owner: u8[], alias: u8[], git: u8[], rev: u8[], requirement: u8[], selected_ref: u8[], commit: u8[] }
 struct Package { directory: u8[], name: u8[], version: u8[], entry: u8[], ns: u8[], digest: u8[], git: u8[] = [], commit: u8[] = [], git_root: u8[] = [], subdir: u8[] = [], registry: u8[] = [], archive_sha: u8[] = [] }
 struct ActiveFeature { owner: i64, name: u8[] }
-root struct Graph { testing: bool = false, packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
+root struct Graph { testing: bool = false, target_os: u8[] = [], platform_key: u8[] = [], packages: Package[>..], bindings: Binding[>..], pins: Pin[>..], pins_loaded: bool = false, requests: scoped_registry::Request[>..], registry_pins: scoped_registry::Pin[>..], feature_rows: u8[][>..], active_features: ActiveFeature[>..], feature_bytes: i64 = 0 }
 fn field(state: crypto::Sha256&, value: u8[:]) {
     platform::require(build_cache::feed(state, value), "cannot hash package snapshot");
 }
@@ -148,7 +148,12 @@ fn package_key(pkg: Package&, base: u8[:]) -> u8[>..] {
 fn read_pins(g: Graph&, p: manifest::Project&) {
     if g.pins_loaded { return; } g.pins_loaded = true;
     let path = str(p.root, "/Honk.lock"); if platform::kind(path) == 0 { return; }
-    let previous = platform::load(path); var doc = toml::Document { .. }; parse_lock(previous, doc);
+    let input = platform::load(path); var doc = toml::Document { .. }; parse_lock(input, doc);
+    if g.platform_key.len > 0 {
+        let previous, exists = platform_lock(input, doc, g.platform_key);
+        if !exists { return; }
+        parse_lock(previous, doc);
+    }
     let test = toml::find(doc, 0, "test");
     let parent = if g.testing && test >= 0 { test } else { 0 };
     let bindings = toml::find(doc, parent, "binding"); if bindings < 0 { return; }
@@ -224,7 +229,7 @@ fn parse_lock(input: u8[:], doc: toml::Document&) {
     platform::require(error.len == 0, "invalid existing lockfile; original is unchanged");
     let version = toml::find(doc, 0, "version");
     platform::require(version >= 0 && doc.nodes[version].kind == toml::Kind.Integer && doc.nodes[version].integer == 2, "isolated mode requires a version-2 lockfile; legacy lockfile is unchanged");
-    manifest::keys(doc, 0, ["version", "mode", "compiler", "package", "binding", "members", "feature", "test"]);
+    manifest::keys(doc, 0, ["version", "mode", "compiler", "package", "binding", "members", "feature", "test", "platforms"]);
     platform::require(manifest::string(doc, 0, "mode") == "isolated", "incompatible lockfile mode; original is unchanged");
     let test = toml::find(doc, 0, "test");
     if test >= 0 {
@@ -232,31 +237,77 @@ fn parse_lock(input: u8[:], doc: toml::Document&) {
         manifest::keys(doc, test, ["package", "binding", "feature"]);
     }
 }
-fn lock_graph(p: manifest::Project&, normal: u8[>..]&, tests: u8[:], testing: bool, locked: bool) {
+// Each explicit platform stores a complete version-2 lock. Existing host
+// locks keep their original rows while other platforms are fetched.
+const PLATFORM_HEADER = "\n[platforms]\n";
+fn platform_lock(input: u8[:], doc: toml::Document&, key: u8[:]) -> u8[>..], bool {
+    let table = toml::find(doc, 0, "platforms");
+    if table >= 0 {
+        platform::require(doc.nodes[table].kind == toml::Kind.Table, "invalid isolated platforms lock section");
+        manifest::keys(doc, table, ["linux", "macos", "windows", "freebsd"]);
+    }
+    if key.len == 0 {
+        if table < 0 { return str(input), true; }
+        let offset = find(input, PLATFORM_HEADER);
+        platform::require(offset >= 0 && find(input[offset + PLATFORM_HEADER.len..], PLATFORM_HEADER) < 0, "invalid isolated platforms lock section header");
+        return str(input[..offset]), true;
+    }
+    if table < 0 { return [], false; }
+    let row = toml::find(doc, table, key);
+    if row < 0 { return [], false; }
+    return platform_lock_text(doc, row), true;
+}
+fn platform_lock_text(doc: toml::Document&, row: i64) -> u8[>..] {
+    platform::require(doc.nodes[row].kind == toml::Kind.String, "invalid platform lock value");
+    return str(toml::text(doc, row));
+}
+fn write_platforms(out: u8[>..]&, doc: toml::Document&, key: u8[:], value: u8[:]) {
+    let table = toml::find(doc, 0, "platforms");
+    if table < 0 && key.len == 0 { return; }
+    out.append(PLATFORM_HEADER);
+    for os in ["freebsd", "linux", "macos", "windows"] {
+        if os == key {
+            out.append(str(os, " = ")); manifest::quoted(out, value); out.push('\n');
+        } else if table >= 0 {
+            let row = toml::find(doc, table, os);
+            if row >= 0 {
+                out.append(str(os, " = ")); manifest::quoted(out, platform_lock_text(doc, row)); out.push('\n');
+            }
+        }
+    }
+}
+fn lock_graph(p: manifest::Project&, normal: u8[>..]&, tests: u8[:], testing: bool, locked: bool, key: u8[:]) {
     let path = str(p.root, "/Honk.lock");
-    var previous: u8[>..] = [];
-    let exists = platform::kind(path) != 0;
-    var has_test_rows = testing;
-    if exists { previous = platform::load(path); }
-    if !testing && previous == normal { return; }
-    if exists {
+    var storage = toml::Document { .. };
+    var previous: u8[>..] = []; var base: u8[>..] = [];
+    var exists = false;
+    if platform::kind(path) != 0 {
+        let input = platform::load(path);
+        if key.len == 0 && !testing && input == normal { return; }
+        parse_lock(input, storage);
+        previous, exists = platform_lock(input, storage, key);
+        if key.len > 0 { let prefix, present = platform_lock(input, storage, ""); base = copy(prefix); }
+    }
+    if exists && !testing && previous == normal { return; }
+    if exists && !testing {
         var doc = toml::Document { .. }; parse_lock(previous, doc);
-        if !testing && toml::find(doc, 0, "test") >= 0 {
+        if toml::find(doc, 0, "test") >= 0 {
             let offset = find(previous, TEST_LOCK_HEADER);
             platform::require(offset >= 0 && find(previous[offset + TEST_LOCK_HEADER.len..], TEST_LOCK_HEADER) < 0, "invalid isolated test lock section header");
             normal.append(previous[offset..]);
-            has_test_rows = true;
         }
     }
     if testing { normal.append(tests); }
     platform::require(normal.len <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB");
-    if previous == normal { return; }
+    if exists && previous == normal { return; }
     platform::require(!locked, "isolated lockfile is missing or out of date; rerun the command without --locked");
-    if has_test_rows {
-        var doc = toml::Document { .. }; parse_lock(normal, doc);
-    }
-    platform::save(path, normal);
+    var desired = if key.len == 0 { copy(normal) } else if base.len > 0 { copy(base) } else { lock_header(p) };
+    write_platforms(desired, storage, key, normal);
+    platform::require(desired.len <= manifest::MAX_INPUT_BYTES, "isolated lockfile exceeds 1 MiB");
+    var doc = toml::Document { .. }; parse_lock(desired, doc);
+    platform::save(path, desired);
 }
+
 fn record_feature(g: Graph&, owner: i64, key: u8[:], name: u8[:]) {
     var row = str(if g.testing { "\n[[test.feature]]" } else { "\n[[feature]]" });
     lock_field(row, "owner", key); lock_field(row, "name", name); row.push('\n');
@@ -298,6 +349,7 @@ fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, 
         platform::require(child.name == record.package && child.version == record.version && child.entry == record.entry && child.kind == "lib", "archive manifest differs from registry metadata");
         var count = 0;
         for dep in child.dependencies {
+            platform::require(dep.target_os.len == 0, "registry archives cannot declare target-specific dependencies");
             if dep.dev { continue; } count++;
             platform::require(dep.registry == record.registry, "registry archives require same-registry manifest dependencies");
             var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.package == dep.package && expected.requirement == dep.requirement && expected.optional == dep.optional && expected.default_features == dep.default_features && same_names(expected.features, dep.features) { found = true; break; } }
@@ -338,6 +390,7 @@ fn add_root(graph: Graph&, workspace: manifest::Project&, targets: Target[>..]&,
     let id = visit(graph, member.root, workspace.revision);
     if selected.len > 0 && member.root != selected { return; }
     var output = str(workspace.root, "/target/isolated");
+    if graph.platform_key.len > 0 { output.append(str("/platform/", graph.platform_key)); }
     if workspace.members.len > 0 {
         // Put root and member targets in distinct directory trees.
         output.append(if member.root == workspace.root { str("/root") } else { str("/members/", id) });
@@ -396,13 +449,13 @@ fn activate_features(graph: Graph&, owner: manifest::Project&, owner_id: i64, ke
             if i != index { continue; }
             for item in feature.items {
                 if item.len > 4 && item[..4] == "dep:" {
-                    for dep, j in owner.dependencies { if dep.name == item[4..] { state.enabled[j] = true; break; } }
+                    for dep, j in owner.dependencies { if !dep.dev && manifest::active_on(dep, graph.target_os) && dep.name == item[4..] { state.enabled[j] = true; break; } }
                     continue;
                 }
                 let alias, name, weak = nest::forwarded_feature(item);
                 if alias.len > 0 {
                     for dep, j in owner.dependencies {
-                        if dep.name != alias { continue; }
+                        if dep.dev || !manifest::active_on(dep, graph.target_os) || dep.name != alias { continue; }
                         state.changed[j] = true;
                         if !weak { state.enabled[j] = true; }
                         break;
@@ -462,12 +515,12 @@ fn resolve_graph(graph: Graph&, p: manifest::Project&, selected: u8[:], features
         else { activate_features(graph, owner, cursor, owner_key, empty, states[cursor]); }
         let include_dev = graph.testing && cursor < workspace_roots;
         for dep, index in owner.dependencies {
-            if dep.dev && !include_dev { continue; }
+            if !manifest::active_on(dep, graph.target_os) || (dep.dev && !include_dev) { continue; }
             var shared = false; var defaults = dep.default_features;
             var extra: u8[][>..] = [];
             if include_dev {
                 for other in owner.dependencies {
-                    if other.name != dep.name || other.dev == dep.dev { continue; }
+                    if !manifest::active_on(other, graph.target_os) || other.name != dep.name || other.dev == dep.dev { continue; }
                     shared = true;
                     defaults = defaults || other.default_features;
                     for name in other.features { extra.push(str(name)); }
@@ -565,7 +618,7 @@ fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compil
             planned.push(TestTarget { root: str(target.root), entry: copy(entry), output: copy(output) });
         }
     }
-    lock_graph(p, normal, tests, true, locked);
+    lock_graph(p, normal, tests, true, locked, graph.platform_key);
     for target in planned {
         let path = str(target.output, "/graph.json"); let executable = str(target.output, "/test");
         var argv: (const u8[:])[>..] = [compiler, "build", target.entry, "--package-graph", path, "-o", executable];
@@ -577,7 +630,7 @@ fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compil
     }
     print("Passed ", planned.len, " test targets");
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, fetch_tests: bool) {
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, fetch_tests: bool, requested_os: u8[:]) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -595,7 +648,11 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create graph lock directory");
     let project_lock = platform::lock(str(p.root, "/.honk/isolated.lock")); platform::require(project_lock >= 0, "isolated project is locked by another process");
-    var graph = Graph { .. }; var targets: Target[>..] = [];
+    let host = platform::host_os();
+    platform::require(requested_os.len == 0 || manifest::supported_os(requested_os), "unsupported --target-os");
+    platform::require(requested_os.len == 0 || requested_os == host || command == "fetch", "foreign --target-os requires fetch");
+    let selected_os = if requested_os.len == 0 { str(host) } else { str(requested_os) };
+    var graph = Graph { target_os: str(selected_os), platform_key: str(requested_os), .. }; var targets: Target[>..] = [];
     add_roots(graph, p, targets, selected);
     let resolve_only = command == "fetch" || command == "update";
     if command == "run" { platform::require(targets.len == 1, "isolated run requires a single target, select a workspace member with -p"); }
@@ -610,11 +667,11 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     resolve_graph(graph, p, selected, features, no_defaults, cache, locked, offline, command == "update", feature_capability && graph_features);
     var normal = lock_header(p); append_lock_rows(normal, graph, p);
     if command == "test" || fetch_tests {
-        var test_graph = Graph { testing: true, .. }; var test_targets: Target[>..] = [];
+        var test_graph = Graph { testing: true, target_os: str(selected_os), platform_key: str(requested_os), .. }; var test_targets: Target[>..] = [];
         add_roots(test_graph, p, test_targets, selected);
         resolve_graph(test_graph, p, selected, features, no_defaults, cache, locked, offline, false, feature_capability && graph_features);
         var tests = str(TEST_LOCK_HEADER); append_lock_rows(tests, test_graph, p);
-        if fetch_tests { lock_graph(p, normal, tests, true, locked); }
+        if fetch_tests { lock_graph(p, normal, tests, true, locked, graph.platform_key); }
         else { run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments); }
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
@@ -622,7 +679,7 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     // Validate every selected graph before changing the shared lock.
     var documents: u8[][>..] = [];
     for target in targets { documents.push(render(graph, p.revision, target.id, feature_capability && graph_features)); }
-    lock_graph(p, normal, "", false, locked);
+    lock_graph(p, normal, "", false, locked, graph.platform_key);
     for target, i in targets {
         if command == "build" && target.kind != "bin" { continue; }
         // Resolution-only workspace commands have no compiler output.
