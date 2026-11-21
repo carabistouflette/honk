@@ -335,7 +335,7 @@ fn same_names(left: const u8[][:], right: const u8[][:]) -> bool {
 struct RegistrySelection { record: i64, node: i64 }
 fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, offline: bool, update: bool, graph_features: bool) {
     if g.requests.len == 0 { return; } read_pins(g, p);
-    var state = scoped_registry::State { .. }; for pin in g.registry_pins { state.pins.push(copy(pin)); }
+    var state = scoped_registry::State { target_os: str(g.target_os), .. }; for pin in g.registry_pins { state.pins.push(copy(pin)); }
     var catalog = nest::Resolver { cache: str(cache, "/nest"), offline: offline, .. };
     platform::require(scoped_registry::resolve(state, catalog, g.requests[..], locked, update), state.error);
     platform::require(graph_features || state.features.len == 0, "registry features require a compiler with package graph feature support");
@@ -349,10 +349,9 @@ fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, 
         platform::require(child.name == record.package && child.version == record.version && child.entry == record.entry && child.kind == "lib", "archive manifest differs from registry metadata");
         var count = 0;
         for dep in child.dependencies {
-            platform::require(dep.target_os.len == 0, "registry archives cannot declare target-specific dependencies");
             if dep.dev { continue; } count++;
             platform::require(dep.registry == record.registry, "registry archives require same-registry manifest dependencies");
-            var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.package == dep.package && expected.requirement == dep.requirement && expected.optional == dep.optional && expected.default_features == dep.default_features && same_names(expected.features, dep.features) { found = true; break; } }
+            var found = false; for expected in record.dependencies { if expected.alias == dep.name && expected.target_os == dep.target_os && expected.package == dep.package && expected.requirement == dep.requirement && expected.optional == dep.optional && expected.default_features == dep.default_features && same_names(expected.features, dep.features) { found = true; break; } }
             platform::require(found, "archive dependency differs from registry metadata");
         }
         platform::require(count == record.dependencies.len, "archive dependency count differs from registry metadata");

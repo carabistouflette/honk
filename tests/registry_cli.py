@@ -58,15 +58,21 @@ class Registry:
         self.thread.join()
         self.server.server_close()
 
-    def package(self, name='demo', version='1.0.0', deps=(), payload=None, extra=None, compiler=None, dependency_options=None, features=None):
+    def package(self, name='demo', version='1.0.0', deps=(), payload=None, extra=None, compiler=None, dependency_options=None, features=None, target_dependencies=None):
         label = f'{name}-{version}'
         manifest = f'[package]\nname={q(name)}\nversion={q(version)}\nkind="lib"\nentry="lib.goose"\n[dependencies]\n'
         dependencies = []
-        for alias, package, requirement in deps:
-            fields = dict(package=package, version=requirement, **(dependency_options or {}).get(alias, {}))
-            dependencies.append(dict(alias=alias, **fields))
-            fields['registry'] = self.url + '/index'
-            manifest += f'{alias} = {{ ' + ', '.join(f'{key}={json.dumps(value)}' for key, value in fields.items()) + ' }\n'
+        for target_os, rows in [(None, deps), *(target_dependencies or {}).items()]:
+            if target_os:
+                manifest += f'[target.{target_os}.dependencies]\n'
+            for alias, package, requirement in rows:
+                fields = dict(package=package, version=requirement, **(dependency_options or {}).get(alias, {}))
+                record_dep = dict(alias=alias, **fields)
+                if target_os:
+                    record_dep['target-os'] = target_os
+                dependencies.append(record_dep)
+                fields['registry'] = self.url + '/index'
+                manifest += f'{alias} = {{ ' + ', '.join(f'{key}={json.dumps(value)}' for key, value in fields.items()) + ' }\n'
         if features:
             manifest += '[features]\n' + ''.join(f'{name}={json.dumps(items)}\n' for name, items in features.items())
         if compiler:
@@ -94,7 +100,7 @@ class Registry:
     def index(self, name, entries):
         target = self.root / 'index' / f'{name}.toml'
         target.parent.mkdir(exist_ok=True)
-        schema = 2 if any('features' in release or any('optional' in dep or 'features' in dep or 'default-features' in dep for dep in release['dependencies']) for release in entries) else 1
+        schema = 2 if any('features' in release or any('optional' in dep or 'features' in dep or 'default-features' in dep or 'target-os' in dep for dep in release['dependencies']) for release in entries) else 1
         text = f'schema={schema}\npackage={q(name)}\n'
         for entry in entries:
             text += '\n[[releases]]\n'

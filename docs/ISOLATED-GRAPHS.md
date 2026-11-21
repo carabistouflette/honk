@@ -171,9 +171,10 @@ section of `Honk.lock`. Use the same explicit target when replaying a
 platform lock, for example `honk fetch --isolated --target-os windows
 --frozen`. Foreign targets support fetching, including `--tests`.
 Compilation and execution use the host compiler. Platform-specific
-declarations are supported in path and Git packages and may refer to
-registry packages. Published registry manifests still use unconditional
-dependency metadata.
+declarations are supported in path and Git packages and in published
+registry packages using a schema-2 index. Honk selects the active registry
+edges before downloading archives and checks every published production
+edge against the archive manifest, including inactive edges.
 
 Aliases can name different dependencies on disjoint OSes. On the active
 OS, ordinary and development edges follow the same alias rules as
