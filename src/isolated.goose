@@ -696,9 +696,8 @@ fn run_binary(executable: u8[:], root: u8[:], runner: u8[:], arguments: u8[:][:]
     for arg in arguments { argv.push(arg); }
     platform::run(argv[..], root);
 }
-struct TestTarget { root: u8[], entry: u8[], output: u8[] }
-fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compiler: u8[:], graph_features: bool, normal: u8[>..]&, tests: u8[:], locked: bool, release: bool, arguments: u8[:][:], cc: u8[:], runner: u8[:]) {
-    var planned: TestTarget[>..] = [];
+struct TestTarget { id: i64, root: u8[], path: u8[], output: u8[] }
+fn plan_tests(targets: Target[>..]&, planned: TestTarget[>..]&, release: bool) {
     for target in targets {
         let prefix = str(target.root, "/tests");
         if platform::kind(prefix) == 0 { continue; }
@@ -708,24 +707,54 @@ fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compil
         sort(ordered[..]) { a, b => before(a, b) }
         for path, i in ordered {
             platform::require(manifest::relative(path), "invalid isolated test entry");
-            let entry = str(target.root, "/", path);
             let output = str(target.output, "/tests/", if release { "release" } else { "debug" }, "/", i);
-            let doc = render(graph, p.revision, target.id, graph_features, path, namespace_of(platform::load(entry)));
-            platform::require(platform::mkdir(output), "cannot create isolated test output directory");
-            platform::save(str(output, "/graph.json"), doc);
-            planned.push(TestTarget { root: str(target.root), entry: copy(entry), output: copy(output) });
+            planned.push(TestTarget { id: target.id, root: str(target.root), path: str(path), output: copy(output) });
         }
+    }
+}
+fn render_test(graph: Graph&, p: manifest::Project&, target: TestTarget&, graph_features: bool) -> u8[>..] {
+    let entry = str(target.root, "/", target.path);
+    return render(graph, p.revision, target.id, graph_features, target.path, namespace_of(platform::load(entry)));
+}
+fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compiler: u8[:], graph_features: bool, normal: u8[>..]&, tests: u8[:], locked: bool, release: bool, arguments: u8[:][:], cc: u8[:], runner: u8[:]) {
+    var planned: TestTarget[>..] = []; plan_tests(targets, planned, release);
+    for target in planned {
+        let doc = render_test(graph, p, target, graph_features);
+        platform::require(platform::mkdir(target.output), "cannot create isolated test output directory");
+        platform::save(str(target.output, "/graph.json"), doc);
     }
     lock_graph(p, normal, tests, true, locked, graph.platform_key);
     for target in planned {
         let path = str(target.output, "/graph.json"); let executable = str(target.output, "/test");
-        var argv: (const u8[:])[>..] = [compiler, "build", target.entry, "--package-graph", path, "-o", executable];
+        let entry = str(target.root, "/", target.path);
+        var argv: (const u8[:])[>..] = [compiler, "build", entry, "--package-graph", path, "-o", executable];
         if release { argv.push("-O2"); }
         if cc.len > 0 { argv.push("--cc"); argv.push(cc); }
         platform::run(argv[..], target.root);
         run_binary(executable, target.root, runner, arguments);
     }
     print("Passed ", planned.len, " test targets");
+}
+fn append_metadata_graph(out: u8[>..]&, graph: u8[:], first: bool) {
+    platform::require(out.len + graph.len + 3 <= 16777216, "isolated metadata exceeds 16 MiB");
+    if !first { out.push(','); }
+    out.append(graph);
+}
+fn print_metadata(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, graph_features: bool, normal: u8[>..]&, tests: u8[:], locked: bool) {
+    var out = str("{\"format_version\":1,\"target\":{\"os\":");
+    manifest::quoted(out, graph.target_os);
+    out.append(",\"arch\":"); manifest::quoted(out, graph.target_arch);
+    out.append("},\"profile\":"); manifest::quoted(out, if graph.testing { "test" } else { "production" });
+    out.append(",\"graphs\":[");
+    if graph.testing {
+        var planned: TestTarget[>..] = []; plan_tests(targets, planned, false);
+        for target, i in planned { append_metadata_graph(out, render_test(graph, p, target, graph_features), i == 0); }
+    } else {
+        for target, i in targets { append_metadata_graph(out, render(graph, p.revision, target.id, graph_features), i == 0); }
+    }
+    out.append("]}\n");
+    lock_graph(p, normal, tests, graph.testing, locked, graph.platform_key);
+    write_stdout(out);
 }
 fn cross_compiler(path: u8[:], root: u8[:]) -> u8[>..] {
     platform::require(path.len > 0, "cross-building for Linux AArch64 requires --cc /absolute/path/to/compiler");
@@ -754,13 +783,14 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create graph lock directory");
     let project_lock = platform::lock(str(p.root, "/.honk/isolated.lock")); platform::require(project_lock >= 0, "isolated project is locked by another process");
-    let inspect_graph = command == "tree";
+    let metadata = command == "metadata";
+    let inspect_graph = command == "tree" || metadata;
     let host = platform::host_os(); let arch = platform::host_arch();
     platform::require(requested_os.len == 0 || manifest::supported_os(requested_os), "unsupported --target-os");
     platform::require(requested_arch.len == 0 || (requested_os.len > 0 && manifest::supported_arch(requested_arch)), "unsupported --target-arch");
-    platform::require(requested_os.len == 0 || requested_os == host || command == "fetch" || inspect_graph, "foreign --target-os requires fetch or tree");
+    platform::require(requested_os.len == 0 || requested_os == host || command == "fetch" || inspect_graph, "foreign --target-os requires fetch, tree or metadata");
     let cross_build = (command == "build" || command == "run" || command == "test") && host == "linux" && arch == "x86_64" && requested_os == "linux" && requested_arch == "aarch64";
-    platform::require(requested_arch.len == 0 || requested_arch == arch || command == "fetch" || inspect_graph || cross_build, "foreign --target-arch requires fetch or tree unless cross-building for Linux AArch64");
+    platform::require(requested_arch.len == 0 || requested_arch == arch || command == "fetch" || inspect_graph || cross_build, "foreign --target-arch requires fetch, tree or metadata unless cross-building for Linux AArch64");
     platform::require(cross_build || requested_cc.len == 0, "--cc is supported for Linux x86_64 to AArch64 builds");
     let cc: u8[>..] = if cross_build { cross_compiler(requested_cc, p.root) } else { [] };
     let cross_execute = cross_build && (command == "run" || command == "test");
@@ -791,14 +821,16 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         resolve_graph(test_graph, p, selected, features, no_defaults, cache, locked, offline, false, feature_capability && graph_features);
         var tests = str(TEST_LOCK_HEADER); append_lock_rows(tests, test_graph, p);
         if include_tests {
-            if inspect_graph { print_tree(test_graph, p, test_targets, invert, normal, tests, locked); }
+            if metadata { print_metadata(test_graph, p, test_targets, feature_capability && graph_features, normal, tests, locked); }
+            else if inspect_graph { print_tree(test_graph, p, test_targets, invert, normal, tests, locked); }
             else { lock_graph(p, normal, tests, true, locked, graph.platform_key); }
         } else { run_tests(test_graph, p, test_targets, compiler, feature_capability && graph_features, normal, tests, locked, release, arguments, cc, runner); }
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
     }
     if inspect_graph {
-        print_tree(graph, p, targets, invert, normal, "", locked);
+        if metadata { print_metadata(graph, p, targets, feature_capability && graph_features, normal, "", locked); }
+        else { print_tree(graph, p, targets, invert, normal, "", locked); }
         platform::unlock(project_lock); platform::unlock(cache_lock);
         return;
     }

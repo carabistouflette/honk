@@ -214,6 +214,23 @@ Tree resolves dependencies without compiling or writing a build graph.
 An unlocked invocation can update the selected lock graph. Frozen
 inspection replays the existing lock using the local cache.
 
+## Resolved JSON metadata
+
+`honk metadata --isolated --format-version 1` emits one JSON document
+with `format_version`, `target` (`os` and `arch`), `profile`
+(`production` or `test`), and `graphs`. The default format version is 1.
+Each element of `graphs` uses the same `goose-package-graph-v1` fields
+as the compiler input, including the root key, node identities,
+alias bindings and active features. Node keys are scoped to a graph.
+The complete metadata document is limited to 16 MiB.
+
+The production profile emits one graph per selected package. With
+`--tests`, metadata emits one graph per discovered test entry, in the
+same order as `honk test`. Use the same workspace, feature, and target
+selectors as the command you intend to run. Metadata does not compile
+sources or write build artifacts. Use `--frozen` to inspect a locked
+graph with cached sources and no registry access.
+
 ## Cross-building Linux AArch64
 
 From Linux x86_64, install an AArch64 Linux C compiler and its target
