@@ -206,6 +206,21 @@ cross toolchain's sysroot when running under QEMU. The test suite can
 run this flow when `HONK_AARCH64_SYSROOT` points to that sysroot and
 `aarch64-linux-gnu-gcc` and `qemu-aarch64` are on PATH.
 
+To cross-compile and run the isolated test graph, prefetch it and
+supply an explicit test runner:
+
+```sh
+honk fetch --isolated --target-os linux --target-arch aarch64 --tests --locked
+QEMU_LD_PREFIX=/usr/aarch64-linux-gnu honk test --isolated \
+  --target-os linux --target-arch aarch64 --frozen \
+  --cc /usr/bin/aarch64-linux-gnu-gcc --runner /usr/bin/qemu-aarch64
+```
+
+Use an unlocked fetch to create the test lock if it does not yet exist.
+Honk calls the runner with the test binary path followed by test
+arguments after `--`, and returns the runner's exit status on failure.
+A wrapper executable can supply additional runner options.
+
 ## Isolated tests
 
 `honk test --isolated` discovers standalone executables under `tests/`,

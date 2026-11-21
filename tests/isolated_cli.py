@@ -1064,6 +1064,55 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
 
+    @unittest.skipUnless(sys.platform.startswith('linux') and platform.machine() == 'x86_64'
+                         and os.environ.get('HONK_AARCH64_SYSROOT'),
+                         'requires the Linux AArch64 cross toolchain and QEMU')
+    def test_cross_tests_replay_locked_dev_graph_and_propagate_exit_status(self):
+        cc = shutil.which('aarch64-linux-gnu-gcc')
+        qemu = shutil.which('qemu-aarch64')
+        self.assertIsNotNone(cc)
+        self.assertIsNotNone(qemu)
+        self.env['QEMU_LD_PREFIX'] = os.environ['HONK_AARCH64_SYSROOT']
+        self.registry_fixture()
+        self.registry_release('test-helper', '1.0.0')
+        app = self.package('app', 'import std; fn main() { print("production"); }')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[target.linux-aarch64.dev-dependencies]\n')
+        self.registry_dependency('app', 'helper', 'test-helper', '*')
+        (app / 'tests').mkdir()
+        (app / 'tests/smoke.goose').write_text(
+            'import helper; import os; import std; fn main() { '
+            'assert(helper::value() == 42); let argv = args(); '
+            'let arg = argv[argv.len - 1]; if arg == "fail" { exit(23); } print(arg); }')
+        target = ('--target-os', 'linux', '--target-arch', 'aarch64')
+        self.run_honk('fetch', extra=(*target, '--tests'))
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        graph = tomllib.loads(tomllib.loads(original.decode())['platforms']['linux-aarch64'])
+        self.assertNotIn('binding', graph)
+        self.assertEqual([b['package'] for b in graph['test']['binding']], ['test-helper'])
+
+        self.env['HONK_HOME'] = str(self.root / 'cold-cache')
+        before = len(self.registry.requests)
+        self.run_honk('fetch', extra=(*target, '--tests', '--locked'))
+        self.assertEqual([p for p, _ in self.registry.requests[before:]], ['/test-helper-1.0.0.tar.gz'])
+        self.assertFalse((app / 'target').exists())
+        requests = list(self.registry.requests)
+        frozen = (*target, '--cc', cc, '--frozen')
+        self.assertIn('requires --runner', self.run_honk('test', ok=False, extra=frozen).stderr)
+        run = (*frozen, '--runner', qemu)
+        result = self.run_honk('test', extra=(*run, '--', 'argument with spaces'))
+        self.assertIn('argument with spaces', result.stdout.splitlines())
+        self.assertEqual(self.run_honk('test', ok=False, extra=(*run, '--', 'fail')).returncode, 23)
+        self.run_honk('build', extra=frozen)
+        output = app / 'target/isolated/platform/linux-aarch64'
+        self.assertEqual(subprocess.check_output([qemu, str(output / 'app')], env=self.env,
+                                                 text=True, timeout=30).strip(), 'production')
+        production = json.loads((output / 'graph.json').read_text())
+        self.assertEqual([n['source']['name'] for n in production['nodes']], ['app'])
+        self.assertEqual(self.registry.requests, requests)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_fetch_isolated_tests_prepares_a_cold_locked_cache_without_compiling(self):
         self.registry_fixture()
         self.registry_release('test-helper', '1.0.0')
