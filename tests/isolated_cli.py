@@ -1190,6 +1190,42 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
 
+    def test_inverse_isolated_tree_shows_selected_workspace_paths_and_test_edges(self):
+        self.registry_fixture()
+        self.registry_release('shared', '1.0.0')
+        self.registry_release('bridge', '1.0.0', [('leaf', 'shared', '*')])
+        self.workspace()
+        self.registry_dependency('a', 'bridge', 'bridge', '*')
+        with (self.root / 'b/Honk.toml').open('a') as f:
+            f.write('[dev-dependencies]\n')
+        self.registry_dependency('b', 'test_dep', 'shared', '*')
+
+        target = ('--target-os', 'linux', '--target-arch', 'aarch64')
+        self.run_honk('fetch', extra=(*target, '--tests', '--workspace'), cwd=self.root)
+        lock = self.root / 'Honk.lock'
+        original = lock.read_bytes()
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+
+        options = (*target, '--invert', 'shared', '--frozen')
+        production = self.run_honk('tree', extra=(*options, '--workspace'), cwd=self.root).stdout.splitlines()
+        self.assertTrue(production[0].startswith('shared v1.0.0'))
+        self.assertTrue(production[1].startswith('  leaf <- bridge v1.0.0'))
+        self.assertTrue(production[2].startswith('    bridge <- a v0.1.0'))
+        self.assertEqual(len(production), 3)
+
+        tests = self.run_honk('tree', extra=(*options, '--tests', '--workspace'), cwd=self.root).stdout
+        self.assertIn('bridge <- a v0.1.0', tests)
+        self.assertIn('test_dep <- b v0.1.0', tests)
+        selected = self.run_honk('tree', extra=(*options, '--tests', '-p', 'b'), cwd=self.root).stdout
+        self.assertIn('test_dep <- b v0.1.0', selected)
+        self.assertNotIn('bridge <- a', selected)
+        missing = self.run_honk('tree', ok=False, extra=(*options, '-p', 'b'), cwd=self.root)
+        self.assertIn('no reachable package matches --invert: shared', missing.stderr)
+        self.assertFalse((self.root / 'target').exists())
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_fetch_isolated_tests_prepares_a_cold_locked_cache_without_compiling(self):
         self.registry_fixture()
         self.registry_release('test-helper', '1.0.0')

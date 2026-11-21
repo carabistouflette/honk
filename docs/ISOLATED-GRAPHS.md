@@ -203,6 +203,13 @@ honk fetch --isolated --target-os linux --target-arch aarch64 --tests --locked
 honk tree --isolated --target-os linux --target-arch aarch64 --tests --frozen
 ```
 
+Use `--invert <package-name>` to show which packages depend on a package
+and trace each chain back toward the selected roots. It shows all reachable
+instances with that name, including multiple selected versions.
+For example, `honk tree --isolated --tests --invert codec --frozen`
+includes paths through development dependencies. Inverse edges show the
+alias used by the dependent package, for example `codec <- image-tools`.
+
 Tree resolves dependencies without compiling or writing a build graph.
 An unlocked invocation can update the selected lock graph. Frozen
 inspection replays the existing lock using the local cache.
