@@ -1067,6 +1067,40 @@ class Isolated(unittest.TestCase):
     @unittest.skipUnless(sys.platform.startswith('linux') and platform.machine() == 'x86_64'
                          and os.environ.get('HONK_AARCH64_SYSROOT'),
                          'requires the Linux AArch64 cross toolchain and QEMU')
+    def test_cross_run_replays_production_graph_and_propagates_exit_status(self):
+        cc = shutil.which('aarch64-linux-gnu-gcc')
+        qemu = shutil.which('qemu-aarch64')
+        self.assertIsNotNone(cc)
+        self.assertIsNotNone(qemu)
+        self.env['QEMU_LD_PREFIX'] = os.environ['HONK_AARCH64_SYSROOT']
+        self.registry_fixture()
+        self.registry_release('arm-codec', '1.0.0',
+                              code='namespace codec; fn value() -> i64 { 42 }')
+        app = self.package('app', 'import codec; import os; import std; fn main() { '
+                           'let argv = args(); let arg = argv[argv.len - 1]; '
+                           'if arg == "fail" { exit(23); } print(codec::value(), " ", arg); }')
+        with (app / 'Honk.toml').open('a') as f:
+            f.write('[target.linux-aarch64.dependencies]\n')
+        self.registry_dependency('app', 'codec', 'arm-codec', '*')
+        target = ('--target-os', 'linux', '--target-arch', 'aarch64')
+        self.run_honk('fetch', extra=target)
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        before = list(self.registry.requests)
+
+        frozen = (*target, '--cc', cc, '--frozen')
+        self.assertIn('requires --runner', self.run_honk(ok=False, extra=frozen).stderr)
+        run = (*frozen, '--runner', qemu)
+        result = self.run_honk(extra=(*run, '--', 'argument with spaces'))
+        self.assertIn('42 argument with spaces', result.stdout.splitlines())
+        self.assertEqual(self.run_honk(ok=False, extra=(*run, '--', 'fail')).returncode, 23)
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+    @unittest.skipUnless(sys.platform.startswith('linux') and platform.machine() == 'x86_64'
+                         and os.environ.get('HONK_AARCH64_SYSROOT'),
+                         'requires the Linux AArch64 cross toolchain and QEMU')
     def test_cross_tests_replay_locked_dev_graph_and_propagate_exit_status(self):
         cc = shutil.which('aarch64-linux-gnu-gcc')
         qemu = shutil.which('qemu-aarch64')
