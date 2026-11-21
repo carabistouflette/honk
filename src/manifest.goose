@@ -123,7 +123,7 @@ fn validate_dependency(dep: Dependency&) {
     }
 }
 fn supported_os(name: const u8[:]) -> bool {
-    return name == "linux" || name == "macos" || name == "windows" || name == "freebsd";
+    return nest::supported_os(name);
 }
 fn active_on(dep: const Dependency&, target_os: u8[:]) -> bool {
     return dep.target_os.len == 0 || dep.target_os == target_os;

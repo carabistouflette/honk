@@ -190,14 +190,14 @@
     {
       "directory": "goose-nest",
       "repository": "https://github.com/carabistouflette/goose-nest",
-      "revision": "59ec71e3be632164f38a2891458d1b146843bce9",
+      "revision": "3c15f10071cfb190fc53b292194f8919e7daa2b6",
       "license": "Apache-2.0",
       "files": {
         "CMakeLists.txt": "b1a0ae71baaaccfa140260bcf7ad20945b08c8ed858aee370eeb75aa53283278",
         "LICENSE": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4",
         "native/nest.c": "69a3b45555a99279a47431b60d632b012d0f52029b431cce036a991cd7ef9d54",
         "nest.build": "8e16b64a52347ee85de8d59cf5fbfa198ee635c33de04a087da528efa3d55baf",
-        "nest.goose": "532cc45c898db1f9188a7d03600e5a9eca2864085c3e18c530e614d4f0b9cf0b"
+        "nest.goose": "2d695b8aa4da492dc27088ab3758369a6078212d20035c6c2e520da2d958a633"
       }
     }
   ]

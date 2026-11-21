@@ -939,6 +939,51 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
 
+    @unittest.skipUnless(COMPILER.get('package_graph_features') and sys.platform.startswith('linux'),
+                         'requires a Linux host and package graph features')
+    def test_published_platform_edges_select_archives_and_replay_frozen(self):
+        self.registry_fixture()
+        self.registry_release('linux-codec', '1.0.0', features={'api': []},
+                              code='namespace codec; if feature("api") { fn value() -> i64 { 42 } }')
+        self.registry_release('win-codec', '1.0.0', features={'api': []})
+        driver = self.registry_release(
+            'driver', '1.0.0', features={'default': ['codec/api']},
+            target_dependencies={'linux': [('codec', 'linux-codec', '*')],
+                                 'windows': [('codec', 'win-codec', '*')]},
+            dependency_options={'codec': {'optional': True}},
+            code='namespace driver; import codec; fn value() -> i64 { codec::value() }')
+        app = self.package('app', 'import driver; import std; fn main() { print(driver::value()); }')
+        self.registry_dependency('app', 'driver', 'driver', '*')
+        self.assertEqual(self.run_honk(extra=('--target-os', 'linux')).stdout.strip(), '42')
+        self.assertFalse(any('win-codec' in path for path, _ in self.registry.requests))
+        observed = len(self.registry.requests)
+        self.run_honk('fetch', extra=('--target-os', 'windows'))
+        self.assertFalse(any('linux-codec' in path for path, _ in self.registry.requests[observed:]))
+        self.assertTrue(any('win-codec-1.0.0.tar.gz' in path for path, _ in self.registry.requests[observed:]))
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        platforms = tomllib.loads(original.decode())['platforms']
+        for target_os, package in [('linux', 'linux-codec'), ('windows', 'win-codec')]:
+            locked = tomllib.loads(platforms[target_os])
+            self.assertEqual({b['package'] for b in locked['binding']}, {'driver', package})
+            self.assertEqual({f['name'] for f in locked['feature']}, {'api', 'default'})
+        before = list(self.registry.requests)
+        shutil.rmtree(self.root / 'honk-cache/nest/index')
+        for target in ('linux', 'windows'):
+            self.run_honk('fetch', extra=('--target-os', target, '--frozen'))
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
+        # An incorrect inactive edge must still fail index/archive validation.
+        other = self.package('other', 'fn main() {}')
+        self.registry_dependency('other', 'driver', 'driver', '*')
+        driver['dependencies'][1]['target-os'] = 'macos'
+        self.registry.index('driver', [driver])
+        self.env['HONK_HOME'] = str(self.root / 'fresh-cache')
+        self.assertIn('archive dependency differs from registry metadata',
+                      self.run_honk('fetch', extra=('--target-os', 'linux'), cwd=other, ok=False).stderr)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_fetch_isolated_tests_prepares_a_cold_locked_cache_without_compiling(self):
         self.registry_fixture()
         self.registry_release('test-helper', '1.0.0')
