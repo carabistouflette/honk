@@ -228,11 +228,11 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         else if name == "features" || name == "no-default-features" { allowed = options.has("isolated") && !watching; }
         else if name == "tests" { allowed = !watching && cmd == "fetch" && options.has("isolated"); }
         else if name == "cc" {
-            allowed = !watching && (cmd == "build" || cmd == "test") && options.has("isolated") && options.has("target-arch");
+            allowed = !watching && (cmd == "build" || cmd == "run" || cmd == "test") && options.has("isolated") && options.has("target-arch");
             platform::require(entry.value.len > 0 && entry.value[0] == '/', "--cc requires an absolute compiler path");
         }
         else if name == "runner" {
-            allowed = !watching && cmd == "test" && options.has("isolated") && options.has("target-arch");
+            allowed = !watching && (cmd == "run" || cmd == "test") && options.has("isolated") && options.has("target-arch");
             platform::require(entry.value.len > 0 && entry.value[0] == '/', "--runner requires an absolute executable path");
         }
         else if name == "target-arch" { allowed = !watching && options.has("isolated") && options.has("target-os"); platform::require(manifest::supported_arch(entry.value), "unsupported --target-arch"); }

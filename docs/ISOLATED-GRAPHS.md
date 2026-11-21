@@ -175,8 +175,8 @@ create a distinct entry for each OS/architecture pair. Omitting
 Use the same explicit target when replaying a
 platform lock, for example `honk fetch --isolated --target-os windows
 --frozen`. Foreign targets support fetching, including `--tests`.
-Execution uses the host target. Linux x86_64 also supports building for
-Linux AArch64 with an explicit cross compiler. Platform-specific
+Linux x86_64 also supports building for Linux AArch64 with an explicit
+cross compiler, and running applications and tests with an explicit runner. Platform-specific
 declarations are supported in path and Git packages and in published
 registry packages using a schema-2 index. Honk selects the active registry
 edges before downloading archives and checks every published production
@@ -206,6 +206,15 @@ cross toolchain's sysroot when running under QEMU. The test suite can
 run this flow when `HONK_AARCH64_SYSROOT` points to that sysroot and
 `aarch64-linux-gnu-gcc` and `qemu-aarch64` are on PATH.
 
+Use `run` to build and launch the application in one command after the
+same production fetch:
+
+```sh
+QEMU_LD_PREFIX=/usr/aarch64-linux-gnu honk run --isolated \
+  --target-os linux --target-arch aarch64 --frozen \
+  --cc /usr/bin/aarch64-linux-gnu-gcc --runner /usr/bin/qemu-aarch64 -- my-arg
+```
+
 To cross-compile and run the isolated test graph, prefetch it and
 supply an explicit test runner:
 
@@ -217,7 +226,7 @@ QEMU_LD_PREFIX=/usr/aarch64-linux-gnu honk test --isolated \
 ```
 
 Use an unlocked fetch to create the test lock if it does not yet exist.
-Honk calls the runner with the test binary path followed by test
+Honk calls the runner with the binary path followed by the
 arguments after `--`, and returns the runner's exit status on failure.
 A wrapper executable can supply additional runner options.
 

@@ -609,6 +609,13 @@ fn resolve_graph(graph: Graph&, p: manifest::Project&, selected: u8[:], features
     let order, graph_error = task::plan(graph.packages.len, edges, limits);
     platform::require(graph_error.kind == task::ErrorKind.None, "isolated dependency cycle or graph limit exceeded");
 }
+fn run_binary(executable: u8[:], root: u8[:], runner: u8[:], arguments: u8[:][:]) {
+    var argv: (const u8[:])[>..] = [];
+    if runner.len > 0 { argv.push(runner); }
+    argv.push(executable);
+    for arg in arguments { argv.push(arg); }
+    platform::run(argv[..], root);
+}
 struct TestTarget { root: u8[], entry: u8[], output: u8[] }
 fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compiler: u8[:], graph_features: bool, normal: u8[>..]&, tests: u8[:], locked: bool, release: bool, arguments: u8[:][:], cc: u8[:], runner: u8[:]) {
     var planned: TestTarget[>..] = [];
@@ -636,11 +643,7 @@ fn run_tests(graph: Graph&, p: manifest::Project&, targets: Target[>..]&, compil
         if release { argv.push("-O2"); }
         if cc.len > 0 { argv.push("--cc"); argv.push(cc); }
         platform::run(argv[..], target.root);
-        argv.clear();
-        if runner.len > 0 { argv.push(runner); }
-        argv.push(executable);
-        for arg in arguments { argv.push(arg); }
-        platform::run(argv[..], target.root);
+        run_binary(executable, target.root, runner, arguments);
     }
     print("Passed ", planned.len, " test targets");
 }
@@ -675,15 +678,15 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     platform::require(requested_os.len == 0 || manifest::supported_os(requested_os), "unsupported --target-os");
     platform::require(requested_arch.len == 0 || (requested_os.len > 0 && manifest::supported_arch(requested_arch)), "unsupported --target-arch");
     platform::require(requested_os.len == 0 || requested_os == host || command == "fetch", "foreign --target-os requires fetch");
-    let cross_build = (command == "build" || command == "test") && host == "linux" && arch == "x86_64" && requested_os == "linux" && requested_arch == "aarch64";
+    let cross_build = (command == "build" || command == "run" || command == "test") && host == "linux" && arch == "x86_64" && requested_os == "linux" && requested_arch == "aarch64";
     platform::require(requested_arch.len == 0 || requested_arch == arch || command == "fetch" || cross_build, "foreign --target-arch requires fetch unless cross-building for Linux AArch64");
     platform::require(cross_build || requested_cc.len == 0, "--cc is supported for Linux x86_64 to AArch64 builds");
     let cc: u8[>..] = if cross_build { cross_compiler(requested_cc, p.root) } else { [] };
-    let cross_test = cross_build && command == "test";
-    platform::require(cross_test || requested_runner.len == 0, "--runner is supported for Linux x86_64 to AArch64 tests");
-    platform::require(!cross_test || requested_runner.len > 0, "cross-testing for Linux AArch64 requires --runner /absolute/path/to/executable");
-    let runner: u8[>..] = if cross_test { platform::absolute(requested_runner) } else { [] };
-    platform::require(!cross_test || platform::kind(runner) == 1, "--runner must be an executable file");
+    let cross_execute = cross_build && (command == "run" || command == "test");
+    platform::require(cross_execute || requested_runner.len == 0, "--runner is supported for Linux x86_64 to AArch64 run and test");
+    platform::require(!cross_execute || requested_runner.len > 0, "cross-execution for Linux AArch64 requires --runner /absolute/path/to/executable");
+    let runner: u8[>..] = if cross_execute { platform::absolute(requested_runner) } else { [] };
+    platform::require(!cross_execute || platform::kind(runner) == 1, "--runner must be an executable file");
     let selected_os = if requested_os.len == 0 { str(host) } else { str(requested_os) };
     let selected_arch = if requested_arch.len == 0 { str(arch) } else { str(requested_arch) };
     let key = if requested_arch.len == 0 { str(requested_os) } else { str(requested_os, "-", requested_arch) };
@@ -723,13 +726,16 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         let path = str(target.output, "/graph.json");
         for document, j in documents { if i == j { platform::save(path, document); break; } }
         if resolve_only { break; }
-        var words: u8[][>..] = [str(compiler), str(command), str(target.root, "/", target.entry), str("--package-graph"), str(path)];
-        if command == "build" { words.push(str("-o")); words.push(str(target.output, "/", target.name)); }
+        let compile = command == "build" || cross_execute;
+        let executable = str(target.output, "/", target.name);
+        var words: u8[][>..] = [str(compiler), str(if compile { "build" } else { command }), str(target.root, "/", target.entry), str("--package-graph"), str(path)];
+        if compile { words.push(str("-o")); words.push(copy(executable)); }
         if cc.len > 0 { words.push(str("--cc")); words.push(copy(cc)); }
         if release { words.push(str("-O2")); }
-        if arguments.len > 0 { words.push(str("--")); for argument in arguments { words.push(str(argument)); } }
+        if !cross_execute && arguments.len > 0 { words.push(str("--")); for argument in arguments { words.push(str(argument)); } }
         var argv: (const u8[:])[>..] = []; for word in words { argv.push(word); }
         platform::run(argv[..], target.root);
+        if cross_execute { run_binary(executable, target.root, runner, arguments); }
     }
     platform::unlock(project_lock); platform::unlock(cache_lock);
 }
