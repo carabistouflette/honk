@@ -895,6 +895,42 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
 
+    def test_fetch_isolated_tests_prepares_a_cold_locked_cache_without_compiling(self):
+        self.registry_fixture()
+        self.registry_release('test-helper', '1.0.0')
+        app = self.package('app', 'fn main() {}')
+        manifest = app / 'Honk.toml'
+        with manifest.open('a') as f:
+            f.write('[dev-dependencies]\n')
+        self.registry_dependency('app', 'helper', 'test-helper', '*')
+        (app / 'tests').mkdir()
+        smoke = app / 'tests/smoke.goose'
+        smoke.write_text('fn main( {')  # Fetch must not compile test sources.
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        production = lock.read_bytes()
+        self.assertEqual(self.registry.requests, [])
+        self.run_honk('fetch', ok=False, extra=('--tests', '--locked'))
+        self.assertEqual(lock.read_bytes(), production)
+        shutil.rmtree(app / 'target')
+        self.run_honk('fetch', extra=('--tests',))
+        original = lock.read_bytes()
+        self.assertEqual([b['alias'] for b in tomllib.loads(original.decode())['test']['binding']], ['helper'])
+        self.assertFalse((app / 'target').exists())
+
+        self.env['HONK_HOME'] = str(self.root / 'cold-honk-cache')
+        before = len(self.registry.requests)
+        self.run_honk('fetch', extra=('--tests', '--locked'))
+        requests = self.registry.requests[before:]
+        self.assertEqual([path for path, _ in requests], ['/test-helper-1.0.0.tar.gz'])
+        self.assertFalse((app / 'target').exists())
+        self.assertEqual(lock.read_bytes(), original)
+        smoke.write_text('import helper; import std; fn main() { assert(helper::value() == 42); print("smoke"); }')
+        before = list(self.registry.requests)
+        self.assertIn('smoke', self.run_honk('test', extra=('--frozen',)).stdout)
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+
     def test_isolated_test_ignores_transitive_dev_dependencies(self):
         commit, _ = self.git_fixture()
         helper = self.package('helper', 'namespace helper; fn value() -> i64 { 43 }')
