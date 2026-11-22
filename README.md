@@ -62,6 +62,7 @@ that trusted compiler, replace setup/build with
 | `metadata`, `toolchain` | Print project metadata or obtain/report the compiler. |
 | `package`, `install`, `uninstall NAME`, `doc`, `clean` | Package tracked sources, manage executables, generate API declarations, or remove build state. |
 | `publish --dry-run --url HTTPS_ASSET_URL` | Prepare and verify a library archive and its [Nest v1 index entry](docs/REGISTRY.md#prepare-a-registry-release) offline. |
+| `publish --repo OWNER/REPO --index-repo OWNER/REPO` | Upload a verified archive and open a [reviewed Nest index PR](docs/REGISTRY.md#publish-through-github). |
 
 Commit `Honk.lock`. `--locked` forbids changes to it; `--offline` forbids network
 and compiler bootstrap; `--frozen` combines both. Source/package checks still run.

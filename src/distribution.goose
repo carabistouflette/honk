@@ -11,6 +11,8 @@ import .deps;
 import .build;
 import .build_cache;
 import .source;
+struct PublishTarget { repo: const u8[:] = "", index: const u8[:] = "", fork: const u8[:] = "" }
+
 fn https_url(url: const u8[:]) -> bool {
     return nest::url(url) && starts_with(url, "https://") && url.len > 8 &&
         url[8] != '/' && url[8] != '?' && url[8] != ':';
@@ -52,7 +54,7 @@ fn release_entry(p: manifest::Project&, registry: u8[:], url: u8[:], sha: u8[:])
     text.append(nest::record_text(record));
     return text;
 }
-fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] = "", registry: u8[:] = "") {
+fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] = "", registry: u8[:] = "", target: PublishTarget = PublishTarget { .. }) {
     // Path dependencies cannot be reproduced by recipients of a source archive.
     for n in g.nodes {
         let inside = n.directory.len > p.root.len && n.directory[..p.root.len] == p.root && n.directory[p.root.len] == '/';
@@ -125,7 +127,9 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] =
     platform::require(platform::remove_tree(stage), "cannot clear packaged sources");
     if metadata.len > 0 {
         write_stderr(str("honk: prepared ", archive, "\n"));
-        write_stdout(metadata);
+        if target.repo.len > 0 {
+            platform::run(["python3", "-I", "-c", embed_file("publish_github.py"), target.repo, target.index, target.fork, archive, metadata], p.root);
+        } else { write_stdout(metadata); }
     } else { print(archive); }
 }
 fn install(p: manifest::Project&, release: bool, destination: u8[:], force: bool) {

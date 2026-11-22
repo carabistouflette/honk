@@ -52,7 +52,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
     let spec = [argparse::flag("isolated"), argparse::option("dependency"), argparse::flag("dry-run"), argparse::option("precise"), argparse::option("format-version"), argparse::option("invert"), argparse::option("target-os"), argparse::option("target-arch"), argparse::option("cc"), argparse::option("runner"), argparse::flag("tests"), argparse::flag("no-default-features"), argparse::option("features"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("registry"), argparse::option("url"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("registry"), argparse::option("url"), argparse::option("repo"), argparse::option("index-repo"), argparse::option("index-fork"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -224,15 +224,22 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         platform::require(mode == "text" || mode == "json", "--diagnostics must be text or json");
     }
     if cmd == "publish" {
-        platform::require(options.has("dry-run") && options.has("url"), "publish requires --dry-run --url HTTPS_URL");
+        if options.has("dry-run") {
+            platform::require(options.has("url") && !options.has("repo") && !options.has("index-repo") && !options.has("index-fork"),
+                "publish --dry-run requires --url HTTPS_URL");
+        } else {
+            platform::require(options.has("repo") && options.has("index-repo") && !options.has("url"),
+                "publish requires --repo OWNER/REPO --index-repo OWNER/REPO");
+            platform::require(!options.has("offline") && !options.has("frozen"), "publish needs network access; use --dry-run for offline preparation");
+        }
     }
     for entry in options.entries {
         let name = entry.name; var allowed = false;
         if cmd == "publish" {
-            allowed = name == "dry-run" || name == "url" || name == "registry" || name == "package" ||
+            allowed = name == "dry-run" || name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" || name == "registry" || name == "package" ||
                 name == "manifest-path" || name == "log-file" || name == "offline" || name == "locked" || name == "frozen";
         }
-        else if name == "url" { allowed = false; }
+        else if name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" { allowed = false; }
         else if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
         else if name == "features" || name == "no-default-features" { allowed = options.has("isolated") && !watching; }
         else if name == "dry-run" { allowed = !watching && cmd == "update" && options.has("isolated"); }

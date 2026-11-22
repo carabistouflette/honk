@@ -319,6 +319,24 @@ class CLI(unittest.TestCase):
         self.git(directory, 'init', '-q')
         self.git(directory, 'config', 'user.name', 'Honk Tests')
         self.git(directory, 'config', 'user.email', 'tests@example.invalid')
+    def test_publish_github_uses_explicit_repository(self):
+        p = self.new('release', '--lib')
+        self.run_honk('fetch', cwd=p)
+        self.git_project(p)
+        (p/'LICENSE').write_text('Fixture license\n')
+        self.git(p, 'add', 'LICENSE', 'Honk.toml', 'Honk.lock', 'src')
+        gh = self.root/'gh'
+        command = 'api --hostname github.com repos/test/nest'
+        gh.write_text('#!/bin/sh\nprintf "%s\\n" "$*" > "$PUBLISH_LOG"\n'
+                      'echo fixture GitHub error >&2\nexit 1\n')
+        gh.chmod(0o755)
+        log = self.root/'publish-command'
+        env = {'PATH': str(self.root) + os.pathsep + os.environ['PATH'], 'PUBLISH_LOG': str(log)}
+        result = self.run_honk('publish', '--repo', 'test/lib', '--index-repo', 'test/nest', cwd=p, env=env, ok=False)
+        self.assertIn('fixture GitHub error', result.stderr)
+        self.assertEqual(log.read_text().strip(), command)
+        self.assertTrue((p/'target/package/release-0.1.0.tar.gz').is_file())
+
     def test_publish_dry_run_verifies_archive_and_emits_index_entry(self):
         p = self.new('release', '--lib')
         url = 'https://example.invalid/releases/release-0.1.0.tar.gz'

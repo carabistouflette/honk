@@ -134,9 +134,11 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         }
         platform::unlock(lock); return;
     }
-    if publishing {
-        distribution::validate_publication(p, options.get("registry", nest::DEFAULT_REGISTRY), options.get("url"));
-    }
+    let registry_url = options.get("registry", nest::DEFAULT_REGISTRY);
+    let target = distribution::PublishTarget { repo: options.get("repo"), index: options.get("index-repo"), fork: options.get("index-fork") };
+    let archive_url = if target.repo.len == 0 { str(options.get("url")) }
+        else { str("https://github.com/", target.repo, "/releases/download/v", p.version, "/", p.name, "-", p.version, ".tar.gz") };
+    if publishing { distribution::validate_publication(p, registry_url, archive_url); }
     var graph = deps::Graph { cache: str(cache), locked: publishing || options.has("locked") || options.has("frozen"), offline: offline, update: cmd == "update", .. };
     platform::require(!(graph.update && graph.locked), "update cannot be combined with --locked or --frozen"); deps::resolve(p, graph);
     if cmd == "fetch" || cmd == "update" { print("Resolved ", graph.nodes.len, " dependencies"); platform::unlock(lock); return; }
@@ -151,7 +153,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         p.entry = str("src/bin/", name, ".goose"); p.name = str(name); p.kind = str("bin");
     }
     if cmd == "package" || publishing {
-        distribution::package(p, graph, compiler, options.get("url"), options.get("registry", nest::DEFAULT_REGISTRY));
+        distribution::package(p, graph, compiler, archive_url, registry_url, target);
     } else {
         let release = options.has("release") || cmd == "install";
         let jobs, jobs_valid = parse_int(options.get("jobs", "0"));
