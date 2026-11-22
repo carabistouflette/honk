@@ -11,6 +11,15 @@ struct Edge { request: i64, target: i64 }
 struct Activation { record: i64, index: i64 }
 root struct State { refresh: u8[] = [], precise: u8[] = [], conflict: bool = false, target_os: u8[] = [], target_arch: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
 struct Frame { candidates: i64[512], count: i64, next: i64 = 0, cursor: i64, pending: i64, selected: i64, edges: i64, features: i64, optional_edges: i64 }
+struct Candidate { id: i64, rank: i64, version: semver::Version }
+
+fn candidate_before(a: Candidate&, b: Candidate&) -> bool {
+    if a.rank != b.rank { return a.rank > b.rank; }
+    let order = semver::compare(a.version, b.version);
+    if order != 0 { return order > 0; }
+    return a.id < b.id;
+}
+
 const MAX_WORK = 8000000;
 fn spend(s: State&, units: i64 = 1) -> bool { s.work += units; if s.work > MAX_WORK { s.error = str("registry resolution scan budget exceeded (8000000)"); return false; } return true; }
 fn key(record: const nest::Record&) -> u8[>..] { str("registry:", record.registry, "/", record.package, "@", record.version, "#", record.sha256) }
@@ -285,11 +294,14 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                 let floor, require_newer = refresh_floor(s, catalog, request, strict_refresh);
                 if s.error.len > 0 { return false; }
                 let minimum, minimum_error = semver::parse(if floor.len > 0 { floor[..] } else { "0.0.0" });
-                var candidates: i64[>..] = [];
-                var missing:    u8[>..]  = [];
+                let requirement, requirement_error = semver::parse_requirement(request.requirement);
+                var candidates: Candidate[>..] = [];
+                var missing:    u8[>..]        = [];
                 for record, i in catalog.records {
                     if !spend(s) { return false; }
-                    if record.registry != request.registry || record.package != request.package || !nest::matches(request.requirement, record.version) || !allowed(s, catalog, i) { continue; }
+                    if record.registry != request.registry || record.package != request.package || requirement_error.kind != semver::ErrorKind.None { continue; }
+                    let version, version_error = semver::parse(record.version);
+                    if version_error.kind != semver::ErrorKind.None || !semver::matches(requirement, version) || !allowed(s, catalog, i) { continue; }
                     let pin = !update && preferred(s, record, request); if s.error.len > 0 { return false; }
                     if (only_pins && !pin) || (record.yanked && !pin) { continue; }
                     if !only_pins {
@@ -297,8 +309,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                     }
                     if exact && record.version != s.precise { continue; }
                     if floor.len > 0 {
-                        let candidate, error = semver::parse(record.version);
-                        let order = semver::compare(candidate, minimum);
+                        let order = semver::compare(version, minimum);
                         if order < 0 || (order == 0 && require_newer) { continue; }
                     }
                     if request.features.len > 0 {
@@ -307,26 +318,24 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                         if unknown.len > 0 { missing = str(unknown); continue; }
                     }
                     if candidates.len >= 512 { s.error = str("registry candidate limit exceeded (512)"); return false; }
-                    var at = candidates.len; candidates.push(i);
-                    while at > 0 {
-                        let left = nest::record_at(catalog, candidates[at - 1]);
-                        let left_reused = reused(s, candidates[at - 1]); let right_reused = reused(s, i);
-                        let left_pin = !update && preferred(s, left, request); if s.error.len > 0 { return false; }
-                        let lv, le = semver::parse(left.version); let rv, re = semver::parse(record.version);
-                        if (left_reused && !right_reused) || (left_reused == right_reused && ((left_pin && !pin) || (left_pin == pin && semver::compare(lv, rv) >= 0))) { break; }
-                        candidates[at] = candidates[at - 1]; at--;
-                    }
-                    candidates[at] = i;
+                    // Prefer reuse, then a matching pin, then highest SemVer.
+                    let rank = (if reused(s, i) { 2 } else { 0 }) + (if pin { 1 } else { 0 });
+                    candidates.push(Candidate { id: i, rank: rank, version: copy(version) });
                 }
                 if s.error.len > 0 { return false; }
                 if candidates.len == 0 { detail = str(request.package, " ", request.requirement, " requested by ", request.owner, " -> ", request.alias); if exact { detail.append(str(" (--precise ", s.precise, ")")); } if missing.len > 0 { detail.append(str(" (unknown feature ", missing, ")")); } }
                 if candidates.len == 1 {
-                    if !choose(s, catalog, request_id, candidates[0]) { return false; } continue;
+                    for candidate in candidates { if !choose(s, catalog, request_id, candidate.id) { return false; } }
+                    continue;
                 }
                 if candidates.len > 1 {
                     if frames.len >= 4096 { s.error = str("registry alternative frame limit exceeded (4096)"); return false; }
                     var frame = Frame { candidates: [0; 512], count: candidates.len, cursor: cursor, pending: s.pending.len, selected: s.selected.len, edges: s.edges.len, features: s.features.len, optional_edges: s.optional_edges.len, .. };
-                    for id, i in candidates { frame.candidates[i] = id; } frames.push(copy(frame));
+                    var order: (Candidate&)[>..] = [];
+                    for candidate in candidates { order.push(candidate); }
+                    sort(order[..]) { a, b => candidate_before(a, b) }
+                    for candidate, i in order { frame.candidates[i] = candidate.id; }
+                    frames.push(copy(frame));
                 }
                 conflict = true;
             }
