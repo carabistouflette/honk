@@ -1,0 +1,92 @@
+# SPDX-License-Identifier: Apache-2.0
+import base64
+import hashlib
+from pathlib import Path
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
+from publish_github import ensure_release, publish
+
+
+class GitHubPublication(unittest.TestCase):
+    def test_retry_reuses_uploaded_asset_and_existing_index_branch(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            archive = Path(temporary) / 'example-1.0.0.tar.gz'
+            archive.write_bytes(b'archive bytes')
+            sha = hashlib.sha256(archive.read_bytes()).hexdigest()
+            url = f'https://github.com/author/lib/releases/download/v1.0.0/{archive.name}'
+            entry = (f'schema = 1\npackage = "example"\n\n[[releases]]\nversion = "1.0.0"\n'
+                     f'url = "{url}"\nsha256 = "{sha}"\nyanked = false\n'
+                     'entry = "lib.goose"\ndependencies = []\n')
+            asset = dict(name=archive.name, state='uploaded', digest='sha256:' + sha, browser_download_url=url)
+            state = dict(branch=False, release=False, pr=False, fail_pr=True)
+            blobs = {}
+            calls = []
+
+            def api(path, data=None, **_):
+                calls.append((path, data))
+                if path == 'repos/author/lib':
+                    return {'private': False}
+                if path == 'repos/registry/nest':
+                    return {'full_name': 'registry/nest', 'permissions': {'push': True}, 'default_branch': 'main'}
+                if path.endswith('/git/ref/heads/main'):
+                    return {'object': {'sha': 'base'}}
+                if '/contents/' in path:
+                    path, commit = path.split('/contents/')[1].split('?ref=')
+                    content = blobs.get(path) if commit == 'publish' else (
+                        'schema = 1\npackages = []\n' if path == 'index/_catalog.toml' else None)
+                    return None if content is None else dict(type='file', encoding='base64', size=len(content),
+                                                             content=base64.b64encode(content.encode()).decode())
+                if path.endswith('/git/ref/heads/honk-publish/example/1.0.0'):
+                    return {'object': {'sha': 'publish'}} if state['branch'] else None
+                if path.endswith('/git/commits/base'):
+                    return {'tree': {'sha': 'base-tree'}}
+                if path.endswith('/git/commits/publish'):
+                    return {'parents': [{'sha': 'base'}]}
+                if path.endswith('/releases/tags/v1.0.0'):
+                    return {'draft': False, 'assets': [asset]} if state['release'] else None
+                if path.endswith('/commits/publish'):
+                    return {'files': [{'filename': path} for path in blobs]}
+                if path.endswith('/git/trees'):
+                    blobs.update((item['path'], item['content']) for item in data['tree'])
+                    return {'sha': 'new-tree'}
+                if path.endswith('/git/commits'):
+                    return {'sha': 'publish'}
+                if path.endswith('/git/refs'):
+                    state['branch'] = True
+                    return {}
+                if '/pulls?' in path:
+                    return [{'html_url': 'https://github.com/registry/nest/pull/7'}] if state['pr'] else []
+                if path.endswith('/pulls'):
+                    if state['fail_pr']:
+                        raise ValueError('temporary PR failure')
+                    state['pr'] = True
+                    return {'html_url': 'https://github.com/registry/nest/pull/7'}
+                self.fail(path)
+
+            def gh(*args, cwd, **_):
+                self.assertEqual(args[:3], ('release', 'create', 'v1.0.0'))
+                self.assertIn('--verify-tag', args)
+                self.assertEqual((Path(cwd) / archive.name).read_bytes(), archive.read_bytes())
+                state['release'] = True
+
+            with patch('publish_github.api', side_effect=api), patch('publish_github.gh', side_effect=gh) as transport:
+                with self.assertRaisesRegex(ValueError, 'temporary PR failure'):
+                    publish('author/lib', 'registry/nest', '', archive, entry)
+                state['fail_pr'] = False
+                publish('author/lib', 'registry/nest', '', archive, entry)
+                publish('author/lib', 'registry/nest', '', archive, entry)
+                self.assertEqual(transport.call_count, 1)
+                self.assertEqual(sum(path.endswith('/git/refs') for path, _ in calls), 1)
+                self.assertIn('name = "example"', blobs['index/_catalog.toml'])
+                asset['digest'] = 'sha256:' + '0' * 64
+                with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                    ensure_release('author/lib', 'v1.0.0', archive, dict(sha256=sha, url=url))
+                self.assertEqual(transport.call_count, 1)
+
+
+if __name__ == '__main__':
+    unittest.main()

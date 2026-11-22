@@ -73,10 +73,27 @@ mode. It writes the verified archive to `target/package/<name>-<version>.tar.gz`
 and prints a schema-1 index document with one release and the archive SHA-256.
 The archive path and compiler messages go to stderr.
 
-Upload the exact archive as a GitHub release asset, then submit the release
-entry in a reviewed index PR. Merge the new release with any existing entries
-for the package. Nest's authoring tool can perform that local merge and update
-the search catalog. See the [Nest publication workflow](https://github.com/carabistouflette/goose-nest#publish-a-package).
+## Publish through GitHub
+
+```sh
+honk publish --repo OWNER/LIBRARY --index-repo carabistouflette/goose-nest \
+  --index-fork OWNER/goose-nest
+```
+
+This uses the same offline preparation, then uses Python 3.11+ and authenticated
+GitHub CLI to upload the archive and open a reviewed index PR. The library
+repository must be public and have the tag `v<package.version>` on GitHub.
+Set the release repository to its canonical GitHub spelling. Use a synced
+direct fork with write access, or omit `--index-fork` when you can write branches
+in the index repository.
+
+Publication appends the release and updates the search catalog in one commit.
+On retry, Honk checks the existing asset SHA-256 and reuses a matching branch
+and open PR. It refuses a conflicting version or asset. The release can already
+exist if a later index operation fails.
+
+The [manual Nest publication workflow](https://github.com/carabistouflette/goose-nest#publish-a-package)
+also accepts the archive produced by `--dry-run`.
 
 ## Isolated multi-version graphs
 
