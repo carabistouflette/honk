@@ -20,6 +20,7 @@ import posix from "./vendor/goose-terminal";
 import .src.diagnostics;
 import .src.platform;
 import .src.manifest;
+import .src.distribution;
 import .src.project;
 import .src.deps;
 import .src.build;
@@ -33,7 +34,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package publish install uninstall doc toolchain watch search info version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nExperimental scoped local packages: build/run/check/test --isolated (docs/ISOLATED-GRAPHS.md).\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
+    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package publish yank install uninstall doc toolchain watch search info version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nExperimental scoped local packages: build/run/check/test --isolated (docs/ISOLATED-GRAPHS.md).\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -52,7 +53,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
     let spec = [argparse::flag("isolated"), argparse::option("dependency"), argparse::flag("dry-run"), argparse::option("precise"), argparse::option("format-version"), argparse::option("invert"), argparse::option("target-os"), argparse::option("target-arch"), argparse::option("cc"), argparse::option("runner"), argparse::flag("tests"), argparse::flag("no-default-features"), argparse::option("features"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("registry"), argparse::option("url"), argparse::option("schema"), argparse::option("repo"), argparse::option("index-repo"), argparse::option("index-fork"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("registry"), argparse::option("url"), argparse::option("schema"), argparse::flag("undo"), argparse::option("repo"), argparse::option("index-repo"), argparse::option("index-fork"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -110,6 +111,16 @@ fn cli_main() {
         let cache = toolchain::home(); let lock = platform::lock(str(cache, "/lock")); platform::require(lock >= 0, "Honk cache is locked");
         let destination = if options.has("root") { str(options.get("root")) } else { str(cache, "/installed") };
         distribution::uninstall(destination, options.positionals[0]); platform::unlock(lock); return;
+    }
+    if cmd == "yank" {
+        platform::require(options.positionals.len == 1 && options.has("index-repo") && options.has("version"),
+            "yank requires NAME --version VERSION --index-repo OWNER/REPO");
+        let name = options.positionals[0];
+        let version = options.get("version");
+        platform::require(nest::package_name(name), "invalid registry package name");
+        platform::require(manifest::version(version) && find(version, "+") < 0, "yank requires an exact registry SemVer without build metadata");
+        distribution::yank(name, version, options.get("index-repo"), options.get("index-fork"), options.has("undo"));
+        return;
     }
     if cmd == "search" || cmd == "info" { registry::discover(cmd, options); return; }
     dispatch(cmd, options, program_args, filter);
@@ -243,7 +254,8 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
             allowed = name == "dry-run" || name == "schema" || name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" || name == "registry" || name == "package" ||
                 name == "manifest-path" || name == "log-file" || name == "offline" || name == "locked" || name == "frozen";
         }
-        else if name == "schema" || name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" { allowed = false; }
+        else if cmd == "yank" { allowed = name == "version" || name == "undo" || name == "index-repo" || name == "index-fork" || name == "log-file"; }
+        else if name == "undo" || name == "schema" || name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" { allowed = false; }
         else if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
         else if name == "features" || name == "no-default-features" { allowed = options.has("isolated") && !watching; }
         else if name == "dry-run" { allowed = !watching && cmd == "update" && options.has("isolated"); }

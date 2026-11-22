@@ -143,9 +143,13 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] =
     if metadata.len > 0 {
         write_stderr(str("honk: prepared ", archive, "\n"));
         if target.repo.len > 0 {
-            platform::run(["python3", "-I", "-c", embed_file("publish_github.py"), target.repo, target.index, target.fork, archive, metadata], p.root);
+            platform::run(["python3", "-I", "-c", embed_file("publish_github.py"), "publish", target.repo, target.index, target.fork, archive, metadata], p.root);
         } else { write_stdout(metadata); }
     } else { print(archive); }
+}
+fn yank(name: u8[:], version: u8[:], index: u8[:], fork: u8[:], undo: bool) {
+    platform::run(["python3", "-I", "-c", embed_file("publish_github.py"), "yank", index, fork, name, version,
+        if undo { "undo" } else { "yank" }], platform::absolute("."));
 }
 fn install(p: manifest::Project&, release: bool, destination: u8[:], force: bool) {
     platform::require(p.kind == "bin", "install requires a binary package");

@@ -110,6 +110,22 @@ exist if a later index operation fails.
 The [manual Nest publication workflow](https://github.com/carabistouflette/goose-nest#publish-a-package)
 also accepts the archive produced by `--dry-run`.
 
+## Yank a release
+
+```sh
+honk yank example --version 1.0.0 --index-repo carabistouflette/goose-nest \
+  --index-fork OWNER/goose-nest
+```
+
+The command opens a reviewed pull request that sets the release's `yanked` flag
+and regenerates the search catalog. Add `--undo` to propose restoring the
+release. The same command supports schema-1 and schema-2 indexes.
+
+Once the index PR is merged, new resolutions skip the yanked version.
+Existing lockfiles can still resolve it and use its SHA-256-pinned archive.
+A repeated command reuses a matching pull request while the index is unchanged.
+Changes become visible to consumers as the public index host refreshes its cache.
+
 ## Isolated multi-version graphs
 
 `honk build/run/check/fetch/update --isolated` uses the scoped compiler graph and
