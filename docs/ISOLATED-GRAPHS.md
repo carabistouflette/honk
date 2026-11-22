@@ -472,6 +472,9 @@ packages, sourced imports, and registry authentication/publishing
 remain unfinished. The test suite includes an independent
 exhaustive oracle over 64 seeded small acyclic graphs, plus real JIT/native,
 cycle/backtracking, yanked-lock, archive-integrity and mixed Git/registry cases.
+Resolver boundary tests cover a 256-instance graph and its first over-limit
+variant, previous lock and graph preservation at the scan budget, and mixed
+Git/path/registry backtracking across 48 candidate releases.
 
 Qualification with a separately built graph compiler:
 
