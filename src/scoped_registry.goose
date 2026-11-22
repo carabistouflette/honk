@@ -170,15 +170,23 @@ fn choose(s: State&, catalog: nest::Resolver&, request_id: i64, id: i64) -> bool
     return activate(s, record, id, request, owner, fresh);
 }
 fn acyclic(s: State&, catalog: nest::Resolver&) -> bool {
+    // Record IDs index the catalog, while task edges use dense selected IDs.
+    var positions: i64[>..]  = []; positions.resize(catalog.records.len, -1);
+    var owners:    u8[][>..] = [];
+    for id, i in s.selected {
+        positions[id] = i;
+        owners.push(key(nest::record_at(catalog, id)));
+    }
     var edges: task::Edge[>..] = [];
     for edge in s.edges {
-        var owner = -1; var target = -1;
-        for id, i in s.selected {
+        let owner = request_at(s, edge.request).owner;
+        for name, i in owners {
             if !spend(s) { return false; }
-            if key(nest::record_at(catalog, id)) == request_at(s, edge.request).owner { owner = i; }
-            if id == edge.target { target = i; }
+            if name == owner {
+                edges.push(task::Edge { before: i, after: positions[edge.target] });
+                break;
+            }
         }
-        if owner >= 0 { edges.push(task::Edge { before: owner, after: target }); }
     }
     var limits = task::Limits { tasks: 256, edges: 65536 };
     let order, error = task::plan(s.selected.len, edges, limits); return error.kind == task::ErrorKind.None;
