@@ -69,6 +69,10 @@ def index_files(repo, commit, path, name, entry, row, schema):
         package_text = existing.rstrip() + '\n\n' + entry[prefix:]
     else:
         package_text = entry
+    return catalog_files(repo, commit, path, name, package_text)
+
+
+def catalog_files(repo, commit, path, name, package_text):
     releases = tomllib.loads(package_text)['releases']
     require(len(releases) <= 512 and len(package_text.encode()) <= 1024 * 1024, 'package index limit exceeded')
     catalog_path = 'index/_catalog.toml'
@@ -129,6 +133,21 @@ def ensure_release(repo, tag, archive, row):
     require(digest == 'sha256:' + row['sha256'], 'release archive SHA-256 mismatch')
 
 
+def index_target(index, fork):
+    upstream = api(f'repos/{index}')
+    target = api(f'repos/{fork}') if fork else upstream
+    fork = target['full_name']
+    index = upstream['full_name']
+    require(target['permissions']['push'], 'index branch repository requires write access')
+    require(fork == index or target.get('parent', {}).get('full_name') == index,
+            'index fork must be a direct fork of the index repository')
+    base = upstream['default_branch']
+    upstream_head = api(f'repos/{index}/git/ref/heads/{quote(base)}')['object']['sha']
+    require(fork == index or api(f'repos/{fork}/git/commits/{upstream_head}', missing=True),
+            'sync the index fork with upstream before publishing')
+    return index, fork, base, upstream_head
+
+
 def publish(repo, index, fork, archive, entry):
     doc = tomllib.loads(entry)
     schema = doc['schema']
@@ -137,38 +156,39 @@ def publish(repo, index, fork, archive, entry):
     row, = doc['releases']
     version = row['version']
     tag = 'v' + version
-    upstream = api(f'repos/{index}')
-    target = api(f'repos/{fork}') if fork else upstream
-    fork = target['full_name']
-    index = upstream['full_name']
+    index, fork, base, upstream_head = index_target(index, fork)
     require(not api(f'repos/{repo}')['private'], 'release repository must be public')
-    require(target['permissions']['push'], 'index branch repository requires write access')
-    require(fork == index or target.get('parent', {}).get('full_name') == index,
-            'index fork must be a direct fork of the index repository')
-    base = upstream['default_branch']
-    upstream_head = api(f'repos/{index}/git/ref/heads/{quote(base)}')['object']['sha']
-    require(fork == index or api(f'repos/{fork}/git/commits/{upstream_head}', missing=True),
-            'sync the index fork with upstream before publishing')
     path = f'index/{name}.toml'
     files = index_files(index, upstream_head, path, name, entry, row, schema)
     branch = f'honk-publish/{name}/{version}'
-    if files:
-        ref = api(f'repos/{fork}/git/ref/heads/{quote(branch)}', missing=True)
-        if ref:
-            branch_head = ref['object']['sha']
-            commit = api(f'repos/{fork}/git/commits/{branch_head}')
-            require(len(commit['parents']) == 1, 'existing publication branch has unexpected history')
-            parent = commit['parents'][0]['sha']
-            expected = index_files(fork, parent, path, name, entry, row, schema)
-            changed_paths = {p for p, content in expected.items() if file_at(fork, p, parent) != content}
-            details = api(f'repos/{fork}/commits/{branch_head}')
-            require(changed_paths and {item['filename'] for item in details['files']} == changed_paths
-                    and all(file_at(fork, p, branch_head) == content for p, content in expected.items()),
-                    'existing publication branch has different index content')
+    ref = existing_branch(fork, branch,
+                          lambda parent: index_files(fork, parent, path, name, entry, row, schema)) if files else None
     ensure_release(repo, tag, archive, row)
     if not files:
         print(f'{name} {version} is already in the index')
         return
+    propose(index, fork, base, upstream_head, branch, ref, files, f'Publish {name} {version}',
+            f'Archive: {row["url"]}\n\nSHA-256: `{row["sha256"]}`')
+
+
+def existing_branch(fork, branch, files_at_parent):
+    ref = api(f'repos/{fork}/git/ref/heads/{quote(branch)}', missing=True)
+    if ref is None:
+        return None
+    branch_head = ref['object']['sha']
+    commit = api(f'repos/{fork}/git/commits/{branch_head}')
+    require(len(commit['parents']) == 1, 'existing index branch has unexpected history')
+    parent = commit['parents'][0]['sha']
+    expected = files_at_parent(parent)
+    changed_paths = {path for path, content in expected.items() if file_at(fork, path, parent) != content}
+    details = api(f'repos/{fork}/commits/{branch_head}')
+    require(changed_paths and {item['filename'] for item in details['files']} == changed_paths
+            and all(file_at(fork, path, branch_head) == content for path, content in expected.items()),
+            'existing index branch has different content')
+    return ref
+
+
+def propose(index, fork, base, upstream_head, branch, ref, files, title, body):
     if not ref:
         parent = api(f'repos/{fork}/git/commits/{upstream_head}')
         tree = api(f'repos/{fork}/git/trees', {
@@ -177,7 +197,7 @@ def publish(repo, index, fork, archive, entry):
                      for p, content in files.items()],
         })
         commit = api(f'repos/{fork}/git/commits', {
-            'tree': tree['sha'], 'parents': [upstream_head], 'message': f'Publish {name} {version}',
+            'tree': tree['sha'], 'parents': [upstream_head], 'message': title,
         })
         api(f'repos/{fork}/git/refs', {'ref': f'refs/heads/{branch}', 'sha': commit['sha']})
     head = fork.split('/')[0] + ':' + branch
@@ -187,18 +207,79 @@ def publish(repo, index, fork, archive, entry):
     if existing:
         result = existing[0]
     else:
-        result = api(pulls, dict(title=f'Publish {name} {version}', head=head, base=base,
-                                 body=f'Archive: {row["url"]}\n\nSHA-256: `{row["sha256"]}`'))
+        result = api(pulls, dict(title=title, head=head, base=base,
+                                 body=body))
     print(result['html_url'])
 
 
+RELEASE_HEADER = re.compile(r'(?m)^\s*\[\[releases\]\]\s*(?:#[^\r\n]*)?$')
+YANKED_FIELD = re.compile(r'(?m)^([ \t]*yanked[ \t]*=[ \t]*)(true|false)([ \t]*(?:#[^\r\n]*)?\r?)$')
+
+
+def set_yanked(text, name, version, desired):
+    doc = tomllib.loads(text)
+    require(doc['schema'] in (1, 2) and doc['package'] == name, 'invalid package index')
+    releases = doc['releases']
+    positions = [i for i, row in enumerate(releases) if row['version'] == version]
+    require(len(positions) == 1, 'expected exactly one published release for the requested version')
+    position, = positions
+    row = releases[position]
+    require(type(row['yanked']) is bool, 'invalid yank state')
+    if row['yanked'] == desired:
+        return text
+    headers = list(RELEASE_HEADER.finditer(text))
+    require(len(headers) == len(releases), 'expected canonical [[releases]] tables')
+    start = headers[position].end()
+    end = headers[position + 1].start() if position + 1 < len(headers) else len(text)
+    updated, count = YANKED_FIELD.subn(lambda m: m[1] + ('true' if desired else 'false') + m[3], text[start:end])
+    result = text[:start] + updated + text[end:]
+    row['yanked'] = desired
+    require(count == 1 and tomllib.loads(result) == doc, 'could not edit only the requested yank state')
+    return result
+
+
+def yank(index, fork, name, version, undo):
+    index, fork, base, upstream_head = index_target(index, fork)
+    path = f'index/{name}.toml'
+
+    def changes(repo, commit):
+        original = file_at(repo, path, commit)
+        require(original is not None, 'package was not found in the index')
+        updated = set_yanked(original, name, version, not undo)
+        return {} if updated == original else catalog_files(repo, commit, path, name, updated)
+
+    files = changes(index, upstream_head)
+    if not files:
+        print(f'{name} {version} is already {"active" if undo else "yanked"}')
+        return
+    action = 'Restore' if undo else 'Yank'
+    branch = f'honk-{action.lower()}/{name}/{version}/{upstream_head[:12]}'
+    ref = existing_branch(fork, branch, lambda parent: changes(fork, parent))
+    propose(index, fork, base, upstream_head, branch, ref, files, f'{action} {name} {version}',
+            'Update the yank flag for this release and regenerate the search catalog.')
+
+
+def repository(value):
+    require(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+', value)
+            and value.split('/')[1] not in ('.', '..'), 'expected a GitHub OWNER/REPO')
+
+
 if __name__ == '__main__':
+    action, *arguments = sys.argv[1:]
     try:
-        repo, index, fork, path, entry = sys.argv[1:]
-        for value in (repo, index, *([fork] if fork else [])):
-            require(re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9-]*/[A-Za-z0-9_.-]+', value)
-                    and value.split('/')[1] not in ('.', '..'), 'expected a GitHub OWNER/REPO')
-        publish(repo, index, fork, Path(path), entry)
+        if action == 'publish':
+            repo, index, fork, path, entry = arguments
+            repository(repo)
+            repository(index)
+            if fork:
+                repository(fork)
+            publish(repo, index, fork, Path(path), entry)
+        else:
+            index, fork, name, version, undo = arguments
+            repository(index)
+            if fork:
+                repository(fork)
+            yank(index, fork, name, version, undo == 'undo')
     except (ValueError, OSError, KeyError, subprocess.TimeoutExpired) as error:
-        print(f'honk publish: {error}', file=sys.stderr)
+        print(f'honk {action}: {error}', file=sys.stderr)
         sys.exit(1)

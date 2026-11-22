@@ -8,10 +8,39 @@ import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'src'))
-from publish_github import ensure_release, publish
+from publish_github import ensure_release, publish, set_yanked, yank
 
 
 class GitHubPublication(unittest.TestCase):
+    def test_yank_edits_only_requested_flag_and_restores_original(self):
+        source = ('schema = 2\npackage = "example"\n\n[[releases]]\nversion = "1.0.0"\n'
+                  'yanked = false\n\n[[releases]]\nversion = "2.0.0"\n'
+                  'yanked = false # latest\nfeatures = { extras = [] }\n')
+        changed = set_yanked(source, 'example', '2.0.0', True)
+        self.assertEqual(changed, source.replace('false # latest', 'true # latest'))
+        self.assertEqual(set_yanked(changed, 'example', '2.0.0', True), changed)
+        self.assertEqual(set_yanked(changed, 'example', '2.0.0', False), source)
+        with self.assertRaisesRegex(ValueError, 'requested version'):
+            set_yanked(source, 'example', '3.0.0', True)
+
+    def test_yank_updates_search_catalog_and_retry_is_a_noop_after_merge(self):
+        path = 'index/example.toml'
+        package = ('schema = 1\npackage = "example"\n[[releases]]\nversion = "1.0.0"\nyanked = false\n'
+                   '[[releases]]\nversion = "2.0.0"\nyanked = false\n')
+        catalog = 'schema = 1\n\n[[packages]]\nname = "example"\nversion = "2.0.0"\n'
+        files = {path: package, 'index/_catalog.toml': catalog}
+        with patch('publish_github.index_target', return_value=('owner/index', 'owner/index', 'main', 'abc123')), \
+             patch('publish_github.file_at', side_effect=lambda repo, path, commit: files[path]), \
+             patch('publish_github.existing_branch', return_value=None), \
+             patch('publish_github.propose') as propose:
+            yank('owner/index', '', 'example', '2.0.0', False)
+            changes = propose.call_args.args[6]
+            self.assertEqual(changes['index/_catalog.toml'], catalog.replace('2.0.0', '1.0.0'))
+            self.assertEqual(changes[path], set_yanked(package, 'example', '2.0.0', True))
+            files.update(changes)
+            yank('owner/index', '', 'example', '2.0.0', False)
+            self.assertEqual(propose.call_count, 1)
+
     def test_retry_reuses_uploaded_asset_and_existing_index_branch(self):
         for schema in (1, 2):
             with self.subTest(schema=schema):
