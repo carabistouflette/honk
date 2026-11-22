@@ -422,6 +422,8 @@ not its entire resolver/feature policy. All registry constraints from path/Git
 packages are collected before solving. Selected archive dependencies are solved
 from index metadata before any registry archive is materialized. Only selected
 releases are downloaded. Cycles can trigger backtracking to older releases.
+Online operations prefetch up to four missing archives at once, then verify and
+materialize packages in graph order. Offline and frozen operations use the cache.
 
 Isolated mode accepts schema-1 and schema-2 indexes. Schema 2 allows releases
 to declare feature groups, optional dependencies, and feature requests on

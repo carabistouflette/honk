@@ -23,6 +23,7 @@ root struct Resolver {
 }
 extern fn native_index(registry: const u8[:], package: const u8[:], cache: const u8[:], offline: bool, refresh: bool, out: u8[:]) -> i64 = "nest_index";
 extern fn native_materialize(url: const u8[:], sha256: const u8[:], label: const u8[:], cache: const u8[:], offline: bool) -> bool = "nest_materialize";
+extern fn native_prefetch(records: const u8[:], starts: const i64[:], cache: const u8[:]) -> bool = "nest_prefetch";
 extern fn native_error(out: u8[:]) -> i64 = "nest_error";
 fn last_error() -> u8[>..] {
     var out: u8[256] = [0; 256]; let n = native_error(out); return if n >= 0 { str(out[..n]) } else { str("registry operation failed") };
@@ -330,6 +331,22 @@ fn resolve(resolver: Resolver&, roots: const Request[:]) -> bool {
         resolver.error.clear(); resolver.records.clear();
     } else if resolver.locked && roots.len > 0 { resolver.error = str("registry lock is missing or out of date"); return false; }
     return solve(resolver, roots, false);
+}
+// Stage verified blobs. Materialization still verifies and extracts each archive.
+fn prefetch(resolver: const Resolver&, selected: const i64[:]) -> u8[>..] {
+    if resolver.offline || selected.len < 2 { return []; }
+    if selected.len > MAX_PACKAGES { return str("registry graph exceeds 256 packages"); }
+    var records: u8[>..]  = [];
+    var starts:  i64[>..] = [0];
+    for id in selected {
+        let record = record_at(resolver, id);
+        if !valid(record) { return str("invalid package record"); }
+        records.append(record.sha256);
+        records.append(record.url);
+        starts.push(records.len);
+    }
+    if !native_prefetch(records[..], starts[..], str(resolver.cache, "/packages")) { return last_error(); }
+    return [];
 }
 fn materialize(record: const Record&, cache: u8[:], offline: bool) -> u8[>..] {
     if !valid(record) { return str("invalid package record"); }

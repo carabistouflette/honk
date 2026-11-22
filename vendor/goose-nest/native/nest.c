@@ -120,17 +120,10 @@ static bool url_allowed(const char *url) {
     // Cleartext is restricted to explicit IPv4 loopback fixtures, never enabled by an environment variable.
     return !strncmp(url, "https://", 8) || !strncmp(url, "http://127.0.0.1:", 17);
 }
-static bool fetch(const char *url, const char *etag, transfer *t, long *status) {
+static bool fetch_options(CURL *c, const char *url, transfer *t, struct curl_slist *request_headers) {
     if (!url_allowed(url) || strchr(url, '@') || strchr(url, '#')) return fail("registry URLs require HTTPS without credentials or fragments");
-    static CURL *connection;
-    if (!connection) { if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return fail("cannot initialize TLS"); connection = curl_easy_init(); }
-    if (!connection) return fail("cannot initialize HTTP connection");
-    CURL *c = connection; curl_easy_reset(c);
-    struct curl_slist *request_headers = NULL;
-    char conditional[300];
-    if (etag && *etag) { snprintf(conditional, sizeof conditional, "If-None-Match: %s", etag); request_headers = curl_slist_append(NULL, conditional); if (!request_headers) return fail("cannot allocate conditional header"); }
     bool loopback = !strncmp(url, "http://127.0.0.1:", 17);
-#define SET(k,v) do { if (curl_easy_setopt(c, k, v) != CURLE_OK) { curl_slist_free_all(request_headers); return fail("unsupported HTTP option"); } } while (0)
+#define SET(k,v) do { if (curl_easy_setopt(c, k, v) != CURLE_OK) return fail("unsupported HTTP option"); } while (0)
     SET(CURLOPT_URL, url); SET(CURLOPT_PROTOCOLS_STR, loopback ? "http" : "https");
     SET(CURLOPT_REDIR_PROTOCOLS_STR, loopback ? "http" : "https");
     SET(CURLOPT_FOLLOWLOCATION, loopback ? 0L : 1L); SET(CURLOPT_MAXREDIRS, 5L);
@@ -141,12 +134,35 @@ static bool fetch(const char *url, const char *etag, transfer *t, long *status) 
     SET(CURLOPT_HEADERFUNCTION, headers); SET(CURLOPT_HEADERDATA, t);
     SET(CURLOPT_HTTPHEADER, request_headers); SET(CURLOPT_ACCEPT_ENCODING, "identity");
     SET(CURLOPT_USERAGENT, "goose-nest/0.1.0-alpha.1");
-    CURLcode code = curl_easy_perform(c);
-    bool ok = code == CURLE_OK && curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, status) == CURLE_OK;
-    curl_slist_free_all(request_headers);
 #undef SET
-    if (!ok) return fail("HTTP transfer failed, timed out, or exceeded resource limits");
+    return true;
+}
+static bool fetch_result(CURL *c, CURLcode code, long *status) {
+    if (code != CURLE_OK || curl_easy_getinfo(c, CURLINFO_RESPONSE_CODE, status) != CURLE_OK)
+        return fail("HTTP transfer failed, timed out, or exceeded resource limits");
     return (*status == 200 || *status == 304) || fail("HTTP server returned an unexpected status");
+}
+static bool init_http(void) {
+    static bool initialized;
+    if (!initialized) {
+        if (curl_global_init(CURL_GLOBAL_DEFAULT) != CURLE_OK) return fail("cannot initialize TLS");
+        initialized = true;
+    }
+    return true;
+}
+static bool fetch(const char *url, const char *etag, transfer *t, long *status) {
+    static CURL *connection;
+    if (!init_http()) return false;
+    if (!connection) connection = curl_easy_init();
+    if (!connection) return fail("cannot initialize HTTP connection");
+    curl_easy_reset(connection);
+    struct curl_slist *request_headers = NULL;
+    char conditional[300];
+    if (etag && *etag) { snprintf(conditional, sizeof conditional, "If-None-Match: %s", etag); request_headers = curl_slist_append(NULL, conditional); if (!request_headers) return fail("cannot allocate conditional header"); }
+    bool ok = fetch_options(connection, url, t, request_headers)
+        && fetch_result(connection, curl_easy_perform(connection), status);
+    curl_slist_free_all(request_headers);
+    return ok;
 }
 int64_t nest_index(input registry_in, input name_in, input cache_in, bool offline, bool refresh, output out) {
     char registry[PATH_CAP], name[65], cache[PATH_CAP], url[PATH_CAP], key[65], path[PATH_CAP], tag_path[PATH_CAP];
@@ -254,11 +270,123 @@ static void remove_private(const char *path) {
     }
     closedir(d); rmdir(path);
 }
+static bool valid_sha(const char *sha) {
+    return strlen(sha) == 64 && strspn(sha, "0123456789abcdef") == 64;
+}
+
+#define PREFETCH_WIDTH 4
+typedef struct {
+    char sha[65], url[PATH_CAP], blob[PATH_CAP];
+    transfer data;
+    CURL *easy;
+    CURLcode result;
+    bool active;
+} archive_job;
+
+static bool prefetch_group(CURLM *multi, archive_job *jobs, size_t count) {
+    bool ok = false;
+    for (size_t i = 0; i < count; ++i) {
+        archive_job *job = &jobs[i];
+        job->data = (transfer){.data = malloc(ARCHIVE_CAP), .cap = ARCHIVE_CAP};
+        job->easy = curl_easy_init();
+        if (!job->data.data || !job->easy) { fail("cannot allocate archive transfer"); goto done; }
+        if (!fetch_options(job->easy, job->url, &job->data, NULL)) goto done;
+        if (curl_multi_add_handle(multi, job->easy) != CURLM_OK) { fail("cannot queue archive transfer"); goto done; }
+        job->active = true;
+        job->result = CURLE_FAILED_INIT;
+    }
+    int running;
+    do {
+        if (curl_multi_perform(multi, &running) != CURLM_OK ||
+            (running && curl_multi_poll(multi, NULL, 0, 1000, NULL) != CURLM_OK)) {
+            fail("cannot run archive transfers");
+            goto done;
+        }
+    } while (running);
+    int left;
+    for (CURLMsg *message; (message = curl_multi_info_read(multi, &left));) {
+        if (message->msg != CURLMSG_DONE) continue;
+        for (size_t i = 0; i < count; ++i)
+            if (jobs[i].easy == message->easy_handle) jobs[i].result = message->data.result;
+    }
+    for (size_t i = 0; i < count; ++i) {
+        archive_job *job = &jobs[i];
+        long status;
+        char actual[65];
+        if (!fetch_result(job->easy, job->result, &status)) goto done;
+        if (status != 200) { fail("archive server did not return a package"); goto done; }
+        if (!digest(job->data.data, job->data.used, actual)) goto done;
+        if (strcmp(actual, job->sha)) { fail("package archive SHA-256 mismatch"); goto done; }
+        if (!write_file(job->blob, job->data.data, job->data.used)) goto done;
+    }
+    ok = true;
+done:
+    for (size_t i = 0; i < count; ++i) {
+        if (jobs[i].active) curl_multi_remove_handle(multi, jobs[i].easy);
+        if (jobs[i].easy) curl_easy_cleanup(jobs[i].easy);
+        free(jobs[i].data.data);
+        jobs[i] = (archive_job){0};
+    }
+    return ok;
+}
+
+// Offsets delimit records consisting of a 64-byte digest followed by the URL.
+typedef struct { const int64_t *data; int64_t len; } offsets;
+bool nest_prefetch(input records, offsets starts, input cache_in) {
+    if (!records.data || !starts.data || starts.len < 2 || starts.len > 257 ||
+        starts.data[0] != 0 || starts.data[starts.len - 1] != records.len)
+        return fail("invalid archive transfer list");
+    char cache[PATH_CAP];
+    if (!string(cache_in, cache, sizeof cache)) return false;
+    int lock = cache_lock(cache);
+    if (lock < 0) return false;
+    CURLM *multi = NULL;
+    archive_job jobs[PREFETCH_WIDTH] = {0};
+    size_t count = 0;
+    bool ok = false;
+    for (int64_t i = 1; i < starts.len; ++i) {
+        int64_t start = starts.data[i - 1], end = starts.data[i];
+        if (start < 0 || end > records.len || end <= start || end - start <= 64) {
+            fail("invalid archive transfer record");
+            goto done;
+        }
+        archive_job *job = &jobs[count];
+        if (!string((input){records.data + start, 64}, job->sha, sizeof job->sha) ||
+            !string((input){records.data + start + 64, end - start - 64}, job->url, sizeof job->url))
+            goto done;
+        if (!valid_sha(job->sha)) { fail("invalid SHA-256"); goto done; }
+        char target[PATH_CAP];
+        if (!join(target, cache, job->sha) ||
+            snprintf(job->blob, sizeof job->blob, "%s.tar.gz", target) >= (int)sizeof job->blob) {
+            fail("archive cache path too long");
+            goto done;
+        }
+        if (directory(target) || regular(job->blob, ARCHIVE_CAP)) continue;
+        bool queued = false;
+        for (size_t j = 0; j < count; ++j) if (!strcmp(jobs[j].sha, job->sha)) queued = true;
+        if (queued) continue;
+        if (!multi) {
+            if (!init_http()) goto done;
+            multi = curl_multi_init();
+            if (!multi) { fail("cannot initialize archive transfers"); goto done; }
+        }
+        if (++count == PREFETCH_WIDTH) {
+            if (!prefetch_group(multi, jobs, count)) goto done;
+            count = 0;
+        }
+    }
+    ok = count == 0 || prefetch_group(multi, jobs, count);
+done:
+    if (multi) curl_multi_cleanup(multi);
+    close(lock);
+    return ok;
+}
+
 bool nest_materialize(input url_in, input sha_in, input label_in, input cache_in, bool offline) {
     char url[PATH_CAP], sha[65], label[160], cache[PATH_CAP], target[PATH_CAP], ready[PATH_CAP], blob[PATH_CAP];
     if (!string(url_in, url, sizeof url) || !string(sha_in, sha, sizeof sha) || !string(label_in, label, sizeof label) || !string(cache_in, cache, sizeof cache)) return false;
-    if (strlen(sha) != 64 || !safe_relative(label) || strchr(label, '/')) return fail("invalid package digest or label");
-    for (size_t i = 0; i < 64; ++i) if (!strchr("0123456789abcdef", sha[i])) return fail("invalid SHA-256");
+    if (!safe_relative(label) || strchr(label, '/')) return fail("invalid package label");
+    if (!valid_sha(sha)) return fail("invalid SHA-256");
     int lock = cache_lock(cache); if (lock < 0) return false;
     bool ok = false; uint8_t *data = NULL; char temporary[PATH_CAP] = {0};
     if (!join(target, cache, sha) || snprintf(ready, sizeof ready, "%s.ready", target) >= (int)sizeof ready || snprintf(blob, sizeof blob, "%s.tar.gz", target) >= (int)sizeof blob) goto done;

@@ -66,5 +66,5 @@ version-2 lock instead of the flat workflow above. It can compile incompatible
 registry versions together, unifies SemVer-compatible releases with bounded
 backtracking, and records each owner's alias binding and complete immutable
 release metadata. See [the isolated graph contract and limits](ISOLATED-GRAPHS.md).
-The registry protocol/transport and vendored Nest client are unchanged; version
-selection policy is in Honk's scoped graph producer. This is not full Cargo parity.
+Honk's scoped graph producer selects versions. It uses the vendored Nest client
+to prefetch missing archives in groups of up to four on online runs.

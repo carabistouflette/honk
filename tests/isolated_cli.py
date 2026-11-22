@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
+import threading
 import tomllib
 import shutil
 import sys
@@ -770,6 +771,30 @@ class Isolated(unittest.TestCase):
         with (self.root / 'app/Honk.toml').open('a') as f:
             f.write(f'b = {{package="answer", version="^1.0.0", registry="{other.url}/index"}}\n')
         self.assertEqual(self.run_honk().stdout.strip(), '1 1')
+
+    def test_registry_prefetch_overlaps_requests_and_rejects_bad_checksum(self):
+        self.registry_fixture()
+        self.registry_release('alpha', '1.0.0')
+        release = self.registry_release('beta', '1.0.0')
+        archive = self.root / 'registry/beta-1.0.0.tar.gz'
+        original = archive.read_bytes()
+        archive.write_bytes(original + b'corrupt')
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'a', 'alpha', '^1.0.0')
+        self.registry_dependency('app', 'b', 'beta', '^1.0.0')
+        self.registry.archive_barrier = threading.Barrier(2, timeout=5)
+        result = self.run_honk('fetch', ok=False)
+        self.assertIn('SHA-256 mismatch', result.stderr)
+        self.assertFalse((app / 'Honk.lock').exists())
+        self.assertFalse((app / 'target/isolated/graph.json').exists())
+        self.assertFalse(list(Path(self.env['HONK_HOME']).rglob(release['sha256'] + '.tar.gz')))
+
+        self.registry.archive_barrier = None
+        archive.write_bytes(original)
+        self.run_honk('fetch')
+        before = list(self.registry.requests)
+        self.run_honk('fetch', extra=('--frozen',))
+        self.assertEqual(self.registry.requests, before)
 
     def test_registry_cached_tree_integrity_and_archive_manifest_validation(self):
         self.registry_fixture()

@@ -121,3 +121,32 @@ workload measured 75.7 ms for Honk (72.4–90.4 ms) and 74.5 ms for Cargo
 slower for Honk at 403.6 ms versus 345.9 ms. The Honk binary hashes and
 per-round values are retained in the report.
 [Follow-up raw results](results/isolated-registry-cargo-cycle-keys.json)
+
+## Cold archive prefetch
+
+On 2026-11-22, a five-run profile split the cold fetch on the 96-package
+workload. The median catalog phase took 167.5 ms, including 130.2 ms in HTTP
+transfers. Resolution including the catalog took 193.7 ms. Materialization
+and package validation took 191.1 ms, including 132.9 ms in archive HTTP
+transfers and 22.6 ms in extraction and tree hashing. The remaining time in
+these phases includes cache and manifest work. Phase medians are independent.
+
+After solving, the isolated client stages verified archive blobs with up to
+four concurrent requests. The existing materialization path verifies each
+blob or cached tree and checks the package manifest. In nine alternating
+runs with new project directories and empty caches, the 96-package median
+fell from 391.1 ms (362.7–438.6 ms) to 333.6 ms (315.4–391.8 ms). Each run
+made 96 index and 96 archive requests. The lockfiles were byte-identical
+and their versions and dependency edges matched the fixture.
+
+Seven measured rounds of the full Honk/Cargo harness gave these cold-fetch
+medians and ranges. RSS is the median process peak, in MiB.
+
+| Packages | Honk ms | Cargo ms | Honk / Cargo RSS |
+| ---: | ---: | ---: | ---: |
+| 24 | 101.6 [97.4–110.9] | 141.4 [134.9–155.0] | 19.2 / 45.8 |
+| 96 | 340.1 [324.7–349.8] | 346.9 [315.0–367.8] | 19.6 / 45.9 |
+
+At 96 packages the cold-fetch ranges overlap. Cold resolution still took
+217.8 ms in Honk and 192.4 ms in Cargo. The comparison uses loopback HTTP
+and small archives. [Raw samples](results/isolated-registry-cargo-prefetch.json)

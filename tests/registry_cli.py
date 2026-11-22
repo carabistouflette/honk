@@ -27,6 +27,7 @@ class Registry:
     def __init__(self, root):
         self.root = Path(root)
         self.requests = []
+        self.archive_barrier = None
         fixture = self
         class Handler(http.server.BaseHTTPRequestHandler):
             def log_message(self, *_):
@@ -37,6 +38,12 @@ class Registry:
                 if not path.is_file():
                     self.send_error(404)
                     return
+                if path.suffix == '.gz' and fixture.archive_barrier is not None:
+                    try:
+                        fixture.archive_barrier.wait()
+                    except threading.BrokenBarrierError:
+                        self.send_error(503)
+                        return
                 data = path.read_bytes()
                 etag = '"' + hashlib.sha256(data).hexdigest() + '"'
                 if self.headers.get('If-None-Match') == etag:

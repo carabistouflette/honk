@@ -397,6 +397,10 @@ fn apply_registry(g: Graph&, p: manifest::Project&, cache: u8[:], locked: bool, 
     platform::require(scoped_registry::resolve(state, catalog, g.requests[..], locked, update), state.error);
     platform::require(graph_features || state.features.len == 0, "registry features require a compiler with package graph feature support");
     platform::require(g.packages.len + state.selected.len <= 256 && g.bindings.len + state.edges.len <= 65536, "combined dependency graph limit exceeded");
+    if !g.dry_run {
+        let error = nest::prefetch(catalog, state.selected[..]);
+        platform::require(error.len == 0, error);
+    }
     var selected: RegistrySelection[>..] = [];
     for id in state.selected {
         let record = nest::record_at(catalog, id);
