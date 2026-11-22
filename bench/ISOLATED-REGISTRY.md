@@ -245,3 +245,35 @@ against the fixture for both managers. Frozen replays kept the same lock
 and made zero requests. Median peak process RSS during cold resolution
 was 24.0 MiB for Honk and 38.5 MiB for Cargo.
 [Raw samples](results/isolated-registry-cargo-ranked-candidates.json)
+
+### Package and release lookup follow-up
+
+On five instrumented 512-candidate runs after the ranking change, the
+median catalog load took 24.0 ms. The solver made 6,660 release lookups by
+ID, spending 120.6 ms in those lookups. The candidate scan took 42.0 ms
+excluding ID lookup time. It visited 791,550 records across 1,537 scans.
+The timers omit startup, choice work outside lookups, and final output.
+
+The solver now keeps a local index of release references and groups them
+by registry and package in catalog order. Candidate scans visit only the
+requested group, while skipped IDs are charged to the scan budget in
+the same order as before. The index borrows from the append-only catalog
+and lives for one solve.
+
+Nine alternating runs with empty caches measured the following medians
+and ranges. Each pair printed byte-identical dry-run plans and made the
+same number of index and archive requests.
+
+| Workload | Before ms | Indexed ms |
+| --- | ---: | ---: |
+| 48 candidates | 38.3 [36.7–44.4] | 37.0 [34.7–45.5] |
+| 512 candidates | 216.7 [213.4–224.1] | 56.9 [53.1–62.2] |
+| Regular graph, 96 packages | 177.0 [164.7–187.7] | 148.4 [129.4–158.2] |
+
+Seven measured rounds at 512 candidates put cold resolution at 58.7 ms
+for Honk (50.2–84.4 ms) and 51.3 ms for Cargo 1.99.0 (44.3–64.3 ms).
+Cold fetch took 67.3 ms (60.0–75.1 ms) and 91.3 ms (83.2–107.7 ms),
+respectively. Both managers selected identical versions and dependency
+edges. Frozen runs sent zero requests and preserved their lockfiles.
+Median peak process RSS for cold resolution was 24.0 MiB and 38.5 MiB.
+[Raw samples](results/isolated-registry-cargo-catalog-index.json)
