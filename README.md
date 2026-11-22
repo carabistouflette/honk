@@ -11,7 +11,8 @@ parallel tests, per-test reuse, diagnostics, filtering and optional progress.
 CLI, manifest and lockfile compatibility are not guaranteed before 1.0.
 [Publication evidence and limits](docs/RELEASE-CANDIDATE.md) accompany the release.
 This prerelease does not include registry support. Development source adds the
-experimental Nest integration described below; hosted publishing and cross compilation remain outside scope.
+experimental Nest integration described below, reviewed GitHub publication and
+qualified isolated Linux AArch64 cross compilation.
 
 ## Experimental registry support
 
