@@ -150,3 +150,36 @@ medians and ranges. RSS is the median process peak, in MiB.
 At 96 packages the cold-fetch ranges overlap. Cold resolution still took
 217.8 ms in Honk and 192.4 ms in Cargo. The comparison uses loopback HTTP
 and small archives. [Raw samples](results/isolated-registry-cargo-prefetch.json)
+
+## Cold index prefetch
+
+The isolated resolver batches up to four distinct known catalog requests and
+parses the responses in solver order. The benchmark can add a fixed server
+delay with `--index-delay-ms 5`. This applies equally to Honk and Cargo
+index responses, including conditional responses and Cargo's registry
+configuration request. Archives receive no artificial delay.
+
+In nine alternating cold resolution runs with empty caches, 96 packages and
+5 ms of delay per index response, prefetch reduced the Honk median from
+779.7 ms (752.7–914.9 ms) to 425.0 ms (406.0–471.1 ms). The dry-run output
+was identical and each run made 96 index requests and zero archive requests.
+Without injected delay, the same paired test was more variable, with medians
+of 250.0 ms before and 246.6 ms after. A separate three-round dry-run check
+at 250 packages also preserved the output and request counts.
+
+Seven measured rounds of the full comparison with stable Cargo 1.99.0 gave
+the following medians and ranges on 96 packages. RSS is the median peak
+process memory in MiB.
+
+| Index delay | Workflow | Honk ms | Cargo ms | Honk / Cargo RSS |
+| ---: | --- | ---: | ---: | ---: |
+| 0 ms | Cold resolution | 165.2 [142.1–259.6] | 184.2 [174.6–201.3] | 22.3 / 38.5 |
+| 0 ms | Cold fetch | 265.2 [241.6–342.1] | 383.6 [301.9–527.7] | 25.1 / 46.0 |
+| 5 ms | Cold resolution | 445.8 [421.8–516.2] | 738.8 [719.3–769.1] | 22.2 / 36.5 |
+| 5 ms | Cold fetch | 551.3 [537.2–573.5] | 896.5 [863.5–1060.7] | 23.2 / 45.9 |
+
+The no-delay ranges overlap. Honk's batch buffer adds up to 4 MiB of scratch
+space during online resolution. Frozen fetch bypasses it. The frozen runs
+made zero registry requests and retained the existing lock.
+[No-delay samples](results/isolated-registry-cargo-index-batch.json)
+[5 ms delay samples](results/isolated-registry-cargo-index-batch-delay-5ms.json)
