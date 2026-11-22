@@ -96,3 +96,28 @@ requests yet takes roughly twice as long in Honk, so making HTTP faster
 would have no effect there. The benchmark does not establish how much of
 that time belongs to dependency solving, source validation or writing the
 compiler graph.
+
+## Frozen replay follow-up
+
+On 2026-11-22, temporary monotonic timers split five frozen replays of the
+96-package workload. Median phase times were 4.2 ms to read and validate
+pins, 116.5 ms to solve the registry graph, 12.2 ms to verify cached sources
+and manifests, and 4.2 ms to construct bindings. Compiler graph rendering
+took 0.7 ms, checking the lock took 0.3 ms, and writing the graph took
+0.2 ms. The timers omit startup, compiler probing, local source discovery
+and lock text generation.
+
+Cycle validation now computes each selected package key once and uses
+catalog positions to find the target node. It retains the same cycle
+check and cached source verification. Nine alternating frozen replays
+with both `-O2` binaries against one warm cache took a median of 167.0 ms
+before the change (153.4–170.5 ms) and 73.4 ms after it (70.3–80.0 ms).
+All runs made zero registry requests and produced byte-identical lock and
+compiler graph files.
+
+A fresh seven-round run of the existing harness on the same 96-package
+workload measured 75.7 ms for Honk (72.4–90.4 ms) and 74.5 ms for Cargo
+(67.5–80.4 ms) in frozen fetch. The ranges overlap. Cold fetch was still
+slower for Honk at 403.6 ms versus 345.9 ms. The Honk binary hashes and
+per-round values are retained in the report.
+[Follow-up raw results](results/isolated-registry-cargo-cycle-keys.json)
