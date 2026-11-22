@@ -11,6 +11,7 @@ import subprocess
 import tarfile
 import tempfile
 import threading
+import time
 import tomllib
 import unittest
 
@@ -24,10 +25,11 @@ def q(value):
     return json.dumps(str(value))
 
 class Registry:
-    def __init__(self, root):
+    def __init__(self, root, *, index_delay=0):
         self.root = Path(root)
         self.requests = []
         self.archive_barrier = None
+        self.index_barrier = None
         fixture = self
         class Handler(http.server.BaseHTTPRequestHandler):
             def log_message(self, *_):
@@ -38,12 +40,15 @@ class Registry:
                 if not path.is_file():
                     self.send_error(404)
                     return
-                if path.suffix == '.gz' and fixture.archive_barrier is not None:
+                barrier = {'.gz': fixture.archive_barrier, '.toml': fixture.index_barrier}.get(path.suffix)
+                if barrier is not None:
                     try:
-                        fixture.archive_barrier.wait()
+                        barrier.wait()
                     except threading.BrokenBarrierError:
                         self.send_error(503)
                         return
+                if index_delay and self.path.startswith(('/index/', '/cargo-index/')):
+                    time.sleep(index_delay)
                 data = path.read_bytes()
                 etag = '"' + hashlib.sha256(data).hexdigest() + '"'
                 if self.headers.get('If-None-Match') == etag:

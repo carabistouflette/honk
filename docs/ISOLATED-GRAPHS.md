@@ -437,6 +437,9 @@ continues to use schema 1.
 The resolver first tries the complete owner-specific lock without reading any
 index. If an unlocked graph change requires catalog lookup, eligible existing
 pins and already selected instances are preferred before highest releases.
+Online untargeted catalog lookup prefetches up to four distinct pending indexes.
+Their metadata and errors enter the resolver in request order. Backtracking
+can discard a request whose index was already fetched.
 Existing pins may retain yanked releases; update ignores old candidates and
 excludes yanked releases. Reusing a published version with changed immutable
 metadata is rejected (the mutable yanked flag is excluded from that comparison).

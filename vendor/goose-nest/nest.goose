@@ -21,6 +21,10 @@ root struct Resolver {
     selected: i64[>..], pending: i64[>..], requests: Request[>..], locked_records: Record[>..],
     error:    u8[>..], decisions: i64 = 0, offline: bool = false, locked: bool = false, update: bool = false,
 }
+const INDEX_CAP = 1048576;
+const INDEX_BATCH_WIDTH = 4;
+root struct IndexBatch { entries: Catalog[>..], data: u8[>..], sizes: i64[4] = [0; 4], ready: bool[4] = [false; 4] }
+extern fn native_index_batch(urls: const u8[:], starts: const i64[:], cache: const u8[:], out: u8[:], sizes: i64[:]) -> bool = "nest_index_batch";
 extern fn native_index(registry: const u8[:], package: const u8[:], cache: const u8[:], offline: bool, refresh: bool, out: u8[:]) -> i64 = "nest_index";
 extern fn native_materialize(url: const u8[:], sha256: const u8[:], label: const u8[:], cache: const u8[:], offline: bool) -> bool = "nest_materialize";
 extern fn native_prefetch(records: const u8[:], starts: const i64[:], cache: const u8[:]) -> bool = "nest_prefetch";
@@ -229,15 +233,44 @@ fn parse_index(input: u8[:], registry: u8[:], package: u8[:], records: Record[>.
     }
     return [];
 }
-fn catalog(resolver: Resolver&, request: const Request&, feature_metadata: bool = false) -> bool {
-    for loaded in resolver.catalogs { if loaded.package == request.package && loaded.registry == request.registry { return true; } }
-    if resolver.catalogs.len >= MAX_PACKAGES { resolver.error = str("registry graph exceeds 256 packages"); return false; }
-    var input: u8[>..] = []; input.resize(1048576, 0);
-    let size = native_index(request.registry, request.package, str(resolver.cache, "/index"), resolver.offline, !resolver.offline, input[..]);
-    if size < 0 { resolver.error = last_error(); return false; } input.resize(size);
+fn catalog_loaded(resolver: const Resolver&, registry: const u8[:], package: const u8[:]) -> bool {
+    for loaded in resolver.catalogs { if loaded.package == package && loaded.registry == registry { return true; } }
+    return false;
+}
+fn read_catalog(resolver: Resolver&, request: const Request&, input: u8[:], feature_metadata: bool) -> bool {
     let error = parse_index(input, request.registry, request.package, resolver.records, feature_metadata);
     if error.len > 0 { resolver.error = copy(error); return false; }
     resolver.catalogs.push(Catalog { package: str(request.package), registry: str(request.registry) }); return true;
+}
+fn catalog(resolver: Resolver&, request: const Request&, feature_metadata: bool = false) -> bool {
+    if catalog_loaded(resolver, request.registry, request.package) { return true; }
+    if resolver.catalogs.len >= MAX_PACKAGES { resolver.error = str("registry graph exceeds 256 packages"); return false; }
+    var input: u8[>..] = []; input.resize(INDEX_CAP, 0);
+    let size = native_index(request.registry, request.package, str(resolver.cache, "/index"), resolver.offline, !resolver.offline, input[..]);
+    if size < 0 { resolver.error = last_error(); return false; }
+    return read_catalog(resolver, request, input[..size], feature_metadata);
+}
+fn prefetch_indexes(resolver: Resolver&, batch: IndexBatch&) -> bool {
+    var urls:   u8[>..]  = [];
+    var starts: i64[>..] = [0];
+    for entry in batch.entries {
+        urls.append(str(entry.registry, "/", entry.package, ".toml"));
+        starts.push(urls.len);
+    }
+    let count = batch.entries.len;
+    if resolver.offline || count < 2 || count > INDEX_BATCH_WIDTH { return false; }
+    if batch.data.len == 0 { batch.data.resize(INDEX_CAP * INDEX_BATCH_WIDTH, 0); }
+    for _, i in batch.entries { batch.ready[i] = true; }
+    return native_index_batch(urls[..], starts[..], str(resolver.cache, "/index"), batch.data[..], batch.sizes[..count]);
+}
+// Consume in the solver's original order, including failures for needed indexes.
+fn consume_index(resolver: Resolver&, request: const Request&, batch: IndexBatch&, slot: i64, feature_metadata: bool) -> bool {
+    if resolver.catalogs.len >= MAX_PACKAGES { resolver.error = str("registry graph exceeds 256 packages"); return false; }
+    let len = batch.sizes[slot];
+    let start = slot * INDEX_CAP;
+    batch.ready[slot] = false;
+    if len < 0 { resolver.error = str(batch.data[start..start - len - 1]); return false; }
+    return read_catalog(resolver, request, batch.data[start..start + len], feature_metadata);
 }
 fn enqueue(resolver: Resolver&, request: const Request&) -> bool {
     if resolver.pending.len >= 65536 { resolver.error = str("registry dependency work limit exceeded"); return false; }
