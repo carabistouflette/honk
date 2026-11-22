@@ -11,14 +11,16 @@ import .deps;
 import .build;
 import .build_cache;
 import .source;
+import .isolated;
 struct PublishTarget { repo: const u8[:] = "", index: const u8[:] = "", fork: const u8[:] = "" }
 
 fn https_url(url: const u8[:]) -> bool {
     return nest::url(url) && starts_with(url, "https://") && url.len > 8 &&
         url[8] != '/' && url[8] != '?' && url[8] != ':';
 }
-fn validate_publication(p: manifest::Project&, registry: u8[:], url: u8[:]) {
-    platform::require(https_url(registry) && nest::registry_url(registry), "publish requires an HTTPS registry index URL");
+fn validate_publication(p: manifest::Project&, registry: u8[:], url: u8[:], schema_two: bool = false) {
+    platform::require(nest::registry_url(registry) && (https_url(registry) || (schema_two && starts_with(registry, "http://127.0.0.1:"))),
+        "publish requires an HTTPS registry index URL");
     platform::require(https_url(url), "publish requires an HTTPS archive URL without credentials or fragments");
     platform::require(p.kind == "lib" && nest::package_name(p.name), "publish requires a library with a valid registry package name");
     let version, error = semver::parse(p.version);
@@ -28,8 +30,8 @@ fn validate_publication(p: manifest::Project&, registry: u8[:], url: u8[:]) {
         platform::require(dep.registry == registry, "published production dependencies must come from the selected registry index");
     }
 }
-fn release_entry(p: manifest::Project&, registry: u8[:], url: u8[:], sha: u8[:]) -> u8[>..] {
-    validate_publication(p, registry, url);
+fn release_entry(p: manifest::Project&, registry: u8[:], url: u8[:], sha: u8[:], schema_two: bool) -> u8[>..] {
+    validate_publication(p, registry, url, schema_two);
     var doc = toml::Document { .. };
     let error = toml::parse_into(platform::load(str(p.root, "/Honk.toml")), doc);
     platform::require(error.len == 0, error);
@@ -44,17 +46,23 @@ fn release_entry(p: manifest::Project&, registry: u8[:], url: u8[:], sha: u8[:])
     }
     var deps: nest::Dependency[>..] = [];
     for dep in p.dependencies {
-        if !dep.dev { deps.push(nest::Dependency { alias: str(dep.name), package: str(dep.package), requirement: str(dep.requirement), .. }); }
+        if !dep.dev {
+            deps.push(nest::Dependency { alias: str(dep.name), package: str(dep.package), requirement: str(dep.requirement),
+                optional: dep.optional, features: copy(dep.features), default_features: dep.default_features,
+                target_os: str(dep.target_os), target_arch: str(dep.target_arch) });
+        }
     }
-    let record = nest::Record { package: str(p.name), version: str(p.version), registry: str(registry), url: str(url), sha256: str(sha), entry: str(p.entry), dependencies: copy(deps), .. };
+    var features: nest::Feature[>..] = [];
+    for feature in p.features { features.push(nest::Feature { name: str(feature.name), items: copy(feature.items) }); }
+    let record = nest::Record { package: str(p.name), version: str(p.version), registry: str(registry), url: str(url), sha256: str(sha), entry: str(p.entry), dependencies: copy(deps), features: copy(features), .. };
     platform::require(nest::valid(record), "archive manifest cannot be represented in the registry index");
-    var text = str("schema = 1\npackage = ");
+    var text = str("schema = ", if schema_two { 2 } else { 1 }, "\npackage = ");
     nest::quoted(text, record.package);
     text.append("\n\n[[releases]]\n");
     text.append(nest::record_text(record));
     return text;
 }
-fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] = "", registry: u8[:] = "", target: PublishTarget = PublishTarget { .. }) {
+fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] = "", registry: u8[:] = "", target: PublishTarget = PublishTarget { .. }, schema_two: bool = false) {
     // Path dependencies cannot be reproduced by recipients of a source archive.
     for n in g.nodes {
         let inside = n.directory.len > p.root.len && n.directory[..p.root.len] == p.root && n.directory[p.root.len] == '/';
@@ -112,17 +120,24 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] =
         platform::run(["tar", "--extract", "--gzip", "--file", temp, "--directory", verify, "--no-same-owner", "--no-same-permissions"], p.root);
         source_root = str(verify, "/", label);
     }
-    var exported = manifest::Project { .. }; manifest::load(source_root, exported);
+    var exported = manifest::Project { .. }; manifest::load(source_root, exported, schema_two);
     var metadata: u8[>..] = [];
     if url.len > 0 {
         platform::require(exported.name == p.name && exported.version == p.version && exported.revision == p.revision,
             "archive package identity or compiler pin differs from the selected manifest");
-        metadata = release_entry(exported, registry, url, sha);
+        metadata = release_entry(exported, registry, url, sha, schema_two);
     }
-    var resolved = deps::Graph { cache: str(g.cache), locked: true, offline: true, .. }; deps::resolve(exported, resolved);
-    let no_args: u8[:][0] = [];
-    let filter = build::TargetFilter { .. };
-    build::compile(exported, resolved, compiler, "check", false, no_args, false, filter, "never", 0, 30000, "text", url.len > 0);
+    if schema_two {
+        var features: u8[][>..] = [];
+        let no_args: u8[:][0] = [];
+        isolated::execute(exported, exported.root, features, false, "check", no_args, false, true, true, false,
+            "", "", "", "", "", "", "", false, true);
+    } else {
+        var resolved = deps::Graph { cache: str(g.cache), locked: true, offline: true, .. }; deps::resolve(exported, resolved);
+        let no_args: u8[:][0] = [];
+        let filter = build::TargetFilter { .. };
+        build::compile(exported, resolved, compiler, "check", false, no_args, false, filter, "never", 0, 30000, "text", url.len > 0);
+    }
     platform::require(rename_file(staged_archive, archive), "cannot commit package archive");
     platform::require(platform::remove_tree(stage), "cannot clear packaged sources");
     if metadata.len > 0 {

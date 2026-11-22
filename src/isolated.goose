@@ -825,7 +825,7 @@ fn report_update(graph: Graph&, p: manifest::Project&) {
     sorted_rows(out, removed); sorted_rows(out, added);
     write_stdout(out);
 }
-fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:], invert: u8[:], refresh: u8[:], precise: u8[:], dry_run: bool) {
+fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defaults: bool, command: u8[:], arguments: u8[:][:], release: bool, locked: bool, offline: bool, include_tests: bool, requested_os: u8[:], requested_arch: u8[:], requested_cc: u8[:], requested_runner: u8[:], invert: u8[:], refresh: u8[:], precise: u8[:], dry_run: bool, publication_check: bool = false) {
     platform::require(command != "update" || !locked, "update cannot be combined with --locked or --frozen");
     platform::require(p.revision == FEATURE_COMPILER || p.revision == "0ce3a5edb5679e10a490e9f66d5db5f6a30b9f63" || p.revision == "6471713c6c18f64e172c4c778ac5987a5a177358", "isolated mode requires an explicitly qualified graph compiler revision in [toolchain]");
     var compiler: u8[>..] = []; platform::require(env("GOOSE", compiler), "isolated mode requires an explicit GOOSE compiler");
@@ -840,7 +840,10 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
     platform::require(valid && supported && revision == p.revision && schema == "goose-package-graph-v1", "compiler graph capability or full revision mismatch");
     let graph_features, feature_capability = json::as_bool(json::member(root, "package_graph_features"));
     platform::require(p.revision != FEATURE_COMPILER || (feature_capability && graph_features), "compiler does not advertise package graph features");
-    let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
+    let cache = toolchain::home();
+    // Publication checks an extracted package under the caller's cache lock.
+    let cache_lock = if publication_check { -1 } else { platform::lock(str(cache, "/lock")) };
+    platform::require(publication_check || cache_lock >= 0, "Honk cache is locked by another process");
     platform::require(platform::mkdir(str(p.root, "/.honk")), "cannot create graph lock directory");
     let project_lock = platform::lock(str(p.root, "/.honk/isolated.lock")); platform::require(project_lock >= 0, "isolated project is locked by another process");
     let metadata = command == "metadata";
@@ -927,7 +930,11 @@ fn execute(p: manifest::Project&, selected: u8[:], features: u8[][>..]&, no_defa
         if release { words.push(str("-O2")); }
         if !cross_execute && arguments.len > 0 { words.push(str("--")); for argument in arguments { words.push(str(argument)); } }
         var argv: (const u8[:])[>..] = []; for word in words { argv.push(word); }
-        platform::run(argv[..], target.root);
+        if publication_check {
+            let message, status = platform::command(argv[..], target.root, true);
+            write_stderr(message);
+            if status != 0 { platform::child_exit(status); }
+        } else { platform::run(argv[..], target.root); }
         if cross_execute { run_binary(executable, target.root, runner, arguments); }
     }
     if command == "update" { report_update(graph, p); }
