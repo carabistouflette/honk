@@ -1189,6 +1189,69 @@ class Isolated(unittest.TestCase):
 
     @unittest.skipUnless(COMPILER.get('package_graph_features') and sys.platform.startswith('linux'),
                          'requires a Linux host and package graph features')
+    @unittest.skipUnless(sys.platform.startswith('linux') and platform.machine() in ('x86_64', 'aarch64'),
+                         'requires a supported Linux graph target')
+    def test_schema_two_publish_dry_run_round_trips_through_isolated_consumer(self):
+        self.registry_fixture()
+        self.registry_release('host-api', '1.0.0', code='namespace host; fn value() -> i64 { 40 }')
+        self.registry_release('extra-api', '1.0.0', code='namespace extra; fn value() -> i64 { 2 }')
+        lib = self.package('release', 'namespace released; import host; '
+                           'if feature("extras") { import extra; fn value() -> i64 { host::value() + extra::value() } } '
+                           'else { fn value() -> i64 { host::value() } }')
+        manifest = lib / 'Honk.toml'
+        registry = self.registry.url + '/index'
+        arch = platform.machine()
+        manifest.write_text(
+            '[package]\nname="release"\nversion="1.0.0"\nkind="lib"\nentry="entry.goose"\n'
+            f'[toolchain]\nrevision="{REVISION}"\n[dependencies]\n'
+            f'extra = {{package="extra-api", version="^1.0.0", registry="{registry}", optional=true}}\n'
+            f'[target.linux-{arch}.dependencies]\n'
+            f'host = {{package="host-api", version="^1.0.0", registry="{registry}"}}\n'
+            '[features]\nextras=["dep:extra"]\n')
+        (lib / 'LICENSE').write_text('Fixture license\n')
+        self.run_honk('fetch', cwd=lib)
+        lock = lib / 'Honk.lock'
+        original = lock.read_bytes()
+        subprocess.run(['git', '-C', str(lib), 'init', '-q'], check=True)
+        subprocess.run(['git', '-C', str(lib), 'add', 'Honk.toml', 'Honk.lock', 'LICENSE', 'entry.goose'], check=True)
+        before = list(self.registry.requests)
+        args = ('publish', '--dry-run', '--schema', '2', '--registry', registry,
+                '--url', 'https://example.invalid/releases/release-1.0.0.tar.gz')
+        result = subprocess.run([str(HONK), *args], cwd=lib, env=self.env, capture_output=True, text=True, timeout=90)
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual(lock.read_bytes(), original)
+        index = tomllib.loads(result.stdout)
+        self.assertEqual((index['schema'], index['package']), (2, 'release'))
+        record, = index['releases']
+        self.assertEqual(record['features'], {'extras': ['dep:extra']})
+        deps = {row['alias']: row for row in record['dependencies']}
+        self.assertTrue(deps['extra']['optional'])
+        self.assertEqual((deps['host']['target-os'], deps['host']['target-arch']), ('linux', arch))
+
+        # Use the exact generated asset with its checksum and the HTTPS URL.
+        archive = lib / 'target/package/release-1.0.0.tar.gz'
+        cache = Path(self.env['HONK_HOME']) / 'nest/packages'
+        shutil.copyfile(archive, cache / (record['sha256'] + '.tar.gz'))
+        (self.registry.root / 'index/release.toml').write_text(result.stdout)
+        app = self.package('app', 'import dep; import std; fn main() { print(dep::value()); }')
+        self.registry_dependency('app', 'dep', 'release', '^1.0.0')
+        self.assertEqual(self.run_honk().stdout.strip(), '40')
+        manifest = app / 'Honk.toml'
+        manifest.write_text(manifest.read_text().replace('package = "release"', 'package = "release", features = ["extras"]'))
+        self.assertEqual(self.run_honk().stdout.strip(), '42')
+        consumer_lock = (app / 'Honk.lock').read_bytes()
+        before = list(self.registry.requests)
+        self.assertEqual(self.run_honk(extra=('--frozen',)).stdout.strip(), '42')
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual((app / 'Honk.lock').read_bytes(), consumer_lock)
+
+        other_arch = 'aarch64' if arch == 'x86_64' else 'x86_64'
+        self.run_honk('fetch', extra=('--target-os', 'linux', '--target-arch', other_arch))
+        platform_lock = tomllib.loads((app / 'Honk.lock').read_text())['platforms'][f'linux-{other_arch}']
+        self.assertEqual({node['name'] for node in tomllib.loads(platform_lock)['package']},
+                         {'app', 'release', 'extra-api'})
+
     def test_target_platforms_replay_independent_registry_features_in_one_lock(self):
         self.registry_fixture()
         self.registry_release(

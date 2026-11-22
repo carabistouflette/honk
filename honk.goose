@@ -52,7 +52,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
     let spec = [argparse::flag("isolated"), argparse::option("dependency"), argparse::flag("dry-run"), argparse::option("precise"), argparse::option("format-version"), argparse::option("invert"), argparse::option("target-os"), argparse::option("target-arch"), argparse::option("cc"), argparse::option("runner"), argparse::flag("tests"), argparse::flag("no-default-features"), argparse::option("features"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("registry"), argparse::option("url"), argparse::option("repo"), argparse::option("index-repo"), argparse::option("index-fork"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("registry"), argparse::option("url"), argparse::option("schema"), argparse::option("repo"), argparse::option("index-repo"), argparse::option("index-fork"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -117,7 +117,8 @@ fn cli_main() {
 fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filter: build::TargetFilter&) {
     var p = manifest::Project { .. };
     let root = select_root(options);
-    manifest::load(root, p, options.has("isolated"));
+    let schema_two = cmd == "publish" && options.get("schema") == "2";
+    manifest::load(root, p, options.has("isolated") || schema_two);
     platform::require(options.positionals.len == 0 || cmd == "add" || cmd == "remove", "unexpected positional argument (program arguments follow --)");
     if options.has("isolated") {
         for entry in options.entries {
@@ -143,8 +144,8 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filt
     }
     let cache = toolchain::home(); let cache_lock = platform::lock(str(cache, "/lock")); platform::require(cache_lock >= 0, "Honk cache is locked by another process");
     if options.has("package") {
-        let selected = selected_member(p, options.get("package"));
-        var child = manifest::Project { .. }; manifest::load(selected, child);
+        let selected = selected_member(p, options.get("package"), schema_two);
+        var child = manifest::Project { .. }; manifest::load(selected, child, schema_two);
         commands::execute(child, cmd, options, program_args, cache, filter);
         platform::require(diagnostics::write(diagnostics::Event.ItemCompleted), "diagnostic log failed");
     } else if options.has("workspace") || p.name.len == 0 {
@@ -224,6 +225,8 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         platform::require(mode == "text" || mode == "json", "--diagnostics must be text or json");
     }
     if cmd == "publish" {
+        let schema = options.get("schema", "1");
+        platform::require(schema == "1" || (schema == "2" && options.has("dry-run")), "publish schema must be 1, or 2 with --dry-run");
         if options.has("dry-run") {
             platform::require(options.has("url") && !options.has("repo") && !options.has("index-repo") && !options.has("index-fork"),
                 "publish --dry-run requires --url HTTPS_URL");
@@ -236,10 +239,10 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
     for entry in options.entries {
         let name = entry.name; var allowed = false;
         if cmd == "publish" {
-            allowed = name == "dry-run" || name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" || name == "registry" || name == "package" ||
+            allowed = name == "dry-run" || name == "schema" || name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" || name == "registry" || name == "package" ||
                 name == "manifest-path" || name == "log-file" || name == "offline" || name == "locked" || name == "frozen";
         }
-        else if name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" { allowed = false; }
+        else if name == "schema" || name == "url" || name == "repo" || name == "index-repo" || name == "index-fork" { allowed = false; }
         else if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
         else if name == "features" || name == "no-default-features" { allowed = options.has("isolated") && !watching; }
         else if name == "dry-run" { allowed = !watching && cmd == "update" && options.has("isolated"); }

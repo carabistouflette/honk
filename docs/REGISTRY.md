@@ -73,6 +73,15 @@ mode. It writes the verified archive to `target/package/<name>-<version>.tar.gz`
 and prints a schema-1 index document with one release and the archive SHA-256.
 The archive path and compiler messages go to stderr.
 
+For an experimental schema-2 index, use `publish --dry-run --schema 2` and
+select the staging index with `--registry`. This emits feature groups,
+dependency feature requests, optional dependencies and target OS and
+architecture qualifiers. Honk checks the exported package under the default
+features for the host using a qualified graph compiler specified by `GOOSE`
+and a current isolated lock from `honk fetch --isolated`. Loopback HTTP
+indexes are accepted for local schema-2 fixtures. The archive URL uses HTTPS.
+GitHub publication currently uses schema 1.
+
 ## Publish through GitHub
 
 ```sh
