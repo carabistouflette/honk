@@ -53,11 +53,30 @@ Corrupt/incomplete source entries fail closed; remove their digest directory and
 `.ready` file under `HONK_HOME/nest/packages/`, then fetch again. The SHA-256-pinned
 blob is retained. Do not edit cached dependency sources; use a path dependency.
 
-Publication is currently a reviewed index PR plus a GitHub release asset, with
-`honk package` or Nest's deterministic offline authoring tool. There is no hosted
-publish API or `honk publish` command yet. No compile-time or universal Cargo
-performance guarantee is made; the Nest repository contains reproducible scoped
-fetch benchmarks.
+## Prepare a registry release
+
+```sh
+honk publish --dry-run \
+  --url https://github.com/OWNER/REPO/releases/download/v1.0.0/example-1.0.0.tar.gz \
+  > release.toml
+```
+
+Run this from a Git-tracked library with a current `Honk.lock`, tracked
+`Honk.toml` and `LICENSE`, and a local compiler and dependency cache. Use
+`-p NAME` to select a workspace member. The manifest needs explicit
+`package.version` and `package.entry`. Production dependencies must use the
+selected index. `--registry HTTPS_INDEX_URL` selects an index other than Nest.
+
+Honk builds a deterministic archive, checks it with Nest's archive reader,
+and typechecks the extracted library with the pinned compiler in offline
+mode. It writes the verified archive to `target/package/<name>-<version>.tar.gz`
+and prints a schema-1 index document with one release and the archive SHA-256.
+The archive path and compiler messages go to stderr.
+
+Upload the exact archive as a GitHub release asset, then submit the release
+entry in a reviewed index PR. Merge the new release with any existing entries
+for the package. Nest's authoring tool can perform that local merge and update
+the search catalog. See the [Nest publication workflow](https://github.com/carabistouflette/goose-nest#publish-a-package).
 
 ## Isolated multi-version graphs
 

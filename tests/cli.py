@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Black-box regressions: real files, real executable, no shell interpolation."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -318,6 +319,50 @@ class CLI(unittest.TestCase):
         self.git(directory, 'init', '-q')
         self.git(directory, 'config', 'user.name', 'Honk Tests')
         self.git(directory, 'config', 'user.email', 'tests@example.invalid')
+    def test_publish_dry_run_verifies_archive_and_emits_index_entry(self):
+        p = self.new('release', '--lib')
+        url = 'https://example.invalid/releases/release-0.1.0.tar.gz'
+        self.run_honk('publish', '--url', url, cwd=p, ok=False)
+        missing = self.run_honk('publish', '--dry-run', '--url', url, cwd=p, ok=False)
+        self.assertIn('Honk.lock is missing or out of date', missing.stderr)
+        self.assertFalse((p/'Honk.lock').exists())
+        self.run_honk('fetch', cwd=p)
+        self.git_project(p)
+        (p/'LICENSE').write_text('Fixture license\n')
+        (p/'local-only.txt').write_text('untracked data')
+        self.git(p, 'add', 'Honk.toml', 'Honk.lock', 'LICENSE', 'src')
+        lock = (p/'Honk.lock').read_bytes()
+        for invalid_url in ('http://example.invalid/archive', 'https:///archive',
+                            'https://user@example.invalid/archive', url + '#fragment'):
+            with self.subTest(url=invalid_url):
+                result = self.run_honk('publish', '--dry-run', '--url', invalid_url, cwd=p, ok=False)
+                self.assertIn('HTTPS archive URL', result.stderr)
+        self.run_honk('package', '--frozen', cwd=p)
+        archive = p/'target/package/release-0.1.0.tar.gz'
+        original = archive.read_bytes()
+        previous_umask = os.umask(0)
+        try:
+            result = self.run_honk('publish', '--dry-run', '--url', url, cwd=p)
+        finally:
+            os.umask(previous_umask)
+        index = tomllib.loads(result.stdout)
+        self.assertEqual(index, {'schema': 1, 'package': 'release', 'releases': [{
+            'version': '0.1.0', 'url': url, 'sha256': hashlib.sha256(original).hexdigest(),
+            'entry': 'src/lib.goose', 'yanked': False, 'dependencies': [],
+        }]})
+        self.assertEqual(archive.read_bytes(), original)
+        with tarfile.open(archive) as entries:
+            self.assertNotIn('release-0.1.0/local-only.txt', entries.getnames())
+
+        oversized = p/'oversized.txt'
+        oversized.write_bytes(b'a' * (1024 * 1024 + 1))
+        self.git(p, 'add', oversized.name)
+        failure = self.run_honk('publish', '--dry-run', '--url', url, cwd=p, ok=False)
+        self.assertIn('archive rejected', failure.stderr)
+        self.assertEqual(failure.stdout, '')
+        self.assertEqual(archive.read_bytes(), original)
+        self.assertEqual((p/'Honk.lock').read_bytes(), lock)
+
     def test_package_and_install(self):
         p = self.new()
         self.run_honk('fetch', cwd=p)
