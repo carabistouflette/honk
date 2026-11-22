@@ -11,6 +11,34 @@ struct Edge { request: i64, target: i64 }
 struct Activation { record: i64, index: i64 }
 root struct State { refresh: u8[] = [], precise: u8[] = [], conflict: bool = false, target_os: u8[] = [], target_arch: u8[] = [], selected: i64[>..], pending: i64[>..], requests: Request[>..], edges: Edge[>..], pins: Pin[>..], features: Activation[>..], optional_edges: Activation[>..], error: u8[>..], decisions: i64 = 0, work: i64 = 0 }
 struct Frame { candidates: i64[512], count: i64, next: i64 = 0, cursor: i64, pending: i64, selected: i64, edges: i64, features: i64, optional_edges: i64 }
+struct CatalogSlot { record: const nest::Record&, group: i64, next: i64 = -1 }
+struct PackageRecords { registry: const u8[:], package: const u8[:], first: i64, last: i64 }
+root struct CatalogIndex { slots: CatalogSlot[>..], packages: PackageRecords[>..] }
+
+fn package_group(index: const CatalogIndex&, registry: const u8[:], package: const u8[:]) -> i64 {
+    for entry, i in index.packages {
+        if entry.package == package && entry.registry == registry { return i; }
+    }
+    return -1;
+}
+fn extend_index(index: CatalogIndex&, catalog: const nest::Resolver&) {
+    let indexed = index.slots.len;
+    if indexed == catalog.records.len { return; }
+    // A solve only appends to the catalog. Its grow-only storage keeps old references valid.
+    for record, id in catalog.records {
+        if id < indexed { continue; }
+        var group = package_group(index, record.registry, record.package);
+        if group < 0 {
+            group = index.packages.len;
+            index.packages.push(PackageRecords { registry: record.registry, package: record.package, first: id, last: id });
+        } else {
+            index.slots[index.packages[group].last].next = id;
+            index.packages[group].last = id;
+        }
+        index.slots.push(CatalogSlot { record: record, group: group, .. });
+    }
+}
+
 struct Candidate { id: i64, rank: i64, version: semver::Version }
 
 fn candidate_before(a: Candidate&, b: Candidate&) -> bool {
@@ -40,12 +68,12 @@ fn compatible(a: u8[:], b: u8[:]) -> bool {
     if x.minor != y.minor { return false; }
     return x.minor != "0" || x.patch == y.patch;
 }
-fn allowed(s: State&, catalog: nest::Resolver&, id: i64) -> bool {
-    let candidate = nest::record_at(catalog, id);
+fn allowed(s: State&, index: const CatalogIndex&, id: i64) -> bool {
+    let candidate = index.slots[id];
     for selected in s.selected {
         if !spend(s) { return false; }
-        let record = nest::record_at(catalog, selected);
-        if id != selected && record.registry == candidate.registry && record.package == candidate.package && compatible(record.version, candidate.version) { return false; }
+        let current = index.slots[selected];
+        if id != selected && current.group == candidate.group && compatible(current.record.version, candidate.record.version) { return false; }
     }
     return true;
 }
@@ -160,11 +188,11 @@ fn activate(s: State&, record: const nest::Record&, id: i64, request: Request&, 
     }
     return true;
 }
-fn choose(s: State&, catalog: nest::Resolver&, request_id: i64, id: i64) -> bool {
+fn choose(s: State&, index: const CatalogIndex&, request_id: i64, id: i64) -> bool {
     s.decisions++; if s.decisions > nest::MAX_DECISIONS { s.error = str("scoped registry resolution exceeded 100000 decisions"); return false; }
     s.edges.push(Edge { request: request_id, target: id });
     let fresh = !reused(s, id);
-    let record = nest::record_at(catalog, id); let owner = key(record);
+    let record = index.slots[id].record; let owner = key(record);
     if fresh {
         if s.selected.len >= 256 { s.error = str("registry graph exceeds 256 instances"); return false; }
         s.selected.push(id);
@@ -178,13 +206,13 @@ fn choose(s: State&, catalog: nest::Resolver&, request_id: i64, id: i64) -> bool
     var request = copy(incoming);
     return activate(s, record, id, request, owner, fresh);
 }
-fn acyclic(s: State&, catalog: nest::Resolver&) -> bool {
+fn acyclic(s: State&, index: const CatalogIndex&) -> bool {
     // Record IDs index the catalog, while task edges use dense selected IDs.
-    var positions: i64[>..]  = []; positions.resize(catalog.records.len, -1);
+    var positions: i64[>..]  = []; positions.resize(index.slots.len, -1);
     var owners:    u8[][>..] = [];
     for id, i in s.selected {
         positions[id] = i;
-        owners.push(key(nest::record_at(catalog, id)));
+        owners.push(key(index.slots[id].record));
     }
     var edges: task::Edge[>..] = [];
     for edge in s.edges {
@@ -273,15 +301,16 @@ fn load_catalog(s: State&, catalog: nest::Resolver&, batch: nest::IndexBatch&, r
 fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins: bool, update: bool, strict_refresh: bool = false) -> bool {
     s.selected.clear(); s.pending.clear(); s.requests.clear(); s.edges.clear(); s.features.clear(); s.optional_edges.clear(); s.error.clear(); s.conflict = false;
     for root in roots { var request = copy(root); if !enqueue(s, request) { return false; } }
+    var index = CatalogIndex { .. }; extend_index(index, catalog);
     var indexes = nest::IndexBatch { .. };
     var frames: Frame[>..] = []; var cursor = 0; var conflict = false; var detail = str("constraints or cycle");
     loop {
-        if !conflict && cursor == s.pending.len { if acyclic(s, catalog) { return true; } if s.error.len > 0 { return false; } detail = str("dependency cycle"); conflict = true; }
+        if !conflict && cursor == s.pending.len { if acyclic(s, index) { return true; } if s.error.len > 0 { return false; } detail = str("dependency cycle"); conflict = true; }
         if !conflict {
             let request_id = s.pending[cursor]; var request = copy(request_at(s, request_id)); cursor++;
             if request.forwarded.len > 0 {
                 let id = forwarded_target(s, request); if id < 0 { return false; }
-                let record = nest::record_at(catalog, id);
+                let record = index.slots[id].record;
                 if feature_index(record, request.forwarded) >= 0 {
                     if !activate(s, record, id, request, key(record), false) { return false; }
                     continue;
@@ -290,6 +319,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                 conflict = true;
             } else {
                 if !only_pins && !load_catalog(s, catalog, indexes, request, cursor) { s.error = str(catalog.error); return false; }
+                extend_index(index, catalog);
                 let exact = s.precise.len > 0 && request.package == s.refresh;
                 let floor, require_newer = refresh_floor(s, catalog, request, strict_refresh);
                 if s.error.len > 0 { return false; }
@@ -297,11 +327,19 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                 let requirement, requirement_error = semver::parse_requirement(request.requirement);
                 var candidates: Candidate[>..] = [];
                 var missing:    u8[>..]        = [];
-                for record, i in catalog.records {
-                    if !spend(s) { return false; }
-                    if record.registry != request.registry || record.package != request.package || requirement_error.kind != semver::ErrorKind.None { continue; }
+                let group = package_group(index, request.registry, request.package);
+                var next = if group >= 0 { index.packages[group].first } else { -1 };
+                var scanned = 0;
+                while next >= 0 {
+                    let i = next;
+                    let record = index.slots[i].record;
+                    next = index.slots[i].next;
+                    // Charge skipped IDs at the same point as a full catalog scan.
+                    if !spend(s, i - scanned + 1) { return false; }
+                    scanned = i + 1;
+                    if requirement_error.kind != semver::ErrorKind.None { continue; }
                     let version, version_error = semver::parse(record.version);
-                    if version_error.kind != semver::ErrorKind.None || !semver::matches(requirement, version) || !allowed(s, catalog, i) { continue; }
+                    if version_error.kind != semver::ErrorKind.None || !semver::matches(requirement, version) || !allowed(s, index, i) { continue; }
                     let pin = !update && preferred(s, record, request); if s.error.len > 0 { return false; }
                     if (only_pins && !pin) || (record.yanked && !pin) { continue; }
                     if !only_pins {
@@ -322,10 +360,10 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                     let rank = (if reused(s, i) { 2 } else { 0 }) + (if pin { 1 } else { 0 });
                     candidates.push(Candidate { id: i, rank: rank, version: copy(version) });
                 }
-                if s.error.len > 0 { return false; }
+                if s.error.len > 0 || !spend(s, index.slots.len - scanned) { return false; }
                 if candidates.len == 0 { detail = str(request.package, " ", request.requirement, " requested by ", request.owner, " -> ", request.alias); if exact { detail.append(str(" (--precise ", s.precise, ")")); } if missing.len > 0 { detail.append(str(" (unknown feature ", missing, ")")); } }
                 if candidates.len == 1 {
-                    for candidate in candidates { if !choose(s, catalog, request_id, candidate.id) { return false; } }
+                    for candidate in candidates { if !choose(s, index, request_id, candidate.id) { return false; } }
                     continue;
                 }
                 if candidates.len > 1 {
@@ -347,7 +385,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
             s.features.resize(frame.features); s.optional_edges.resize(frame.optional_edges);
             if frame.next == frame.count { frames.pop(); continue; }
             let id = frame.candidates[frame.next]; frames[frames.len - 1].next++;
-            if !choose(s, catalog, s.pending[cursor - 1], id) { return false; } conflict = false;
+            if !choose(s, index, s.pending[cursor - 1], id) { return false; } conflict = false;
         }
     }
 }
