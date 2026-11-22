@@ -2,11 +2,57 @@
 namespace distribution;
 import std;
 import os;
+import nest;
+import semver;
+import toml;
 import .platform;
 import .manifest;
 import .deps;
 import .build;
-fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
+import .build_cache;
+import .source;
+fn https_url(url: const u8[:]) -> bool {
+    return nest::url(url) && starts_with(url, "https://") && url.len > 8 &&
+        url[8] != '/' && url[8] != '?' && url[8] != ':';
+}
+fn validate_publication(p: manifest::Project&, registry: u8[:], url: u8[:]) {
+    platform::require(https_url(registry) && nest::registry_url(registry), "publish requires an HTTPS registry index URL");
+    platform::require(https_url(url), "publish requires an HTTPS archive URL without credentials or fragments");
+    platform::require(p.kind == "lib" && nest::package_name(p.name), "publish requires a library with a valid registry package name");
+    let version, error = semver::parse(p.version);
+    platform::require(error.kind == semver::ErrorKind.None && version.build.len == 0, "publish requires SemVer without build metadata");
+    for dep in p.dependencies {
+        if dep.dev { continue; }
+        platform::require(dep.registry == registry, "published production dependencies must come from the selected registry index");
+    }
+}
+fn release_entry(p: manifest::Project&, registry: u8[:], url: u8[:], sha: u8[:]) -> u8[>..] {
+    validate_publication(p, registry, url);
+    var doc = toml::Document { .. };
+    let error = toml::parse_into(platform::load(str(p.root, "/Honk.toml")), doc);
+    platform::require(error.len == 0, error);
+    let package = toml::find(doc, 0, "package");
+    platform::require(package >= 0 && toml::find(doc, package, "version") >= 0 && toml::find(doc, package, "entry") >= 0,
+        "publish requires explicit package.version and package.entry");
+    platform::require(platform::kind(str(p.root, "/LICENSE")) == 1, "track LICENSE before publishing");
+    var paths: u8[][>..] = []; build::files(p.root, "", paths);
+    for path in paths {
+        let text = platform::load(str(p.root, "/", path));
+        platform::require(source::requirements(text).len == 0, "registry packages must declare dependencies in Honk.toml, without sourced imports");
+    }
+    var deps: nest::Dependency[>..] = [];
+    for dep in p.dependencies {
+        if !dep.dev { deps.push(nest::Dependency { alias: str(dep.name), package: str(dep.package), requirement: str(dep.requirement), .. }); }
+    }
+    let record = nest::Record { package: str(p.name), version: str(p.version), registry: str(registry), url: str(url), sha256: str(sha), entry: str(p.entry), dependencies: copy(deps), .. };
+    platform::require(nest::valid(record), "archive manifest cannot be represented in the registry index");
+    var text = str("schema = 1\npackage = ");
+    nest::quoted(text, record.package);
+    text.append("\n\n[[releases]]\n");
+    text.append(nest::record_text(record));
+    return text;
+}
+fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], url: u8[:] = "", registry: u8[:] = "") {
     // Path dependencies cannot be reproduced by recipients of a source archive.
     for n in g.nodes {
         let inside = n.directory.len > p.root.len && n.directory[..p.root.len] == p.root && n.directory[p.root.len] == '/';
@@ -44,14 +90,43 @@ fn package(p: manifest::Project&, g: deps::Graph&, compiler: u8[:]) {
     let archive = str(output, "/", label, ".tar.gz"); let temp = str(stage, "/archive.tar.gz");
     platform::run(["tar", "--create", "--gzip", "--file", temp, "--directory", stage, "--format=gnu", "--sort=name", "--mtime=@0", "--owner=0", "--group=0", "--numeric-owner", "--null", "--verbatim-files-from", "--no-recursion", "--files-from", list], p.root);
     // Verify the exact exported files, rather than accidentally depending on untracked local files.
-    let verify = str(stage, "/verify"); platform::require(platform::mkdir(verify), "cannot create package verification directory");
-    platform::run(["tar", "--extract", "--gzip", "--file", temp, "--directory", verify, "--no-same-owner", "--no-same-permissions"], p.root);
-    var exported = manifest::Project { .. }; manifest::load(str(verify, "/", label), exported);
+    var staged_archive = str(temp);
+    var source_root: u8[>..] = [];
+    var sha:         u8[>..] = [];
+    if url.len > 0 {
+        let digest, _ = build_cache::digest(temp, 16777216);
+        sha = str(digest);
+        platform::require(sha.len == 64, "cannot hash registry archive (limit 16 MiB)");
+        let cache = str(stage, "/registry/packages");
+        platform::require(platform::mkdir(cache), "cannot create package verification directory");
+        staged_archive = str(cache, "/", sha, ".tar.gz");
+        platform::require(platform::cache_seal(temp), "cannot secure registry archive for verification");
+        platform::require(rename_file(temp, staged_archive), "cannot stage registry archive for verification");
+        platform::require(nest::native_materialize(url, sha, label, cache, true), nest::last_error());
+        source_root = str(cache, "/", sha);
+    } else {
+        let verify = str(stage, "/verify");
+        platform::require(platform::mkdir(verify), "cannot create package verification directory");
+        platform::run(["tar", "--extract", "--gzip", "--file", temp, "--directory", verify, "--no-same-owner", "--no-same-permissions"], p.root);
+        source_root = str(verify, "/", label);
+    }
+    var exported = manifest::Project { .. }; manifest::load(source_root, exported);
+    var metadata: u8[>..] = [];
+    if url.len > 0 {
+        platform::require(exported.name == p.name && exported.version == p.version && exported.revision == p.revision,
+            "archive package identity or compiler pin differs from the selected manifest");
+        metadata = release_entry(exported, registry, url, sha);
+    }
     var resolved = deps::Graph { cache: str(g.cache), locked: true, offline: true, .. }; deps::resolve(exported, resolved);
     let no_args: u8[:][0] = [];
     let filter = build::TargetFilter { .. };
-    build::compile(exported, resolved, compiler, "check", false, no_args, false, filter);
-    platform::require(rename_file(temp, archive), "cannot commit package archive"); platform::require(platform::remove_tree(stage), "cannot clear packaged sources"); print(archive);
+    build::compile(exported, resolved, compiler, "check", false, no_args, false, filter, "never", 0, 30000, "text", url.len > 0);
+    platform::require(rename_file(staged_archive, archive), "cannot commit package archive");
+    platform::require(platform::remove_tree(stage), "cannot clear packaged sources");
+    if metadata.len > 0 {
+        write_stderr(str("honk: prepared ", archive, "\n"));
+        write_stdout(metadata);
+    } else { print(archive); }
 }
 fn install(p: manifest::Project&, release: bool, destination: u8[:], force: bool) {
     platform::require(p.kind == "bin", "install requires a binary package");

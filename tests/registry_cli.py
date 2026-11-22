@@ -167,6 +167,29 @@ class Client(unittest.TestCase):
     def registry_dependency(self, requirement='^1.0.0', package='goose-answer', alias='answer'):
         return f'{alias} = {{package={q(package)}, version={q(requirement)}, registry={q(self.registry.url + "/index")} }}\n'
 
+    def test_publish_dry_run_uses_locked_registry_dependency_offline(self):
+        self.registry.package('goose-answer', payload=b'namespace answer; fn value() -> i64 { 42 }')
+        lib = self.local_library('publisher', self.registry_dependency())
+        self.call('fetch', project=lib)
+        # Reuse the content-addressed cached archive with an HTTPS index coordinate.
+        registry = 'https://example.invalid/index'
+        for name in ('Honk.toml', 'Honk.lock'):
+            path = lib / name
+            path.write_text(path.read_text().replace(self.registry.url + '/index', registry))
+        lock = (lib / 'Honk.lock').read_bytes()
+        (lib / 'LICENSE').write_text('Fixture license\n')
+        subprocess.run(['git', '-C', str(lib), 'init', '-q'], check=True)
+        subprocess.run(['git', '-C', str(lib), 'add', 'Honk.toml', 'Honk.lock', 'LICENSE', 'lib.goose'], check=True)
+        args = ('publish', '--dry-run', '--url', 'https://example.invalid/releases/publisher.tar.gz')
+        before = list(self.registry.requests)
+        cross = self.call(*args, project=lib, ok=False)
+        self.assertIn('selected registry index', cross.stderr)
+        result = self.call(*args, '--registry', registry, project=lib)
+        entry, = tomllib.loads(result.stdout)['releases']
+        self.assertEqual(entry['dependencies'], [{'alias': 'answer', 'package': 'goose-answer', 'version': '^1.0.0'}])
+        self.assertEqual(self.registry.requests, before)
+        self.assertEqual((lib / 'Honk.lock').read_bytes(), lock)
+
     def test_path_transitives_resolve_without_root_redeclarations(self):
         self.registry.package('goose-helper', payload=b'namespace helper; fn value() -> i64 { 42 }')
         self.registry.package('goose-answer', deps=[('helper', 'goose-helper', '^1.0.0')],

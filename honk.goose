@@ -33,7 +33,7 @@ import .src.tag_catalog;
 import std;
 import os;
 fn usage() {
-    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package install uninstall doc toolchain watch search info version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nExperimental scoped local packages: build/run/check/test --isolated (docs/ISOLATED-GRAPHS.md).\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
+    print("honk 0.5.0-rc.1 — Goose project manager\n\nUsage: honk <command> [options]\n\nCommands: new init metadata build run check test bench fmt fetch update add remove\n          tree clean package publish install uninstall doc toolchain watch search info version help\n\nUse honk help for project conventions. --help prints this message.\nOptional status: --progress auto|always|never (default never) for build/run/check/test/bench/install.\nExperimental scoped local packages: build/run/check/test --isolated (docs/ISOLATED-GRAPHS.md).\nCompiler diagnostics: honk check --diagnostics text|json (single-package JSON).\nParallel tests: honk test --jobs 1..8 [--test-timeout-ms N] (bounded captured output, null stdin).\nWatch: honk watch check|test --watch-dir ABS_DIR [--watch-dir ABS_DIR ...] [--watch-runs N] [--watch-debounce-ms 0..1000] [--watch-recursive] [--watch-ignore PATTERN ...].");
 }
 var logging_started_ns: i64 = 0;
 var logging_requested = false;
@@ -52,7 +52,7 @@ fn cli_main() {
     let cmd = argv[1];
     if cmd == "version" || cmd == "--version" { print("honk 0.5.0-rc.1"); return; }
     let spec = [argparse::flag("isolated"), argparse::option("dependency"), argparse::flag("dry-run"), argparse::option("precise"), argparse::option("format-version"), argparse::option("invert"), argparse::option("target-os"), argparse::option("target-arch"), argparse::option("cc"), argparse::option("runner"), argparse::flag("tests"), argparse::flag("no-default-features"), argparse::option("features"), argparse::flag("watch-recursive"), argparse::flag("reuse-build"), argparse::flag("metadata"), argparse::flag("force"), argparse::flag("help", 'h'), argparse::flag("lib"), argparse::flag("release"), argparse::flag("locked"), argparse::flag("offline"), argparse::flag("frozen"), argparse::flag("workspace"), argparse::flag("check"), argparse::flag("dev"),
-                argparse::option("registry"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
+                argparse::option("registry"), argparse::option("url"), argparse::option("as"), argparse::option("diagnostics"), argparse::option("jobs"), argparse::option("test-timeout-ms"), argparse::option("watch-dir"), argparse::option("watch-ignore"), argparse::option("watch-runs"), argparse::option("watch-debounce-ms"), argparse::option("progress"), argparse::option("filter"), argparse::option("log-file"), argparse::option("name"), argparse::option("path"), argparse::option("git"), argparse::option("rev"), argparse::option("version"), argparse::option("manifest-path"), argparse::option("package", 'p'), argparse::option("bin"), argparse::option("root")];
     var separator = argv.len;
     for a, i in argv { if i >= 2 && a == "--" { separator = i; break; } }
     let options = argparse::parse(spec, argv[2..separator]);
@@ -133,9 +133,10 @@ fn dispatch(cmd: u8[:], options: argparse::Result&, program_args: u8[:][:], filt
         platform::require((features.len == 0 && !options.has("no-default-features")) || selected.len > 0, "select one package with -p to override workspace features");
         isolated::execute(p, selected, features, options.has("no-default-features"), cmd, program_args, options.has("release"), options.has("locked") || options.has("frozen"), options.has("offline") || options.has("frozen"), options.has("tests"), options.get("target-os"), options.get("target-arch"), options.get("cc"), options.get("runner"), options.get("invert"), options.get("dependency"), options.get("precise"), options.has("dry-run")); return;
     }
+    if cmd == "publish" { platform::require(p.name.len > 0 || options.has("package"), "publish requires one library; select a workspace member with -p"); }
     if cmd == "metadata" { emit_metadata(p, options); return; }
     var known = false;
-    for name in ["build", "run", "check", "test", "bench", "fmt", "fetch", "update", "tree", "clean", "add", "remove", "toolchain", "package", "install", "doc"] { if cmd == name { known = true; } }
+    for name in ["build", "run", "check", "test", "bench", "fmt", "fetch", "update", "tree", "clean", "add", "remove", "toolchain", "package", "publish", "install", "doc"] { if cmd == name { known = true; } }
     platform::require(known, str("unknown command: ", cmd));
     if options.get("diagnostics", "text") == "json" {
         platform::require(options.has("package") || (!options.has("workspace") && p.name.len > 0), "JSON diagnostics require a single package; select a workspace member with -p");
@@ -222,9 +223,17 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
         let mode = options.get("diagnostics");
         platform::require(mode == "text" || mode == "json", "--diagnostics must be text or json");
     }
+    if cmd == "publish" {
+        platform::require(options.has("dry-run") && options.has("url"), "publish requires --dry-run --url HTTPS_URL");
+    }
     for entry in options.entries {
         let name = entry.name; var allowed = false;
-        if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
+        if cmd == "publish" {
+            allowed = name == "dry-run" || name == "url" || name == "registry" || name == "package" ||
+                name == "manifest-path" || name == "log-file" || name == "offline" || name == "locked" || name == "frozen";
+        }
+        else if name == "url" { allowed = false; }
+        else if name == "watch-ignore" || name == "watch-recursive" || name == "watch-dir" || name == "watch-runs" || name == "watch-debounce-ms" { allowed = watching; }
         else if name == "features" || name == "no-default-features" { allowed = options.has("isolated") && !watching; }
         else if name == "dry-run" { allowed = !watching && cmd == "update" && options.has("isolated"); }
         else if name == "dependency" {

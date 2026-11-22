@@ -104,7 +104,8 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         else { print(if cmd == "add" { "Added " } else { "Removed " }, name, "; run honk fetch to update Honk.lock"); }
         platform::unlock(lock); return;
     }
-    let offline = options.has("offline") || options.has("frozen");
+    let publishing = cmd == "publish";
+    let offline = publishing || options.has("offline") || options.has("frozen");
     if cmd == "toolchain" {
         let binary = toolchain::compiler(p, cache, offline); let argv: const u8[:][] = [binary, "version"];
         let text, status = platform::command(argv, p.root, true); write_stdout(text); if status != 0 { platform::child_exit(status); }
@@ -133,7 +134,10 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         }
         platform::unlock(lock); return;
     }
-    var graph = deps::Graph { cache: str(cache), locked: options.has("locked") || options.has("frozen"), offline: offline, update: cmd == "update", .. };
+    if publishing {
+        distribution::validate_publication(p, options.get("registry", nest::DEFAULT_REGISTRY), options.get("url"));
+    }
+    var graph = deps::Graph { cache: str(cache), locked: publishing || options.has("locked") || options.has("frozen"), offline: offline, update: cmd == "update", .. };
     platform::require(!(graph.update && graph.locked), "update cannot be combined with --locked or --frozen"); deps::resolve(p, graph);
     if cmd == "fetch" || cmd == "update" { print("Resolved ", graph.nodes.len, " dependencies"); platform::unlock(lock); return; }
     if cmd == "tree" {
@@ -146,8 +150,8 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
         let name = options.get("bin"); platform::require(manifest::package_name(name), "invalid binary target name");
         p.entry = str("src/bin/", name, ".goose"); p.name = str(name); p.kind = str("bin");
     }
-    if cmd == "package" {
-        distribution::package(p, graph, compiler);
+    if cmd == "package" || publishing {
+        distribution::package(p, graph, compiler, options.get("url"), options.get("registry", nest::DEFAULT_REGISTRY));
     } else {
         let release = options.has("release") || cmd == "install";
         let jobs, jobs_valid = parse_int(options.get("jobs", "0"));

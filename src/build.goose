@@ -149,7 +149,7 @@ fn binary(compiler: u8[:], entry: u8[:], stage: u8[:], output: u8[:], release: b
     }
     print("built ", output); presentation::summary(display, "Build complete");
 }
-fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool, filter: TargetFilter&, progress_policy: const u8[:] = "never", jobs: i64 = 0, test_timeout_ms: i64 = 30000, diagnostic_format: const u8[:] = "text") {
+fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], release: bool, args: u8[:][:], reuse: bool, filter: TargetFilter&, progress_policy: const u8[:] = "never", jobs: i64 = 0, test_timeout_ms: i64 = 30000, diagnostic_format: const u8[:] = "text", check_to_stderr: bool = false) {
     var display = presentation::Output { mode: presentation::mode(progress_policy), .. };
     deps::activate(g, cmd == "test" || cmd == "bench");
     let stage = prepare(p, g); let profile = if release { "release" } else { "debug" };
@@ -197,7 +197,12 @@ fn compile(p: manifest::Project&, g: deps::Graph&, compiler: u8[:], cmd: u8[:], 
         if diagnostic_format == "json" {
             let argv: const u8[:][] = [compiler, "check", entry, "--offline", "--diagnostics", "json"]; platform::run(argv, p.root);
         } else {
-            let argv: const u8[:][] = [compiler, "check", entry, "--offline"]; platform::run(argv, p.root);
+            let argv: const u8[:][] = [compiler, "check", entry, "--offline"];
+            if check_to_stderr {
+                let message, status = platform::command(argv, p.root, true);
+                write_stderr(message);
+                if status != 0 { platform::child_exit(status); }
+            } else { platform::run(argv, p.root); }
         }
         platform::require(cmd != "run", "run requires a binary package"); presentation::summary(display, "Check complete"); return;
     }
