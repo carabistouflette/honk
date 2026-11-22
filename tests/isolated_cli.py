@@ -441,6 +441,10 @@ class Isolated(unittest.TestCase):
         self.registry.index(name, self.registry_versions[name])
         return record
 
+    def index_only_record(self, version='1.0.0', dependencies=()):
+        return {'version': version, 'url': self.registry.url + '/unused.tar.gz',
+                'sha256': '1' * 64, 'entry': 'lib.goose', 'dependencies': dependencies}
+
     def registry_dependency(self, folder, alias, package, requirement, features=()):
         with (self.root / folder / 'Honk.toml').open('a') as f:
             selection = f', features = {json.dumps(list(features))}' if features else ''
@@ -843,6 +847,82 @@ class Isolated(unittest.TestCase):
         self.run_honk('fetch', ok=False, extra=('--frozen',))
         self.assertEqual(self.registry.requests, before)
         self.assertEqual(lock.read_bytes(), original)
+
+    def test_registry_backtracks_across_many_releases_with_git_and_path(self):
+        self.git_fixture()
+        self.registry_fixture()
+        for release in ('1.0.0', '1.1.0'):
+            self.registry_release('shared', release)
+        for minor in range(48):
+            requirement = '=1.0.0' if minor == 0 else '=1.1.0'
+            self.registry_release('adapter', f'1.{minor}.0', [('shared', 'shared', requirement)])
+        self.package('helper', 'namespace helper; fn value() -> i64 { 3 }')
+        app = self.package('app', 'fn main() {}', {'local_helper': 'helper'})
+        self.registry_dependency('app', 'adapter', 'adapter', '^1.0.0')
+        self.registry_dependency('helper', 'shared', 'shared', '=1.0.0')
+        with (self.remote / 'Honk.toml').open('a') as f:
+            f.write('[dependencies]\nshared = {version="=1.0.0", registry="' + self.registry.url + '/index"}\n')
+        self.git('add', 'Honk.toml')
+        self.git('commit', '-qm', 'pin shared dependency')
+        self.git_dependency('app', 'git_helper', rev=self.git('rev-parse', 'HEAD'))
+
+        self.run_honk('fetch')
+        lock = app / 'Honk.lock'
+        original = lock.read_bytes()
+        versions = {entry['name']: entry['version'] for entry in tomllib.loads(original.decode())['package']}
+        self.assertEqual(versions, {'app': '0.1.0', 'helper': '0.1.0', 'mathx': '2.0.0',
+                                    'adapter': '1.0.0', 'shared': '1.0.0'})
+        archives = [path for path, _ in self.registry.requests if path.endswith('.tar.gz')]
+        self.assertCountEqual(archives, ['/adapter-1.0.0.tar.gz', '/shared-1.0.0.tar.gz'])
+        graph = app / 'target/isolated/graph.json'
+        original_graph = graph.read_bytes()
+        before = list(self.registry.requests), self.network_commands()
+        self.run_honk('fetch', extra=('--frozen',))
+        self.assertEqual((self.registry.requests, self.network_commands()), before)
+        self.assertEqual(lock.read_bytes(), original)
+        self.assertEqual(graph.read_bytes(), original_graph)
+
+    def test_registry_combined_package_limit_at_boundary(self):
+        self.registry_fixture()
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'first', 'node-000', '^1.0.0')
+        for i in range(256):
+            name = f'node-{i:03}'
+            deps = [{'alias': 'child', 'package': f'node-{i + 1:03}', 'version': '^1.0.0'}] if i < 254 else []
+            self.registry.index(name, [self.index_only_record(dependencies=deps)])
+        self.run_honk('update', extra=('--dry-run',))
+        self.assertEqual(len(self.registry.requests), 255)
+        self.assertFalse((app / 'Honk.lock').exists())
+
+        self.registry.index('node-254', [self.index_only_record(dependencies=[
+            {'alias': 'child', 'package': 'node-255', 'version': '^1.0.0'}])])
+        before = len(self.registry.requests)
+        result = self.run_honk('update', ok=False, extra=('--dry-run',))
+        self.assertIn('combined dependency graph limit exceeded', result.stderr)
+        self.assertEqual(len(self.registry.requests) - before, 256)
+        self.assertFalse((app / 'Honk.lock').exists())
+
+    def test_registry_scan_budget_exhaustion_preserves_existing_outputs(self):
+        self.registry_fixture()
+        self.registry_release('anchor', '1.0.0')
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'anchor', 'anchor', '^1.0.0')
+        self.run_honk('fetch')
+        outputs = [app / 'Honk.lock', app / 'target/isolated/graph.json']
+        original = [path.read_bytes() for path in outputs]
+        # The terminal contradiction is reached only after the unrelated choices.
+        for i in range(6):
+            name = f'option-{i}'
+            self.registry.index(name, [self.index_only_record(f'1.{v}.0') for v in range(16)])
+            self.registry_dependency('app', f'option{i}', name, '^1.0.0')
+        self.registry.index('terminal', [self.index_only_record(v) for v in ('1.0.0', '1.1.0')])
+        self.registry_dependency('app', 'term_old', 'terminal', '=1.0.0')
+        self.registry_dependency('app', 'term_new', 'terminal', '=1.1.0')
+        before = len(self.registry.requests)
+        result = self.run_honk('update', ok=False)
+        self.assertIn('registry resolution scan budget exceeded (8000000)', result.stderr)
+        self.assertEqual([path.read_bytes() for path in outputs], original)
+        self.assertFalse(any(path.endswith('.tar.gz') for path, _ in self.registry.requests[before:]))
 
     def test_registry_generated_graphs_against_exhaustive_oracle(self):
         from scoped_registry_oracle import check

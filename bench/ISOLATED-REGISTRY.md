@@ -183,3 +183,34 @@ space during online resolution. Frozen fetch bypasses it. The frozen runs
 made zero registry requests and retained the existing lock.
 [No-delay samples](results/isolated-registry-cargo-index-batch.json)
 [5 ms delay samples](results/isolated-registry-cargo-index-batch-delay-5ms.json)
+
+## Backtracking across many releases
+
+Run the harness with `--backtracking --sizes 48 512` to vary the number of
+compatible adapter releases while keeping the same three registry packages.
+The root requests `adapter` and `pinning`. Each depends on `shared`.
+`pinning` and the oldest adapter require exactly `shared 1.0.0`. All newer
+adapters require exactly `shared 1.1.0`. Only the oldest adapter can produce
+a graph with one release in each compatibility family. The cold fetch
+checks both lockfiles against that graph and downloads exactly three archives.
+The frozen replay checks for a byte-identical lock and zero network requests.
+
+Seven measured rounds with Cargo 1.99.0, empty caches for cold commands and
+no artificial delay gave these medians and ranges in milliseconds. Honk's
+cold-resolution command previews its plan, while Cargo writes its lock.
+
+| Candidates | Workflow | Honk ms | Cargo ms |
+| ---: | --- | ---: | ---: |
+| 48 | Cold resolution | 40.3 [37.2–49.4] | 46.6 [41.3–51.4] |
+| 48 | Cold fetch | 47.0 [38.6–51.3] | 86.7 [82.4–93.8] |
+| 48 | Frozen fetch | 28.0 [25.3–30.1] | 58.9 [53.8–69.8] |
+| 512 | Cold resolution | 1175.6 [1123.3–1366.6] | 51.9 [47.9–59.0] |
+| 512 | Cold fetch | 1170.5 [1137.5–1266.5] | 95.2 [83.1–103.5] |
+| 512 | Frozen fetch | 28.3 [23.9–30.2] | 63.5 [50.7–70.1] |
+
+At 512 candidates, median peak RSS during cold resolution was 23.8 MiB for
+Honk and 38.5 MiB for Cargo. The cold-resolution request totals remained
+three for Honk and four for Cargo at both sizes. The results include HTTP
+transfer and parsing but do not measure each manager's resolver decisions
+or isolate their individual phase costs.
+[Raw samples](results/isolated-registry-cargo-backtracking.json)
