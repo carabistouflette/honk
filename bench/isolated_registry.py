@@ -34,6 +34,17 @@ def graph(size):
     return names, dict(edges, **{APP: names[:2]})
 
 
+def backtracking_graph(candidates):
+    edges = {APP: ['adapter', 'pinning'], 'adapter': ['shared'],
+             'pinning': ['shared'], 'shared': []}
+    releases = {
+        'adapter': {f'1.{i}.0': {'shared': '=1.0.0' if i == 0 else '=1.1.0'} for i in range(candidates)},
+        'pinning': {BASE: {'shared': '=1.0.0'}},
+        'shared': {BASE: {}, UPGRADE: {}},
+    }
+    return edges, releases
+
+
 def write(path, text):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text)
@@ -59,27 +70,26 @@ def goose_manifest(name, version, edges, url, revision=None):
     if revision:
         manifest += f'[toolchain]\nrevision="{revision}"\n'
     manifest += '[dependencies]\n'
-    for dep in edges:
-        manifest += f'{dep} = {{ version = "^1.0.0", registry = "{url}/index" }}\n'
+    for dep, requirement in edges.items():
+        manifest += f'{dep} = {{ version = "{requirement}", registry = "{url}/index" }}\n'
     return manifest
 
 
 def rust_manifest(name, version, edges):
     manifest = f'[package]\nname="{name}"\nversion="{version}"\nedition="2021"\n[dependencies]\n'
-    for dep in edges:
-        manifest += f'{dep} = {{ version = "^1.0.0", registry = "bench" }}\n'
+    for dep, requirement in edges.items():
+        manifest += f'{dep} = {{ version = "{requirement}", registry = "bench" }}\n'
     return manifest
 
 
-def create_releases(server, names, edges, changed):
+def create_releases(server, releases):
     records = {'honk': {}, 'cargo': {}}
     write(server.root / 'cargo-index/config.json', json.dumps({
         'dl': server.url + '/cargo-archives/{crate}-{version}.crate',
     }))
-    for name in names:
+    for name, versions in releases.items():
         records['honk'][name], records['cargo'][name] = [], []
-        for version in ((BASE, UPGRADE) if name in changed else (BASE,)):
-            deps = edges[name]
+        for version, deps in versions.items():
             stem = f'{name}-{version}'
             filename = stem + '.tar.gz'
             digest = archive(server.root / filename, name, version, {
@@ -88,15 +98,15 @@ def create_releases(server, names, edges, changed):
             })
             records['honk'][name].append(dict(version=version, url=server.url + '/' + filename,
                                                sha256=digest, entry='lib.goose', dependencies=[
-                                                   dict(alias=dep, package=dep, version='^1.0.0') for dep in deps]))
+                                                   dict(alias=dep, package=dep, version=req) for dep, req in deps.items()]))
             digest = archive(server.root / 'cargo-archives' / (stem + '.crate'), name, version, {
                 'Cargo.toml': rust_manifest(name, version, deps).encode(),
                 'src/lib.rs': b'pub fn value() -> i64 { 42 }\n',
             })
             records['cargo'][name].append(dict(name=name, vers=version, cksum=digest, features={}, yanked=False,
-                                                deps=[dict(name=dep, req='^1.0.0', features=[], optional=False,
+                                                deps=[dict(name=dep, req=req, features=[], optional=False,
                                                            default_features=True, kind='normal', target=None,
-                                                           registry=None) for dep in deps]))
+                                                           registry=None) for dep, req in deps.items()]))
     return records
 
 
@@ -161,23 +171,20 @@ def sample(args, manager, root, server, edges, target, env, revision, publish_up
     project = root / "project"
     project.mkdir(parents=True)
     bench_env = env.copy()
+    root_requirements = dict.fromkeys(edges[APP], '^1.0.0')
     if manager == 'honk':
-        write(project / 'Honk.toml', goose_manifest(APP, BASE, edges[APP], server.url, revision))
+        write(project / 'Honk.toml', goose_manifest(APP, BASE, root_requirements, server.url, revision))
         write(project / 'lib.goose', 'namespace benchmark; fn value() -> i64 { 42 }\n')
         bench_env.update(HONK_HOME=str(root / 'cache'), GOOSE_HOME=str(root / 'goose-home'))
         fetch = [args.honk, 'fetch', '--isolated']
-        update = [args.honk, 'update', '--isolated', '--dependency', target]
-        apply = [update]
         cold_resolve = [args.honk, 'update', '--isolated', '--dry-run']
         lock_name = 'Honk.lock'
     else:
-        write(project / 'Cargo.toml', rust_manifest(APP, BASE, edges[APP]))
+        write(project / 'Cargo.toml', rust_manifest(APP, BASE, root_requirements))
         write(project / 'src/lib.rs', 'pub fn value() -> i64 { 42 }\n')
         write(root / 'cache/config.toml', f'[registries.bench]\nindex = "sparse+{server.url}/cargo-index/"\n')
         bench_env['CARGO_HOME'] = str(root / 'cache')
         fetch = [args.cargo, 'fetch']
-        update = [args.cargo, 'update', '-p', target]
-        apply = [update, [*fetch, '--locked']]
         cold_resolve = [args.cargo, 'generate-lockfile']
         lock_name = 'Cargo.lock'
 
@@ -194,18 +201,29 @@ def sample(args, manager, root, server, edges, target, env, revision, publish_up
     if warm['index_requests'] or warm['archive_requests'] or lock.read_bytes() != initial_lock:
         raise ValueError(f'{manager} frozen fetch accessed the registry or changed the lock')
 
-    preview_root = root.with_name(root.name + '-preview')
-    shutil.copytree(root, preview_root)
-    preview_env = relocate_env(bench_env, root, preview_root)
-    publish_update()
-    preview = measure([[*update, '--dry-run']], preview_root / "project", preview_env, args.time, server)
-    if preview['archive_requests'] or (preview_root / "project" / lock_name).read_bytes() != initial_lock:
-        raise ValueError(f'{manager} preview acquired archives or changed the lock')
-    updated = measure(apply, project, bench_env, args.time, server)
-    check_lock(lock, manager, edges, updated=target)
-    if updated['archive_requests'] != 1:
-        raise ValueError(f'{manager} targeted update did not download exactly one archive: {updated}')
-    reset_index()
+    result = dict(cold_fetch=cold, frozen_fetch=warm)
+    if target is not None:
+        if manager == 'honk':
+            update = [args.honk, 'update', '--isolated', '--dependency', target]
+            apply = [update]
+        else:
+            update = [args.cargo, 'update', '-p', target]
+            apply = [update, [*fetch, '--locked']]
+
+        preview_root = root.with_name(root.name + '-preview')
+        shutil.copytree(root, preview_root)
+        preview_env = relocate_env(bench_env, root, preview_root)
+        publish_update()
+        preview = measure([[*update, '--dry-run']], preview_root / "project", preview_env, args.time, server)
+        if preview['archive_requests'] or (preview_root / "project" / lock_name).read_bytes() != initial_lock:
+            raise ValueError(f'{manager} preview acquired archives or changed the lock')
+        updated = measure(apply, project, bench_env, args.time, server)
+        check_lock(lock, manager, edges, updated=target)
+        if updated['archive_requests'] != 1:
+            raise ValueError(f'{manager} targeted update did not download exactly one archive: {updated}')
+        reset_index()
+        result.update(update_preview=preview, update_and_fetch=updated)
+
     resolve = measure([cold_resolve], cold_root / 'project', cold_env, args.time, server)
     cold_lock = cold_root / 'project' / lock_name
     if resolve['archive_requests']:
@@ -214,8 +232,8 @@ def sample(args, manager, root, server, edges, target, env, revision, publish_up
         check_lock(cold_lock, manager, edges)
     elif cold_lock.exists():
         raise ValueError('Honk cold preview wrote a lock')
-    return dict(cold_resolve=resolve, cold_fetch=cold, frozen_fetch=warm,
-                update_preview=preview, update_and_fetch=updated)
+    result['cold_resolve'] = resolve
+    return result
 
 
 def summarize(samples):
@@ -230,15 +248,19 @@ def main():
         parser.add_argument('--' + option, required=True, type=lambda path: str(Path(path).resolve(strict=True)))
     parser.add_argument('--time', default='/usr/bin/time', help='GNU time executable')
     parser.add_argument('--honk-revision', required=True, help='Git revision used to build the Honk executable')
-    parser.add_argument('--sizes', nargs='+', type=int, default=[24, 96])
+    parser.add_argument('--sizes', nargs='+', type=int, default=[24, 96],
+                        help='package counts, or adapter candidate counts with --backtracking')
+    parser.add_argument('--backtracking', action='store_true',
+                        help='resolve a transitive version conflict across adapter releases')
     parser.add_argument('--rounds', type=int, default=7)
     parser.add_argument('--index-delay-ms', type=int, default=0,
                         help='fixed server delay per index response, including conditional responses')
     parser.add_argument('--temp-root', type=Path, default=Path(tempfile.gettempdir()))
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
-    if args.rounds < 1 or any(not 4 <= size <= 120 for size in args.sizes):
-        parser.error('require positive rounds and graph sizes from 4 through 120')
+    max_size = 512 if args.backtracking else 120
+    if args.rounds < 1 or any(not 4 <= size <= max_size for size in args.sizes):
+        parser.error(f'require positive rounds and sizes from 4 through {max_size}')
     if args.index_delay_ms < 0:
         parser.error('index delay must be nonnegative')
     args.temp_root = args.temp_root.resolve(strict=True)
@@ -256,17 +278,25 @@ def main():
                   rustc=subprocess.check_output([args.rustc, '--version'], text=True).strip(),
                   goose=goose, honk_revision=args.honk_revision,
                   honk_sha256=hashlib.sha256(Path(args.honk).read_bytes()).hexdigest(),
-                  rounds=args.rounds, payload_bytes=PAYLOAD_BYTES, index_delay_ms=args.index_delay_ms, sizes={})
+                  rounds=args.rounds, payload_bytes=PAYLOAD_BYTES, index_delay_ms=args.index_delay_ms,
+                  workload='backtracking' if args.backtracking else 'regular', sizes={})
     for size in args.sizes:
-        names, edges = graph(size)
-        target, unrelated = names[size // 2], names[-1]
-        changed = (target, unrelated)
+        if args.backtracking:
+            edges, releases = backtracking_graph(size)
+            names, target, changed = list(releases), None, ()
+        else:
+            names, edges = graph(size)
+            target = names[size // 2]
+            changed = (target, names[-1])
+            releases = {name: {version: dict.fromkeys(edges[name], '^1.0.0')
+                               for version in ((BASE, UPGRADE) if name in changed else (BASE,))}
+                        for name in names}
         samples = {'honk': [], 'cargo': []}
         with tempfile.TemporaryDirectory(prefix='honk-cargo-', dir=args.temp_root) as temp:
             directory = Path(temp)
             with closing(Registry(directory / 'registry', index_delay=args.index_delay_ms / 1000)) as server:
-                records = create_releases(server, names, edges, changed)
-                publish(server, records, names)
+                records = create_releases(server, releases)
+                publish(server, records, names, upgraded=args.backtracking)
                 for round_number in range(args.rounds + 1):
                     for manager in (('honk', 'cargo') if round_number % 2 else ('cargo', 'honk')):
                         publish(server, records, changed)
@@ -276,9 +306,10 @@ def main():
                                         lambda: publish(server, records, changed))
                         if round_number:
                             samples[manager].append(result)
-        report['sizes'][str(size)] = dict(edges=sum(map(len, edges.values())), samples=samples,
+        report['sizes'][str(size)] = dict(packages=len(names), edges=sum(map(len, edges.values())), samples=samples,
                                           median=summarize(samples))
-        print(f'Completed {size} packages × {args.rounds} measured rounds', flush=True)
+        unit = 'candidates' if args.backtracking else 'packages'
+        print(f'Completed {size} {unit} × {args.rounds} measured rounds', flush=True)
     write(args.output, json.dumps(report, indent=2) + '\n')
 
 
