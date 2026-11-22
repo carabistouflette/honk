@@ -232,11 +232,15 @@ def main():
     parser.add_argument('--honk-revision', required=True, help='Git revision used to build the Honk executable')
     parser.add_argument('--sizes', nargs='+', type=int, default=[24, 96])
     parser.add_argument('--rounds', type=int, default=7)
+    parser.add_argument('--index-delay-ms', type=int, default=0,
+                        help='fixed server delay per index response, including conditional responses')
     parser.add_argument('--temp-root', type=Path, default=Path(tempfile.gettempdir()))
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     if args.rounds < 1 or any(not 4 <= size <= 120 for size in args.sizes):
         parser.error('require positive rounds and graph sizes from 4 through 120')
+    if args.index_delay_ms < 0:
+        parser.error('index delay must be nonnegative')
     args.temp_root = args.temp_root.resolve(strict=True)
     goose = json.loads(subprocess.check_output([args.goose, 'version', '--json']))
     env = {key: value for key, value in os.environ.items()
@@ -252,7 +256,7 @@ def main():
                   rustc=subprocess.check_output([args.rustc, '--version'], text=True).strip(),
                   goose=goose, honk_revision=args.honk_revision,
                   honk_sha256=hashlib.sha256(Path(args.honk).read_bytes()).hexdigest(),
-                  rounds=args.rounds, payload_bytes=PAYLOAD_BYTES, sizes={})
+                  rounds=args.rounds, payload_bytes=PAYLOAD_BYTES, index_delay_ms=args.index_delay_ms, sizes={})
     for size in args.sizes:
         names, edges = graph(size)
         target, unrelated = names[size // 2], names[-1]
@@ -260,7 +264,7 @@ def main():
         samples = {'honk': [], 'cargo': []}
         with tempfile.TemporaryDirectory(prefix='honk-cargo-', dir=args.temp_root) as temp:
             directory = Path(temp)
-            with closing(Registry(directory / 'registry')) as server:
+            with closing(Registry(directory / 'registry', index_delay=args.index_delay_ms / 1000)) as server:
                 records = create_releases(server, names, edges, changed)
                 publish(server, records, names)
                 for round_number in range(args.rounds + 1):

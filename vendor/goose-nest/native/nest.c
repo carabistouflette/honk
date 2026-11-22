@@ -22,6 +22,7 @@ typedef struct { uint8_t *data; int64_t len; } output;
 #define INDEX_CAP (1024 * 1024)
 #define ARCHIVE_CAP (16 * 1024 * 1024)
 #define TREE_CAP (64 * 1024 * 1024)
+#define PREFETCH_WIDTH 4
 static char failure[256];
 static bool fail(const char *message) { snprintf(failure, sizeof failure, "%s", message); return false; }
 int64_t nest_error(output out) {
@@ -150,6 +151,13 @@ static bool init_http(void) {
     }
     return true;
 }
+static bool conditional_headers(const char *etag, struct curl_slist **headers) {
+    if (!*etag) return true;
+    char conditional[300];
+    snprintf(conditional, sizeof conditional, "If-None-Match: %s", etag);
+    *headers = curl_slist_append(NULL, conditional);
+    return *headers || fail("cannot allocate conditional header");
+}
 static bool fetch(const char *url, const char *etag, transfer *t, long *status) {
     static CURL *connection;
     if (!init_http()) return false;
@@ -157,30 +165,139 @@ static bool fetch(const char *url, const char *etag, transfer *t, long *status) 
     if (!connection) return fail("cannot initialize HTTP connection");
     curl_easy_reset(connection);
     struct curl_slist *request_headers = NULL;
-    char conditional[300];
-    if (etag && *etag) { snprintf(conditional, sizeof conditional, "If-None-Match: %s", etag); request_headers = curl_slist_append(NULL, conditional); if (!request_headers) return fail("cannot allocate conditional header"); }
+    if (etag && !conditional_headers(etag, &request_headers)) return false;
     bool ok = fetch_options(connection, url, t, request_headers)
         && fetch_result(connection, curl_easy_perform(connection), status);
     curl_slist_free_all(request_headers);
     return ok;
 }
+typedef struct {
+    transfer data;
+    struct curl_slist *headers;
+    CURL *easy;
+    CURLcode result;
+    bool active;
+} http_job;
+
+static bool add_transfer(CURLM *multi, http_job *job, const char *url) {
+    job->easy = curl_easy_init();
+    if (!job->easy) return fail("cannot allocate HTTP transfer");
+    if (!fetch_options(job->easy, url, &job->data, job->headers)) return false;
+    if (curl_multi_add_handle(multi, job->easy) != CURLM_OK) return fail("cannot queue HTTP transfer");
+    job->active = true;
+    job->result = CURLE_FAILED_INIT;
+    return true;
+}
+static bool run_transfers(CURLM *multi, http_job *jobs, size_t count) {
+    int running;
+    do {
+        if (curl_multi_perform(multi, &running) != CURLM_OK ||
+            (running && curl_multi_poll(multi, NULL, 0, 1000, NULL) != CURLM_OK))
+            return fail("cannot run HTTP transfers");
+    } while (running);
+    int left;
+    for (CURLMsg *message; (message = curl_multi_info_read(multi, &left));) {
+        if (message->msg != CURLMSG_DONE) continue;
+        for (size_t i = 0; i < count; ++i)
+            if (jobs[i].easy == message->easy_handle) jobs[i].result = message->data.result;
+    }
+    return true;
+}
+static void close_transfer(CURLM *multi, http_job *job) {
+    if (job->active) curl_multi_remove_handle(multi, job->easy);
+    if (job->easy) curl_easy_cleanup(job->easy);
+    curl_slist_free_all(job->headers);
+}
+
+typedef struct { char body[PATH_CAP], tag[PATH_CAP]; } index_paths;
+static bool index_paths_for(index_paths *paths, const char *cache, const char *url) {
+    char key[65];
+    return digest(url, strlen(url), key) && join(paths->body, cache, key) &&
+        (snprintf(paths->tag, sizeof paths->tag, "%s.etag", paths->body) < (int)sizeof paths->tag ||
+        fail("index cache path too long"));
+}
+static bool index_etag(const index_paths *paths, char etag[256]) {
+    etag[0] = 0;
+    if (!regular(paths->body, INDEX_CAP) || !regular(paths->tag, 255)) return true;
+    int64_t n = read_file(paths->tag, (uint8_t *)etag, 255);
+    if (n < 0) return false;
+    etag[n] = 0;
+    for (int64_t i = 0; i < n; ++i)
+        if ((unsigned char)etag[i] < 32 || etag[i] == 127) return fail("invalid cached ETag");
+    return true;
+}
+static int64_t finish_index(const index_paths *paths, transfer *t, long status) {
+    if (status == 304) return read_file(paths->body, t->data, INDEX_CAP);
+    if (!write_file(paths->body, t->data, t->used) || !write_file(paths->tag, t->etag, strlen(t->etag))) return -1;
+    return (int64_t)t->used;
+}
 int64_t nest_index(input registry_in, input name_in, input cache_in, bool offline, bool refresh, output out) {
-    char registry[PATH_CAP], name[65], cache[PATH_CAP], url[PATH_CAP], key[65], path[PATH_CAP], tag_path[PATH_CAP];
+    char registry[PATH_CAP], name[65], cache[PATH_CAP], url[PATH_CAP];
     if (!string(registry_in, registry, sizeof registry) || !string(name_in, name, sizeof name) || !string(cache_in, cache, sizeof cache) || out.len < INDEX_CAP) return -1;
-    if (snprintf(url, sizeof url, "%s/%s.toml", registry, name) >= (int)sizeof url || !digest(url, strlen(url), key)) return -1;
+    if (snprintf(url, sizeof url, "%s/%s.toml", registry, name) >= (int)sizeof url) return -1;
     int lock = cache_lock(cache); if (lock < 0) return -1;
+    index_paths paths;
     int64_t result = -1;
-    if (!join(path, cache, key) || snprintf(tag_path, sizeof tag_path, "%s.etag", path) >= (int)sizeof tag_path) goto done;
-    if (!refresh && regular(path, INDEX_CAP)) { result = read_file(path, out.data, INDEX_CAP); goto done; }
+    if (!index_paths_for(&paths, cache, url)) goto done;
+    if (!refresh && regular(paths.body, INDEX_CAP)) { result = read_file(paths.body, out.data, INDEX_CAP); goto done; }
     if (offline) { fail("registry index is not cached; offline mode forbids network access"); goto done; }
-    char etag[256] = {0};
-    if (regular(path, INDEX_CAP) && regular(tag_path, 255)) { int64_t n = read_file(tag_path, (uint8_t *)etag, 255); if (n < 0) goto done; etag[n] = 0; for (int64_t i = 0; i < n; ++i) if ((unsigned char)etag[i] < 32 || etag[i] == 127) { fail("invalid cached ETag"); goto done; } }
-    transfer t = {.data=out.data, .cap=INDEX_CAP}; long status = 0;
-    if (!fetch(url, etag, &t, &status)) goto done;
-    if (status == 304) { result = read_file(path, out.data, INDEX_CAP); goto done; }
-    if (!write_file(path, out.data, t.used) || !write_file(tag_path, t.etag, strlen(t.etag))) goto done;
-    result = (int64_t)t.used;
+    char etag[256];
+    transfer t = {.data=out.data, .cap=INDEX_CAP};
+    long status = 0;
+    if (index_etag(&paths, etag) && fetch(url, etag, &t, &status)) result = finish_index(&paths, &t, status);
 done: close(lock); return result;
+}
+
+typedef struct { const int64_t *data; int64_t len; } offsets;
+typedef struct { int64_t *data; int64_t len; } sizes;
+
+// Each slot holds either its response body or its own diagnostic bytes.
+static int64_t index_error(uint8_t *slot) {
+    size_t len = strlen(failure);
+    memcpy(slot, failure, len);
+    return -(int64_t)len - 1;
+}
+bool nest_index_batch(input urls, offsets starts, input cache_in, output out, sizes results) {
+    if (!urls.data || !starts.data || !out.data || !results.data ||
+        results.len < 2 || results.len > PREFETCH_WIDTH || starts.len != results.len + 1 ||
+        starts.data[0] != 0 || starts.data[results.len] != urls.len ||
+        out.len < results.len * INDEX_CAP) return fail("invalid index transfer list");
+    char cache[PATH_CAP];
+    if (!string(cache_in, cache, sizeof cache) || !init_http()) return false;
+    static CURLM *multi;
+    if (!multi) multi = curl_multi_init();
+    if (!multi) return fail("cannot initialize index transfers");
+    int lock = cache_lock(cache);
+    if (lock < 0) return false;
+    http_job jobs[PREFETCH_WIDTH] = {0};
+    index_paths paths[PREFETCH_WIDTH];
+    for (int64_t i = 0; i < results.len; ++i) {
+        uint8_t *slot = out.data + i * INDEX_CAP;
+        jobs[i].data = (transfer){.data=slot, .cap=INDEX_CAP};
+        int64_t start = starts.data[i], end = starts.data[i + 1];
+        char url[PATH_CAP], etag[256];
+        if (start < 0 || end > urls.len || end <= start) {
+            fail("invalid index URL bounds");
+            results.data[i] = index_error(slot);
+        } else if (!string((input){urls.data + start, end - start}, url, sizeof url) ||
+                   !index_paths_for(&paths[i], cache, url) || !index_etag(&paths[i], etag) ||
+                   !conditional_headers(etag, &jobs[i].headers) || !add_transfer(multi, &jobs[i], url)) {
+            results.data[i] = index_error(slot);
+        }
+    }
+    bool ok = run_transfers(multi, jobs, (size_t)results.len);
+    for (int64_t i = 0; i < results.len; ++i) {
+        if (ok && jobs[i].active) {
+            long status;
+            int64_t len = -1;
+            if (fetch_result(jobs[i].easy, jobs[i].result, &status))
+                len = finish_index(&paths[i], &jobs[i].data, status);
+            results.data[i] = len >= 0 ? len : index_error(jobs[i].data.data);
+        }
+        close_transfer(multi, &jobs[i]);
+    }
+    close(lock);
+    return ok;
 }
 // Content verification uses sorted directory entries and length-delimited names.
 // No file is trusted merely because its size/mtime matches a previous invocation.
@@ -274,64 +391,37 @@ static bool valid_sha(const char *sha) {
     return strlen(sha) == 64 && strspn(sha, "0123456789abcdef") == 64;
 }
 
-#define PREFETCH_WIDTH 4
-typedef struct {
-    char sha[65], url[PATH_CAP], blob[PATH_CAP];
-    transfer data;
-    CURL *easy;
-    CURLcode result;
-    bool active;
-} archive_job;
+typedef struct { char sha[65], url[PATH_CAP], blob[PATH_CAP]; } archive_job;
 
-static bool prefetch_group(CURLM *multi, archive_job *jobs, size_t count) {
+static bool prefetch_group(CURLM *multi, archive_job *archives, size_t count) {
+    http_job jobs[PREFETCH_WIDTH] = {0};
     bool ok = false;
     for (size_t i = 0; i < count; ++i) {
-        archive_job *job = &jobs[i];
-        job->data = (transfer){.data = malloc(ARCHIVE_CAP), .cap = ARCHIVE_CAP};
-        job->easy = curl_easy_init();
-        if (!job->data.data || !job->easy) { fail("cannot allocate archive transfer"); goto done; }
-        if (!fetch_options(job->easy, job->url, &job->data, NULL)) goto done;
-        if (curl_multi_add_handle(multi, job->easy) != CURLM_OK) { fail("cannot queue archive transfer"); goto done; }
-        job->active = true;
-        job->result = CURLE_FAILED_INIT;
+        jobs[i].data = (transfer){.data = malloc(ARCHIVE_CAP), .cap = ARCHIVE_CAP};
+        if (!jobs[i].data.data) { fail("cannot allocate archive transfer"); goto done; }
+        if (!add_transfer(multi, &jobs[i], archives[i].url)) goto done;
     }
-    int running;
-    do {
-        if (curl_multi_perform(multi, &running) != CURLM_OK ||
-            (running && curl_multi_poll(multi, NULL, 0, 1000, NULL) != CURLM_OK)) {
-            fail("cannot run archive transfers");
-            goto done;
-        }
-    } while (running);
-    int left;
-    for (CURLMsg *message; (message = curl_multi_info_read(multi, &left));) {
-        if (message->msg != CURLMSG_DONE) continue;
-        for (size_t i = 0; i < count; ++i)
-            if (jobs[i].easy == message->easy_handle) jobs[i].result = message->data.result;
-    }
+    if (!run_transfers(multi, jobs, count)) goto done;
     for (size_t i = 0; i < count; ++i) {
-        archive_job *job = &jobs[i];
+        http_job *job = &jobs[i];
         long status;
         char actual[65];
         if (!fetch_result(job->easy, job->result, &status)) goto done;
         if (status != 200) { fail("archive server did not return a package"); goto done; }
         if (!digest(job->data.data, job->data.used, actual)) goto done;
-        if (strcmp(actual, job->sha)) { fail("package archive SHA-256 mismatch"); goto done; }
-        if (!write_file(job->blob, job->data.data, job->data.used)) goto done;
+        if (strcmp(actual, archives[i].sha)) { fail("package archive SHA-256 mismatch"); goto done; }
+        if (!write_file(archives[i].blob, job->data.data, job->data.used)) goto done;
     }
     ok = true;
 done:
     for (size_t i = 0; i < count; ++i) {
-        if (jobs[i].active) curl_multi_remove_handle(multi, jobs[i].easy);
-        if (jobs[i].easy) curl_easy_cleanup(jobs[i].easy);
+        close_transfer(multi, &jobs[i]);
         free(jobs[i].data.data);
-        jobs[i] = (archive_job){0};
     }
     return ok;
 }
 
 // Offsets delimit records consisting of a 64-byte digest followed by the URL.
-typedef struct { const int64_t *data; int64_t len; } offsets;
 bool nest_prefetch(input records, offsets starts, input cache_in) {
     if (!records.data || !starts.data || starts.len < 2 || starts.len > 257 ||
         starts.data[0] != 0 || starts.data[starts.len - 1] != records.len)

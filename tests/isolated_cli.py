@@ -772,6 +772,38 @@ class Isolated(unittest.TestCase):
             f.write(f'b = {{package="answer", version="^1.0.0", registry="{other.url}/index"}}\n')
         self.assertEqual(self.run_honk().stdout.strip(), '1 1')
 
+    def test_registry_index_prefetch_revalidates_mixed_source_dependencies(self):
+        self.registry_fixture()
+        self.registry_release('alpha', '1.0.0')
+        self.registry_release('beta', '1.0.0')
+        self.package('helper', 'namespace helper; fn value() -> i64 { 3 }')
+        self.package('app', 'fn main() {}', {'helper': 'helper'})
+        self.registry_dependency('app', 'a', 'alpha', '^1.0.0')
+        self.registry_dependency('helper', 'b', 'beta', '^1.0.0')
+        self.registry.index_barrier = threading.Barrier(2, timeout=5)
+        self.run_honk('fetch')
+        before = len(self.registry.requests)
+        self.run_honk('update', extra=('--dry-run',))
+        requests = self.registry.requests[before:]
+        self.assertEqual({path for path, etag in requests if etag},
+                         {'/index/alpha.toml', '/index/beta.toml'})
+        self.assertEqual(len(requests), 2)
+        before = len(self.registry.requests)
+        self.run_honk('fetch', extra=('--frozen',))
+        self.assertEqual(len(self.registry.requests), before)
+
+    def test_registry_index_prefetch_defers_error_until_dependency_is_needed(self):
+        self.registry_fixture()
+        self.registry_release('client', '1.0.0')
+        self.registry_release('client', '1.1.0', [('a', 'alpha', '=2.0.0'), ('b', 'beta', '^1.0.0')])
+        self.registry_release('alpha', '1.0.0')
+        app = self.package('app', 'fn main() {}')
+        self.registry_dependency('app', 'dep', 'client', '^1.0.0')
+        self.run_honk('fetch')
+        self.assertIn(('/index/beta.toml', None), self.registry.requests)
+        lock = tomllib.loads((app / 'Honk.lock').read_text())
+        self.assertEqual([p['version'] for p in lock['package'] if p['name'] == 'client'], ['1.0.0'])
+
     def test_registry_prefetch_overlaps_requests_and_rejects_bad_checksum(self):
         self.registry_fixture()
         self.registry_release('alpha', '1.0.0')

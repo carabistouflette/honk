@@ -226,9 +226,45 @@ fn refresh_floor(s: State&, catalog: nest::Resolver&, request: Request&, strict:
     }
     return [], false;
 }
+fn load_catalog(s: State&, catalog: nest::Resolver&, batch: nest::IndexBatch&, request: const Request&, cursor: i64) -> bool {
+    if nest::catalog_loaded(catalog, request.registry, request.package) { return true; }
+    let lookup = nest::Request { package: str(request.package), requirement: str(request.requirement), registry: str(request.registry) };
+    if catalog.offline || s.refresh.len > 0 || catalog.catalogs.len >= nest::MAX_PACKAGES {
+        return nest::catalog(catalog, lookup, true);
+    }
+    var outstanding = false;
+    for entry, i in batch.entries {
+        if !batch.ready[i] { continue; }
+        if entry.package == request.package && entry.registry == request.registry {
+            return nest::consume_index(catalog, lookup, batch, i, true);
+        }
+        outstanding = true;
+    }
+    if !outstanding {
+        batch.entries.clear();
+        batch.entries.push(nest::Catalog { package: str(request.package), registry: str(request.registry) });
+        var next = cursor;
+        // Bound lookahead even if many pending aliases share one catalog.
+        while next < s.pending.len && next - cursor < 12 && batch.entries.len < nest::INDEX_BATCH_WIDTH &&
+              batch.entries.len + catalog.catalogs.len < nest::MAX_PACKAGES {
+            let candidate = request_at(s, s.pending[next]); next++;
+            if candidate.forwarded.len > 0 || nest::catalog_loaded(catalog, candidate.registry, candidate.package) { continue; }
+            var duplicate = false;
+            for entry in batch.entries { if entry.package == candidate.package && entry.registry == candidate.registry { duplicate = true; break; } }
+            if !duplicate { batch.entries.push(nest::Catalog { package: str(candidate.package), registry: str(candidate.registry) }); }
+        }
+        if batch.entries.len > 1 {
+            if !nest::prefetch_indexes(catalog, batch) { catalog.error = nest::last_error(); return false; }
+            return nest::consume_index(catalog, lookup, batch, 0, true);
+        }
+        batch.entries.clear();
+    }
+    return nest::catalog(catalog, lookup, true);
+}
 fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins: bool, update: bool, strict_refresh: bool = false) -> bool {
     s.selected.clear(); s.pending.clear(); s.requests.clear(); s.edges.clear(); s.features.clear(); s.optional_edges.clear(); s.error.clear(); s.conflict = false;
     for root in roots { var request = copy(root); if !enqueue(s, request) { return false; } }
+    var indexes = nest::IndexBatch { .. };
     var frames: Frame[>..] = []; var cursor = 0; var conflict = false; var detail = str("constraints or cycle");
     loop {
         if !conflict && cursor == s.pending.len { if acyclic(s, catalog) { return true; } if s.error.len > 0 { return false; } detail = str("dependency cycle"); conflict = true; }
@@ -244,10 +280,7 @@ fn solve(s: State&, catalog: nest::Resolver&, roots: const Request[:], only_pins
                 detail = str("unknown feature ", request.forwarded, " in ", request.package, " requested by ", request.owner, " -> ", request.alias);
                 conflict = true;
             } else {
-                if !only_pins {
-                    let lookup = nest::Request { package: str(request.package), requirement: str(request.requirement), registry: str(request.registry) };
-                    if !nest::catalog(catalog, lookup, true) { s.error = str(catalog.error); return false; }
-                }
+                if !only_pins && !load_catalog(s, catalog, indexes, request, cursor) { s.error = str(catalog.error); return false; }
                 let exact = s.precise.len > 0 && request.package == s.refresh;
                 let floor, require_newer = refresh_floor(s, catalog, request, strict_refresh);
                 if s.error.len > 0 { return false; }
