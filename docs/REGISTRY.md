@@ -80,7 +80,6 @@ architecture qualifiers. Honk checks the exported package under the default
 features for the host using a qualified graph compiler specified by `GOOSE`
 and a current isolated lock from `honk fetch --isolated`. Loopback HTTP
 indexes are accepted for local schema-2 fixtures. The archive URL uses HTTPS.
-GitHub publication currently uses schema 1.
 
 ## Publish through GitHub
 
@@ -95,6 +94,13 @@ repository must be public and have the tag `v<package.version>` on GitHub.
 Set the release repository to its canonical GitHub spelling. Use a synced
 direct fork with write access, or omit `--index-fork` when you can write branches
 in the index repository.
+
+For schema 2, add `--schema 2 --registry HTTPS_STAGING_INDEX_URL` and point
+`--index-repo` at a separate schema-2 index repository. Commit a plain-text
+`index/_schema` containing `2` to its default branch, alongside its
+`index/_catalog.toml`. The search catalog keeps schema 1. Honk checks the
+index declaration and any existing package entry before uploading an asset.
+An index without a declaration is treated as schema 1.
 
 Publication appends the release and updates the search catalog in one commit.
 On retry, Honk checks the existing asset SHA-256 and reuses a matching branch

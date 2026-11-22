@@ -139,7 +139,7 @@ fn execute(p: manifest::Project&, cmd: u8[:], options: const argparse::Result&, 
     let archive_url = if target.repo.len == 0 { str(options.get("url")) }
         else { str("https://github.com/", target.repo, "/releases/download/v", p.version, "/", p.name, "-", p.version, ".tar.gz") };
     if publishing && options.get("schema") == "2" {
-        distribution::validate_publication(p, registry_url, archive_url, true);
+        distribution::validate_publication(p, registry_url, archive_url, target.repo.len == 0);
         var local = deps::Graph { cache: str(cache), .. };
         distribution::package(p, local, "", archive_url, registry_url, target, true);
         platform::unlock(lock); return;

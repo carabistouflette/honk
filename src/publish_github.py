@@ -45,18 +45,23 @@ def file_at(repo, path, commit):
     return base64.b64decode(result['content']).decode()
 
 
-def release_in(text, name, version):
+def release_in(text, name, version, schema):
     doc = tomllib.loads(text)
-    require(doc['schema'] == 1 and doc['package'] == name, 'expected a schema-1 package index')
+    require(doc['schema'] == schema and doc['package'] == name, f'expected a schema-{schema} package index')
     matches = [row for row in doc['releases'] if row['version'] == version]
     require(len(matches) <= 1, 'duplicate version in package index')
     return matches[0] if matches else None
 
 
-def index_files(repo, commit, path, name, entry, row):
+def index_files(repo, commit, path, name, entry, row, schema):
+    # Search catalogs use schema 1 even when package indexes use schema 2.
+    marker = file_at(repo, 'index/_schema', commit)
+    declared = '1' if marker is None else marker.strip()
+    require(declared == str(schema),
+            f'index schema mismatch: expected {schema}; schema-2 indexes must declare 2 in index/_schema')
     existing = file_at(repo, path, commit)
     if existing:
-        previous = release_in(existing, name, row['version'])
+        previous = release_in(existing, name, row['version'], schema)
         require(previous is None or previous == row, 'version already exists with different index metadata')
         if previous:
             return {}
@@ -126,6 +131,8 @@ def ensure_release(repo, tag, archive, row):
 
 def publish(repo, index, fork, archive, entry):
     doc = tomllib.loads(entry)
+    schema = doc['schema']
+    require(schema in (1, 2), 'unsupported release schema')
     name = doc['package']
     row, = doc['releases']
     version = row['version']
@@ -143,7 +150,7 @@ def publish(repo, index, fork, archive, entry):
     require(fork == index or api(f'repos/{fork}/git/commits/{upstream_head}', missing=True),
             'sync the index fork with upstream before publishing')
     path = f'index/{name}.toml'
-    files = index_files(index, upstream_head, path, name, entry, row)
+    files = index_files(index, upstream_head, path, name, entry, row, schema)
     branch = f'honk-publish/{name}/{version}'
     if files:
         ref = api(f'repos/{fork}/git/ref/heads/{quote(branch)}', missing=True)
@@ -152,7 +159,7 @@ def publish(repo, index, fork, archive, entry):
             commit = api(f'repos/{fork}/git/commits/{branch_head}')
             require(len(commit['parents']) == 1, 'existing publication branch has unexpected history')
             parent = commit['parents'][0]['sha']
-            expected = index_files(fork, parent, path, name, entry, row)
+            expected = index_files(fork, parent, path, name, entry, row, schema)
             changed_paths = {p for p, content in expected.items() if file_at(fork, p, parent) != content}
             details = api(f'repos/{fork}/commits/{branch_head}')
             require(changed_paths and {item['filename'] for item in details['files']} == changed_paths

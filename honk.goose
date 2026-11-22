@@ -226,13 +226,14 @@ fn validate_options(cmd: u8[:], options: argparse::Result&, arguments: i64, watc
     }
     if cmd == "publish" {
         let schema = options.get("schema", "1");
-        platform::require(schema == "1" || (schema == "2" && options.has("dry-run")), "publish schema must be 1, or 2 with --dry-run");
+        platform::require(schema == "1" || schema == "2", "publish schema must be 1 or 2");
         if options.has("dry-run") {
             platform::require(options.has("url") && !options.has("repo") && !options.has("index-repo") && !options.has("index-fork"),
                 "publish --dry-run requires --url HTTPS_URL");
         } else {
             platform::require(options.has("repo") && options.has("index-repo") && !options.has("url"),
                 "publish requires --repo OWNER/REPO --index-repo OWNER/REPO");
+            platform::require(schema != "2" || options.has("registry"), "schema-2 publication requires an explicit --registry");
             platform::require(!options.has("offline") && !options.has("frozen"), "publish needs network access; use --dry-run for offline preparation");
         }
     }

@@ -1189,6 +1189,32 @@ class Isolated(unittest.TestCase):
 
     @unittest.skipUnless(COMPILER.get('package_graph_features') and sys.platform.startswith('linux'),
                          'requires a Linux host and package graph features')
+    def test_schema_two_live_publish_reaches_github_with_explicit_index(self):
+        lib = self.package('release', 'namespace released; fn value() -> i64 { 42 }')
+        manifest = lib / 'Honk.toml'
+        manifest.write_text(
+            '[package]\nname="release"\nversion="1.0.0"\nkind="lib"\nentry="entry.goose"\n'
+            f'[toolchain]\nrevision="{REVISION}"\n[features]\nextras=[]\n')
+        (lib / 'LICENSE').write_text('Fixture license\n')
+        self.run_honk('fetch', cwd=lib)
+        subprocess.run(['git', '-C', str(lib), 'init', '-q'], check=True)
+        subprocess.run(['git', '-C', str(lib), 'add', 'Honk.toml', 'Honk.lock', 'LICENSE', 'entry.goose'], check=True)
+        gh = self.root / 'gh'
+        gh.write_text('#!/bin/sh\nprintf "%s\\n" "$*" > "$PUBLISH_LOG"\necho fixture GitHub stop >&2\nexit 1\n')
+        gh.chmod(0o755)
+        log = self.root / 'publish-command'
+        env = dict(self.env, PATH=str(self.root) + os.pathsep + os.environ['PATH'], PUBLISH_LOG=str(log))
+        args = [str(HONK), 'publish', '--schema', '2', '--repo', 'test/lib', '--index-repo', 'test/nest']
+        missing = subprocess.run(args, cwd=lib, env=env, capture_output=True, text=True, timeout=90)
+        self.assertNotEqual(missing.returncode, 0)
+        self.assertIn('requires an explicit --registry', missing.stderr)
+        self.assertFalse(log.exists())
+        result = subprocess.run([*args, '--registry', 'https://example.invalid/index'], cwd=lib, env=env,
+                                capture_output=True, text=True, timeout=90)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('fixture GitHub stop', result.stderr)
+        self.assertEqual(log.read_text().strip(), 'api --hostname github.com repos/test/nest')
+
     @unittest.skipUnless(sys.platform.startswith('linux') and platform.machine() in ('x86_64', 'aarch64'),
                          'requires a supported Linux graph target')
     def test_schema_two_publish_dry_run_round_trips_through_isolated_consumer(self):
@@ -1229,14 +1255,18 @@ class Isolated(unittest.TestCase):
         self.assertTrue(deps['extra']['optional'])
         self.assertEqual((deps['host']['target-os'], deps['host']['target-arch']), ('linux', arch))
 
-        # Use the exact generated asset with its checksum and the HTTPS URL.
+        # Serve the same archive bytes through the local fixture transport.
         archive = lib / 'target/package/release-1.0.0.tar.gz'
-        cache = Path(self.env['HONK_HOME']) / 'nest/packages'
-        shutil.copyfile(archive, cache / (record['sha256'] + '.tar.gz'))
-        (self.registry.root / 'index/release.toml').write_text(result.stdout)
+        shutil.copyfile(archive, self.registry.root / archive.name)
+        url = self.registry.url + '/' + archive.name
+        (self.registry.root / 'index/release.toml').write_text(result.stdout.replace(record['url'], url))
+        self.env['HONK_HOME'] = str(self.root / 'consumer-cache')
         app = self.package('app', 'import dep; import std; fn main() { print(dep::value()); }')
         self.registry_dependency('app', 'dep', 'release', '^1.0.0')
         self.assertEqual(self.run_honk().stdout.strip(), '40')
+        self.assertIn(('/release-1.0.0.tar.gz', None), self.registry.requests)
+        self.assertIn(('/host-api-1.0.0.tar.gz', None), self.registry.requests)
+        self.assertNotIn(('/extra-api-1.0.0.tar.gz', None), self.registry.requests)
         manifest = app / 'Honk.toml'
         manifest.write_text(manifest.read_text().replace('package = "release"', 'package = "release", features = ["extras"]'))
         self.assertEqual(self.run_honk().stdout.strip(), '42')

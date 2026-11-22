@@ -13,16 +13,24 @@ from publish_github import ensure_release, publish
 
 class GitHubPublication(unittest.TestCase):
     def test_retry_reuses_uploaded_asset_and_existing_index_branch(self):
+        for schema in (1, 2):
+            with self.subTest(schema=schema):
+                self.check_retry(schema)
+
+    def check_retry(self, schema):
         with tempfile.TemporaryDirectory() as temporary:
             archive = Path(temporary) / 'example-1.0.0.tar.gz'
             archive.write_bytes(b'archive bytes')
             sha = hashlib.sha256(archive.read_bytes()).hexdigest()
             url = f'https://github.com/author/lib/releases/download/v1.0.0/{archive.name}'
-            entry = (f'schema = 1\npackage = "example"\n\n[[releases]]\nversion = "1.0.0"\n'
+            entry = (f'schema = {schema}\npackage = "example"\n\n[[releases]]\nversion = "1.0.0"\n'
                      f'url = "{url}"\nsha256 = "{sha}"\nyanked = false\n'
                      'entry = "lib.goose"\ndependencies = []\n')
+            if schema == 2:
+                entry += 'features = { extras = [] }\n'
             asset = dict(name=archive.name, state='uploaded', digest='sha256:' + sha, browser_download_url=url)
             state = dict(branch=False, release=False, pr=False, fail_pr=True)
+            marker = None
             blobs = {}
             calls = []
 
@@ -38,6 +46,8 @@ class GitHubPublication(unittest.TestCase):
                     path, commit = path.split('/contents/')[1].split('?ref=')
                     content = blobs.get(path) if commit == 'publish' else (
                         'schema = 1\npackages = []\n' if path == 'index/_catalog.toml' else None)
+                    if path == 'index/_schema':
+                        content = marker
                     return None if content is None else dict(type='file', encoding='base64', size=len(content),
                                                              content=base64.b64encode(content.encode()).decode())
                 if path.endswith('/git/ref/heads/honk-publish/example/1.0.0'):
@@ -74,6 +84,12 @@ class GitHubPublication(unittest.TestCase):
                 state['release'] = True
 
             with patch('publish_github.api', side_effect=api), patch('publish_github.gh', side_effect=gh) as transport:
+                marker = '1\n' if schema == 2 else '2\n'
+                with self.assertRaisesRegex(ValueError, 'index schema mismatch'):
+                    publish('author/lib', 'registry/nest', '', archive, entry)
+                self.assertFalse(any('/releases/' in path or data is not None for path, data in calls))
+                self.assertEqual(transport.call_count, 0)
+                marker = '2\n' if schema == 2 else None
                 with self.assertRaisesRegex(ValueError, 'temporary PR failure'):
                     publish('author/lib', 'registry/nest', '', archive, entry)
                 state['fail_pr'] = False
@@ -82,6 +98,7 @@ class GitHubPublication(unittest.TestCase):
                 self.assertEqual(transport.call_count, 1)
                 self.assertEqual(sum(path.endswith('/git/refs') for path, _ in calls), 1)
                 self.assertIn('name = "example"', blobs['index/_catalog.toml'])
+                self.assertEqual(blobs['index/example.toml'], entry)
                 asset['digest'] = 'sha256:' + '0' * 64
                 with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
                     ensure_release('author/lib', 'v1.0.0', archive, dict(sha256=sha, url=url))
