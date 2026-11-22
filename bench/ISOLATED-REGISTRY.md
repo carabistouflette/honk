@@ -214,3 +214,34 @@ three for Honk and four for Cargo at both sizes. The results include HTTP
 transfer and parsing but do not measure each manager's resolver decisions
 or isolate their individual phase costs.
 [Raw samples](results/isolated-registry-cargo-backtracking.json)
+
+### Candidate ranking follow-up
+
+Temporary phase timers on five cold 512-candidate runs measured medians of
+22.9 ms loading catalogs, 131.8 ms scanning and filtering outside ranking,
+954.5 ms ranking, and 31.7 ms applying selected releases. Ranking performed
+130,816 comparisons and the solver made 1,537 candidate decisions.
+The timers omit startup, final graph validation and output.
+
+Honk now parses a request's SemVer requirement once per scan. It stores each
+eligible candidate's parsed version and preference, then sorts references
+to those candidates. The order is reuse, matching pin, descending SemVer,
+and original catalog order for ties.
+
+Nine alternating runs with the previous and new `-O2` binaries used
+separate empty caches. Both versions printed byte-identical resolution
+plans and made exactly three index requests per run. Times are median
+and range in milliseconds.
+
+| Candidates | Previous Honk ms | New Honk ms |
+| ---: | ---: | ---: |
+| 48 | 39.0 [36.4–42.7] | 37.3 [34.7–41.8] |
+| 512 | 1205.4 [1153.0–1288.1] | 217.4 [215.2–245.9] |
+
+A separate seven-round comparison at 512 candidates measured median cold
+resolution of 220.4 ms for Honk (217.2–245.9 ms) and 49.6 ms for Cargo
+(46.4–54.5 ms). The cold fetch checked versions and dependency edges
+against the fixture for both managers. Frozen replays kept the same lock
+and made zero requests. Median peak process RSS during cold resolution
+was 24.0 MiB for Honk and 38.5 MiB for Cargo.
+[Raw samples](results/isolated-registry-cargo-ranked-candidates.json)
