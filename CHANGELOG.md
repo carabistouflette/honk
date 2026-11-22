@@ -1,6 +1,23 @@
 # Changelog
 
-## Unreleased
+## 0.5.0-rc.2 (experimental prerelease candidate)
+
+Source-only candidate for Linux x86-64/glibc. CLI, manifest and lockfile
+formats remain experimental.
+
+- Add Goose Nest discovery, verified archive caching and registry dependencies
+  within mixed path and Git graphs.
+- Add experimental owner-scoped package graphs and shared workspace locks,
+  incompatible versions, dependency features and platform-qualified dependencies.
+  Isolated operations require a qualified Goose graph compiler.
+- Add isolated metadata, tree inspection, targeted updates and dry-run plans.
+  Linux AArch64 builds, runs and tests support a separately configured cross
+  toolchain and runner.
+- Add offline release preparation for Nest schemas 1 and 2 and GitHub-hosted
+  publication through reviewed static index pull requests. Add
+  `honk yank` and `honk yank --undo` for existing releases.
+- Batch registry metadata and archive requests and optimize candidate ordering
+  and lookups. Benchmark results document the specific measured workflows.
 
 - Add repeatable bounded `watch --watch-ignore PATTERN` using precompiled
   goose-glob patterns for root-relative file events and recursive subtree pruning.
