@@ -1246,6 +1246,12 @@ class Isolated(unittest.TestCase):
         self.assertEqual(self.registry.requests, before)
         self.assertEqual((app / 'Honk.lock').read_bytes(), consumer_lock)
 
+        other_arch = 'aarch64' if arch == 'x86_64' else 'x86_64'
+        self.run_honk('fetch', extra=('--target-os', 'linux', '--target-arch', other_arch))
+        platform_lock = tomllib.loads((app / 'Honk.lock').read_text())['platforms'][f'linux-{other_arch}']
+        self.assertEqual({node['name'] for node in tomllib.loads(platform_lock)['package']},
+                         {'app', 'release', 'extra-api'})
+
     def test_target_platforms_replay_independent_registry_features_in_one_lock(self):
         self.registry_fixture()
         self.registry_release(
